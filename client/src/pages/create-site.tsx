@@ -28,6 +28,7 @@ export default function CreateSite() {
 
   // Form State
   const [formData, setFormData] = useState({
+    title: "",
     address: "",
     price: "",
     bedrooms: "",
@@ -60,6 +61,7 @@ export default function CreateSite() {
     const success = deductCredit();
     if (success) {
       addSite({
+        title: formData.title || formData.address,
         address: formData.address,
         price: formData.price,
         bedrooms: parseInt(formData.bedrooms) || 0,
@@ -127,6 +129,16 @@ export default function CreateSite() {
                   <CardTitle>Property Details</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="title">Property Title</Label>
+                    <Input 
+                      id="title" 
+                      placeholder="e.g., Retro Mid-Mod in Westlake" 
+                      value={formData.title}
+                      onChange={e => setFormData({...formData, title: e.target.value})}
+                    />
+                  </div>
+
                   <div className="grid gap-2">
                     <Label htmlFor="address">Property Address</Label>
                     <Input 

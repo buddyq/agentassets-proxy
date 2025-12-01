@@ -75,7 +75,7 @@ export default function SiteView() {
         <div className="absolute inset-0 bg-black/30" />
         <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-4">
           <h1 className="text-4xl md:text-6xl font-serif font-bold mb-4 drop-shadow-lg">
-            {site.address}
+            {site.title || site.address}
           </h1>
           <p className="text-xl md:text-2xl font-light mb-8 drop-shadow-md">
             {site.price}

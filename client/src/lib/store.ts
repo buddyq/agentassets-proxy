@@ -27,6 +27,7 @@ export interface Template {
 
 export interface Site {
   id: string;
+  title?: string;
   address: string;
   price: string;
   bedrooms: number;
@@ -149,6 +150,7 @@ export const useStore = create<AppState>()(
       addSite: (site) => set((state) => ({
         sites: [...state.sites, { 
           ...site, 
+          title: site.title || site.address,
           id: Math.random().toString(36).substr(2, 9), 
           createdAt: new Date().toISOString(),
           stats: {
