@@ -16,6 +16,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
@@ -28,9 +38,14 @@ export default function Dashboard() {
   const getThemeName = (id: string) => themes.find(t => t.id === id)?.name || 'Unknown Theme';
   const getTemplateName = (id: string) => TEMPLATES.find(t => t.id === id)?.name || 'Unknown Template';
 
+  // Domain Dialog State
   const [domainDialogOpen, setDomainDialogOpen] = useState(false);
   const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
   const [domainInput, setDomainInput] = useState("");
+
+  // Delete Dialog State
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [siteToDelete, setSiteToDelete] = useState<string | null>(null);
 
   const handleOpenDomainDialog = (siteId: string, currentDomain?: string) => {
     setSelectedSiteId(siteId);
@@ -46,6 +61,24 @@ export default function Dashboard() {
         description: domainInput ? `Custom domain ${domainInput} connected successfully.` : "Custom domain removed.",
       });
       setDomainDialogOpen(false);
+    }
+  };
+
+  const handleDeleteClick = (siteId: string) => {
+    setSiteToDelete(siteId);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (siteToDelete) {
+      deleteSite(siteToDelete);
+      toast({
+        title: "Site Deleted",
+        description: "The property site has been permanently removed.",
+        variant: "destructive"
+      });
+      setDeleteDialogOpen(false);
+      setSiteToDelete(null);
     }
   };
 
@@ -142,7 +175,7 @@ export default function Dashboard() {
                       variant="ghost" 
                       size="icon" 
                       className="text-destructive hover:text-destructive/90 hover:bg-destructive/10"
-                      onClick={() => deleteSite(site.id)}
+                      onClick={() => handleDeleteClick(site.id)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -162,6 +195,7 @@ export default function Dashboard() {
         )}
       </main>
 
+      {/* Domain Dialog */}
       <Dialog open={domainDialogOpen} onOpenChange={setDomainDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -190,6 +224,25 @@ export default function Dashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete your property site
+              and remove your data from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete Site
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Footer />
     </div>
