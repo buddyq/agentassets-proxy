@@ -8,6 +8,7 @@ import Home from "@/pages/home";
 import Dashboard from "@/pages/dashboard";
 import CreateSite from "@/pages/create-site";
 import Themes from "@/pages/themes";
+import AdminDashboard from "@/pages/admin";
 import Credits from "@/pages/credits";
 
 function Router() {
@@ -18,6 +19,7 @@ function Router() {
       <Route path="/create-site" component={CreateSite} />
       <Route path="/themes" component={Themes} />
       <Route path="/credits" component={Credits} />
+      <Route path="/admin" component={AdminDashboard} />
       <Route component={NotFound} />
     </Switch>
   );
