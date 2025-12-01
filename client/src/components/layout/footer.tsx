@@ -8,7 +8,7 @@ export function Footer() {
         <div className="grid md:grid-cols-4 gap-8">
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center gap-2 mb-4">
-              <img src={logoUrl} alt="AgentAssets" className="h-8 w-auto brightness-0 invert" />
+              <img src={logoUrl} alt="AgentAssets" className="h-12 w-auto brightness-0 invert" />
             </div>
             <p className="text-secondary-foreground/80 max-w-xs">
               Single property websites that don't suck. The easiest way to showcase your listings and impress your sellers.
