@@ -39,6 +39,11 @@ export interface Site {
   status: 'draft' | 'published';
   customDomain?: string;
   createdAt: string;
+  stats: {
+    views: number;
+    uniqueVisitors: number;
+    leads: number;
+  };
 }
 
 export interface User {
@@ -144,7 +149,12 @@ export const useStore = create<AppState>()(
         sites: [...state.sites, { 
           ...site, 
           id: Math.random().toString(36).substr(2, 9), 
-          createdAt: new Date().toISOString() 
+          createdAt: new Date().toISOString(),
+          stats: {
+            views: 0,
+            uniqueVisitors: 0,
+            leads: 0
+          }
         }]
       })),
 

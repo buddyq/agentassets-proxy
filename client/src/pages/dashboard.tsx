@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useStore, TEMPLATES } from "@/lib/store";
 import { Link } from "wouter";
-import { Plus, ExternalLink, Edit, Trash2, Globe } from "lucide-react";
+import { Plus, ExternalLink, Edit, Trash2, Globe, BarChart3, Users, MousePointerClick, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
+import { format, subDays } from "date-fns";
 import {
   Dialog,
   DialogContent,
@@ -28,8 +28,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 
 export default function Dashboard() {
   const { sites, user, deleteSite, themes, updateSite } = useStore();
@@ -46,6 +47,10 @@ export default function Dashboard() {
   // Delete Dialog State
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [siteToDelete, setSiteToDelete] = useState<string | null>(null);
+
+  // Analytics Dialog State
+  const [analyticsDialogOpen, setAnalyticsDialogOpen] = useState(false);
+  const [selectedSiteForAnalytics, setSelectedSiteForAnalytics] = useState<string | null>(null);
 
   const handleOpenDomainDialog = (siteId: string, currentDomain?: string) => {
     setSelectedSiteId(siteId);
@@ -81,6 +86,29 @@ export default function Dashboard() {
       setSiteToDelete(null);
     }
   };
+
+  const handleOpenAnalytics = (siteId: string) => {
+    setSelectedSiteForAnalytics(siteId);
+    setAnalyticsDialogOpen(true);
+  };
+
+  // Mock data generation for chart based on selected site
+  const analyticsData = useMemo(() => {
+    if (!selectedSiteForAnalytics) return [];
+    // Deterministic random based on site ID for consistent mock data
+    const site = sites.find(s => s.id === selectedSiteForAnalytics);
+    const baseViews = site?.stats?.views || 150;
+    
+    return Array.from({ length: 7 }).map((_, i) => {
+      const date = subDays(new Date(), 6 - i);
+      return {
+        name: format(date, 'MMM dd'),
+        views: Math.floor(Math.random() * (baseViews / 2)) + 10,
+      };
+    });
+  }, [selectedSiteForAnalytics, sites]);
+
+  const activeSite = sites.find(s => s.id === selectedSiteForAnalytics);
 
   return (
     <div className="min-h-screen flex flex-col bg-muted/10">
@@ -180,14 +208,24 @@ export default function Dashboard() {
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
-                  <Button 
-                    variant="secondary" 
-                    size="sm" 
-                    className="w-full gap-2 text-xs h-8"
-                    onClick={() => handleOpenDomainDialog(site.id, site.customDomain)}
-                  >
-                    <Globe className="h-3 w-3" /> {site.customDomain ? 'Manage Domain' : 'Connect Domain'}
-                  </Button>
+                  <div className="flex gap-2 w-full">
+                    <Button 
+                      variant="secondary" 
+                      size="sm" 
+                      className="flex-1 gap-2 text-xs h-8"
+                      onClick={() => handleOpenDomainDialog(site.id, site.customDomain)}
+                    >
+                      <Globe className="h-3 w-3" /> {site.customDomain ? 'Manage Domain' : 'Connect Domain'}
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="flex-1 gap-2 text-xs h-8"
+                      onClick={() => handleOpenAnalytics(site.id)}
+                    >
+                      <BarChart3 className="h-3 w-3" /> Analytics
+                    </Button>
+                  </div>
                 </CardFooter>
               </Card>
             ))}
@@ -243,6 +281,92 @@ export default function Dashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Analytics Dialog */}
+      <Dialog open={analyticsDialogOpen} onOpenChange={setAnalyticsDialogOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-primary" />
+              Analytics for {activeSite?.address}
+            </DialogTitle>
+            <DialogDescription>
+              Traffic and engagement statistics for the last 7 days.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-6 py-4">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-3 gap-4">
+              <Card>
+                <CardHeader className="p-4 pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Views</CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 pt-0">
+                  <div className="text-2xl font-bold flex items-center gap-2">
+                    {activeSite?.stats?.views || 0}
+                    <TrendingUp className="h-4 w-4 text-green-500" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="p-4 pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Unique Visitors</CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 pt-0">
+                  <div className="text-2xl font-bold flex items-center gap-2">
+                    {activeSite?.stats?.uniqueVisitors || 0}
+                    <Users className="h-4 w-4 text-blue-500" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="p-4 pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Leads Generated</CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 pt-0">
+                  <div className="text-2xl font-bold flex items-center gap-2">
+                    {activeSite?.stats?.leads || 0}
+                    <MousePointerClick className="h-4 w-4 text-purple-500" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Chart */}
+            <div className="h-[300px] w-full border rounded-lg p-4">
+              <h3 className="text-sm font-medium mb-4">Views Over Time</h3>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={analyticsData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis 
+                    dataKey="name" 
+                    stroke="#888888" 
+                    fontSize={12} 
+                    tickLine={false} 
+                    axisLine={false} 
+                  />
+                  <YAxis 
+                    stroke="#888888" 
+                    fontSize={12} 
+                    tickLine={false} 
+                    axisLine={false} 
+                  />
+                  <Tooltip 
+                    contentStyle={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px' }}
+                    cursor={{ fill: '#f1f5f9' }}
+                  />
+                  <Bar 
+                    dataKey="views" 
+                    fill="hsl(var(--primary))" 
+                    radius={[4, 4, 0, 0]} 
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>
