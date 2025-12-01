@@ -4,15 +4,50 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useStore, TEMPLATES } from "@/lib/store";
 import { Link } from "wouter";
-import { Plus, ExternalLink, Edit, Trash2 } from "lucide-react";
+import { Plus, ExternalLink, Edit, Trash2, Globe } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Dashboard() {
-  const { sites, user, deleteSite, themes } = useStore();
+  const { sites, user, deleteSite, themes, updateSite } = useStore();
+  const { toast } = useToast();
 
   const getThemeName = (id: string) => themes.find(t => t.id === id)?.name || 'Unknown Theme';
   const getTemplateName = (id: string) => TEMPLATES.find(t => t.id === id)?.name || 'Unknown Template';
+
+  const [domainDialogOpen, setDomainDialogOpen] = useState(false);
+  const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
+  const [domainInput, setDomainInput] = useState("");
+
+  const handleOpenDomainDialog = (siteId: string, currentDomain?: string) => {
+    setSelectedSiteId(siteId);
+    setDomainInput(currentDomain || "");
+    setDomainDialogOpen(true);
+  };
+
+  const handleSaveDomain = () => {
+    if (selectedSiteId) {
+      updateSite(selectedSiteId, { customDomain: domainInput });
+      toast({
+        title: "Domain Updated",
+        description: domainInput ? `Custom domain ${domainInput} connected successfully.` : "Custom domain removed.",
+      });
+      setDomainDialogOpen(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-muted/10">
@@ -52,8 +87,8 @@ export default function Dashboard() {
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {sites.map((site) => (
-              <Card key={site.id} className="overflow-hidden group hover:shadow-md transition-shadow">
-                <div className="h-48 bg-muted relative overflow-hidden">
+              <Card key={site.id} className="overflow-hidden group hover:shadow-md transition-shadow flex flex-col">
+                <div className="h-48 bg-muted relative overflow-hidden shrink-0">
                   {site.imageUrl ? (
                     <img src={site.imageUrl} alt={site.address} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                   ) : (
@@ -71,7 +106,7 @@ export default function Dashboard() {
                   <CardTitle className="line-clamp-1 text-lg">{site.address}</CardTitle>
                   <p className="text-sm text-muted-foreground">Created on {format(new Date(site.createdAt), 'MMM d, yyyy')}</p>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="flex-1">
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Price:</span>
@@ -85,22 +120,40 @@ export default function Dashboard() {
                       <span className="text-muted-foreground">Theme:</span>
                       <span>{getThemeName(site.themeId)}</span>
                     </div>
+                    {site.customDomain && (
+                      <div className="flex justify-between items-center pt-2 border-t mt-2">
+                        <span className="text-muted-foreground flex items-center gap-1"><Globe className="h-3 w-3" /> Domain:</span>
+                        <a href={`https://${site.customDomain}`} target="_blank" className="font-medium text-primary hover:underline truncate max-w-[150px]" title={site.customDomain}>
+                          {site.customDomain}
+                        </a>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
-                <CardFooter className="flex gap-2 border-t bg-muted/5 p-4">
-                  <Button variant="outline" size="sm" className="flex-1 gap-1">
-                    <Edit className="h-3 w-3" /> Edit
-                  </Button>
-                  <Button variant="outline" size="sm" className="flex-1 gap-1">
-                    <ExternalLink className="h-3 w-3" /> View
-                  </Button>
+                <CardFooter className="flex flex-col gap-2 border-t bg-muted/5 p-4">
+                  <div className="flex gap-2 w-full">
+                    <Button variant="outline" size="sm" className="flex-1 gap-1">
+                      <Edit className="h-3 w-3" /> Edit
+                    </Button>
+                    <Button variant="outline" size="sm" className="flex-1 gap-1">
+                      <ExternalLink className="h-3 w-3" /> View
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="text-destructive hover:text-destructive/90 hover:bg-destructive/10"
+                      onClick={() => deleteSite(site.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                   <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="text-destructive hover:text-destructive/90 hover:bg-destructive/10"
-                    onClick={() => deleteSite(site.id)}
+                    variant="secondary" 
+                    size="sm" 
+                    className="w-full gap-2 text-xs h-8"
+                    onClick={() => handleOpenDomainDialog(site.id, site.customDomain)}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Globe className="h-3 w-3" /> {site.customDomain ? 'Manage Domain' : 'Connect Domain'}
                   </Button>
                 </CardFooter>
               </Card>
@@ -108,6 +161,35 @@ export default function Dashboard() {
           </div>
         )}
       </main>
+
+      <Dialog open={domainDialogOpen} onOpenChange={setDomainDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Connect Custom Domain</DialogTitle>
+            <DialogDescription>
+              Enter the domain name you want to use for this property site (e.g., www.123mainstreet.com).
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="domain">Domain Name</Label>
+              <Input
+                id="domain"
+                placeholder="www.example.com"
+                value={domainInput}
+                onChange={(e) => setDomainInput(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                You will need to configure your DNS settings to point to our servers.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDomainDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleSaveDomain}>Save Domain</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>

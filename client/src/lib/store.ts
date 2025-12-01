@@ -37,6 +37,7 @@ export interface Site {
   templateId: string;
   themeId: string;
   status: 'draft' | 'published';
+  customDomain?: string;
   createdAt: string;
 }
 
