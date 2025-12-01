@@ -196,9 +196,11 @@ export default function Dashboard() {
                     <Button variant="outline" size="sm" className="flex-1 gap-1">
                       <Edit className="h-3 w-3" /> Edit
                     </Button>
-                    <Button variant="outline" size="sm" className="flex-1 gap-1">
-                      <ExternalLink className="h-3 w-3" /> View
-                    </Button>
+                    <Link href={`/site/${site.id}`} className="flex-1">
+                      <Button variant="outline" size="sm" className="w-full gap-1">
+                        <ExternalLink className="h-3 w-3" /> View
+                      </Button>
+                    </Link>
                     <Button 
                       variant="ghost" 
                       size="icon" 

@@ -44,6 +44,7 @@ export interface Site {
     uniqueVisitors: number;
     leads: number;
   };
+  videoUrl?: string;
 }
 
 export interface User {
@@ -154,7 +155,8 @@ export const useStore = create<AppState>()(
             views: 0,
             uniqueVisitors: 0,
             leads: 0
-          }
+          },
+          videoUrl: ""
         }]
       })),
 

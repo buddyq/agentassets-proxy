@@ -10,6 +10,7 @@ import CreateSite from "@/pages/create-site";
 import Themes from "@/pages/themes";
 import AdminDashboard from "@/pages/admin";
 import Credits from "@/pages/credits";
+import SiteView from "@/pages/site-view";
 
 function Router() {
   return (
@@ -20,6 +21,7 @@ function Router() {
       <Route path="/themes" component={Themes} />
       <Route path="/credits" component={Credits} />
       <Route path="/admin" component={AdminDashboard} />
+      <Route path="/site/:id" component={SiteView} />
       <Route component={NotFound} />
     </Switch>
   );

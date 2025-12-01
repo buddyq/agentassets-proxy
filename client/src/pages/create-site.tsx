@@ -34,6 +34,7 @@ export default function CreateSite() {
     bathrooms: "",
     sqft: "",
     description: "",
+    videoUrl: "",
     templateId: TEMPLATES[0].id,
     themeId: themes[0].id,
   });
@@ -66,6 +67,7 @@ export default function CreateSite() {
         sqft: parseInt(formData.sqft) || 0,
         description: formData.description,
         imageUrl: "", // Mock placeholder would go here
+        videoUrl: formData.videoUrl,
         templateId: formData.templateId,
         themeId: formData.themeId,
         status: 'published'
@@ -200,6 +202,16 @@ export default function CreateSite() {
                       className="h-32"
                       value={formData.description}
                       onChange={e => setFormData({...formData, description: e.target.value})}
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="videoUrl">Video URL (YouTube or Vimeo)</Label>
+                    <Input 
+                      id="videoUrl" 
+                      placeholder="https://www.youtube.com/watch?v=..." 
+                      value={formData.videoUrl}
+                      onChange={e => setFormData({...formData, videoUrl: e.target.value})}
                     />
                   </div>
 
