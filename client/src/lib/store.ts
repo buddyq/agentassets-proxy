@@ -1,5 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import modernMinimalUrl from '@assets/generated_images/modern_minimalist_real_estate_website_template_preview.png';
+import classicLuxuryUrl from '@assets/generated_images/classic_luxury_estate_website_template_preview.png';
+import urbanLoftUrl from '@assets/generated_images/urban_modern_loft_website_template_preview.png';
 
 // Types
 export interface Theme {
@@ -49,19 +52,19 @@ export const TEMPLATES: Template[] = [
     id: 'modern-minimal',
     name: 'Modern Minimalist',
     description: 'Clean lines and whitespace for modern properties.',
-    thumbnailUrl: '@assets/generated_images/modern_minimalist_real_estate_website_template_preview.png'
+    thumbnailUrl: modernMinimalUrl
   },
   {
     id: 'classic-luxury',
     name: 'Classic Luxury',
     description: 'Elegant serif typography for high-end estates.',
-    thumbnailUrl: '@assets/generated_images/classic_luxury_estate_website_template_preview.png'
+    thumbnailUrl: classicLuxuryUrl
   },
   {
     id: 'urban-loft',
     name: 'Urban Loft',
     description: 'Bold and industrial style for city living.',
-    thumbnailUrl: '@assets/generated_images/urban_modern_loft_website_template_preview.png'
+    thumbnailUrl: urbanLoftUrl
   }
 ];
 
