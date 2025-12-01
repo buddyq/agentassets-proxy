@@ -139,7 +139,7 @@ export default function Dashboard() {
               <span className="text-sm text-muted-foreground block">Available Credits</span>
               <span className="text-2xl font-bold text-primary">{user?.credits ?? 0}</span>
             </div>
-            <Link href="/create-site">
+            <Link href={user && user.credits > 0 ? "/create-site" : "/credits"}>
               <Button size="lg" className="gap-2 shadow-lg shadow-primary/20">
                 <Plus className="h-4 w-4" />
                 Create New Site
@@ -155,8 +155,8 @@ export default function Dashboard() {
             </div>
             <h3 className="text-xl font-medium mb-2">No sites created yet</h3>
             <p className="text-muted-foreground mb-6">Get started by creating your first property website.</p>
-            <Link href="/create-site">
-              <Button>Create First Site</Button>
+            <Link href={user && user.credits > 0 ? "/create-site" : "/credits"}>
+              <Button>{user && user.credits > 0 ? "Create First Site" : "Purchase Credits"}</Button>
             </Link>
           </div>
         ) : (

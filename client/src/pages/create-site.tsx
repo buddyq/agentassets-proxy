@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { TEMPLATES, DEMO_USER_ID } from "@/lib/store";
 import { useCreateSite, useUser, useUpdateCredits, useThemes } from "@/lib/api";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Check, ChevronRight, ChevronLeft, Upload, Layout, PaintBucket, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -24,11 +24,23 @@ const STEPS = [
 export default function CreateSite() {
   const [step, setStep] = useState(1);
   const [, setLocation] = useLocation();
-  const { data: user } = useUser(DEMO_USER_ID);
+  const { data: user, isLoading: isLoadingUser } = useUser(DEMO_USER_ID);
   const { data: themes = [] } = useThemes();
   const createSiteMutation = useCreateSite();
   const updateCreditsMutation = useUpdateCredits();
   const { toast } = useToast();
+
+  // Redirect to credits page if user has no credits
+  useEffect(() => {
+    if (!isLoadingUser && user && user.credits < 1) {
+      toast({
+        variant: "destructive",
+        title: "No Credits Available",
+        description: "Please purchase credits to create a new site.",
+      });
+      setLocation("/credits");
+    }
+  }, [user, isLoadingUser, setLocation, toast]);
 
   // Form State
   const [formData, setFormData] = useState({

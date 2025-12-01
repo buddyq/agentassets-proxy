@@ -43,7 +43,7 @@ export function Navbar() {
                 </Link>
               </div>
               
-              <Link href="/create-site">
+              <Link href={user && user.credits > 0 ? "/create-site" : "/credits"}>
                 <Button size="sm" className="gap-2">
                   <Plus className="h-4 w-4" />
                   New Site
