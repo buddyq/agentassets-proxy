@@ -2,6 +2,7 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/lib/store";
 import { LayoutDashboard, Plus, CreditCard, Palette, LogOut, Home } from "lucide-react";
+import logoUrl from "@/assets/logo.png";
 
 export function Navbar() {
   const [location] = useLocation();
@@ -14,12 +15,7 @@ export function Navbar() {
     <nav className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link href={isDashboard ? "/dashboard" : "/"} className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded bg-primary text-white font-bold">
-            AA
-          </div>
-          <span className="text-xl font-serif font-bold tracking-tight text-primary">
-            AgentAssets
-          </span>
+          <img src={logoUrl} alt="AgentAssets" className="h-8 w-auto" />
         </Link>
 
         <div className="flex items-center gap-4">
