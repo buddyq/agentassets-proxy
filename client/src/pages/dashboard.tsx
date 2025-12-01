@@ -2,7 +2,8 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useStore, TEMPLATES } from "@/lib/store";
+import { TEMPLATES, DEMO_USER_ID } from "@/lib/store";
+import { useSites, useDeleteSite, useUpdateSite, useUser, useThemes } from "@/lib/api";
 import { Link } from "wouter";
 import { Plus, ExternalLink, Edit, Trash2, Globe, BarChart3, Users, MousePointerClick, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -33,7 +34,11 @@ import { useToast } from "@/hooks/use-toast";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 
 export default function Dashboard() {
-  const { sites, user, deleteSite, themes, updateSite } = useStore();
+  const { data: user } = useUser(DEMO_USER_ID);
+  const { data: sites = [] } = useSites(DEMO_USER_ID);
+  const { data: themes = [] } = useThemes();
+  const deleteSiteMutation = useDeleteSite();
+  const updateSiteMutation = useUpdateSite();
   const { toast } = useToast();
 
   const getThemeName = (id: string) => themes.find(t => t.id === id)?.name || 'Unknown Theme';
@@ -60,12 +65,18 @@ export default function Dashboard() {
 
   const handleSaveDomain = () => {
     if (selectedSiteId) {
-      updateSite(selectedSiteId, { customDomain: domainInput });
-      toast({
-        title: "Domain Updated",
-        description: domainInput ? `Custom domain ${domainInput} connected successfully.` : "Custom domain removed.",
-      });
-      setDomainDialogOpen(false);
+      updateSiteMutation.mutate(
+        { id: selectedSiteId, updates: { customDomain: domainInput } },
+        {
+          onSuccess: () => {
+            toast({
+              title: "Domain Updated",
+              description: domainInput ? `Custom domain ${domainInput} connected successfully.` : "Custom domain removed.",
+            });
+            setDomainDialogOpen(false);
+          }
+        }
+      );
     }
   };
 
@@ -76,14 +87,17 @@ export default function Dashboard() {
 
   const confirmDelete = () => {
     if (siteToDelete) {
-      deleteSite(siteToDelete);
-      toast({
-        title: "Site Deleted",
-        description: "The property site has been permanently removed.",
-        variant: "destructive"
+      deleteSiteMutation.mutate(siteToDelete, {
+        onSuccess: () => {
+          toast({
+            title: "Site Deleted",
+            description: "The property site has been permanently removed.",
+            variant: "destructive"
+          });
+          setDeleteDialogOpen(false);
+          setSiteToDelete(null);
+        }
       });
-      setDeleteDialogOpen(false);
-      setSiteToDelete(null);
     }
   };
 
@@ -123,7 +137,7 @@ export default function Dashboard() {
           <div className="flex items-center gap-4">
             <div className="bg-white px-4 py-2 rounded-lg border shadow-sm">
               <span className="text-sm text-muted-foreground block">Available Credits</span>
-              <span className="text-2xl font-bold text-primary">{user.credits}</span>
+              <span className="text-2xl font-bold text-primary">{user?.credits ?? 0}</span>
             </div>
             <Link href="/create-site">
               <Button size="lg" className="gap-2 shadow-lg shadow-primary/20">
@@ -215,7 +229,7 @@ export default function Dashboard() {
                       variant="secondary" 
                       size="sm" 
                       className="flex-1 gap-2 text-xs h-8"
-                      onClick={() => handleOpenDomainDialog(site.id, site.customDomain)}
+                      onClick={() => handleOpenDomainDialog(site.id, site.customDomain || undefined)}
                     >
                       <Globe className="h-3 w-3" /> {site.customDomain ? 'Manage Domain' : 'Connect Domain'}
                     </Button>

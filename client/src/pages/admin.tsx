@@ -3,7 +3,8 @@ import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useStore, Theme } from "@/lib/store";
+import type { Theme } from "@shared/schema";
+import { useThemes, useCreateTheme } from "@/lib/api";
 import { Plus, Palette, Trash2, Shield, Lock } from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
@@ -11,7 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function AdminDashboard() {
-  const { themes, addTheme, deleteSite } = useStore();
+  const { data: themes = [] } = useThemes();
+  const createThemeMutation = useCreateTheme();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
 
@@ -23,23 +25,30 @@ export default function AdminDashboard() {
   const handleCreatePreset = () => {
     if (!newThemeName) return;
     
-    addTheme({
-      name: newThemeName,
-      type: 'preset', // This makes it a global/admin theme
-      colors: {
-        primary: primaryColor,
-        secondary: secondaryColor,
-        background: '#ffffff',
-        text: '#000000'
+    createThemeMutation.mutate(
+      {
+        name: newThemeName,
+        type: 'preset',
+        colors: {
+          primary: primaryColor,
+          secondary: secondaryColor,
+          background: '#ffffff',
+          text: '#000000'
+        },
+        logoUrl: null,
+        userId: null
+      },
+      {
+        onSuccess: () => {
+          setIsDialogOpen(false);
+          setNewThemeName("");
+          toast({
+            title: "Global Theme Created",
+            description: "New preset theme added to the library for all users.",
+          });
+        }
       }
-    });
-    
-    setIsDialogOpen(false);
-    setNewThemeName("");
-    toast({
-      title: "Global Theme Created",
-      description: "New preset theme added to the library for all users.",
-    });
+    );
   };
 
   return (

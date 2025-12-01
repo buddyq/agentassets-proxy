@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useStore } from "@/lib/store";
+import { DEMO_USER_ID } from "@/lib/store";
+import { useUser, useUpdateCredits } from "@/lib/api";
 import { Check, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -15,15 +16,23 @@ const PACKAGES = [
 ];
 
 export default function Credits() {
-  const { user, addCredits } = useStore();
+  const { data: user } = useUser(DEMO_USER_ID);
+  const updateCreditsMutation = useUpdateCredits();
   const { toast } = useToast();
 
   const handlePurchase = (pkg: typeof PACKAGES[0]) => {
-    addCredits(pkg.credits);
-    toast({
-      title: "Purchase Successful",
-      description: `Added ${pkg.credits} credits to your account.`,
-    });
+    if (!user) return;
+    updateCreditsMutation.mutate(
+      { userId: DEMO_USER_ID, credits: user.credits + pkg.credits },
+      {
+        onSuccess: () => {
+          toast({
+            title: "Purchase Successful",
+            description: `Added ${pkg.credits} credits to your account.`,
+          });
+        }
+      }
+    );
   };
 
   return (
@@ -45,7 +54,7 @@ export default function Credits() {
               <p className="text-muted-foreground text-sm">Available credits to use</p>
             </div>
             <div className="text-3xl font-bold text-primary">
-              {user.credits} <span className="text-base font-normal text-muted-foreground">credits</span>
+              {user?.credits ?? 0} <span className="text-base font-normal text-muted-foreground">credits</span>
             </div>
           </div>
 

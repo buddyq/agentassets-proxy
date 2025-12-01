@@ -1,12 +1,13 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { useStore } from "@/lib/store";
+import { DEMO_USER_ID } from "@/lib/store";
+import { useUser } from "@/lib/api";
 import { LayoutDashboard, Plus, CreditCard, Palette, LogOut, Home } from "lucide-react";
 import logoUrl from "@/assets/logo.png";
 
 export function Navbar() {
   const [location] = useLocation();
-  const user = useStore((state) => state.user);
+  const { data: user } = useUser(DEMO_USER_ID);
   
   // Simple check for dashboard routes
   const isDashboard = location !== "/" && location !== "/login" && location !== "/register";
@@ -37,7 +38,7 @@ export function Navbar() {
                 <Link href="/credits">
                   <Button variant={location === "/credits" ? "secondary" : "ghost"} size="sm" className="gap-2">
                     <CreditCard className="h-4 w-4" />
-                    Credits: {user.credits}
+                    Credits: {user?.credits ?? 0}
                   </Button>
                 </Link>
               </div>

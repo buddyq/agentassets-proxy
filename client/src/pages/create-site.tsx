@@ -5,7 +5,8 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useStore, TEMPLATES } from "@/lib/store";
+import { TEMPLATES, DEMO_USER_ID } from "@/lib/store";
+import { useCreateSite, useUser, useUpdateCredits, useThemes } from "@/lib/api";
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { Check, ChevronRight, ChevronLeft, Upload, Layout, PaintBucket, CreditCard } from "lucide-react";
@@ -23,7 +24,10 @@ const STEPS = [
 export default function CreateSite() {
   const [step, setStep] = useState(1);
   const [, setLocation] = useLocation();
-  const { addSite, themes, user, deductCredit } = useStore();
+  const { data: user } = useUser(DEMO_USER_ID);
+  const { data: themes = [] } = useThemes();
+  const createSiteMutation = useCreateSite();
+  const updateCreditsMutation = useUpdateCredits();
   const { toast } = useToast();
 
   // Form State
@@ -37,7 +41,7 @@ export default function CreateSite() {
     description: "",
     videoUrl: "",
     templateId: TEMPLATES[0].id,
-    themeId: themes[0].id,
+    themeId: themes[0]?.id || '',
   });
 
   const handleNext = () => {
@@ -49,7 +53,7 @@ export default function CreateSite() {
   };
 
   const handlePublish = () => {
-    if (user.credits < 1) {
+    if (!user || user.credits < 1) {
       toast({
         variant: "destructive",
         title: "Insufficient Credits",
@@ -58,30 +62,42 @@ export default function CreateSite() {
       return;
     }
 
-    const success = deductCredit();
-    if (success) {
-      addSite({
-        title: formData.title || formData.address,
+    createSiteMutation.mutate(
+      {
+        userId: DEMO_USER_ID,
+        title: formData.title || null,
         address: formData.address,
         price: formData.price,
         bedrooms: parseInt(formData.bedrooms) || 0,
         bathrooms: parseInt(formData.bathrooms) || 0,
         sqft: parseInt(formData.sqft) || 0,
-        description: formData.description,
-        imageUrl: "", // Mock placeholder would go here
-        videoUrl: formData.videoUrl,
+        description: formData.description || null,
+        imageUrl: null,
+        videoUrl: formData.videoUrl || null,
         templateId: formData.templateId,
         themeId: formData.themeId,
-        status: 'published'
-      });
-      
-      toast({
-        title: "Site Published!",
-        description: "Your new property site is live.",
-      });
-      
-      setLocation("/dashboard");
-    }
+        customDomain: null,
+        status: 'published',
+        stats: { views: 0, uniqueVisitors: 0, leads: 0 }
+      },
+      {
+        onSuccess: () => {
+          updateCreditsMutation.mutate({ userId: DEMO_USER_ID, credits: user.credits - 1 });
+          toast({
+            title: "Site Published!",
+            description: "Your new property site is live.",
+          });
+          setLocation("/dashboard");
+        },
+        onError: () => {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to create site. Please try again.",
+          });
+        }
+      }
+    );
   };
 
   const selectedTemplate = TEMPLATES.find(t => t.id === formData.templateId);
@@ -394,13 +410,13 @@ export default function CreateSite() {
                       </div>
                       
                       <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded">
-                        Your current balance: <span className="font-bold text-foreground">{user.credits} Credits</span>
+                        Your current balance: <span className="font-bold text-foreground">{user?.credits ?? 0} Credits</span>
                       </div>
                     </CardContent>
                     <CardFooter>
-                      <Button className="w-full gap-2" size="lg" onClick={handlePublish} disabled={user.credits < 1}>
+                      <Button className="w-full gap-2" size="lg" onClick={handlePublish} disabled={!user || user.credits < 1}>
                         <CreditCard className="h-4 w-4" />
-                        {user.credits < 1 ? "Insufficient Credits" : "Publish Site"}
+                        {!user || user.credits < 1 ? "Insufficient Credits" : "Publish Site"}
                       </Button>
                     </CardFooter>
                   </Card>

@@ -4,14 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useStore, Theme } from "@/lib/store";
+import { DEMO_USER_ID } from "@/lib/store";
+import type { Theme } from "@shared/schema";
+import { useThemes, useCreateTheme } from "@/lib/api";
 import { Plus, Palette, Trash2, Check, Upload, Image as ImageIcon } from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Themes() {
-  const { themes, addTheme, updateTheme } = useStore();
+  const { data: themes = [] } = useThemes();
+  const createThemeMutation = useCreateTheme();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
 
@@ -24,24 +27,30 @@ export default function Themes() {
   const handleCreateTheme = () => {
     if (!newThemeName) return;
     
-    addTheme({
-      name: newThemeName,
-      type: 'custom',
-      colors: {
-        primary: primaryColor,
-        secondary: secondaryColor,
-        background: '#ffffff',
-        text: '#000000'
+    createThemeMutation.mutate(
+      {
+        name: newThemeName,
+        type: 'custom',
+        colors: {
+          primary: primaryColor,
+          secondary: secondaryColor,
+          background: '#ffffff',
+          text: '#000000'
+        },
+        logoUrl: logoUrl || null,
+        userId: DEMO_USER_ID
       },
-      logoUrl
-    });
-    
-    setIsDialogOpen(false);
-    resetForm();
-    toast({
-      title: "Theme Created",
-      description: "Your new custom theme has been saved.",
-    });
+      {
+        onSuccess: () => {
+          setIsDialogOpen(false);
+          resetForm();
+          toast({
+            title: "Theme Created",
+            description: "Your new custom theme has been saved.",
+          });
+        }
+      }
+    );
   };
 
   const resetForm = () => {

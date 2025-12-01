@@ -1,5 +1,5 @@
 import { useRoute, Link } from "wouter";
-import { useStore } from "@/lib/store";
+import { useSite, useThemes } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { MapPin, Play, Home, Info, Video } from "lucide-react";
 import { useEffect } from "react";
@@ -7,8 +7,8 @@ import heroImage from "@assets/generated_images/luxury_living_room_interior_for_
 
 export default function SiteView() {
   const [, params] = useRoute("/site/:id");
-  const { sites, themes } = useStore();
-  const site = sites.find(s => s.id === params?.id);
+  const { data: site } = useSite(params?.id || '');
+  const { data: themes = [] } = useThemes();
   const theme = themes.find(t => t.id === site?.themeId) || themes[0];
 
   if (!site) {
