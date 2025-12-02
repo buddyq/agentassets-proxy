@@ -105,6 +105,7 @@ export const sites = pgTable("sites", {
   yearBuilt: text("year_built"),
   stories: text("stories"),
   description: text("description"),
+  descriptionImage: text("description_image"),
   imageUrl: text("image_url"),
   photos: text("photos").array(),
   heroPhotos: text("hero_photos").array(),

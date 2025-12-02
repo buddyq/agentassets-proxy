@@ -381,50 +381,139 @@ function ShoalwoodNavigation({ site, theme, hasPhotos, hasVideo }: { site: Site;
   );
 }
 
-function ShoalwoodDescription({ description }: { description: string }) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const isLong = description.length > 500;
+function ShoalwoodDescription({ description, descriptionImage }: { description: string; descriptionImage?: string | null }) {
+  const [showPopup, setShowPopup] = useState(false);
+  const [isTextTruncated, setIsTextTruncated] = useState(false);
+  const textRef = useCallback((node: HTMLDivElement | null) => {
+    if (node && descriptionImage) {
+      const imageHeight = 400;
+      const textHeight = node.scrollHeight;
+      setIsTextTruncated(textHeight > imageHeight);
+    }
+  }, [descriptionImage]);
+
+  const hasImage = !!descriptionImage;
   
   return (
-    <section id="overview" className="py-20 px-4 md:px-8">
-      <div className="container mx-auto max-w-3xl">
-        <h2 
-          className="text-3xl md:text-4xl mb-10 text-center" 
-          style={{ 
-            fontFamily: 'var(--font-heading)', 
-            color: 'var(--theme-text)',
-            fontWeight: '400',
-            letterSpacing: '-0.01em'
-          }}
-        >
-          Property Description
-        </h2>
-        <div className="prose prose-lg max-w-none">
-          <p 
-            className="leading-[1.8] whitespace-pre-wrap text-center md:text-left"
+    <>
+      <section id="overview" className="py-20 px-4 md:px-8">
+        <div className="container mx-auto max-w-5xl">
+          <h2 
+            className="text-3xl md:text-4xl mb-10 text-center" 
             style={{ 
-              color: '#555',
-              fontSize: '1.0625rem',
-              fontFamily: 'var(--font-body)',
-              fontWeight: '400'
+              fontFamily: 'var(--font-heading)', 
+              color: 'var(--theme-text)',
+              fontWeight: '400',
+              letterSpacing: '-0.01em'
             }}
           >
-            {isLong && !isExpanded ? description.slice(0, 500) + '...' : description}
-          </p>
-          {isLong && (
-            <div className="text-center mt-6">
-              <button 
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="text-sm font-medium tracking-wide uppercase hover:opacity-70 transition-opacity"
-                style={{ color: 'var(--theme-primary)' }}
+            Property Description
+          </h2>
+          
+          {hasImage ? (
+            <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-start">
+              {/* Left column - Text */}
+              <div className="relative">
+                <div 
+                  ref={textRef}
+                  className="prose prose-lg max-w-none overflow-hidden"
+                  style={{ maxHeight: isTextTruncated ? '400px' : 'none' }}
+                >
+                  <p 
+                    className="leading-[1.8] whitespace-pre-wrap"
+                    style={{ 
+                      color: '#555',
+                      fontSize: '1.0625rem',
+                      fontFamily: 'var(--font-body)',
+                      fontWeight: '400'
+                    }}
+                  >
+                    {description}
+                  </p>
+                </div>
+                {isTextTruncated && (
+                  <div className="mt-6">
+                    <button 
+                      onClick={() => setShowPopup(true)}
+                      className="text-sm font-medium tracking-wide uppercase hover:opacity-70 transition-opacity"
+                      style={{ color: 'var(--theme-primary)' }}
+                      data-testid="button-read-more"
+                    >
+                      Read More
+                    </button>
+                  </div>
+                )}
+              </div>
+              
+              {/* Right column - Image */}
+              <div className="aspect-[3/4] rounded-lg overflow-hidden shadow-lg">
+                <img 
+                  src={descriptionImage} 
+                  alt="Property" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="prose prose-lg max-w-none max-w-3xl mx-auto">
+              <p 
+                className="leading-[1.8] whitespace-pre-wrap text-center md:text-left"
+                style={{ 
+                  color: '#555',
+                  fontSize: '1.0625rem',
+                  fontFamily: 'var(--font-body)',
+                  fontWeight: '400'
+                }}
               >
-                {isExpanded ? 'Read Less' : 'Read More'}
-              </button>
+                {description}
+              </p>
             </div>
           )}
         </div>
-      </div>
-    </section>
+      </section>
+
+      {/* Read More Popup */}
+      {showPopup && (
+        <div 
+          className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+          onClick={() => setShowPopup(false)}
+        >
+          <div 
+            className="bg-white rounded-xl max-w-3xl max-h-[80vh] overflow-auto p-8 relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowPopup(false)}
+              className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors"
+              data-testid="button-close-popup"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <h3 
+              className="text-2xl mb-6"
+              style={{ 
+                fontFamily: 'var(--font-heading)', 
+                color: 'var(--theme-text)',
+                fontWeight: '400'
+              }}
+            >
+              Property Description
+            </h3>
+            <p 
+              className="leading-[1.8] whitespace-pre-wrap"
+              style={{ 
+                color: '#555',
+                fontSize: '1.0625rem',
+                fontFamily: 'var(--font-body)',
+                fontWeight: '400'
+              }}
+            >
+              {description}
+            </p>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -874,7 +963,7 @@ export default function SiteView() {
         {/* Navigation overlay - rendered first, floats on top of hero */}
         <ShoalwoodNavigation site={site} theme={theme} hasPhotos={!!hasPhotos} hasVideo={hasVideo} />
         <ShoalwoodHero site={site} theme={theme} heroImage={heroImage} />
-        <ShoalwoodDescription description={site.description || "A beautiful property awaiting your discovery."} />
+        <ShoalwoodDescription description={site.description || "A beautiful property awaiting your discovery."} descriptionImage={site.descriptionImage} />
         <ShoalwoodDetails site={site} theme={theme} />
         
         {hasPhotos && <PhotoGallery photos={site.photos!} themeColors={theme?.colors} />}
