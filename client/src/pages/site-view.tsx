@@ -1,11 +1,45 @@
 import { useRoute, Link } from "wouter";
-import { useSite, useThemes } from "@/lib/api";
+import { useSite, useThemes, useLayout } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { MapPin, Play, Home, Info, Video, Image, X, ChevronLeft, ChevronRight } from "lucide-react";
 import heroImage from "@assets/generated_images/luxury_living_room_interior_for_hero_background.png";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import useEmblaCarousel from "embla-carousel-react";
-import type { Site, Theme } from "@shared/schema";
+import type { Site, Theme, Layout } from "@shared/schema";
+
+function getThemeStyles(theme?: Theme) {
+  const primary = theme?.colors?.primary || '#558B73';
+  const secondary = theme?.colors?.secondary || '#2C3E50';
+  const background = theme?.colors?.background || '#ffffff';
+  const text = theme?.colors?.text || '#1a1a1a';
+  
+  return {
+    '--theme-primary': primary,
+    '--theme-secondary': secondary,
+    '--theme-background': background,
+    '--theme-text': text,
+    '--theme-primary-10': `${primary}1a`,
+    '--theme-primary-20': `${primary}33`,
+  } as React.CSSProperties;
+}
+
+function getLayoutTypography(layout?: Layout) {
+  const structure = layout?.structure;
+  if (!structure?.typography) {
+    return {
+      '--font-heading': 'Georgia, serif',
+      '--font-body': 'Inter, system-ui, sans-serif',
+      '--heading-weight': '700',
+    } as React.CSSProperties;
+  }
+  
+  const { headingFont, bodyFont, headingWeight } = structure.typography;
+  return {
+    '--font-heading': `"${headingFont}", serif`,
+    '--font-body': `"${bodyFont}", sans-serif`,
+    '--heading-weight': headingWeight,
+  } as React.CSSProperties;
+}
 
 function HeroSection({ site, theme, heroImage }: { site: Site; theme?: Theme; heroImage: string }) {
   const hasHeroSlider = site.heroPhotos && site.heroPhotos.length > 1;
@@ -149,7 +183,13 @@ export default function SiteView() {
   const [, params] = useRoute("/site/:id");
   const { data: site, isLoading } = useSite(params?.id || '');
   const { data: themes = [] } = useThemes();
+  const { data: layout } = useLayout(site?.layoutId || '');
   const theme = themes.find(t => t.id === site?.themeId) || themes[0];
+
+  const combinedStyles = useMemo(() => ({
+    ...getThemeStyles(theme),
+    ...getLayoutTypography(layout),
+  }), [theme, layout]);
 
   if (isLoading) {
     return (
@@ -190,15 +230,30 @@ export default function SiteView() {
   const embedUrl = getEmbedUrl(site.videoUrl || "");
 
   return (
-    <div className="min-h-screen flex flex-col font-sans" style={{ backgroundColor: theme?.colors?.background || '#fff', color: theme?.colors?.text || '#000' }}>
+    <div 
+      className="min-h-screen flex flex-col" 
+      style={{ 
+        ...combinedStyles,
+        backgroundColor: 'var(--theme-background)',
+        color: 'var(--theme-text)',
+        fontFamily: 'var(--font-body)'
+      }}
+    >
       {/* Navigation */}
-      <nav className="sticky top-0 z-50 w-full shadow-sm" style={{ backgroundColor: 'white', borderBottom: `1px solid ${theme?.colors?.primary || '#558B73'}20` }}>
+      <nav className="sticky top-0 z-50 w-full shadow-sm bg-white" style={{ borderBottom: '1px solid var(--theme-primary-20)' }}>
         <div className="container mx-auto flex h-20 items-center justify-between px-4">
-          <div className="text-2xl font-serif font-bold tracking-tight" style={{ color: theme?.colors?.primary || '#558B73' }}>
+          <div 
+            className="text-2xl tracking-tight" 
+            style={{ 
+              color: 'var(--theme-primary)',
+              fontFamily: 'var(--font-heading)',
+              fontWeight: 'var(--heading-weight)'
+            }}
+          >
             {site.title || site.address}
           </div>
           
-          <div className="hidden md:flex items-center gap-8 font-medium text-sm uppercase tracking-wider" style={{ color: theme?.colors?.secondary || '#2C3E50' }}>
+          <div className="hidden md:flex items-center gap-8 font-medium text-sm uppercase tracking-wider" style={{ color: 'var(--theme-secondary)' }}>
             <a href="#home" className="hover:opacity-70 transition-opacity">Home</a>
             <a href="#details" className="hover:opacity-70 transition-opacity">Details</a>
             {site.videoUrl && (
@@ -228,8 +283,17 @@ export default function SiteView() {
       <section id="details" className="py-24 px-4">
         <div className="container mx-auto max-w-4xl">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-serif font-bold mb-4" style={{ color: theme?.colors?.primary || '#558B73' }}>Property Details</h2>
-            <div className="h-1 w-20 mx-auto" style={{ backgroundColor: theme?.colors?.secondary || '#2C3E50' }}></div>
+            <h2 
+              className="text-3xl mb-4" 
+              style={{ 
+                color: 'var(--theme-primary)',
+                fontFamily: 'var(--font-heading)',
+                fontWeight: 'var(--heading-weight)'
+              }}
+            >
+              Property Details
+            </h2>
+            <div className="h-1 w-20 mx-auto" style={{ backgroundColor: 'var(--theme-secondary)' }}></div>
           </div>
 
           <div className="grid md:grid-cols-2 gap-12 items-start">
@@ -270,8 +334,17 @@ export default function SiteView() {
         <section id="video" className="py-24 px-4 bg-muted/30">
           <div className="container mx-auto max-w-4xl">
             <div className="text-center mb-16">
-              <h2 className="text-3xl font-serif font-bold mb-4" style={{ color: theme?.colors?.primary || '#558B73' }}>Property Tour</h2>
-              <div className="h-1 w-20 mx-auto" style={{ backgroundColor: theme?.colors?.secondary || '#2C3E50' }}></div>
+              <h2 
+                className="text-3xl mb-4" 
+                style={{ 
+                  color: 'var(--theme-primary)',
+                  fontFamily: 'var(--font-heading)',
+                  fontWeight: 'var(--heading-weight)'
+                }}
+              >
+                Property Tour
+              </h2>
+              <div className="h-1 w-20 mx-auto" style={{ backgroundColor: 'var(--theme-secondary)' }}></div>
             </div>
             <div className="aspect-video rounded-xl overflow-hidden shadow-lg">
               <iframe
@@ -290,12 +363,21 @@ export default function SiteView() {
       <section id="location" className="py-24 px-4">
         <div className="container mx-auto max-w-4xl">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-serif font-bold mb-4" style={{ color: theme?.colors?.primary || '#558B73' }}>Location</h2>
-            <div className="h-1 w-20 mx-auto" style={{ backgroundColor: theme?.colors?.secondary || '#2C3E50' }}></div>
+            <h2 
+              className="text-3xl mb-4" 
+              style={{ 
+                color: 'var(--theme-primary)',
+                fontFamily: 'var(--font-heading)',
+                fontWeight: 'var(--heading-weight)'
+              }}
+            >
+              Location
+            </h2>
+            <div className="h-1 w-20 mx-auto" style={{ backgroundColor: 'var(--theme-secondary)' }}></div>
           </div>
           <div className="bg-white p-8 rounded-xl shadow-sm border">
             <div className="flex items-start gap-4 mb-6">
-              <MapPin className="h-6 w-6 shrink-0" style={{ color: theme?.colors?.primary || '#558B73' }} />
+              <MapPin className="h-6 w-6 shrink-0" style={{ color: 'var(--theme-primary)' }} />
               <div>
                 <h3 className="font-bold text-lg">{site.address}</h3>
                 <p className="text-muted-foreground">Explore the neighborhood and nearby amenities.</p>
@@ -385,8 +467,17 @@ function PhotoGallery({ photos, themeColors }: { photos: string[], themeColors?:
     <section id="photos" className="py-24 px-4 bg-muted/30">
       <div className="container mx-auto max-w-6xl">
         <div className="text-center mb-16">
-          <h2 className="text-3xl font-serif font-bold mb-4" style={{ color: themeColors?.primary || '#558B73' }}>Photo Gallery</h2>
-          <div className="h-1 w-20 mx-auto" style={{ backgroundColor: themeColors?.secondary || '#2C3E50' }}></div>
+          <h2 
+            className="text-3xl mb-4" 
+            style={{ 
+              color: 'var(--theme-primary)',
+              fontFamily: 'var(--font-heading)',
+              fontWeight: 'var(--heading-weight)'
+            }}
+          >
+            Photo Gallery
+          </h2>
+          <div className="h-1 w-20 mx-auto" style={{ backgroundColor: 'var(--theme-secondary)' }}></div>
         </div>
         
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
