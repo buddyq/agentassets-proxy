@@ -758,7 +758,7 @@ function ShoalwoodContact({ site, theme }: { site: Site; theme?: Theme }) {
   );
 }
 
-function HeroSection({ site, theme, heroImage }: { site: Site; theme?: Theme; heroImage: string }) {
+function HeroSection({ site, theme, heroImage, effectiveLogo }: { site: Site; theme?: Theme; heroImage: string; effectiveLogo?: string | null }) {
   const hasHeroSlider = site.heroPhotos && site.heroPhotos.length > 1;
   const heroImages = site.heroPhotos && site.heroPhotos.length > 0 
     ? site.heroPhotos 
@@ -813,9 +813,18 @@ function HeroSection({ site, theme, heroImage }: { site: Site; theme?: Theme; he
         />
         <div className="absolute inset-0 bg-black/30" />
         <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-4">
-          <h1 className="text-4xl md:text-6xl font-serif font-bold mb-4 drop-shadow-lg">
-            {site.title || site.address}
-          </h1>
+          {(effectiveLogo || theme?.logoUrl) ? (
+            <img 
+              src={effectiveLogo ?? theme?.logoUrl ?? ''} 
+              alt="Logo" 
+              className="h-20 md:h-32 w-auto object-contain mb-4 drop-shadow-lg brightness-0 invert"
+              data-testid="img-hero-logo"
+            />
+          ) : (
+            <h1 className="text-4xl md:text-6xl font-serif font-bold mb-4 drop-shadow-lg">
+              {site.title || site.address}
+            </h1>
+          )}
           <p className="text-xl md:text-2xl font-light mb-8 drop-shadow-md">
             {site.price}
           </p>
@@ -878,9 +887,18 @@ function HeroSection({ site, theme, heroImage }: { site: Site; theme?: Theme; he
       </div>
       
       <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-4 pointer-events-none z-10">
-        <h1 className="text-4xl md:text-6xl font-serif font-bold mb-4 drop-shadow-lg">
-          {site.title || site.address}
-        </h1>
+        {(effectiveLogo || theme?.logoUrl) ? (
+          <img 
+            src={effectiveLogo ?? theme?.logoUrl ?? ''} 
+            alt="Logo" 
+            className="h-20 md:h-32 w-auto object-contain mb-4 drop-shadow-lg brightness-0 invert"
+            data-testid="img-hero-logo"
+          />
+        ) : (
+          <h1 className="text-4xl md:text-6xl font-serif font-bold mb-4 drop-shadow-lg">
+            {site.title || site.address}
+          </h1>
+        )}
         <p className="text-xl md:text-2xl font-light mb-8 drop-shadow-md">
           {site.price}
         </p>
@@ -1054,16 +1072,25 @@ export default function SiteView() {
       {/* Navigation */}
       <nav className="sticky top-0 z-50 w-full shadow-sm bg-white" style={{ borderBottom: '1px solid var(--theme-primary-20)' }}>
         <div className="container mx-auto flex h-20 items-center justify-between px-4">
-          <div 
-            className="text-2xl tracking-tight" 
-            style={{ 
-              color: 'var(--theme-primary)',
-              fontFamily: 'var(--font-heading)',
-              fontWeight: 'var(--heading-weight)'
-            }}
-          >
-            {site.title || site.address}
-          </div>
+          {(effectiveLogo || theme?.logoUrl) ? (
+            <img 
+              src={effectiveLogo ?? theme?.logoUrl ?? ''} 
+              alt="Logo" 
+              className="h-12 w-auto object-contain"
+              data-testid="img-nav-logo"
+            />
+          ) : (
+            <div 
+              className="text-2xl tracking-tight" 
+              style={{ 
+                color: 'var(--theme-primary)',
+                fontFamily: 'var(--font-heading)',
+                fontWeight: 'var(--heading-weight)'
+              }}
+            >
+              {site.title || site.address}
+            </div>
+          )}
           
           <div className="hidden md:flex items-center gap-8 font-medium text-sm uppercase tracking-wider" style={{ color: 'var(--theme-secondary)' }}>
             <a href="#home" className="hover:opacity-70 transition-opacity">Home</a>
@@ -1089,6 +1116,7 @@ export default function SiteView() {
         site={site} 
         theme={theme} 
         heroImage={heroImage}
+        effectiveLogo={effectiveLogo}
       />
 
       {/* Details Section */}
