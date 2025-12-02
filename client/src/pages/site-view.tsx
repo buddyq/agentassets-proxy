@@ -38,13 +38,13 @@ function getLayoutTypography(layout?: Layout) {
   
   const { headingFont, bodyFont, headingWeight } = structure.typography;
   
-  // Shoalwood layout uses specific typography matching the source site
+  // Shoalwood layout uses Plus Jakarta Sans with Open Sans fallback
   if (layout?.id === 'layout-shoalwood') {
     return {
-      '--font-heading': '"freight-display-pro", "Playfair Display", Georgia, serif',
-      '--font-body': '"freight-text-pro", "Source Sans Pro", -apple-system, BlinkMacSystemFont, sans-serif',
+      '--font-heading': '"Plus Jakarta Sans", "Open Sans", -apple-system, BlinkMacSystemFont, sans-serif',
+      '--font-body': '"Plus Jakarta Sans", "Open Sans", -apple-system, BlinkMacSystemFont, sans-serif',
       '--heading-weight': '400',
-      '--font-nav': '"proxima-nova", "Source Sans Pro", -apple-system, BlinkMacSystemFont, sans-serif',
+      '--font-nav': '"Plus Jakarta Sans", "Open Sans", -apple-system, BlinkMacSystemFont, sans-serif',
     } as React.CSSProperties;
   }
   
@@ -200,6 +200,7 @@ function ShoalwoodHero({ site, theme, heroImage }: { site: Site; theme?: Theme; 
 
 function ShoalwoodNavigation({ site, theme, hasPhotos, hasVideo }: { site: Site; theme?: Theme; hasPhotos: boolean; hasVideo: boolean }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [currentSection, setCurrentSection] = useState('Menu');
 
   useEffect(() => {
     if (isMobileMenuOpen) {
@@ -209,6 +210,35 @@ function ShoalwoodNavigation({ site, theme, hasPhotos, hasVideo }: { site: Site;
     }
     return () => { document.body.style.overflow = ''; };
   }, [isMobileMenuOpen]);
+
+  useEffect(() => {
+    const sectionIds = ['home', 'overview', 'details', 'photos', 'video', 'map', 'contact'];
+    const sectionLabels: Record<string, string> = {
+      'home': 'Menu',
+      'overview': 'Property Description',
+      'details': 'Details',
+      'photos': 'Photos',
+      'video': 'Video',
+      'map': 'Map',
+      'contact': 'Contact'
+    };
+
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + window.innerHeight / 3;
+      
+      for (let i = sectionIds.length - 1; i >= 0; i--) {
+        const section = document.getElementById(sectionIds[i]);
+        if (section && section.offsetTop <= scrollPosition) {
+          setCurrentSection(sectionLabels[sectionIds[i]] || 'Menu');
+          break;
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const navLinks = [
     { href: '#overview', label: 'Property Description' },
@@ -245,9 +275,9 @@ function ShoalwoodNavigation({ site, theme, hasPhotos, hasVideo }: { site: Site;
           </svg>
         </button>
         
-        {/* Vertical "Menu" text */}
+        {/* Vertical section name text - changes based on scroll position */}
         <div 
-          className="mt-4 text-white text-xs font-medium tracking-[0.2em] uppercase"
+          className="mt-4 text-white text-xs font-medium tracking-[0.2em] uppercase transition-all duration-300"
           style={{ 
             writingMode: 'vertical-rl',
             textOrientation: 'mixed',
@@ -255,7 +285,7 @@ function ShoalwoodNavigation({ site, theme, hasPhotos, hasVideo }: { site: Site;
             textShadow: '0 1px 3px rgba(0,0,0,0.5)'
           }}
         >
-          Menu
+          {currentSection}
         </div>
       </div>
 
@@ -391,33 +421,36 @@ function ShoalwoodDetails({ site }: { site: Site }) {
     { label: 'Bedrooms', value: site.bedrooms },
     { label: 'Bathrooms', value: site.bathrooms },
     { label: 'Living Area', value: `${site.sqft.toLocaleString()} sqft` },
+    { label: 'Lot Size', value: site.lotSize || '—' },
+    { label: 'Year Built', value: site.yearBuilt || '—' },
+    { label: 'Stories', value: site.stories || '—' },
   ];
 
   return (
-    <section id="details" className="py-20 px-4 md:px-8 border-t border-gray-100">
-      <div className="container mx-auto max-w-3xl">
+    <section id="details" className="py-16 px-4 md:px-8 border-t border-gray-100">
+      <div className="container mx-auto max-w-4xl">
         <h2 
-          className="text-3xl md:text-4xl mb-12 text-center" 
+          className="text-2xl md:text-3xl mb-10 text-center" 
           style={{ 
             fontFamily: 'var(--font-heading)', 
             color: 'var(--theme-text)',
-            fontWeight: '400',
+            fontWeight: '600',
             letterSpacing: '-0.01em'
           }}
         >
           Property Details
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 md:gap-12">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-8 gap-y-8 md:gap-x-16 md:gap-y-10">
           {details.map(({ label, value }) => (
-            <div key={label} className="text-center">
+            <div key={label} className="text-center border-b border-gray-100 pb-4">
               <p 
-                className="text-xs uppercase tracking-[0.15em] mb-2"
-                style={{ color: '#888', fontFamily: 'var(--font-body)' }}
+                className="text-xs uppercase tracking-[0.12em] mb-2"
+                style={{ color: '#999', fontFamily: 'var(--font-body)', fontWeight: '500' }}
               >
                 {label}
               </p>
               <p 
-                className="text-2xl md:text-3xl"
+                className="text-xl md:text-2xl"
                 style={{ 
                   color: 'var(--theme-text)', 
                   fontFamily: 'var(--font-heading)',
