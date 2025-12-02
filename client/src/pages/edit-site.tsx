@@ -855,11 +855,24 @@ export default function EditSite() {
                 <ChevronLeft className="mr-2 h-4 w-4" /> Back
               </Button>
               
-              {step < 5 && (
-                <Button onClick={handleNext} disabled={!formData.address && step === 1}>
-                  Next <ChevronRight className="ml-2 h-4 w-4" />
-                </Button>
-              )}
+              <div className="flex gap-3">
+                {step < 5 && (
+                  <Button 
+                    variant="outline"
+                    onClick={handleSave}
+                    disabled={updateSiteMutation.isPending}
+                    data-testid="button-save-inline"
+                  >
+                    <Save className="mr-2 h-4 w-4" />
+                    {updateSiteMutation.isPending ? "Saving..." : "Save"}
+                  </Button>
+                )}
+                {step < 5 && (
+                  <Button onClick={handleNext} disabled={!formData.address && step === 1}>
+                    Next <ChevronRight className="ml-2 h-4 w-4" />
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </div>
