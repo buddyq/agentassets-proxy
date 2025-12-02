@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useSite, useUpdateSite, useThemes, useLayouts, useAddPhotoToSite, useRemovePhotoFromSite, useReorderPhotos, getUploadUrl, normalizeObjectUrl } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
 import { useLocation, useParams } from "wouter";
 import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, Save, Image, X, GripVertical, Star, LayoutGrid, Plus, Settings } from "lucide-react";
@@ -24,6 +25,7 @@ const ALL_STEPS = [
 ];
 
 const LAYOUTS_WITH_OPTIONS = ['layout-shoalwood'];
+const ALWAYS_SHOW_STEP_4 = true; // Always show step 4 for logo branding option
 
 export default function EditSite() {
   const params = useParams<{ id: string }>();
@@ -31,6 +33,7 @@ export default function EditSite() {
   
   const [step, setStep] = useState(1);
   const [, setLocation] = useLocation();
+  const { user } = useAuth();
   const { data: site, isLoading: isLoadingSite } = useSite(siteId);
   const { data: themes = [] } = useThemes();
   const { data: layouts = [] } = useLayouts({ preset: true });
@@ -54,6 +57,7 @@ export default function EditSite() {
     videoUrl: "",
     layoutId: "",
     themeId: "",
+    logo: "", // Site-specific logo override
   });
 
   const [customDetails, setCustomDetails] = useState<CustomDetail[]>([]);
@@ -89,12 +93,14 @@ export default function EditSite() {
         videoUrl: site.videoUrl || "",
         layoutId: site.layoutId || layouts[0]?.id || "",
         themeId: site.themeId || themes[0]?.id || "",
+        logo: site.logo || "",
       });
       setCustomDetails(site.customDetails || []);
     }
   }, [site, themes, layouts]);
 
-  const hasLayoutOptions = LAYOUTS_WITH_OPTIONS.includes(formData.layoutId);
+  const hasLayoutSpecificOptions = LAYOUTS_WITH_OPTIONS.includes(formData.layoutId);
+  const hasLayoutOptions = hasLayoutSpecificOptions || ALWAYS_SHOW_STEP_4;
   
   const visibleSteps = ALL_STEPS.filter(s => !s.layoutSpecific || hasLayoutOptions);
 
@@ -137,6 +143,7 @@ export default function EditSite() {
           layoutId: formData.layoutId,
           themeId: formData.themeId,
           customDetails: validCustomDetails,
+          logo: formData.logo || null,
         }
       },
       {
@@ -687,14 +694,71 @@ export default function EditSite() {
             {step === 4 && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Layout Options</CardTitle>
+                  <CardTitle>Layout Options & Branding</CardTitle>
                   <p className="text-muted-foreground text-sm">
-                    Configure options specific to your selected layout.
+                    Customize the branding and options for your property site.
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {formData.layoutId === 'layout-shoalwood' ? (
-                    <>
+                  {/* Site Logo Override */}
+                  <div className="grid gap-2">
+                    <Label>Site Logo (Optional)</Label>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      {user?.logo 
+                        ? "Your default logo will be used. Upload a different logo here to override it for this site only."
+                        : "Upload a logo for this property site. You can set a default logo in your dashboard."
+                      }
+                    </p>
+                    {user?.logo && !formData.logo && (
+                      <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg mb-2">
+                        <img 
+                          src={user.logo} 
+                          alt="Default logo" 
+                          className="h-10 max-w-[100px] object-contain"
+                        />
+                        <span className="text-sm text-muted-foreground">Your default logo (will be used unless overridden)</span>
+                      </div>
+                    )}
+                    {formData.logo ? (
+                      <div className="relative inline-block">
+                        <div className="p-4 bg-muted/30 rounded-lg inline-block">
+                          <img 
+                            src={formData.logo} 
+                            alt="Site logo" 
+                            className="max-h-16 max-w-[200px] object-contain"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setFormData({...formData, logo: ""})}
+                          className="absolute -top-2 -right-2 bg-destructive text-white p-1.5 rounded-full shadow-md"
+                          data-testid="button-remove-site-logo"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <ObjectUploader
+                        maxNumberOfFiles={1}
+                        maxFileSize={5242880}
+                        variant="dropzone"
+                        onGetUploadParameters={async () => {
+                          const { url } = await getUploadUrl();
+                          return { method: 'PUT' as const, url };
+                        }}
+                        onComplete={(result) => {
+                          if (result.successful && result.successful.length > 0) {
+                            const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
+                            setFormData({...formData, logo: normalizedUrl});
+                          }
+                        }}
+                      />
+                    )}
+                  </div>
+
+                  {/* Layout-specific options */}
+                  {formData.layoutId === 'layout-shoalwood' && (
+                    <div className="border-t pt-6">
                       <div className="grid gap-2">
                         <Label>Description Image (Optional)</Label>
                         <p className="text-sm text-muted-foreground mb-2">
@@ -734,12 +798,6 @@ export default function EditSite() {
                           />
                         )}
                       </div>
-                    </>
-                  ) : (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <Settings className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>No additional options available for this layout.</p>
-                      <p className="text-sm">You can proceed to the next step.</p>
                     </div>
                   )}
                 </CardContent>
