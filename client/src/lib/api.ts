@@ -3,6 +3,30 @@ import type { User, Site, Theme, Layout } from '@shared/schema';
 
 const API_BASE = '/api';
 
+// Normalize object storage upload URL to the accessible path format
+export function normalizeObjectUrl(rawUrl: string): string {
+  if (!rawUrl.startsWith('https://storage.googleapis.com/')) {
+    return rawUrl;
+  }
+  
+  try {
+    const url = new URL(rawUrl);
+    const pathname = url.pathname;
+    
+    // Extract the path after .private/ and before query params
+    // Pattern: /bucket-name/.private/uploads/uuid
+    const privateIndex = pathname.indexOf('.private/');
+    if (privateIndex !== -1) {
+      const relativePath = pathname.slice(privateIndex + '.private/'.length);
+      return `/objects/${relativePath}`;
+    }
+    
+    return pathname;
+  } catch {
+    return rawUrl;
+  }
+}
+
 // Update credits for current user
 export function useUpdateCredits() {
   const queryClient = useQueryClient();

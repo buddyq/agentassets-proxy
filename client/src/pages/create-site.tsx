@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useCreateSite, useUpdateCredits, useThemes, useLayouts, getUploadUrl } from "@/lib/api";
+import { useCreateSite, useUpdateCredits, useThemes, useLayouts, getUploadUrl, normalizeObjectUrl } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
@@ -433,7 +433,8 @@ export default function CreateSite() {
                         }}
                         onComplete={(result) => {
                           if (result.successful && result.successful.length > 0) {
-                            setFormData({...formData, descriptionImage: result.successful[0].uploadURL});
+                            const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
+                            setFormData({...formData, descriptionImage: normalizedUrl});
                           }
                         }}
                       />

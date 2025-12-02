@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useSite, useUpdateSite, useThemes, useLayouts, useAddPhotoToSite, useRemovePhotoFromSite, useReorderPhotos, getUploadUrl } from "@/lib/api";
+import { useSite, useUpdateSite, useThemes, useLayouts, useAddPhotoToSite, useRemovePhotoFromSite, useReorderPhotos, getUploadUrl, normalizeObjectUrl } from "@/lib/api";
 import { useState, useEffect } from "react";
 import { useLocation, useParams } from "wouter";
 import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, Save, Image, X, GripVertical, Star, LayoutGrid, Plus } from "lucide-react";
@@ -495,7 +495,8 @@ export default function EditSite() {
                         }}
                         onComplete={(result) => {
                           if (result.successful && result.successful.length > 0) {
-                            setFormData({...formData, descriptionImage: result.successful[0].uploadURL});
+                            const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
+                            setFormData({...formData, descriptionImage: normalizedUrl});
                           }
                         }}
                       />
