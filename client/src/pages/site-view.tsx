@@ -103,25 +103,48 @@ function ShoalwoodHero({ site, theme, heroImage }: { site: Site; theme?: Theme; 
       </div>
       
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/20" />
+
+      {/* Top right - Logo and Request Info (scroll with hero) */}
+      <div className="absolute top-4 right-4 md:top-6 md:right-6 z-20 flex items-center gap-4">
+        {theme?.logoUrl && (
+          <img 
+            src={theme.logoUrl} 
+            alt="Logo" 
+            className="h-10 md:h-14 w-auto object-contain brightness-0 invert"
+            data-testid="img-nav-logo"
+          />
+        )}
+        <a 
+          href="#contact"
+          className="px-5 py-2.5 bg-white/20 backdrop-blur-sm text-white text-sm font-medium tracking-wide border border-white/40 hover:bg-white/30 transition-colors rounded-sm"
+          data-testid="button-request-info"
+          onClick={(e) => {
+            e.preventDefault();
+            document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+          }}
+        >
+          Request Info
+        </a>
+      </div>
       
       {heroImages.length > 1 && (
         <>
           <button 
             onClick={scrollPrev}
-            className="absolute left-6 top-1/2 -translate-y-1/2 z-20 bg-white/10 hover:bg-white/30 text-white p-4 rounded-full transition-all backdrop-blur-sm border border-white/20"
+            className="absolute left-20 top-1/2 -translate-y-1/2 z-20 bg-white/10 hover:bg-white/30 text-white p-3 rounded-full transition-all backdrop-blur-sm border border-white/20"
           >
-            <ChevronLeft className="h-8 w-8" />
+            <ChevronLeft className="h-6 w-6" />
           </button>
           <button 
             onClick={scrollNext}
-            className="absolute right-6 top-1/2 -translate-y-1/2 z-20 bg-white/10 hover:bg-white/30 text-white p-4 rounded-full transition-all backdrop-blur-sm border border-white/20"
+            className="absolute right-6 top-1/2 -translate-y-1/2 z-20 bg-white/10 hover:bg-white/30 text-white p-3 rounded-full transition-all backdrop-blur-sm border border-white/20"
           >
-            <ChevronRight className="h-8 w-8" />
+            <ChevronRight className="h-6 w-6" />
           </button>
         </>
       )}
       
-      <div className="absolute bottom-0 left-0 right-0 p-8 md:p-16 z-10">
+      <div className="absolute bottom-0 left-0 right-0 p-8 md:p-16 z-10 pl-20 md:pl-24">
         <div className="container mx-auto">
           {/* Status badge */}
           <div className="inline-block bg-white/95 backdrop-blur-sm px-5 py-2.5 rounded mb-6">
@@ -176,14 +199,7 @@ function ShoalwoodHero({ site, theme, heroImage }: { site: Site; theme?: Theme; 
 }
 
 function ShoalwoodNavigation({ site, theme, hasPhotos, hasVideo }: { site: Site; theme?: Theme; hasPhotos: boolean; hasVideo: boolean }) {
-  const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 100);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   useEffect(() => {
     if (isMobileMenuOpen) {
@@ -210,62 +226,38 @@ function ShoalwoodNavigation({ site, theme, hasPhotos, hasVideo }: { site: Site;
 
   return (
     <>
-      {/* Fixed floating navigation overlay - sits on top of hero */}
-      <nav 
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          isScrolled 
-            ? 'bg-white shadow-lg' 
-            : 'bg-transparent'
-        }`}
+      {/* Fixed side menu bar - hamburger with vertical text */}
+      <div 
+        className="fixed left-0 top-0 bottom-0 z-50 flex flex-col items-center"
+        style={{ width: '60px' }}
       >
-        <div className="flex items-center justify-between p-4 md:px-6 md:py-4">
-          {/* Left side - Hamburger menu button */}
-          <button
-            onClick={() => setIsMobileMenuOpen(true)}
-            className={`flex items-center gap-3 p-3 rounded-md transition-all duration-300 ${
-              isScrolled 
-                ? 'bg-gray-100 text-gray-800 hover:bg-gray-200' 
-                : 'bg-black/30 backdrop-blur-sm text-white hover:bg-black/50'
-            }`}
-            aria-label="Open menu"
-            data-testid="button-mobile-menu"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="3" y1="12" x2="21" y2="12"></line>
-              <line x1="3" y1="6" x2="21" y2="6"></line>
-              <line x1="3" y1="18" x2="21" y2="18"></line>
-            </svg>
-            <span className="text-sm font-medium tracking-wide uppercase hidden sm:inline">Menu</span>
-          </button>
-
-          {/* Right side - Logo and Request Info */}
-          <div className="flex items-center gap-4">
-            {theme?.logoUrl && (
-              <img 
-                src={theme.logoUrl} 
-                alt="Logo" 
-                className={`h-10 md:h-12 w-auto object-contain transition-all duration-300 ${
-                  isScrolled ? '' : 'brightness-0 invert'
-                }`}
-                data-testid="img-nav-logo"
-              />
-            )}
-            <Button 
-              size="sm" 
-              className={`font-medium px-4 md:px-6 text-sm tracking-wide transition-all duration-300 ${
-                isScrolled 
-                  ? 'text-white' 
-                  : 'bg-white/20 backdrop-blur-sm text-white border border-white/40 hover:bg-white/30'
-              }`}
-              style={isScrolled ? { backgroundColor: theme?.colors?.primary || '#1a1a1a' } : {}}
-              onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
-              data-testid="button-request-info"
-            >
-              Request Info
-            </Button>
-          </div>
+        {/* Hamburger button */}
+        <button
+          onClick={() => setIsMobileMenuOpen(true)}
+          className="mt-4 p-3 bg-black/40 backdrop-blur-sm hover:bg-black/60 transition-colors rounded-sm"
+          aria-label="Open menu"
+          data-testid="button-mobile-menu"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+        
+        {/* Vertical "Menu" text */}
+        <div 
+          className="mt-4 text-white text-xs font-medium tracking-[0.2em] uppercase"
+          style={{ 
+            writingMode: 'vertical-rl',
+            textOrientation: 'mixed',
+            transform: 'rotate(180deg)',
+            textShadow: '0 1px 3px rgba(0,0,0,0.5)'
+          }}
+        >
+          Menu
         </div>
-      </nav>
+      </div>
 
       {/* Slide-out menu panel */}
       {isMobileMenuOpen && (
@@ -276,9 +268,7 @@ function ShoalwoodNavigation({ site, theme, hasPhotos, hasVideo }: { site: Site;
           />
           <div 
             className="absolute left-0 top-0 bottom-0 w-[340px] max-w-[90vw] bg-white shadow-2xl flex flex-col"
-            style={{ 
-              animation: 'slideIn 0.3s ease-out',
-            }}
+            style={{ animation: 'slideIn 0.3s ease-out' }}
           >
             {/* Menu header with logo and close */}
             <div className="flex items-center justify-between p-6 border-b border-gray-100">
