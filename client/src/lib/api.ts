@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { User, Site, Theme } from '@shared/schema';
+import type { User, Site, Theme, Layout } from '@shared/schema';
 
 const API_BASE = '/api';
 
@@ -228,6 +228,85 @@ export function useReorderPhotos() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['sites'] });
       queryClient.setQueryData(['site', data.id], data);
+    }
+  });
+}
+
+// Layouts API
+export function useLayouts(options?: { preset?: boolean; userId?: string }) {
+  return useQuery({
+    queryKey: options?.preset ? ['layouts', 'preset'] : options?.userId ? ['layouts', 'user', options.userId] : ['layouts'],
+    queryFn: async () => {
+      let url = `${API_BASE}/layouts`;
+      const params = new URLSearchParams();
+      if (options?.preset) params.append('preset', 'true');
+      if (options?.userId) params.append('userId', options.userId);
+      if (params.toString()) url += `?${params}`;
+      
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Failed to fetch layouts');
+      return res.json() as Promise<Layout[]>;
+    }
+  });
+}
+
+export function useLayout(layoutId: string) {
+  return useQuery({
+    queryKey: ['layout', layoutId],
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE}/layouts/${layoutId}`);
+      if (!res.ok) throw new Error('Failed to fetch layout');
+      return res.json() as Promise<Layout>;
+    },
+    enabled: !!layoutId
+  });
+}
+
+export function useCreateLayout() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (layout: Omit<Layout, 'id' | 'createdAt' | 'userId'>) => {
+      const res = await fetch(`${API_BASE}/layouts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(layout)
+      });
+      if (!res.ok) throw new Error('Failed to create layout');
+      return res.json() as Promise<Layout>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['layouts'] });
+    }
+  });
+}
+
+export function useUpdateLayout() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<Layout> }) => {
+      const res = await fetch(`${API_BASE}/layouts/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+      if (!res.ok) throw new Error('Failed to update layout');
+      return res.json() as Promise<Layout>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['layouts'] });
+    }
+  });
+}
+
+export function useDeleteLayout() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`${API_BASE}/layouts/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete layout');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['layouts'] });
     }
   });
 }
