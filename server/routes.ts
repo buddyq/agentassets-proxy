@@ -132,6 +132,15 @@ export async function registerRoutes(
     }
   });
 
+  app.patch("/api/themes/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const theme = await storage.updateTheme(req.params.id, req.body);
+      res.json(theme);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update theme" });
+    }
+  });
+
   app.delete("/api/themes/:id", isAuthenticated, async (req: any, res) => {
     try {
       await storage.deleteTheme(req.params.id);

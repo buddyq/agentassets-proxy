@@ -40,6 +40,7 @@ export interface IStorage {
   getAllThemes(): Promise<Theme[]>;
   getPresetThemes(): Promise<Theme[]>;
   createTheme(theme: InsertTheme): Promise<Theme>;
+  updateTheme(id: string, theme: Partial<InsertTheme>): Promise<Theme>;
   deleteTheme(id: string): Promise<void>;
 }
 
@@ -150,6 +151,15 @@ export class DatabaseStorage implements IStorage {
     const [theme] = await db
       .insert(themes)
       .values(insertTheme)
+      .returning();
+    return theme;
+  }
+
+  async updateTheme(id: string, themeUpdate: Partial<InsertTheme>): Promise<Theme> {
+    const [theme] = await db
+      .update(themes)
+      .set(themeUpdate)
+      .where(eq(themes.id, id))
       .returning();
     return theme;
   }

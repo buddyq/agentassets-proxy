@@ -133,6 +133,24 @@ export function useCreateTheme() {
   });
 }
 
+export function useUpdateTheme() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<Theme> }) => {
+      const res = await fetch(`${API_BASE}/themes/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+      if (!res.ok) throw new Error('Failed to update theme');
+      return res.json() as Promise<Theme>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['themes'] });
+    }
+  });
+}
+
 export function useDeleteTheme() {
   const queryClient = useQueryClient();
   return useMutation({
