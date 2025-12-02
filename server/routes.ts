@@ -61,7 +61,13 @@ export async function registerRoutes(
       if (!site) {
         return res.status(404).json({ error: "Site not found" });
       }
-      res.json(site);
+      // Include effective logo (site logo or fallback to user's default logo)
+      let effectiveLogo = site.logo;
+      if (!effectiveLogo && site.userId) {
+        const user = await storage.getUser(site.userId);
+        effectiveLogo = user?.logo || null;
+      }
+      res.json({ ...site, effectiveLogo });
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch site" });
     }

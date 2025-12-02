@@ -55,7 +55,7 @@ function getLayoutTypography(layout?: Layout) {
   } as React.CSSProperties;
 }
 
-function ShoalwoodHero({ site, theme, heroImage }: { site: Site; theme?: Theme; heroImage: string }) {
+function ShoalwoodHero({ site, theme, heroImage, effectiveLogo }: { site: Site; theme?: Theme; heroImage: string; effectiveLogo?: string | null }) {
   const heroImages = site.heroPhotos && site.heroPhotos.length > 0 
     ? site.heroPhotos 
     : site.photos && site.photos.length > 0 
@@ -106,9 +106,9 @@ function ShoalwoodHero({ site, theme, heroImage }: { site: Site; theme?: Theme; 
 
       {/* Top right - Logo and Request Info (scroll with hero) */}
       <div className="absolute top-4 right-4 md:top-6 md:right-6 z-20 flex items-center gap-4">
-        {theme?.logoUrl && (
+        {(effectiveLogo || theme?.logoUrl) && (
           <img 
-            src={theme.logoUrl} 
+            src={effectiveLogo ?? theme?.logoUrl ?? ''} 
             alt="Logo" 
             className="h-10 md:h-14 w-auto object-contain brightness-0 invert"
             data-testid="img-nav-logo"
@@ -199,7 +199,7 @@ function ShoalwoodHero({ site, theme, heroImage }: { site: Site; theme?: Theme; 
   );
 }
 
-function ShoalwoodNavigation({ site, theme, hasPhotos, hasVideo }: { site: Site; theme?: Theme; hasPhotos: boolean; hasVideo: boolean }) {
+function ShoalwoodNavigation({ site, theme, hasPhotos, hasVideo, effectiveLogo }: { site: Site; theme?: Theme; hasPhotos: boolean; hasVideo: boolean; effectiveLogo?: string | null }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [currentSection, setCurrentSection] = useState('Menu');
   const [isOnHero, setIsOnHero] = useState(true);
@@ -314,8 +314,8 @@ function ShoalwoodNavigation({ site, theme, hasPhotos, hasVideo }: { site: Site;
           >
             {/* Menu header with logo and close */}
             <div className="flex items-center justify-between p-6 border-b border-gray-100">
-              {theme?.logoUrl ? (
-                <img src={theme.logoUrl} alt="Logo" className="h-12 w-auto" />
+              {(effectiveLogo || theme?.logoUrl) ? (
+                <img src={effectiveLogo ?? theme?.logoUrl ?? ''} alt="Logo" className="h-12 w-auto" />
               ) : (
                 <div 
                   className="text-xl font-semibold" 
@@ -948,6 +948,8 @@ export default function SiteView() {
   const hasPhotos = site.photos && site.photos.length > 0;
   const hasVideo = !!embedUrl;
   const isShoalwoodLayout = site.layoutId === 'layout-shoalwood';
+  // Get effective logo: site-specific logo or fallback to user default logo
+  const effectiveLogo = (site as any).effectiveLogo || null;
 
   if (isShoalwoodLayout) {
     return (
@@ -961,8 +963,8 @@ export default function SiteView() {
         }}
       >
         {/* Navigation overlay - rendered first, floats on top of hero */}
-        <ShoalwoodNavigation site={site} theme={theme} hasPhotos={!!hasPhotos} hasVideo={hasVideo} />
-        <ShoalwoodHero site={site} theme={theme} heroImage={heroImage} />
+        <ShoalwoodNavigation site={site} theme={theme} hasPhotos={!!hasPhotos} hasVideo={hasVideo} effectiveLogo={effectiveLogo} />
+        <ShoalwoodHero site={site} theme={theme} heroImage={heroImage} effectiveLogo={effectiveLogo} />
         <ShoalwoodDescription description={site.description || "A beautiful property awaiting your discovery."} descriptionImage={site.descriptionImage} />
         <ShoalwoodDetails site={site} theme={theme} />
         
