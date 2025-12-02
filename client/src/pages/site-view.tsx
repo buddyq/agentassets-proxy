@@ -1,7 +1,10 @@
 import { useRoute, Link } from "wouter";
 import { useSite, useThemes, useLayout } from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { MapPin, Play, Home, Info, Video, Image, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { MapPin, Play, Home, Info, Video, Image, X, ChevronLeft, ChevronRight, Bed, Bath, Square, Calendar, Building, Phone, Mail, User } from "lucide-react";
 import heroImage from "@assets/generated_images/luxury_living_room_interior_for_hero_background.png";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import useEmblaCarousel from "embla-carousel-react";
@@ -39,6 +42,300 @@ function getLayoutTypography(layout?: Layout) {
     '--font-body': `"${bodyFont}", sans-serif`,
     '--heading-weight': headingWeight,
   } as React.CSSProperties;
+}
+
+function ShoalwoodHero({ site, theme, heroImage }: { site: Site; theme?: Theme; heroImage: string }) {
+  const heroImages = site.heroPhotos && site.heroPhotos.length > 0 
+    ? site.heroPhotos 
+    : site.photos && site.photos.length > 0 
+      ? site.photos 
+      : [heroImage];
+  
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
+
+  const scrollPrev = useCallback(() => {
+    if (emblaApi) emblaApi.scrollPrev();
+  }, [emblaApi]);
+
+  const scrollNext = useCallback(() => {
+    if (emblaApi) emblaApi.scrollNext();
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    const onSelect = () => setCurrentSlide(emblaApi.selectedScrollSnap());
+    emblaApi.on('select', onSelect);
+    onSelect();
+    return () => { emblaApi.off('select', onSelect); };
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi || heroImages.length <= 1) return;
+    const interval = setInterval(() => emblaApi.scrollNext(), 5000);
+    return () => clearInterval(interval);
+  }, [emblaApi, heroImages.length]);
+
+  return (
+    <section id="home" className="relative h-screen w-full overflow-hidden">
+      <div className="absolute inset-0" ref={emblaRef}>
+        <div className="flex h-full">
+          {heroImages.map((image, index) => (
+            <div key={index} className="flex-[0_0_100%] min-w-0 relative">
+              <div 
+                className="absolute inset-0 bg-cover bg-center"
+                style={{ backgroundImage: `url(${image})` }}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/20" />
+      
+      {heroImages.length > 1 && (
+        <>
+          <button 
+            onClick={scrollPrev}
+            className="absolute left-6 top-1/2 -translate-y-1/2 z-20 bg-white/10 hover:bg-white/30 text-white p-4 rounded-full transition-all backdrop-blur-sm border border-white/20"
+          >
+            <ChevronLeft className="h-8 w-8" />
+          </button>
+          <button 
+            onClick={scrollNext}
+            className="absolute right-6 top-1/2 -translate-y-1/2 z-20 bg-white/10 hover:bg-white/30 text-white p-4 rounded-full transition-all backdrop-blur-sm border border-white/20"
+          >
+            <ChevronRight className="h-8 w-8" />
+          </button>
+        </>
+      )}
+      
+      <div className="absolute bottom-0 left-0 right-0 p-8 md:p-16 z-10">
+        <div className="container mx-auto">
+          <div className="inline-block bg-white/90 backdrop-blur-sm px-4 py-2 rounded-md mb-4">
+            <span className="text-sm font-semibold tracking-wide" style={{ color: theme?.colors?.primary || '#1a1a1a' }}>
+              FOR SALE
+            </span>
+          </div>
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-4 drop-shadow-2xl" style={{ fontFamily: 'var(--font-heading)' }}>
+            {site.price}
+          </h1>
+          <h2 className="text-xl md:text-2xl text-white/90 font-light tracking-wide">
+            {site.address}
+          </h2>
+        </div>
+      </div>
+
+      {heroImages.length > 1 && (
+        <div className="absolute bottom-8 right-8 z-20 flex gap-2">
+          {heroImages.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => emblaApi?.scrollTo(index)}
+              className={`w-2.5 h-2.5 rounded-full transition-all ${
+                currentSlide === index ? 'bg-white w-8' : 'bg-white/40 hover:bg-white/60'
+              }`}
+            />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function ShoalwoodNavigation({ site, hasPhotos, hasVideo }: { site: Site; hasPhotos: boolean; hasVideo: boolean }) {
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 100);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  return (
+    <nav className={`sticky top-0 z-50 w-full transition-all duration-300 ${
+      isScrolled ? 'bg-white shadow-lg' : 'bg-white/95 backdrop-blur-sm'
+    }`}>
+      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+        <div className="text-lg font-semibold truncate max-w-[200px] md:max-w-none" style={{ color: 'var(--theme-primary)' }}>
+          {site.address}
+        </div>
+        
+        <div className="hidden md:flex items-center gap-6 text-sm font-medium">
+          <a href="#overview" className="hover:opacity-70 transition-opacity" style={{ color: 'var(--theme-text)' }}>Overview</a>
+          <a href="#details" className="hover:opacity-70 transition-opacity" style={{ color: 'var(--theme-text)' }}>Details</a>
+          {hasPhotos && <a href="#photos" className="hover:opacity-70 transition-opacity" style={{ color: 'var(--theme-text)' }}>Photos</a>}
+          {hasVideo && <a href="#video" className="hover:opacity-70 transition-opacity" style={{ color: 'var(--theme-text)' }}>Video</a>}
+          <a href="#map" className="hover:opacity-70 transition-opacity" style={{ color: 'var(--theme-text)' }}>Map</a>
+          <a href="#contact" className="hover:opacity-70 transition-opacity" style={{ color: 'var(--theme-text)' }}>Contact</a>
+        </div>
+
+        <Button 
+          size="sm" 
+          className="text-white"
+          style={{ backgroundColor: 'var(--theme-primary)' }}
+          onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
+        >
+          Request Info
+        </Button>
+      </div>
+    </nav>
+  );
+}
+
+function ShoalwoodDescription({ description }: { description: string }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const isLong = description.length > 400;
+  
+  return (
+    <section id="overview" className="py-16 px-4">
+      <div className="container mx-auto max-w-4xl">
+        <h2 className="text-2xl md:text-3xl font-bold mb-8" style={{ fontFamily: 'var(--font-heading)', color: 'var(--theme-primary)' }}>
+          Property Description
+        </h2>
+        <div className="prose prose-lg max-w-none">
+          <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+            {isLong && !isExpanded ? description.slice(0, 400) + '...' : description}
+          </p>
+          {isLong && (
+            <button 
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="mt-4 font-semibold hover:underline"
+              style={{ color: 'var(--theme-primary)' }}
+            >
+              {isExpanded ? 'Read Less' : 'Read More'}
+            </button>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ShoalwoodDetails({ site }: { site: Site }) {
+  const details = [
+    { icon: Bed, label: 'Bedrooms', value: site.bedrooms },
+    { icon: Bath, label: 'Bathrooms', value: site.bathrooms },
+    { icon: Square, label: 'Living Area', value: `${site.sqft.toLocaleString()} sqft` },
+  ];
+
+  return (
+    <section id="details" className="py-16 px-4 bg-gray-50">
+      <div className="container mx-auto max-w-4xl">
+        <h2 className="text-2xl md:text-3xl font-bold mb-8" style={{ fontFamily: 'var(--font-heading)', color: 'var(--theme-primary)' }}>
+          Property Details
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {details.map(({ icon: Icon, label, value }) => (
+            <div key={label} className="bg-white p-6 rounded-xl shadow-sm border flex items-center gap-4">
+              <div className="p-3 rounded-full" style={{ backgroundColor: 'var(--theme-primary-10)' }}>
+                <Icon className="h-6 w-6" style={{ color: 'var(--theme-primary)' }} />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">{label}</p>
+                <p className="text-xl font-bold" style={{ color: 'var(--theme-text)' }}>{value}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ShoalwoodContact({ site, theme }: { site: Site; theme?: Theme }) {
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    message: `I am interested in ${site.address}`
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    alert('Thank you for your inquiry! We will be in touch soon.');
+  };
+
+  return (
+    <section id="contact" className="py-16 px-4 bg-gray-50">
+      <div className="container mx-auto max-w-4xl">
+        <h2 className="text-2xl md:text-3xl font-bold mb-8" style={{ fontFamily: 'var(--font-heading)', color: 'var(--theme-primary)' }}>
+          Get in Touch
+        </h2>
+        
+        <div className="bg-white p-8 rounded-xl shadow-sm border">
+          <form onSubmit={handleSubmit} className="grid gap-6">
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="firstName">First Name *</Label>
+                <Input 
+                  id="firstName" 
+                  value={formData.firstName}
+                  onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                  required 
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="lastName">Last Name *</Label>
+                <Input 
+                  id="lastName" 
+                  value={formData.lastName}
+                  onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                  required 
+                  className="mt-1"
+                />
+              </div>
+            </div>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="email">Email *</Label>
+                <Input 
+                  id="email" 
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  required 
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="phone">Phone *</Label>
+                <Input 
+                  id="phone" 
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                  required 
+                  className="mt-1"
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="message">Message *</Label>
+              <Textarea 
+                id="message" 
+                value={formData.message}
+                onChange={(e) => setFormData({...formData, message: e.target.value})}
+                required 
+                className="mt-1"
+                rows={4}
+              />
+            </div>
+            <Button 
+              type="submit" 
+              size="lg"
+              className="w-full md:w-auto text-white"
+              style={{ backgroundColor: theme?.colors?.primary || '#1a1a1a' }}
+            >
+              Send Inquiry
+            </Button>
+          </form>
+        </div>
+      </div>
+    </section>
+  );
 }
 
 function HeroSection({ site, theme, heroImage }: { site: Site; theme?: Theme; heroImage: string }) {
@@ -228,6 +525,80 @@ export default function SiteView() {
   };
 
   const embedUrl = getEmbedUrl(site.videoUrl || "");
+  const hasPhotos = site.photos && site.photos.length > 0;
+  const hasVideo = !!embedUrl;
+  const isShoalwoodLayout = site.layoutId === 'layout-shoalwood';
+
+  if (isShoalwoodLayout) {
+    return (
+      <div 
+        className="min-h-screen flex flex-col" 
+        style={{ 
+          ...combinedStyles,
+          backgroundColor: 'var(--theme-background)',
+          color: 'var(--theme-text)',
+          fontFamily: 'var(--font-body)'
+        }}
+      >
+        <ShoalwoodHero site={site} theme={theme} heroImage={heroImage} />
+        <ShoalwoodNavigation site={site} hasPhotos={!!hasPhotos} hasVideo={hasVideo} />
+        <ShoalwoodDescription description={site.description || "A beautiful property awaiting your discovery."} />
+        <ShoalwoodDetails site={site} />
+        
+        {hasPhotos && <PhotoGallery photos={site.photos!} themeColors={theme?.colors} />}
+        
+        {hasVideo && (
+          <section id="video" className="py-16 px-4">
+            <div className="container mx-auto max-w-4xl">
+              <h2 className="text-2xl md:text-3xl font-bold mb-8" style={{ fontFamily: 'var(--font-heading)', color: 'var(--theme-primary)' }}>
+                Property Tour
+              </h2>
+              <div className="aspect-video rounded-xl overflow-hidden shadow-lg">
+                <iframe
+                  src={embedUrl}
+                  className="w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  title="Property Video"
+                />
+              </div>
+            </div>
+          </section>
+        )}
+
+        <section id="map" className="py-16 px-4">
+          <div className="container mx-auto max-w-4xl">
+            <h2 className="text-2xl md:text-3xl font-bold mb-8" style={{ fontFamily: 'var(--font-heading)', color: 'var(--theme-primary)' }}>
+              Map
+            </h2>
+            <div className="bg-white p-4 rounded-xl shadow-sm border">
+              <div className="flex items-center gap-3 mb-4">
+                <MapPin className="h-5 w-5" style={{ color: 'var(--theme-primary)' }} />
+                <span className="font-medium">{site.address}</span>
+              </div>
+              <div className="aspect-[16/9] bg-muted rounded-lg overflow-hidden">
+                <iframe
+                  src={`https://www.google.com/maps?q=${encodeURIComponent(site.address)}&output=embed`}
+                  className="w-full h-full border-0"
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="Property Location"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <ShoalwoodContact site={site} theme={theme} />
+
+        <footer className="py-8 px-4 border-t bg-white">
+          <div className="container mx-auto text-center text-sm text-gray-500">
+            <p>Property listing powered by AgentAssets</p>
+          </div>
+        </footer>
+      </div>
+    );
+  }
 
   return (
     <div 
