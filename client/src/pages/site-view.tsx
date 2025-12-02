@@ -116,14 +116,14 @@ function ShoalwoodHero({ site, theme, heroImage }: { site: Site; theme?: Theme; 
         )}
         <a 
           href="#contact"
-          className="px-5 py-2.5 bg-white/20 backdrop-blur-sm text-white text-sm font-medium tracking-wide border border-white/40 hover:bg-white/30 transition-colors rounded-sm"
+          className="px-6 py-3 bg-white/20 backdrop-blur-sm text-white text-base font-medium tracking-[0.1em] uppercase border border-white/40 hover:bg-white/30 transition-colors"
           data-testid="button-request-info"
           onClick={(e) => {
             e.preventDefault();
             document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
           }}
         >
-          Request Info
+          REQUEST INFO
         </a>
       </div>
       
@@ -155,25 +155,26 @@ function ShoalwoodHero({ site, theme, heroImage }: { site: Site; theme?: Theme; 
               For Sale
             </span>
           </div>
-          {/* Price - large elegant display */}
+          {/* Price */}
           <h1 
-            className="text-5xl md:text-7xl lg:text-8xl text-white mb-3 drop-shadow-2xl"
+            className="text-white mb-3"
             style={{ 
               fontFamily: 'var(--font-heading)', 
               fontWeight: '400',
               letterSpacing: '-0.02em',
-              lineHeight: '1.1'
+              lineHeight: '1.1',
+              fontSize: '24px'
             }}
           >
             {site.price}
           </h1>
-          {/* Address */}
+          {/* Address - all caps */}
           <h2 
-            className="text-lg md:text-xl text-white/90 tracking-wide"
+            className="text-lg md:text-xl text-white/90 tracking-wide uppercase"
             style={{ 
               fontFamily: 'var(--font-body)',
               fontWeight: '400',
-              letterSpacing: '0.02em'
+              letterSpacing: '0.05em'
             }}
           >
             {site.address}
@@ -201,6 +202,7 @@ function ShoalwoodHero({ site, theme, heroImage }: { site: Site; theme?: Theme; 
 function ShoalwoodNavigation({ site, theme, hasPhotos, hasVideo }: { site: Site; theme?: Theme; hasPhotos: boolean; hasVideo: boolean }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [currentSection, setCurrentSection] = useState('Menu');
+  const [isOnHero, setIsOnHero] = useState(true);
 
   useEffect(() => {
     if (isMobileMenuOpen) {
@@ -225,6 +227,10 @@ function ShoalwoodNavigation({ site, theme, hasPhotos, hasVideo }: { site: Site;
 
     const handleScroll = () => {
       const scrollPosition = window.scrollY + window.innerHeight / 3;
+      const heroSection = document.getElementById('home');
+      const heroHeight = heroSection?.offsetHeight || window.innerHeight;
+      
+      setIsOnHero(window.scrollY < heroHeight - 100);
       
       for (let i = sectionIds.length - 1; i >= 0; i--) {
         const section = document.getElementById(sectionIds[i]);
@@ -254,21 +260,27 @@ function ShoalwoodNavigation({ site, theme, hasPhotos, hasVideo }: { site: Site;
     document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const menuColor = isOnHero ? 'white' : 'black';
+  const borderColor = isOnHero ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.1)';
+
   return (
     <>
       {/* Fixed side menu bar - hamburger with vertical text */}
       <div 
-        className="fixed left-0 top-0 bottom-0 z-50 flex flex-col items-center"
-        style={{ width: '60px' }}
+        className="fixed left-0 top-0 bottom-0 z-50 flex flex-col items-center transition-all duration-300"
+        style={{ 
+          width: '60px',
+          borderRight: `1px solid ${borderColor}`
+        }}
       >
-        {/* Hamburger button */}
+        {/* Hamburger button - no background */}
         <button
           onClick={() => setIsMobileMenuOpen(true)}
-          className="mt-4 p-3 bg-black/40 backdrop-blur-sm hover:bg-black/60 transition-colors rounded-sm"
+          className="mt-4 p-3 transition-colors"
           aria-label="Open menu"
           data-testid="button-mobile-menu"
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={menuColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="3" y1="12" x2="21" y2="12"></line>
             <line x1="3" y1="6" x2="21" y2="6"></line>
             <line x1="3" y1="18" x2="21" y2="18"></line>
@@ -277,12 +289,12 @@ function ShoalwoodNavigation({ site, theme, hasPhotos, hasVideo }: { site: Site;
         
         {/* Vertical section name text - changes based on scroll position */}
         <div 
-          className="mt-4 text-white text-xs font-medium tracking-[0.2em] uppercase transition-all duration-300"
+          className="mt-4 text-xs font-medium tracking-[0.2em] uppercase transition-all duration-300"
           style={{ 
             writingMode: 'vertical-rl',
             textOrientation: 'mixed',
             transform: 'rotate(180deg)',
-            textShadow: '0 1px 3px rgba(0,0,0,0.5)'
+            color: menuColor
           }}
         >
           {currentSection}
