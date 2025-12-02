@@ -1,9 +1,10 @@
 import { useRoute, Link } from "wouter";
 import { useSite, useThemes } from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { MapPin, Play, Home, Info, Video, Image, X } from "lucide-react";
+import { MapPin, Play, Home, Info, Video, Image, X, ChevronLeft, ChevronRight } from "lucide-react";
 import heroImage from "@assets/generated_images/luxury_living_room_interior_for_hero_background.png";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import useEmblaCarousel from "embla-carousel-react";
 
 export default function SiteView() {
   const [, params] = useRoute("/site/:id");
@@ -203,7 +204,56 @@ export default function SiteView() {
 }
 
 function PhotoGallery({ photos, themeColors }: { photos: string[], themeColors?: any }) {
-  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, startIndex: selectedIndex || 0 });
+
+  const scrollPrev = useCallback(() => {
+    if (emblaApi) emblaApi.scrollPrev();
+  }, [emblaApi]);
+
+  const scrollNext = useCallback(() => {
+    if (emblaApi) emblaApi.scrollNext();
+  }, [emblaApi]);
+
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    
+    const onSelect = () => {
+      setCurrentSlide(emblaApi.selectedScrollSnap());
+    };
+    
+    emblaApi.on('select', onSelect);
+    onSelect();
+    
+    return () => {
+      emblaApi.off('select', onSelect);
+    };
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (selectedIndex !== null && emblaApi) {
+      emblaApi.scrollTo(selectedIndex, true);
+    }
+  }, [selectedIndex, emblaApi]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (selectedIndex === null) return;
+      
+      if (e.key === 'Escape') {
+        setSelectedIndex(null);
+      } else if (e.key === 'ArrowLeft') {
+        scrollPrev();
+      } else if (e.key === 'ArrowRight') {
+        scrollNext();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedIndex, scrollPrev, scrollNext]);
 
   return (
     <section id="photos" className="py-24 px-4 bg-muted/30">
@@ -217,8 +267,8 @@ function PhotoGallery({ photos, themeColors }: { photos: string[], themeColors?:
           {photos.map((photo, index) => (
             <div 
               key={index}
-              className="aspect-square rounded-xl overflow-hidden shadow-lg cursor-pointer hover:opacity-90 transition-opacity"
-              onClick={() => setSelectedPhoto(photo)}
+              className="aspect-square rounded-xl overflow-hidden shadow-lg cursor-pointer hover:scale-[1.02] hover:shadow-xl transition-all duration-300"
+              onClick={() => setSelectedIndex(index)}
               data-testid={`photo-${index}`}
             >
               <img 
@@ -231,23 +281,64 @@ function PhotoGallery({ photos, themeColors }: { photos: string[], themeColors?:
         </div>
       </div>
 
-      {selectedPhoto && (
+      {selectedIndex !== null && (
         <div 
-          className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
-          onClick={() => setSelectedPhoto(null)}
+          className="fixed inset-0 bg-black/95 z-50 flex flex-col"
+          onClick={() => setSelectedIndex(null)}
         >
-          <button 
-            className="absolute top-4 right-4 text-white hover:text-gray-300"
-            onClick={() => setSelectedPhoto(null)}
-          >
-            <X className="h-8 w-8" />
-          </button>
-          <img 
-            src={selectedPhoto} 
-            alt="Full size property photo"
-            className="max-w-full max-h-[90vh] object-contain rounded-lg"
-            onClick={(e) => e.stopPropagation()}
-          />
+          <div className="flex items-center justify-between p-4">
+            <div className="text-white/70 text-sm font-medium">
+              {currentSlide + 1} / {photos.length}
+            </div>
+            <button 
+              className="text-white/70 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10"
+              onClick={() => setSelectedIndex(null)}
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+
+          <div className="flex-1 flex items-center justify-center relative px-4">
+            <button
+              className="absolute left-4 z-10 p-3 rounded-full bg-black/50 text-white hover:bg-black/70 transition-all hover:scale-110"
+              onClick={(e) => { e.stopPropagation(); scrollPrev(); }}
+            >
+              <ChevronLeft className="h-8 w-8" />
+            </button>
+
+            <div className="overflow-hidden w-full max-w-5xl" ref={emblaRef} onClick={(e) => e.stopPropagation()}>
+              <div className="flex">
+                {photos.map((photo, index) => (
+                  <div key={index} className="flex-[0_0_100%] min-w-0 flex items-center justify-center px-4">
+                    <img 
+                      src={photo} 
+                      alt={`Property photo ${index + 1}`}
+                      className="max-w-full max-h-[75vh] object-contain rounded-lg shadow-2xl"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <button
+              className="absolute right-4 z-10 p-3 rounded-full bg-black/50 text-white hover:bg-black/70 transition-all hover:scale-110"
+              onClick={(e) => { e.stopPropagation(); scrollNext(); }}
+            >
+              <ChevronRight className="h-8 w-8" />
+            </button>
+          </div>
+
+          <div className="p-4 flex justify-center gap-2">
+            {photos.map((_, index) => (
+              <button
+                key={index}
+                className={`w-2 h-2 rounded-full transition-all ${
+                  currentSlide === index ? 'bg-white w-6' : 'bg-white/40 hover:bg-white/60'
+                }`}
+                onClick={(e) => { e.stopPropagation(); emblaApi?.scrollTo(index); }}
+              />
+            ))}
+          </div>
         </div>
       )}
     </section>
