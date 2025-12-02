@@ -49,9 +49,15 @@ Preferred communication style: Simple, everyday language.
 **ORM**: Drizzle ORM for type-safe database queries and schema management. Schema definitions in `shared/schema.ts` create shared types between frontend and backend.
 
 **Schema Design**:
-- **Users**: ID, name, email, credits, timestamps. Credits track available site creation capacity.
-- **Sites**: Property details (address, price, bedrooms, etc.), associated user, theme, template, custom domain, analytics stats (views, unique visitors, leads), timestamps.
+- **Users**: ID, name, email, credits, logo (default logo URL), timestamps. Credits track available site creation capacity.
+- **Sites**: Property details (address, price, bedrooms, etc.), associated user, theme, template, custom domain, logo (per-site override), analytics stats (views, unique visitors, leads), timestamps.
 - **Themes**: Preset and custom themes with color palettes and optional logos. Preset themes (userId null) available to all users, custom themes tied to specific users.
+
+**Logo Management**: Two-tier logo system with user defaults and site-level overrides:
+- Users upload a default logo in the dashboard (stored in `users.logo`)
+- Individual sites can override with a site-specific logo (stored in `sites.logo`)
+- API returns `effectiveLogo` (site logo with fallback to user default) for frontend display
+- Layouts display the effective logo in navigation/hero sections
 
 **Migration Strategy**: Drizzle Kit handles schema migrations with `npm run db:push` command.
 
