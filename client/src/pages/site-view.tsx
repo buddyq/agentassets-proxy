@@ -143,8 +143,9 @@ function ShoalwoodHero({ site, theme, heroImage }: { site: Site; theme?: Theme; 
   );
 }
 
-function ShoalwoodNavigation({ site, hasPhotos, hasVideo }: { site: Site; hasPhotos: boolean; hasVideo: boolean }) {
+function ShoalwoodNavigation({ site, theme, hasPhotos, hasVideo }: { site: Site; theme?: Theme; hasPhotos: boolean; hasVideo: boolean }) {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 100);
@@ -152,34 +153,143 @@ function ShoalwoodNavigation({ site, hasPhotos, hasVideo }: { site: Site; hasPho
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  return (
-    <nav className={`sticky top-0 z-50 w-full transition-all duration-300 ${
-      isScrolled ? 'bg-white shadow-lg' : 'bg-white/95 backdrop-blur-sm'
-    }`}>
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <div className="text-lg font-semibold truncate max-w-[200px] md:max-w-none" style={{ color: 'var(--theme-primary)' }}>
-          {site.address}
-        </div>
-        
-        <div className="hidden md:flex items-center gap-6 text-sm font-medium">
-          <a href="#overview" className="hover:opacity-70 transition-opacity" style={{ color: 'var(--theme-text)' }}>Overview</a>
-          <a href="#details" className="hover:opacity-70 transition-opacity" style={{ color: 'var(--theme-text)' }}>Details</a>
-          {hasPhotos && <a href="#photos" className="hover:opacity-70 transition-opacity" style={{ color: 'var(--theme-text)' }}>Photos</a>}
-          {hasVideo && <a href="#video" className="hover:opacity-70 transition-opacity" style={{ color: 'var(--theme-text)' }}>Video</a>}
-          <a href="#map" className="hover:opacity-70 transition-opacity" style={{ color: 'var(--theme-text)' }}>Map</a>
-          <a href="#contact" className="hover:opacity-70 transition-opacity" style={{ color: 'var(--theme-text)' }}>Contact</a>
-        </div>
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [isMobileMenuOpen]);
 
-        <Button 
-          size="sm" 
-          className="text-white"
-          style={{ backgroundColor: 'var(--theme-primary)' }}
-          onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
-        >
-          Request Info
-        </Button>
-      </div>
-    </nav>
+  const navLinks = [
+    { href: '#overview', label: 'Overview', show: true },
+    { href: '#details', label: 'Details', show: true },
+    { href: '#photos', label: 'Photos', show: hasPhotos },
+    { href: '#video', label: 'Video', show: hasVideo },
+    { href: '#map', label: 'Map', show: true },
+    { href: '#contact', label: 'Contact', show: true },
+  ].filter(link => link.show);
+
+  const handleNavClick = (href: string) => {
+    setIsMobileMenuOpen(false);
+    document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  return (
+    <>
+      <nav className={`sticky top-0 z-50 w-full transition-all duration-300 ${
+        isScrolled ? 'bg-white shadow-lg' : 'bg-white/95 backdrop-blur-sm'
+      }`}>
+        <div className="container mx-auto flex h-16 items-center justify-between px-4">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="md:hidden p-2 -ml-2 hover:bg-gray-100 rounded-lg transition-colors"
+              aria-label="Open menu"
+              data-testid="button-mobile-menu"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+            </button>
+            
+            {theme?.logoUrl ? (
+              <img 
+                src={theme.logoUrl} 
+                alt="Logo" 
+                className="h-10 w-auto object-contain"
+                data-testid="img-nav-logo"
+              />
+            ) : (
+              <div className="text-lg font-semibold truncate max-w-[200px] md:max-w-none" style={{ color: 'var(--theme-primary)', fontFamily: 'var(--font-heading)' }}>
+                {site.title || site.address}
+              </div>
+            )}
+          </div>
+          
+          <div className="hidden md:flex items-center gap-6 text-sm font-medium">
+            {navLinks.map(link => (
+              <a 
+                key={link.href}
+                href={link.href} 
+                className="hover:opacity-70 transition-opacity" 
+                style={{ color: 'var(--theme-text)' }}
+              >
+                {link.label}
+              </a>
+            ))}
+          </div>
+
+          <Button 
+            size="sm" 
+            className="text-white font-medium px-5"
+            style={{ backgroundColor: 'var(--theme-primary)' }}
+            onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
+            data-testid="button-request-info"
+          >
+            Request Info
+          </Button>
+        </div>
+      </nav>
+
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-[100]" data-testid="mobile-menu-overlay">
+          <div 
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+          <div className="absolute left-0 top-0 bottom-0 w-80 max-w-[85vw] bg-white shadow-2xl transform transition-transform">
+            <div className="flex items-center justify-between p-4 border-b">
+              {theme?.logoUrl ? (
+                <img src={theme.logoUrl} alt="Logo" className="h-10 w-auto" />
+              ) : (
+                <div className="text-lg font-semibold" style={{ color: 'var(--theme-primary)', fontFamily: 'var(--font-heading)' }}>
+                  {site.title || 'Menu'}
+                </div>
+              )}
+              <button
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Close menu"
+                data-testid="button-close-menu"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            
+            <div className="p-4">
+              <div className="space-y-1">
+                {navLinks.map(link => (
+                  <button
+                    key={link.href}
+                    onClick={() => handleNavClick(link.href)}
+                    className="block w-full text-left px-4 py-3 text-lg font-medium hover:bg-gray-50 rounded-lg transition-colors"
+                    style={{ color: 'var(--theme-text)' }}
+                    data-testid={`link-nav-${link.label.toLowerCase()}`}
+                  >
+                    {link.label}
+                  </button>
+                ))}
+              </div>
+              
+              <div className="mt-6 pt-6 border-t">
+                <Button 
+                  className="w-full text-white font-medium"
+                  style={{ backgroundColor: 'var(--theme-primary)' }}
+                  onClick={() => handleNavClick('#contact')}
+                  data-testid="button-mobile-request-info"
+                >
+                  Request Info
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -541,7 +651,7 @@ export default function SiteView() {
         }}
       >
         <ShoalwoodHero site={site} theme={theme} heroImage={heroImage} />
-        <ShoalwoodNavigation site={site} hasPhotos={!!hasPhotos} hasVideo={hasVideo} />
+        <ShoalwoodNavigation site={site} theme={theme} hasPhotos={!!hasPhotos} hasVideo={hasVideo} />
         <ShoalwoodDescription description={site.description || "A beautiful property awaiting your discovery."} />
         <ShoalwoodDetails site={site} />
         
