@@ -451,11 +451,12 @@ function ShoalwoodDetails({ site, theme }: { site: Site; theme?: Theme }) {
         {/* Section title with divider - left aligned */}
         <div className="mb-10">
           <h2 
-            className="text-sm uppercase tracking-[0.2em] mb-4" 
+            className="uppercase tracking-[0.2em] mb-4" 
             style={{ 
               fontFamily: 'var(--font-heading)', 
               color: 'var(--theme-text)',
-              fontWeight: '600'
+              fontWeight: '600',
+              fontSize: '21px'
             }}
           >
             PROPERTY DETAILS
