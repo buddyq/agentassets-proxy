@@ -30,6 +30,7 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUserCredits(id: string, credits: number): Promise<User>;
+  updateUserLogo(id: string, logo: string | null): Promise<User>;
   
   // Site methods
   getSite(id: string): Promise<Site | undefined>;
@@ -99,6 +100,15 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db
       .update(users)
       .set({ credits, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
+  async updateUserLogo(id: string, logo: string | null): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ logo, updatedAt: new Date() })
       .where(eq(users.id, id))
       .returning();
     return user;
