@@ -5,8 +5,9 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { TEMPLATES, DEMO_USER_ID } from "@/lib/store";
-import { useCreateSite, useUser, useUpdateCredits, useThemes } from "@/lib/api";
+import { TEMPLATES } from "@/lib/store";
+import { useCreateSite, useUpdateCredits, useThemes } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Check, ChevronRight, ChevronLeft, Upload, Layout, PaintBucket, CreditCard } from "lucide-react";
@@ -24,7 +25,7 @@ const STEPS = [
 export default function CreateSite() {
   const [step, setStep] = useState(1);
   const [, setLocation] = useLocation();
-  const { data: user, isLoading: isLoadingUser } = useUser(DEMO_USER_ID);
+  const { user, isLoading: isLoadingUser } = useAuth();
   const { data: themes = [] } = useThemes();
   const createSiteMutation = useCreateSite();
   const updateCreditsMutation = useUpdateCredits();
@@ -76,7 +77,6 @@ export default function CreateSite() {
 
     createSiteMutation.mutate(
       {
-        userId: DEMO_USER_ID,
         title: formData.title || null,
         address: formData.address,
         price: formData.price,
@@ -94,7 +94,7 @@ export default function CreateSite() {
       },
       {
         onSuccess: () => {
-          updateCreditsMutation.mutate({ userId: DEMO_USER_ID, credits: user.credits - 1 });
+          updateCreditsMutation.mutate(user.credits - 1);
           toast({
             title: "Site Published!",
             description: "Your new property site is live.",
@@ -176,15 +176,34 @@ export default function CreateSite() {
                       onChange={e => setFormData({...formData, address: e.target.value})}
                     />
                   </div>
-                  
-                  <div className="grid md:grid-cols-2 gap-4">
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="price">Price</Label>
+                    <Input 
+                      id="price" 
+                      placeholder="$1,250,000" 
+                      value={formData.price}
+                      onChange={e => setFormData({...formData, price: e.target.value})}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4">
                     <div className="grid gap-2">
-                      <Label htmlFor="price">Price</Label>
+                      <Label htmlFor="bedrooms">Bedrooms</Label>
                       <Input 
-                        id="price" 
-                        placeholder="$1,250,000" 
-                        value={formData.price}
-                        onChange={e => setFormData({...formData, price: e.target.value})}
+                        id="bedrooms" 
+                        type="number" 
+                        value={formData.bedrooms}
+                        onChange={e => setFormData({...formData, bedrooms: e.target.value})}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="bathrooms">Bathrooms</Label>
+                      <Input 
+                        id="bathrooms" 
+                        type="number" 
+                        value={formData.bathrooms}
+                        onChange={e => setFormData({...formData, bathrooms: e.target.value})}
                       />
                     </div>
                     <div className="grid gap-2">
@@ -192,45 +211,9 @@ export default function CreateSite() {
                       <Input 
                         id="sqft" 
                         type="number" 
-                        placeholder="2500" 
                         value={formData.sqft}
                         onChange={e => setFormData({...formData, sqft: e.target.value})}
                       />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="beds">Bedrooms</Label>
-                      <Select 
-                        value={formData.bedrooms} 
-                        onValueChange={v => setFormData({...formData, bedrooms: v})}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {[1,2,3,4,5,6,7,8].map(num => (
-                            <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="baths">Bathrooms</Label>
-                      <Select 
-                        value={formData.bathrooms} 
-                        onValueChange={v => setFormData({...formData, bathrooms: v})}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {[1,2,3,4,5,6].map(num => (
-                            <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
                     </div>
                   </div>
 
@@ -238,30 +221,21 @@ export default function CreateSite() {
                     <Label htmlFor="description">Description</Label>
                     <Textarea 
                       id="description" 
-                      placeholder="Describe the property..." 
-                      className="h-32"
+                      rows={4} 
+                      placeholder="Describe this property..."
                       value={formData.description}
                       onChange={e => setFormData({...formData, description: e.target.value})}
                     />
                   </div>
 
                   <div className="grid gap-2">
-                    <Label htmlFor="videoUrl">Video URL (YouTube or Vimeo)</Label>
+                    <Label htmlFor="videoUrl">Video URL (YouTube/Vimeo)</Label>
                     <Input 
                       id="videoUrl" 
-                      placeholder="https://www.youtube.com/watch?v=..." 
+                      placeholder="https://youtube.com/watch?v=..." 
                       value={formData.videoUrl}
                       onChange={e => setFormData({...formData, videoUrl: e.target.value})}
                     />
-                  </div>
-
-                  <div className="grid gap-2">
-                    <Label>Property Photos</Label>
-                    <div className="border-2 border-dashed rounded-lg p-8 text-center hover:bg-muted/50 transition-colors cursor-pointer">
-                      <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                      <p className="text-sm text-muted-foreground">Drag and drop photos here, or click to upload</p>
-                      <p className="text-xs text-muted-foreground mt-1">(Mock upload - no file will be stored)</p>
-                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -269,118 +243,130 @@ export default function CreateSite() {
 
             {/* Step 2: Choose Template */}
             {step === 2 && (
-              <div className="grid md:grid-cols-3 gap-6">
-                {TEMPLATES.map((template) => (
-                  <div 
-                    key={template.id}
-                    className={`cursor-pointer group relative rounded-xl overflow-hidden border-2 transition-all ${
-                      formData.templateId === template.id 
-                        ? "border-primary ring-2 ring-primary/20 shadow-lg" 
-                        : "border-transparent hover:border-primary/50"
-                    }`}
-                    onClick={() => setFormData({...formData, templateId: template.id})}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Choose a Template</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <RadioGroup 
+                    value={formData.templateId} 
+                    onValueChange={(v) => setFormData({...formData, templateId: v})}
+                    className="grid md:grid-cols-3 gap-4"
                   >
-                    <div className="aspect-[4/3] relative">
-                      <img 
-                        src={template.thumbnailUrl} 
-                        alt={template.name} 
-                        className="w-full h-full object-cover"
-                      />
-                      {formData.templateId === template.id && (
-                        <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                          <div className="bg-primary text-white rounded-full p-2">
-                            <Check className="h-6 w-6" />
-                          </div>
+                    {TEMPLATES.map((template) => (
+                      <Label 
+                        key={template.id}
+                        htmlFor={template.id}
+                        className={`cursor-pointer rounded-xl border-2 overflow-hidden transition-all ${
+                          formData.templateId === template.id 
+                            ? "border-primary ring-2 ring-primary/20" 
+                            : "border-muted hover:border-primary/50"
+                        }`}
+                      >
+                        <RadioGroupItem value={template.id} id={template.id} className="sr-only" />
+                        <div className="h-40 bg-muted">
+                          <img src={template.thumbnailUrl} alt={template.name} className="w-full h-full object-cover" />
                         </div>
-                      )}
-                    </div>
-                    <div className="p-4 bg-white">
-                      <h3 className="font-bold text-lg">{template.name}</h3>
-                      <p className="text-sm text-muted-foreground">{template.description}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                        <div className="p-4">
+                          <h3 className="font-medium flex items-center gap-2">
+                            {template.name}
+                            {formData.templateId === template.id && <Check className="h-4 w-4 text-primary" />}
+                          </h3>
+                          <p className="text-sm text-muted-foreground">{template.description}</p>
+                        </div>
+                      </Label>
+                    ))}
+                  </RadioGroup>
+                </CardContent>
+              </Card>
             )}
 
             {/* Step 3: Branding */}
             {step === 3 && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Choose Theme</CardTitle>
+                  <CardTitle>Choose a Theme</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid gap-6">
-                    <RadioGroup 
+                <CardContent className="space-y-6">
+                  <div className="grid gap-2">
+                    <Label>Select Theme</Label>
+                    <Select 
                       value={formData.themeId} 
-                      onValueChange={v => setFormData({...formData, themeId: v})}
-                      className="grid md:grid-cols-2 gap-4"
+                      onValueChange={(v) => setFormData({...formData, themeId: v})}
                     >
-                      {themes.map((theme) => (
-                        <div key={theme.id}>
-                          <RadioGroupItem value={theme.id} id={theme.id} className="peer sr-only" />
-                          <Label
-                            htmlFor={theme.id}
-                            className="flex items-center justify-between rounded-md border-2 border-muted p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
-                          >
-                            <div className="flex items-center gap-4">
-                              <div className="flex gap-1">
-                                <div className="h-8 w-8 rounded-full border" style={{ backgroundColor: theme.colors.primary }} />
-                                <div className="h-8 w-8 rounded-full border -ml-4" style={{ backgroundColor: theme.colors.secondary }} />
-                              </div>
-                              <div>
-                                <div className="font-semibold">{theme.name}</div>
-                                <div className="text-xs text-muted-foreground capitalize">{theme.type} Theme</div>
-                              </div>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose a theme" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {themes.map((theme) => (
+                          <SelectItem key={theme.id} value={theme.id}>
+                            <div className="flex items-center gap-2">
+                              <div 
+                                className="w-4 h-4 rounded-full border" 
+                                style={{ backgroundColor: theme.colors.primary }}
+                              />
+                              {theme.name}
+                              {theme.type === 'custom' && <span className="text-xs text-muted-foreground">(Custom)</span>}
                             </div>
-                            {formData.themeId === theme.id && <Check className="h-4 w-4 text-primary" />}
-                          </Label>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {selectedTheme && (
+                    <div className="p-6 rounded-xl border bg-muted/30">
+                      <h4 className="font-medium mb-4">Theme Preview: {selectedTheme.name}</h4>
+                      <div className="flex gap-4">
+                        <div className="flex flex-col items-center gap-1">
+                          <div 
+                            className="w-12 h-12 rounded-lg border shadow-sm" 
+                            style={{ backgroundColor: selectedTheme.colors.primary }}
+                          />
+                          <span className="text-xs text-muted-foreground">Primary</span>
                         </div>
-                      ))}
-                    </RadioGroup>
-                  </div>
-                  
-                  {/* Live Preview */}
-                  <div className="mt-8 border rounded-xl overflow-hidden shadow-lg">
-                    <div className="bg-muted p-2 text-xs text-center border-b">Theme Preview</div>
-                    {selectedTheme && selectedTemplate && (
-                      <div className="relative aspect-video bg-white">
-                        {/* Mock Preview of Selected Template with Theme Colors */}
-                         <div className="absolute inset-0 flex flex-col">
-                           <div className="h-12 flex items-center justify-between px-8" style={{ backgroundColor: 'white', borderBottom: `1px solid ${selectedTheme.colors.secondary}20` }}>
-                             <div className="font-bold text-lg" style={{ color: selectedTheme.colors.primary }}>AGENCY LOGO</div>
-                             <div className="flex gap-4 text-sm font-medium" style={{ color: selectedTheme.colors.secondary }}>
-                               <span>Home</span>
-                               <span>Details</span>
-                               <span>Contact</span>
-                             </div>
-                           </div>
-                           <div className="flex-1 relative">
-                              <img src={selectedTemplate.thumbnailUrl} className="w-full h-full object-cover opacity-50" />
-                              <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8">
-                                <h1 className="text-3xl font-bold mb-2 text-shadow" style={{ color: selectedTheme.colors.primary }}>{formData.address || "123 Property Address"}</h1>
-                                <p className="text-xl font-medium text-shadow" style={{ color: selectedTheme.colors.secondary }}>{formData.price || "$1,000,000"}</p>
-                                <Button className="mt-4" style={{ backgroundColor: selectedTheme.colors.primary }}>Schedule Viewing</Button>
-                              </div>
-                           </div>
-                         </div>
+                        <div className="flex flex-col items-center gap-1">
+                          <div 
+                            className="w-12 h-12 rounded-lg border shadow-sm" 
+                            style={{ backgroundColor: selectedTheme.colors.secondary }}
+                          />
+                          <span className="text-xs text-muted-foreground">Secondary</span>
+                        </div>
+                        <div className="flex flex-col items-center gap-1">
+                          <div 
+                            className="w-12 h-12 rounded-lg border shadow-sm" 
+                            style={{ backgroundColor: selectedTheme.colors.background }}
+                          />
+                          <span className="text-xs text-muted-foreground">Background</span>
+                        </div>
+                        <div className="flex flex-col items-center gap-1">
+                          <div 
+                            className="w-12 h-12 rounded-lg border shadow-sm" 
+                            style={{ backgroundColor: selectedTheme.colors.text }}
+                          />
+                          <span className="text-xs text-muted-foreground">Text</span>
+                        </div>
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}
 
             {/* Step 4: Review */}
             {step === 4 && (
-              <div className="grid md:grid-cols-3 gap-8">
-                <div className="md:col-span-2 space-y-6">
+              <div className="grid md:grid-cols-3 gap-6">
+                <div className="md:col-span-2">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Review Details</CardTitle>
+                      <CardTitle>Review Your Site</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4 text-sm">
+                    <CardContent className="space-y-6">
+                      <div className="grid gap-4">
+                        <div>
+                          <span className="text-muted-foreground block">Property Title</span>
+                          <span className="font-medium">{formData.title || formData.address}</span>
+                        </div>
                         <div>
                           <span className="text-muted-foreground block">Address</span>
                           <span className="font-medium">{formData.address}</span>

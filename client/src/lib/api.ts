@@ -3,23 +3,12 @@ import type { User, Site, Theme } from '@shared/schema';
 
 const API_BASE = '/api';
 
-// User API
-export function useUser(userId: string) {
-  return useQuery({
-    queryKey: ['user', userId],
-    queryFn: async () => {
-      const res = await fetch(`${API_BASE}/user/${userId}`);
-      if (!res.ok) throw new Error('Failed to fetch user');
-      return res.json() as Promise<User>;
-    }
-  });
-}
-
+// Update credits for current user
 export function useUpdateCredits() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ userId, credits }: { userId: string; credits: number }) => {
-      const res = await fetch(`${API_BASE}/user/${userId}/credits`, {
+    mutationFn: async (credits: number) => {
+      const res = await fetch(`${API_BASE}/user/credits`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ credits })
@@ -27,19 +16,18 @@ export function useUpdateCredits() {
       if (!res.ok) throw new Error('Failed to update credits');
       return res.json() as Promise<User>;
     },
-    onSuccess: (data) => {
-      queryClient.setQueryData(['user', data.id], data);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
     }
   });
 }
 
-// Sites API
-export function useSites(userId?: string) {
+// Sites API (uses authenticated user)
+export function useSites() {
   return useQuery({
-    queryKey: userId ? ['sites', userId] : ['sites'],
+    queryKey: ['sites'],
     queryFn: async () => {
-      const url = userId ? `${API_BASE}/sites?userId=${userId}` : `${API_BASE}/sites`;
-      const res = await fetch(url);
+      const res = await fetch(`${API_BASE}/sites`);
       if (!res.ok) throw new Error('Failed to fetch sites');
       return res.json() as Promise<Site[]>;
     }
@@ -53,14 +41,15 @@ export function useSite(siteId: string) {
       const res = await fetch(`${API_BASE}/sites/${siteId}`);
       if (!res.ok) throw new Error('Failed to fetch site');
       return res.json() as Promise<Site>;
-    }
+    },
+    enabled: !!siteId
   });
 }
 
 export function useCreateSite() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (site: Omit<Site, 'id' | 'createdAt' | 'updatedAt'>) => {
+    mutationFn: async (site: Omit<Site, 'id' | 'createdAt' | 'updatedAt' | 'userId'>) => {
       const res = await fetch(`${API_BASE}/sites`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -71,6 +60,7 @@ export function useCreateSite() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sites'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
     }
   });
 }
@@ -128,7 +118,7 @@ export function useThemes(options?: { preset?: boolean; userId?: string }) {
 export function useCreateTheme() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (theme: Omit<Theme, 'id' | 'createdAt'>) => {
+    mutationFn: async (theme: Omit<Theme, 'id' | 'createdAt' | 'userId'>) => {
       const res = await fetch(`${API_BASE}/themes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

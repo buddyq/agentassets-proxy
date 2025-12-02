@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { DEMO_USER_ID } from "@/lib/store";
 import type { Theme } from "@shared/schema";
 import { useThemes, useCreateTheme } from "@/lib/api";
 import { Plus, Palette, Trash2, Check, Upload, Image as ImageIcon } from "lucide-react";
@@ -37,8 +36,7 @@ export default function Themes() {
           background: '#ffffff',
           text: '#000000'
         },
-        logoUrl: logoUrl || null,
-        userId: DEMO_USER_ID
+        logoUrl: logoUrl || null
       },
       {
         onSuccess: () => {
@@ -62,8 +60,6 @@ export default function Themes() {
 
   // Mock logo upload
   const handleLogoUpload = () => {
-    // In a real app, this would upload to a server
-    // Here we just simulate a success
     setLogoUrl("https://via.placeholder.com/150x50?text=LOGO");
     toast({
       title: "Logo Uploaded",
@@ -117,7 +113,7 @@ export default function Themes() {
                       <Input 
                         value={primaryColor}
                         onChange={(e) => setPrimaryColor(e.target.value)}
-                        className="uppercase font-mono"
+                        className="uppercase"
                       />
                     </div>
                   </div>
@@ -134,121 +130,109 @@ export default function Themes() {
                       <Input 
                         value={secondaryColor}
                         onChange={(e) => setSecondaryColor(e.target.value)}
-                        className="uppercase font-mono"
+                        className="uppercase"
                       />
                     </div>
                   </div>
                 </div>
                 
                 <div className="grid gap-2">
-                  <Label>Brand Logo</Label>
-                  <div 
-                    className="border-2 border-dashed rounded-lg p-4 flex flex-col items-center justify-center bg-muted/20 hover:bg-muted/30 transition-colors cursor-pointer"
-                    onClick={handleLogoUpload}
-                  >
+                  <Label>Logo (Optional)</Label>
+                  <div className="border-2 border-dashed rounded-lg p-6 text-center">
                     {logoUrl ? (
-                      <div className="flex items-center gap-2">
-                        <ImageIcon className="h-5 w-5 text-primary" />
-                        <span className="text-sm font-medium text-primary">Logo Uploaded</span>
-                        <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={(e) => { e.stopPropagation(); setLogoUrl(undefined); }}>Remove</Button>
+                      <div className="flex flex-col items-center gap-2">
+                        <img src={logoUrl} alt="Logo preview" className="max-h-12" />
+                        <Button variant="ghost" size="sm" onClick={() => setLogoUrl(undefined)}>Remove</Button>
                       </div>
                     ) : (
-                      <>
-                        <Upload className="h-6 w-6 text-muted-foreground mb-2" />
-                        <span className="text-sm text-muted-foreground">Click to upload logo</span>
-                      </>
+                      <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                        <ImageIcon className="h-8 w-8" />
+                        <Button variant="outline" size="sm" onClick={handleLogoUpload}>
+                          <Upload className="h-4 w-4 mr-2" /> Upload Logo
+                        </Button>
+                      </div>
                     )}
                   </div>
                 </div>
-                
-                <div className="p-4 rounded border bg-muted/20 mt-2">
-                  <Label className="mb-2 block text-xs font-medium uppercase text-muted-foreground">Preview</Label>
-                  <div className="h-32 rounded flex flex-col overflow-hidden border shadow-sm bg-white">
-                    <div className="h-12 flex items-center px-4 justify-between border-b">
-                      <div className="font-bold flex items-center gap-2" style={{ color: primaryColor }}>
-                         {logoUrl && <div className="h-6 w-6 bg-current rounded-full opacity-20"></div>}
-                         <span>BRAND</span>
-                      </div>
-                      <div className="flex gap-3 text-xs font-medium" style={{ color: secondaryColor }}>
-                        <span>Home</span>
-                        <span>About</span>
-                      </div>
-                    </div>
-                    <div className="flex-1 flex items-center justify-center text-white relative" style={{ backgroundColor: primaryColor }}>
-                      <div className="z-10 font-medium">Hero Section</div>
-                      <div className="absolute inset-0 bg-black/10"></div>
-                    </div>
+
+                <div className="p-4 rounded-lg border bg-muted/30">
+                  <p className="text-sm text-muted-foreground mb-2">Preview</p>
+                  <div className="flex gap-4">
+                    <div 
+                      className="w-12 h-12 rounded-lg border shadow-sm" 
+                      style={{ backgroundColor: primaryColor }}
+                    />
+                    <div 
+                      className="w-12 h-12 rounded-lg border shadow-sm" 
+                      style={{ backgroundColor: secondaryColor }}
+                    />
                   </div>
                 </div>
               </div>
               <DialogFooter>
-                <Button onClick={handleCreateTheme} disabled={!newThemeName}>Save Theme</Button>
+                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+                <Button onClick={handleCreateTheme} disabled={!newThemeName}>Create Theme</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
         </div>
 
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <Palette className="h-5 w-5" /> Your Custom Themes
-          </h2>
-          <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {themes.filter(t => t.type === 'custom').length === 0 ? (
-               <div className="col-span-full text-muted-foreground text-sm italic p-8 border border-dashed rounded flex flex-col items-center justify-center gap-2">
-                 <Palette className="h-8 w-8 text-muted-foreground/50" />
-                 No custom themes created yet.
-               </div>
-            ) : (
-              themes.filter(t => t.type === 'custom').map(theme => (
-                <ThemeCard key={theme.id} theme={theme} />
-              ))
-            )}
-          </div>
-        </div>
-
-        <div>
-          <h2 className="text-xl font-semibold mb-4 text-muted-foreground">Preset Library</h2>
-          <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {themes.filter(t => t.type === 'preset').map(theme => (
-              <ThemeCard key={theme.id} theme={theme} />
-            ))}
-          </div>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {themes.map((theme) => (
+            <Card key={theme.id} className="overflow-hidden">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Palette className="h-4 w-4" style={{ color: theme.colors.primary }} />
+                    {theme.name}
+                  </CardTitle>
+                  {theme.type === 'preset' && (
+                    <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">Preset</span>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="flex gap-2 mb-4">
+                  <div 
+                    className="w-10 h-10 rounded-lg border shadow-sm" 
+                    style={{ backgroundColor: theme.colors.primary }}
+                    title="Primary"
+                  />
+                  <div 
+                    className="w-10 h-10 rounded-lg border shadow-sm" 
+                    style={{ backgroundColor: theme.colors.secondary }}
+                    title="Secondary"
+                  />
+                  <div 
+                    className="w-10 h-10 rounded-lg border shadow-sm" 
+                    style={{ backgroundColor: theme.colors.background }}
+                    title="Background"
+                  />
+                  <div 
+                    className="w-10 h-10 rounded-lg border shadow-sm" 
+                    style={{ backgroundColor: theme.colors.text }}
+                    title="Text"
+                  />
+                </div>
+                {theme.logoUrl && (
+                  <div className="h-8 flex items-center">
+                    <img src={theme.logoUrl} alt={`${theme.name} logo`} className="max-h-full max-w-full object-contain" />
+                  </div>
+                )}
+              </CardContent>
+              {theme.type === 'custom' && (
+                <CardFooter className="border-t pt-4">
+                  <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive/90 hover:bg-destructive/10 w-full">
+                    <Trash2 className="h-4 w-4 mr-2" /> Delete
+                  </Button>
+                </CardFooter>
+              )}
+            </Card>
+          ))}
         </div>
       </main>
 
       <Footer />
     </div>
-  );
-}
-
-function ThemeCard({ theme }: { theme: Theme }) {
-  return (
-    <Card className="overflow-hidden hover:shadow-md transition-shadow">
-      <div className="h-24 w-full flex flex-col border-b">
-        <div className="h-1/2 w-full flex items-center px-3 justify-between bg-white">
-          <div className="flex items-center gap-1">
-             {theme.logoUrl && <div className="h-3 w-3 rounded-full bg-gray-200"></div>}
-             <div className="h-3 w-12 rounded-sm" style={{ backgroundColor: theme.colors.primary }}></div>
-          </div>
-          <div className="h-2 w-16 rounded-sm bg-gray-100"></div>
-        </div>
-        <div className="h-1/2 w-full flex items-center justify-center" style={{ backgroundColor: theme.colors.primary }}>
-          <span className="text-[10px] text-white opacity-80">Hero Area</span>
-        </div>
-      </div>
-      <CardHeader className="p-4 pb-2">
-        <CardTitle className="text-base flex justify-between items-center">
-          {theme.name}
-          {theme.type === 'custom' && <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">Custom</span>}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-4 pt-0">
-        <div className="flex gap-2 mt-2">
-          <div className="h-6 w-6 rounded-full border shadow-sm" style={{ backgroundColor: theme.colors.primary }} title="Primary" />
-          <div className="h-6 w-6 rounded-full border shadow-sm" style={{ backgroundColor: theme.colors.secondary }} title="Secondary" />
-          <div className="h-6 w-6 rounded-full border shadow-sm" style={{ backgroundColor: theme.colors.background }} title="Background" />
-        </div>
-      </CardContent>
-    </Card>
   );
 }

@@ -35,8 +35,7 @@ export default function AdminDashboard() {
           background: '#ffffff',
           text: '#000000'
         },
-        logoUrl: null,
-        userId: null
+        logoUrl: null
       },
       {
         onSuccess: () => {
@@ -131,71 +130,71 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                 </div>
-                
-                <div className="p-4 rounded border bg-muted/20 mt-2">
-                  <Label className="mb-2 block">Preview</Label>
-                  <div className="h-24 rounded flex flex-col overflow-hidden border shadow-sm">
-                    <div className="h-12 flex items-center px-4 justify-between" style={{ backgroundColor: '#ffffff' }}>
-                      <div className="font-bold" style={{ color: primaryColor }}>Brand Logo</div>
-                      <div className="text-sm" style={{ color: secondaryColor }}>Nav Link</div>
-                    </div>
-                    <div className="flex-1 flex items-center justify-center text-white" style={{ backgroundColor: primaryColor }}>
-                      Hero Section
-                    </div>
+                <div className="p-4 rounded-lg border bg-muted/30">
+                  <p className="text-sm text-muted-foreground mb-2">Preview</p>
+                  <div className="flex gap-4">
+                    <div 
+                      className="w-12 h-12 rounded-lg border shadow-sm" 
+                      style={{ backgroundColor: primaryColor }}
+                    />
+                    <div 
+                      className="w-12 h-12 rounded-lg border shadow-sm" 
+                      style={{ backgroundColor: secondaryColor }}
+                    />
                   </div>
                 </div>
               </div>
               <DialogFooter>
-                <Button onClick={handleCreatePreset}>Save Global Preset</Button>
+                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+                <Button onClick={handleCreatePreset} disabled={!newThemeName}>Create Preset</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
         </div>
 
-        <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {themes.filter(t => t.type === 'preset').map(theme => (
-              <ThemeCard key={theme.id} theme={theme} isAdmin />
-            ))}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {themes.filter(t => t.type === 'preset').map((theme) => (
+            <Card key={theme.id} className="overflow-hidden border-2 border-secondary/20">
+              <CardHeader className="pb-2 bg-secondary/5">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Palette className="h-4 w-4" style={{ color: theme.colors.primary }} />
+                    {theme.name}
+                  </CardTitle>
+                  <Lock className="h-4 w-4 text-muted-foreground" />
+                </div>
+              </CardHeader>
+              <CardContent className="pt-4">
+                <div className="flex gap-2 mb-2">
+                  <div 
+                    className="w-10 h-10 rounded-lg border shadow-sm" 
+                    style={{ backgroundColor: theme.colors.primary }}
+                    title="Primary"
+                  />
+                  <div 
+                    className="w-10 h-10 rounded-lg border shadow-sm" 
+                    style={{ backgroundColor: theme.colors.secondary }}
+                    title="Secondary"
+                  />
+                  <div 
+                    className="w-10 h-10 rounded-lg border shadow-sm" 
+                    style={{ backgroundColor: theme.colors.background }}
+                    title="Background"
+                  />
+                  <div 
+                    className="w-10 h-10 rounded-lg border shadow-sm" 
+                    style={{ backgroundColor: theme.colors.text }}
+                    title="Text"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">Available to all users</p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </main>
 
       <Footer />
     </div>
-  );
-}
-
-function ThemeCard({ theme, isAdmin }: { theme: Theme, isAdmin?: boolean }) {
-  return (
-    <Card className="relative group">
-      {isAdmin && (
-          <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-              <Button variant="destructive" size="icon" className="h-8 w-8">
-                  <Trash2 className="h-4 w-4" />
-              </Button>
-          </div>
-      )}
-      <div className="h-24 w-full flex flex-col border-b">
-        <div className="h-1/2 w-full flex items-center px-3 justify-between bg-white">
-          <div className="h-3 w-12 rounded-sm" style={{ backgroundColor: theme.colors.primary }}></div>
-          <div className="h-2 w-16 rounded-sm bg-gray-100"></div>
-        </div>
-        <div className="h-1/2 w-full flex items-center justify-center" style={{ backgroundColor: theme.colors.primary }}>
-          <span className="text-[10px] text-white opacity-80">Hero Area</span>
-        </div>
-      </div>
-      <CardHeader className="p-4 pb-2">
-        <CardTitle className="text-base flex items-center gap-2">
-            {theme.name}
-            {isAdmin && <Lock className="h-3 w-3 text-muted-foreground" />}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-4 pt-0">
-        <div className="flex gap-2 mt-2">
-          <div className="h-6 w-6 rounded-full border shadow-sm" style={{ backgroundColor: theme.colors.primary }} title="Primary" />
-          <div className="h-6 w-6 rounded-full border shadow-sm" style={{ backgroundColor: theme.colors.secondary }} title="Secondary" />
-          <div className="h-6 w-6 rounded-full border shadow-sm" style={{ backgroundColor: theme.colors.background }} title="Background" />
-        </div>
-      </CardContent>
-    </Card>
   );
 }

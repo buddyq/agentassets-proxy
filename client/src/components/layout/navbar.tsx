@@ -1,30 +1,28 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { DEMO_USER_ID } from "@/lib/store";
-import { useUser } from "@/lib/api";
-import { LayoutDashboard, Plus, CreditCard, Palette, LogOut, Home } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { LayoutDashboard, Plus, CreditCard, Palette, LogOut, Home, User } from "lucide-react";
 import logoUrl from "@/assets/logo.png";
 
 export function Navbar() {
   const [location] = useLocation();
-  const { data: user } = useUser(DEMO_USER_ID);
+  const { user, isAuthenticated, isLoading } = useAuth();
   
-  // Simple check for dashboard routes
-  const isDashboard = location !== "/" && location !== "/login" && location !== "/register";
+  const isDashboard = location !== "/" || isAuthenticated;
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link href={isDashboard ? "/dashboard" : "/"} className="flex items-center gap-2">
+        <Link href={isAuthenticated ? "/dashboard" : "/"} className="flex items-center gap-2">
           <img src={logoUrl} alt="AgentAssets" className="h-12 w-auto" />
         </Link>
 
         <div className="flex items-center gap-4">
-          {isDashboard ? (
+          {isAuthenticated ? (
             <>
               <div className="hidden md:flex items-center gap-1 mr-4">
                 <Link href="/dashboard">
-                  <Button variant={location === "/dashboard" ? "secondary" : "ghost"} size="sm" className="gap-2">
+                  <Button variant={location === "/dashboard" || location === "/" ? "secondary" : "ghost"} size="sm" className="gap-2">
                     <LayoutDashboard className="h-4 w-4" />
                     Dashboard
                   </Button>
@@ -50,11 +48,23 @@ export function Navbar() {
                 </Button>
               </Link>
               
-              <Link href="/">
+              {user?.profileImageUrl ? (
+                <img 
+                  src={user.profileImageUrl} 
+                  alt="Profile" 
+                  className="w-8 h-8 rounded-full object-cover border"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <User className="h-4 w-4 text-primary" />
+                </div>
+              )}
+              
+              <a href="/api/logout">
                 <Button variant="ghost" size="icon" className="text-muted-foreground">
                   <LogOut className="h-4 w-4" />
                 </Button>
-              </Link>
+              </a>
             </>
           ) : (
             <>
@@ -64,9 +74,9 @@ export function Navbar() {
               <Link href="/#pricing">
                 <Button variant="ghost" className="hidden md:inline-flex">Pricing</Button>
               </Link>
-              <Link href="/dashboard">
-                <Button>Login / Register</Button>
-              </Link>
+              <a href="/api/login">
+                <Button>{isLoading ? "Loading..." : "Login / Sign Up"}</Button>
+              </a>
             </>
           )}
         </div>

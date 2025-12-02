@@ -3,20 +3,19 @@ import {
   sites, 
   themes,
   type User, 
-  type InsertUser,
+  type UpsertUser,
   type Site,
   type InsertSite,
   type Theme,
   type InsertTheme
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
-  // User methods
+  // User methods (Replit Auth)
   getUser(id: string): Promise<User | undefined>;
-  getUserByEmail(email: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  upsertUser(user: UpsertUser): Promise<User>;
   updateUserCredits(id: string, credits: number): Promise<User>;
   
   // Site methods
@@ -38,21 +37,23 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  // User methods
+  // User methods (Replit Auth)
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user || undefined;
   }
 
-  async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
-    return user || undefined;
-  }
-
-  async createUser(insertUser: InsertUser): Promise<User> {
+  async upsertUser(userData: UpsertUser): Promise<User> {
     const [user] = await db
       .insert(users)
-      .values(insertUser)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
       .returning();
     return user;
   }
@@ -60,7 +61,7 @@ export class DatabaseStorage implements IStorage {
   async updateUserCredits(id: string, credits: number): Promise<User> {
     const [user] = await db
       .update(users)
-      .set({ credits })
+      .set({ credits, updatedAt: new Date() })
       .where(eq(users.id, id))
       .returning();
     return user;

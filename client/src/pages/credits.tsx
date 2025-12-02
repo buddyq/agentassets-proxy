@@ -2,10 +2,8 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { DEMO_USER_ID } from "@/lib/store";
-import { useUser, useUpdateCredits } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
+import { useUpdateCredits } from "@/lib/api";
 import { Check, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -16,14 +14,14 @@ const PACKAGES = [
 ];
 
 export default function Credits() {
-  const { data: user } = useUser(DEMO_USER_ID);
+  const { user } = useAuth();
   const updateCreditsMutation = useUpdateCredits();
   const { toast } = useToast();
 
   const handlePurchase = (pkg: typeof PACKAGES[0]) => {
     if (!user) return;
     updateCreditsMutation.mutate(
-      { userId: DEMO_USER_ID, credits: user.credits + pkg.credits },
+      user.credits + pkg.credits,
       {
         onSuccess: () => {
           toast({

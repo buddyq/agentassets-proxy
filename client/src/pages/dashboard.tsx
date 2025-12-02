@@ -2,8 +2,9 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { TEMPLATES, DEMO_USER_ID } from "@/lib/store";
-import { useSites, useDeleteSite, useUpdateSite, useUser, useThemes } from "@/lib/api";
+import { TEMPLATES } from "@/lib/store";
+import { useSites, useDeleteSite, useUpdateSite, useThemes } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
 import { Plus, ExternalLink, Edit, Trash2, Globe, BarChart3, Users, MousePointerClick, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -34,8 +35,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 
 export default function Dashboard() {
-  const { data: user } = useUser(DEMO_USER_ID);
-  const { data: sites = [] } = useSites(DEMO_USER_ID);
+  const { user } = useAuth();
+  const { data: sites = [] } = useSites();
   const { data: themes = [] } = useThemes();
   const deleteSiteMutation = useDeleteSite();
   const updateSiteMutation = useUpdateSite();
@@ -109,7 +110,6 @@ export default function Dashboard() {
   // Mock data generation for chart based on selected site
   const analyticsData = useMemo(() => {
     if (!selectedSiteForAnalytics) return [];
-    // Deterministic random based on site ID for consistent mock data
     const site = sites.find(s => s.id === selectedSiteForAnalytics);
     const baseViews = site?.stats?.views || 150;
     
@@ -178,7 +178,7 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <CardHeader>
-                  <CardTitle className="line-clamp-1 text-lg">{site.address}</CardTitle>
+                  <CardTitle className="line-clamp-1 text-lg">{site.title || site.address}</CardTitle>
                   <p className="text-sm text-muted-foreground">Created on {format(new Date(site.createdAt), 'MMM d, yyyy')}</p>
                 </CardHeader>
                 <CardContent className="flex-1">
@@ -274,19 +274,18 @@ export default function Dashboard() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDomainDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSaveDomain}>Save Domain</Button>
+            <Button onClick={handleSaveDomain}>Save</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
+      {/* Delete Confirmation */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete your property site
-              and remove your data from our servers.
+              This action cannot be undone. This will permanently delete the property site and all associated data.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -300,83 +299,46 @@ export default function Dashboard() {
 
       {/* Analytics Dialog */}
       <Dialog open={analyticsDialogOpen} onOpenChange={setAnalyticsDialogOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-primary" />
-              Analytics for {activeSite?.address}
-            </DialogTitle>
+            <DialogTitle>Site Analytics</DialogTitle>
             <DialogDescription>
-              Traffic and engagement statistics for the last 7 days.
+              {activeSite?.address} - Performance over the last 7 days
             </DialogDescription>
           </DialogHeader>
-          
-          <div className="grid gap-6 py-4">
-            {/* Stats Cards */}
-            <div className="grid grid-cols-3 gap-4">
-              <Card>
-                <CardHeader className="p-4 pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Views</CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <div className="text-2xl font-bold flex items-center gap-2">
-                    {activeSite?.stats?.views || 0}
-                    <TrendingUp className="h-4 w-4 text-green-500" />
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="p-4 pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Unique Visitors</CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <div className="text-2xl font-bold flex items-center gap-2">
-                    {activeSite?.stats?.uniqueVisitors || 0}
-                    <Users className="h-4 w-4 text-blue-500" />
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="p-4 pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Leads Generated</CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <div className="text-2xl font-bold flex items-center gap-2">
-                    {activeSite?.stats?.leads || 0}
-                    <MousePointerClick className="h-4 w-4 text-purple-500" />
-                  </div>
-                </CardContent>
-              </Card>
+          <div className="py-4">
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="bg-muted/50 rounded-lg p-4 text-center">
+                <div className="flex items-center justify-center gap-2 text-muted-foreground mb-1">
+                  <MousePointerClick className="h-4 w-4" />
+                  <span className="text-sm">Total Views</span>
+                </div>
+                <span className="text-2xl font-bold">{activeSite?.stats?.views ?? 0}</span>
+              </div>
+              <div className="bg-muted/50 rounded-lg p-4 text-center">
+                <div className="flex items-center justify-center gap-2 text-muted-foreground mb-1">
+                  <Users className="h-4 w-4" />
+                  <span className="text-sm">Unique Visitors</span>
+                </div>
+                <span className="text-2xl font-bold">{activeSite?.stats?.uniqueVisitors ?? 0}</span>
+              </div>
+              <div className="bg-muted/50 rounded-lg p-4 text-center">
+                <div className="flex items-center justify-center gap-2 text-muted-foreground mb-1">
+                  <TrendingUp className="h-4 w-4" />
+                  <span className="text-sm">Leads</span>
+                </div>
+                <span className="text-2xl font-bold">{activeSite?.stats?.leads ?? 0}</span>
+              </div>
             </div>
 
-            {/* Chart */}
-            <div className="h-[300px] w-full border rounded-lg p-4">
-              <h3 className="text-sm font-medium mb-4">Views Over Time</h3>
+            <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={analyticsData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis 
-                    dataKey="name" 
-                    stroke="#888888" 
-                    fontSize={12} 
-                    tickLine={false} 
-                    axisLine={false} 
-                  />
-                  <YAxis 
-                    stroke="#888888" 
-                    fontSize={12} 
-                    tickLine={false} 
-                    axisLine={false} 
-                  />
-                  <Tooltip 
-                    contentStyle={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px' }}
-                    cursor={{ fill: '#f1f5f9' }}
-                  />
-                  <Bar 
-                    dataKey="views" 
-                    fill="hsl(var(--primary))" 
-                    radius={[4, 4, 0, 0]} 
-                  />
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis dataKey="name" className="text-xs" />
+                  <YAxis className="text-xs" />
+                  <Tooltip />
+                  <Bar dataKey="views" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

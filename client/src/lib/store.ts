@@ -12,9 +12,6 @@ export interface Template {
   thumbnailUrl: string;
 }
 
-// Demo user ID (from seeded database)
-export const DEMO_USER_ID = 'f862016a-922e-4658-ad8a-94335dd42795';
-
 // Templates (these remain client-side as they're UI-only)
 export const TEMPLATES: Template[] = [
   {
