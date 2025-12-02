@@ -1,7 +1,7 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, X, Check } from "lucide-react";
+import { Upload, X, Image } from "lucide-react";
 
 interface ObjectUploaderProps {
   maxNumberOfFiles?: number;
@@ -12,67 +12,177 @@ interface ObjectUploaderProps {
   }>;
   onComplete?: (result: { successful: Array<{ uploadURL: string }> }) => void;
   buttonClassName?: string;
-  children: ReactNode;
+  children?: ReactNode;
+  variant?: "button" | "dropzone";
 }
 
 export function ObjectUploader({
+  maxNumberOfFiles = 10,
   maxFileSize = 10485760,
   onGetUploadParameters,
   onComplete,
   buttonClassName,
   children,
+  variant = "button",
 }: ObjectUploaderProps) {
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const uploadFiles = async (files: File[]) => {
+    const validFiles = files.filter(file => {
+      if (file.size > maxFileSize) {
+        setError(`Some files exceed ${Math.round(maxFileSize / 1024 / 1024)}MB limit`);
+        return false;
+      }
+      if (!file.type.startsWith('image/')) {
+        setError('Only image files are allowed');
+        return false;
+      }
+      return true;
+    }).slice(0, maxNumberOfFiles);
 
-    if (file.size > maxFileSize) {
-      setError(`File size exceeds ${Math.round(maxFileSize / 1024 / 1024)}MB limit`);
-      return;
-    }
-
-    if (!file.type.startsWith('image/')) {
-      setError('Only image files are allowed');
-      return;
-    }
+    if (validFiles.length === 0) return;
 
     setIsUploading(true);
     setError(null);
+    setUploadProgress({ current: 0, total: validFiles.length });
 
-    try {
-      const { url } = await onGetUploadParameters();
-      
-      const response = await fetch(url, {
-        method: 'PUT',
-        body: file,
-        headers: {
-          'Content-Type': file.type,
-        },
-      });
+    const successfulUploads: Array<{ uploadURL: string }> = [];
 
-      if (!response.ok) {
-        throw new Error('Upload failed');
-      }
+    for (let i = 0; i < validFiles.length; i++) {
+      const file = validFiles[i];
+      try {
+        const { url } = await onGetUploadParameters();
+        
+        const response = await fetch(url, {
+          method: 'PUT',
+          body: file,
+          headers: {
+            'Content-Type': file.type,
+          },
+        });
 
-      onComplete?.({ successful: [{ uploadURL: url }] });
-    } catch (err) {
-      setError('Failed to upload file. Please try again.');
-      console.error('Upload error:', err);
-    } finally {
-      setIsUploading(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+        if (!response.ok) {
+          throw new Error('Upload failed');
+        }
+
+        successfulUploads.push({ uploadURL: url });
+        setUploadProgress({ current: i + 1, total: validFiles.length });
+      } catch (err) {
+        console.error('Upload error for file:', file.name, err);
       }
     }
+
+    if (successfulUploads.length > 0) {
+      onComplete?.({ successful: successfulUploads });
+    }
+
+    if (successfulUploads.length < validFiles.length) {
+      setError(`${validFiles.length - successfulUploads.length} file(s) failed to upload`);
+    }
+
+    setIsUploading(false);
+    setUploadProgress(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
+
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length > 0) {
+      await uploadFiles(files);
+    }
+  };
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  }, []);
+
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+
+    const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
+    if (files.length > 0) {
+      await uploadFiles(files);
+    }
+  }, [onGetUploadParameters, onComplete, maxFileSize, maxNumberOfFiles]);
 
   const handleButtonClick = () => {
     fileInputRef.current?.click();
   };
+
+  if (variant === "dropzone") {
+    return (
+      <div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={handleFileSelect}
+          className="hidden"
+        />
+        <div
+          onClick={handleButtonClick}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          className={`
+            border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all
+            ${isDragOver 
+              ? 'border-primary bg-primary/5 scale-[1.02]' 
+              : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/30'
+            }
+            ${isUploading ? 'pointer-events-none opacity-70' : ''}
+          `}
+        >
+          {isUploading ? (
+            <div className="flex flex-col items-center gap-3">
+              <div className="animate-spin h-8 w-8 border-3 border-primary border-t-transparent rounded-full" />
+              <div>
+                <p className="font-medium text-foreground">Uploading...</p>
+                {uploadProgress && (
+                  <p className="text-sm text-muted-foreground">
+                    {uploadProgress.current} of {uploadProgress.total} photos
+                  </p>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+                <Upload className="h-7 w-7 text-primary" />
+              </div>
+              <div>
+                <p className="font-medium text-foreground">Drag and drop photos here</p>
+                <p className="text-sm text-muted-foreground">or click to browse</p>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Upload up to {maxNumberOfFiles} photos at once (max {Math.round(maxFileSize / 1024 / 1024)}MB each)
+              </p>
+            </div>
+          )}
+        </div>
+        {error && (
+          <p className="text-sm text-destructive mt-2">{error}</p>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -80,6 +190,7 @@ export function ObjectUploader({
         ref={fileInputRef}
         type="file"
         accept="image/*"
+        multiple
         onChange={handleFileSelect}
         className="hidden"
       />
@@ -92,7 +203,11 @@ export function ObjectUploader({
         {isUploading ? (
           <div className="flex items-center gap-2">
             <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-            <span>Uploading...</span>
+            <span>
+              {uploadProgress 
+                ? `Uploading ${uploadProgress.current}/${uploadProgress.total}...` 
+                : 'Uploading...'}
+            </span>
           </div>
         ) : (
           children

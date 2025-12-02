@@ -6,18 +6,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { TEMPLATES } from "@/lib/store";
-import { useSite, useUpdateSite, useThemes } from "@/lib/api";
+import { useSite, useUpdateSite, useThemes, useAddPhotoToSite, useRemovePhotoFromSite, useReorderPhotos, getUploadUrl } from "@/lib/api";
 import { useState, useEffect } from "react";
 import { useLocation, useParams } from "wouter";
-import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, Save } from "lucide-react";
+import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, Save, Image, X, GripVertical } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { ObjectUploader } from "@/components/ObjectUploader";
 
 const STEPS = [
   { id: 1, name: "Property Details", icon: Layout },
-  { id: 2, name: "Choose Template", icon: Layout },
-  { id: 3, name: "Branding", icon: PaintBucket },
-  { id: 4, name: "Review", icon: Save },
+  { id: 2, name: "Photos", icon: Image },
+  { id: 3, name: "Choose Template", icon: Layout },
+  { id: 4, name: "Branding", icon: PaintBucket },
+  { id: 5, name: "Review", icon: Save },
 ];
 
 export default function EditSite() {
@@ -29,6 +31,9 @@ export default function EditSite() {
   const { data: site, isLoading: isLoadingSite } = useSite(siteId);
   const { data: themes = [] } = useThemes();
   const updateSiteMutation = useUpdateSite();
+  const addPhotoMutation = useAddPhotoToSite();
+  const removePhotoMutation = useRemovePhotoFromSite();
+  const reorderPhotosMutation = useReorderPhotos();
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -43,6 +48,8 @@ export default function EditSite() {
     templateId: TEMPLATES[0].id,
     themeId: "",
   });
+
+  const [draggedPhoto, setDraggedPhoto] = useState<number | null>(null);
 
   useEffect(() => {
     if (site) {
@@ -62,7 +69,7 @@ export default function EditSite() {
   }, [site, themes]);
 
   const handleNext = () => {
-    if (step < 4) setStep(step + 1);
+    if (step < 5) setStep(step + 1);
   };
 
   const handleBack = () => {
@@ -105,6 +112,67 @@ export default function EditSite() {
         }
       }
     );
+  };
+
+  const handlePhotoUploadComplete = (result: { successful: Array<{ uploadURL: string }> }) => {
+    if (result.successful && result.successful.length > 0 && siteId) {
+      result.successful.forEach((upload, index) => {
+        setTimeout(() => {
+          addPhotoMutation.mutate(
+            { siteId, photoUrl: upload.uploadURL },
+            {
+              onSuccess: () => {
+                if (index === result.successful.length - 1) {
+                  toast({
+                    title: "Photos Added",
+                    description: `${result.successful.length} photo(s) added to your property site.`,
+                  });
+                }
+              }
+            }
+          );
+        }, index * 200);
+      });
+    }
+  };
+
+  const handleRemovePhoto = (photoUrl: string) => {
+    if (siteId) {
+      removePhotoMutation.mutate(
+        { siteId, photoUrl },
+        {
+          onSuccess: () => {
+            toast({
+              title: "Photo Removed",
+              description: "Photo has been removed from your property site.",
+            });
+          }
+        }
+      );
+    }
+  };
+
+  const handleDragStart = (index: number) => {
+    setDraggedPhoto(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedPhoto === null || draggedPhoto === index || !site?.photos) return;
+
+    const photos = [...site.photos];
+    const draggedItem = photos[draggedPhoto];
+    photos.splice(draggedPhoto, 1);
+    photos.splice(index, 0, draggedItem);
+
+    if (siteId) {
+      reorderPhotosMutation.mutate({ siteId, photos });
+    }
+    setDraggedPhoto(index);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedPhoto(null);
   };
 
   const selectedTemplate = TEMPLATES.find(t => t.id === formData.templateId);
@@ -281,6 +349,72 @@ export default function EditSite() {
             {step === 2 && (
               <Card>
                 <CardHeader>
+                  <CardTitle>Property Photos</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <ObjectUploader
+                    maxNumberOfFiles={20}
+                    maxFileSize={10485760}
+                    variant="dropzone"
+                    onGetUploadParameters={async () => {
+                      const { url } = await getUploadUrl();
+                      return { method: 'PUT' as const, url };
+                    }}
+                    onComplete={handlePhotoUploadComplete}
+                  />
+
+                  {site.photos && site.photos.length > 0 ? (
+                    <>
+                      <p className="text-sm text-muted-foreground">Drag photos to rearrange their order. The first photo will be the main image.</p>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {site.photos.map((photo, index) => (
+                          <div 
+                            key={photo}
+                            draggable
+                            onDragStart={() => handleDragStart(index)}
+                            onDragOver={(e) => handleDragOver(e, index)}
+                            onDragEnd={handleDragEnd}
+                            className={`relative aspect-square rounded-lg overflow-hidden group cursor-grab active:cursor-grabbing ${
+                              draggedPhoto === index ? 'opacity-50 ring-2 ring-primary' : ''
+                            }`}
+                          >
+                            <div className="absolute top-2 left-2 bg-black/50 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                              <GripVertical className="h-4 w-4" />
+                            </div>
+                            <img 
+                              src={photo} 
+                              alt={`Property photo ${index + 1}`}
+                              className="w-full h-full object-cover pointer-events-none"
+                            />
+                            <div className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                              {index === 0 ? 'Main Photo' : `Photo ${index + 1}`}
+                            </div>
+                            <button
+                              type="button"
+                              className="absolute top-2 right-2 bg-destructive text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                              onClick={() => handleRemovePhoto(photo)}
+                              data-testid={`button-remove-photo-${index}`}
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center py-8 bg-muted/30 rounded-lg">
+                      <Image className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                      <p className="text-muted-foreground">No photos uploaded yet</p>
+                      <p className="text-sm text-muted-foreground">Use the dropzone above to add photos</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {step === 3 && (
+              <Card>
+                <CardHeader>
                   <CardTitle>Choose a Template</CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -317,7 +451,7 @@ export default function EditSite() {
               </Card>
             )}
 
-            {step === 3 && (
+            {step === 4 && (
               <Card>
                 <CardHeader>
                   <CardTitle>Choose a Theme</CardTitle>
@@ -400,7 +534,7 @@ export default function EditSite() {
               </Card>
             )}
 
-            {step === 4 && (
+            {step === 5 && (
               <div className="grid md:grid-cols-3 gap-6">
                 <div className="md:col-span-2">
                   <Card>
@@ -424,6 +558,10 @@ export default function EditSite() {
                         <div>
                           <span className="text-muted-foreground block">Specs</span>
                           <span className="font-medium">{formData.bedrooms} BD | {formData.bathrooms} BA | {formData.sqft} SqFt</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground block">Photos</span>
+                          <span className="font-medium">{site.photos?.length || 0} photos</span>
                         </div>
                         <div>
                           <span className="text-muted-foreground block">Template</span>
@@ -470,7 +608,7 @@ export default function EditSite() {
                 <ChevronLeft className="mr-2 h-4 w-4" /> Back
               </Button>
               
-              {step < 4 && (
+              {step < 5 && (
                 <Button onClick={handleNext} disabled={!formData.address && step === 1}>
                   Next <ChevronRight className="ml-2 h-4 w-4" />
                 </Button>
