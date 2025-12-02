@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, isAuthenticated } from "./auth";
 import { insertSiteSchema, insertThemeSchema } from "@shared/schema";
 import { z } from "zod";
 
@@ -9,25 +9,13 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  // Setup authentication
-  await setupAuth(app);
-
-  // Auth route - get current user
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
-    }
-  });
+  // Setup authentication (username/password)
+  setupAuth(app);
 
   // Credits route - update user credits (protected)
   app.patch("/api/user/credits", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const { credits } = req.body;
       if (typeof credits !== 'number') {
         return res.status(400).json({ error: "Credits must be a number" });
@@ -42,7 +30,7 @@ export async function registerRoutes(
   // Site routes (protected)
   app.get("/api/sites", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const sites = await storage.getSitesByUser(userId);
       res.json(sites);
     } catch (error) {
@@ -65,7 +53,7 @@ export async function registerRoutes(
 
   app.post("/api/sites", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const validated = insertSiteSchema.parse({ ...req.body, userId });
       const site = await storage.createSite(validated);
       res.status(201).json(site);
@@ -131,7 +119,7 @@ export async function registerRoutes(
 
   app.post("/api/themes", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const validated = insertThemeSchema.parse({ ...req.body, userId });
       const theme = await storage.createTheme(validated);
       res.status(201).json(theme);

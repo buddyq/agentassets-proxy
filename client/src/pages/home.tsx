@@ -26,11 +26,11 @@ export default function Home() {
             We build great looking single property websites to showcase your hard earned listing.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="/api/login">
+            <Link href="/auth">
               <Button size="lg" className="text-lg px-8 h-14 bg-primary hover:bg-primary/90 text-white border-none">
                 Get Started
               </Button>
-            </a>
+            </Link>
             <Link href="/#features">
               <Button size="lg" variant="outline" className="text-lg px-8 h-14 bg-white/10 hover:bg-white/20 text-white border-white backdrop-blur-sm">
                 Learn More
@@ -130,11 +130,11 @@ export default function Home() {
                   </li>
                 </ul>
                 
-                <a href="/api/login">
+                <Link href="/auth">
                   <Button className={`w-full ${plan.popular ? 'bg-primary hover:bg-primary/90' : 'bg-secondary hover:bg-secondary/90'}`}>
                     Get Started
                   </Button>
-                </a>
+                </Link>
               </div>
             ))}
           </div>
