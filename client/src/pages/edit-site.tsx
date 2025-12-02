@@ -47,6 +47,7 @@ export default function EditSite() {
     yearBuilt: "",
     stories: "",
     description: "",
+    descriptionImage: "",
     videoUrl: "",
     layoutId: "",
     themeId: "",
@@ -81,6 +82,7 @@ export default function EditSite() {
         yearBuilt: site.yearBuilt || "",
         stories: site.stories || "",
         description: site.description || "",
+        descriptionImage: site.descriptionImage || "",
         videoUrl: site.videoUrl || "",
         layoutId: site.layoutId || layouts[0]?.id || "",
         themeId: site.themeId || themes[0]?.id || "",
@@ -115,6 +117,7 @@ export default function EditSite() {
           yearBuilt: formData.yearBuilt || null,
           stories: formData.stories || null,
           description: formData.description || null,
+          descriptionImage: formData.descriptionImage || null,
           videoUrl: formData.videoUrl || null,
           layoutId: formData.layoutId,
           themeId: formData.themeId,
@@ -458,6 +461,45 @@ export default function EditSite() {
                       onChange={e => setFormData({...formData, description: e.target.value})}
                       data-testid="input-description"
                     />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label>Description Image (Optional)</Label>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Add a portrait-style image to display alongside your property description. Vertical/portrait orientation works best.
+                    </p>
+                    {formData.descriptionImage ? (
+                      <div className="relative w-48 aspect-[3/4] rounded-lg overflow-hidden border group">
+                        <img 
+                          src={formData.descriptionImage} 
+                          alt="Description" 
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setFormData({...formData, descriptionImage: ""})}
+                          className="absolute top-2 right-2 bg-destructive text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          data-testid="button-remove-description-image"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <ObjectUploader
+                        maxNumberOfFiles={1}
+                        maxFileSize={10485760}
+                        variant="dropzone"
+                        onGetUploadParameters={async () => {
+                          const { url } = await getUploadUrl();
+                          return { method: 'PUT' as const, url };
+                        }}
+                        onComplete={(result) => {
+                          if (result.successful && result.successful.length > 0) {
+                            setFormData({...formData, descriptionImage: result.successful[0].uploadURL});
+                          }
+                        }}
+                      />
+                    )}
                   </div>
 
                   <div className="grid gap-2">

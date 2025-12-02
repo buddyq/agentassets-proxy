@@ -56,6 +56,7 @@ export default function CreateSite() {
     yearBuilt: "",
     stories: "",
     description: "",
+    descriptionImage: "",
     videoUrl: "",
     layoutId: '',
     themeId: '',
@@ -182,6 +183,7 @@ export default function CreateSite() {
         stories: formData.stories || null,
         lotSize: null,
         description: formData.description || null,
+        descriptionImage: formData.descriptionImage || null,
         imageUrl: null,
         videoUrl: formData.videoUrl || null,
         layoutId: formData.layoutId,
@@ -397,6 +399,45 @@ export default function CreateSite() {
                       value={formData.description}
                       onChange={e => setFormData({...formData, description: e.target.value})}
                     />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label>Description Image (Optional)</Label>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Add a portrait-style image to display alongside your property description. Vertical/portrait orientation works best.
+                    </p>
+                    {formData.descriptionImage ? (
+                      <div className="relative w-48 aspect-[3/4] rounded-lg overflow-hidden border group">
+                        <img 
+                          src={formData.descriptionImage} 
+                          alt="Description" 
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setFormData({...formData, descriptionImage: ""})}
+                          className="absolute top-2 right-2 bg-destructive text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          data-testid="button-remove-description-image"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <ObjectUploader
+                        maxNumberOfFiles={1}
+                        maxFileSize={10485760}
+                        variant="dropzone"
+                        onGetUploadParameters={async () => {
+                          const { url } = await getUploadUrl();
+                          return { method: 'PUT' as const, url };
+                        }}
+                        onComplete={(result) => {
+                          if (result.successful && result.successful.length > 0) {
+                            setFormData({...formData, descriptionImage: result.successful[0].uploadURL});
+                          }
+                        }}
+                      />
+                    )}
                   </div>
 
                   <div className="grid gap-2">
