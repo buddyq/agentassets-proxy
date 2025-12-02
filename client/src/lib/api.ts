@@ -16,8 +16,8 @@ export function useUpdateCredits() {
       if (!res.ok) throw new Error('Failed to update credits');
       return res.json() as Promise<User>;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+    onSuccess: (updatedUser) => {
+      queryClient.setQueryData(['/api/user'], updatedUser);
     }
   });
 }
@@ -60,7 +60,7 @@ export function useCreateSite() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sites'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
     }
   });
 }
