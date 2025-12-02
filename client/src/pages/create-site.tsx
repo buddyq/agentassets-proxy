@@ -13,7 +13,6 @@ import { useLocation } from "wouter";
 import { Check, ChevronRight, ChevronLeft, Upload, Layout, PaintBucket, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const STEPS = [
   { id: 1, name: "Property Details", icon: Layout },
@@ -287,68 +286,80 @@ export default function CreateSite() {
                 <CardHeader>
                   <CardTitle>Choose a Theme</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid gap-2">
-                    <Label>Select Theme</Label>
-                    <Select 
-                      value={formData.themeId} 
-                      onValueChange={(v) => setFormData({...formData, themeId: v})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choose a theme" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {themes.map((theme) => (
-                          <SelectItem key={theme.id} value={theme.id}>
-                            <div className="flex items-center gap-2">
+                <CardContent>
+                  <RadioGroup 
+                    value={formData.themeId} 
+                    onValueChange={(v) => setFormData({...formData, themeId: v})}
+                    className="grid md:grid-cols-2 lg:grid-cols-4 gap-4"
+                  >
+                    {themes.map((theme) => (
+                      <Label 
+                        key={theme.id}
+                        htmlFor={`theme-${theme.id}`}
+                        className={`cursor-pointer rounded-xl border-2 overflow-hidden transition-all ${
+                          formData.themeId === theme.id 
+                            ? "border-primary ring-2 ring-primary/20" 
+                            : "border-muted hover:border-primary/50"
+                        }`}
+                      >
+                        <RadioGroupItem value={theme.id} id={`theme-${theme.id}`} className="sr-only" />
+                        <div 
+                          className="h-24 relative"
+                          style={{ backgroundColor: theme.colors.background }}
+                        >
+                          <div 
+                            className="absolute top-3 left-3 right-3 h-8 rounded"
+                            style={{ backgroundColor: theme.colors.primary }}
+                          />
+                          <div 
+                            className="absolute bottom-3 left-3 w-16 h-3 rounded"
+                            style={{ backgroundColor: theme.colors.secondary }}
+                          />
+                          <div 
+                            className="absolute bottom-3 right-3 w-8 h-3 rounded"
+                            style={{ backgroundColor: theme.colors.text, opacity: 0.3 }}
+                          />
+                        </div>
+                        <div className="p-4 bg-white">
+                          <h3 className="font-medium flex items-center justify-between">
+                            <span className="flex items-center gap-2">
                               <div 
-                                className="w-4 h-4 rounded-full border" 
+                                className="w-3 h-3 rounded-full border" 
                                 style={{ backgroundColor: theme.colors.primary }}
                               />
                               {theme.name}
-                              {theme.type === 'custom' && <span className="text-xs text-muted-foreground">(Custom)</span>}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {selectedTheme && (
-                    <div className="p-6 rounded-xl border bg-muted/30">
-                      <h4 className="font-medium mb-4">Theme Preview: {selectedTheme.name}</h4>
-                      <div className="flex gap-4">
-                        <div className="flex flex-col items-center gap-1">
-                          <div 
-                            className="w-12 h-12 rounded-lg border shadow-sm" 
-                            style={{ backgroundColor: selectedTheme.colors.primary }}
-                          />
-                          <span className="text-xs text-muted-foreground">Primary</span>
+                            </span>
+                            {formData.themeId === theme.id && <Check className="h-4 w-4 text-primary" />}
+                          </h3>
+                          {theme.type === 'custom' && (
+                            <span className="text-xs text-muted-foreground">Custom Theme</span>
+                          )}
+                          <div className="flex gap-1 mt-2">
+                            <div 
+                              className="w-5 h-5 rounded border shadow-sm" 
+                              style={{ backgroundColor: theme.colors.primary }}
+                              title="Primary"
+                            />
+                            <div 
+                              className="w-5 h-5 rounded border shadow-sm" 
+                              style={{ backgroundColor: theme.colors.secondary }}
+                              title="Secondary"
+                            />
+                            <div 
+                              className="w-5 h-5 rounded border shadow-sm" 
+                              style={{ backgroundColor: theme.colors.background }}
+                              title="Background"
+                            />
+                            <div 
+                              className="w-5 h-5 rounded border shadow-sm" 
+                              style={{ backgroundColor: theme.colors.text }}
+                              title="Text"
+                            />
+                          </div>
                         </div>
-                        <div className="flex flex-col items-center gap-1">
-                          <div 
-                            className="w-12 h-12 rounded-lg border shadow-sm" 
-                            style={{ backgroundColor: selectedTheme.colors.secondary }}
-                          />
-                          <span className="text-xs text-muted-foreground">Secondary</span>
-                        </div>
-                        <div className="flex flex-col items-center gap-1">
-                          <div 
-                            className="w-12 h-12 rounded-lg border shadow-sm" 
-                            style={{ backgroundColor: selectedTheme.colors.background }}
-                          />
-                          <span className="text-xs text-muted-foreground">Background</span>
-                        </div>
-                        <div className="flex flex-col items-center gap-1">
-                          <div 
-                            className="w-12 h-12 rounded-lg border shadow-sm" 
-                            style={{ backgroundColor: selectedTheme.colors.text }}
-                          />
-                          <span className="text-xs text-muted-foreground">Text</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                      </Label>
+                    ))}
+                  </RadioGroup>
                 </CardContent>
               </Card>
             )}
