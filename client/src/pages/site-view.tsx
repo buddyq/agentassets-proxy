@@ -131,13 +131,13 @@ function ShoalwoodHero({ site, theme, heroImage }: { site: Site; theme?: Theme; 
         <>
           <button 
             onClick={scrollPrev}
-            className="absolute left-20 top-1/2 -translate-y-1/2 z-20 bg-white/10 hover:bg-white/30 text-white p-3 rounded-full transition-all backdrop-blur-sm border border-white/20"
+            className="absolute left-[80px] top-1/2 -translate-y-1/2 z-30 bg-white/10 hover:bg-white/30 text-white p-3 rounded-full transition-all backdrop-blur-sm border border-white/20"
           >
             <ChevronLeft className="h-6 w-6" />
           </button>
           <button 
             onClick={scrollNext}
-            className="absolute right-6 top-1/2 -translate-y-1/2 z-20 bg-white/10 hover:bg-white/30 text-white p-3 rounded-full transition-all backdrop-blur-sm border border-white/20"
+            className="absolute right-6 top-1/2 -translate-y-1/2 z-30 bg-white/10 hover:bg-white/30 text-white p-3 rounded-full transition-all backdrop-blur-sm border border-white/20"
           >
             <ChevronRight className="h-6 w-6" />
           </button>
