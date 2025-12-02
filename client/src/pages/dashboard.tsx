@@ -6,7 +6,7 @@ import { TEMPLATES } from "@/lib/store";
 import { useSites, useDeleteSite, useUpdateSite, useThemes, useAddPhotoToSite, useRemovePhotoFromSite, useReorderPhotos, getUploadUrl } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
-import { Plus, ExternalLink, Trash2, Globe, BarChart3, Users, MousePointerClick, TrendingUp, Image, X, Upload, GripVertical } from "lucide-react";
+import { Plus, ExternalLink, Trash2, Globe, BarChart3, Users, MousePointerClick, TrendingUp, Image, X, Upload, GripVertical, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format, subDays } from "date-fns";
 import { ObjectUploader } from "@/components/ObjectUploader";
@@ -281,16 +281,22 @@ export default function Dashboard() {
                 </CardContent>
                 <CardFooter className="flex flex-col gap-2 border-t bg-muted/5 p-4">
                   <div className="flex gap-2 w-full">
+                    <Link href={`/edit-site/${site.id}`} className="flex-1">
+                      <Button variant="outline" size="sm" className="w-full gap-1" data-testid={`button-edit-${site.id}`}>
+                        <Pencil className="h-3 w-3" /> Edit
+                      </Button>
+                    </Link>
                     <Button 
                       variant="outline" 
                       size="sm" 
                       className="flex-1 gap-1"
                       onClick={() => handleOpenPhotos(site.id)}
+                      data-testid={`button-photos-${site.id}`}
                     >
                       <Image className="h-3 w-3" /> Photos
                     </Button>
                     <Link href={`/site/${site.id}`} className="flex-1">
-                      <Button variant="outline" size="sm" className="w-full gap-1">
+                      <Button variant="outline" size="sm" className="w-full gap-1" data-testid={`button-view-${site.id}`}>
                         <ExternalLink className="h-3 w-3" /> View
                       </Button>
                     </Link>
@@ -299,6 +305,7 @@ export default function Dashboard() {
                       size="icon" 
                       className="text-destructive hover:text-destructive/90 hover:bg-destructive/10"
                       onClick={() => handleDeleteClick(site.id)}
+                      data-testid={`button-delete-${site.id}`}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

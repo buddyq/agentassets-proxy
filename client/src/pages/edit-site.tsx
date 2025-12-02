@@ -6,11 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { TEMPLATES } from "@/lib/store";
-import { useCreateSite, useUpdateCredits, useThemes } from "@/lib/api";
-import { useAuth } from "@/hooks/useAuth";
+import { useSite, useUpdateSite, useThemes } from "@/lib/api";
 import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
-import { Check, ChevronRight, ChevronLeft, Upload, Layout, PaintBucket, CreditCard } from "lucide-react";
+import { useLocation, useParams } from "wouter";
+import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
@@ -18,31 +17,20 @@ const STEPS = [
   { id: 1, name: "Property Details", icon: Layout },
   { id: 2, name: "Choose Template", icon: Layout },
   { id: 3, name: "Branding", icon: PaintBucket },
-  { id: 4, name: "Review", icon: CreditCard },
+  { id: 4, name: "Review", icon: Save },
 ];
 
-export default function CreateSite() {
+export default function EditSite() {
+  const params = useParams<{ id: string }>();
+  const siteId = params.id;
+  
   const [step, setStep] = useState(1);
   const [, setLocation] = useLocation();
-  const { user, isLoading: isLoadingUser } = useAuth();
+  const { data: site, isLoading: isLoadingSite } = useSite(siteId);
   const { data: themes = [] } = useThemes();
-  const createSiteMutation = useCreateSite();
-  const updateCreditsMutation = useUpdateCredits();
+  const updateSiteMutation = useUpdateSite();
   const { toast } = useToast();
 
-  // Redirect to credits page if user has no credits
-  useEffect(() => {
-    if (!isLoadingUser && user && user.credits < 1) {
-      toast({
-        variant: "destructive",
-        title: "No Credits Available",
-        description: "Please purchase credits to create a new site.",
-      });
-      setLocation("/credits");
-    }
-  }, [user, isLoadingUser, setLocation, toast]);
-
-  // Form State
   const [formData, setFormData] = useState({
     title: "",
     address: "",
@@ -53,8 +41,25 @@ export default function CreateSite() {
     description: "",
     videoUrl: "",
     templateId: TEMPLATES[0].id,
-    themeId: themes[0]?.id || '',
+    themeId: "",
   });
+
+  useEffect(() => {
+    if (site) {
+      setFormData({
+        title: site.title || "",
+        address: site.address || "",
+        price: site.price || "",
+        bedrooms: site.bedrooms?.toString() || "",
+        bathrooms: site.bathrooms?.toString() || "",
+        sqft: site.sqft?.toString() || "",
+        description: site.description || "",
+        videoUrl: site.videoUrl || "",
+        templateId: site.templateId || TEMPLATES[0].id,
+        themeId: site.themeId || themes[0]?.id || "",
+      });
+    }
+  }, [site, themes]);
 
   const handleNext = () => {
     if (step < 4) setStep(step + 1);
@@ -64,40 +69,30 @@ export default function CreateSite() {
     if (step > 1) setStep(step - 1);
   };
 
-  const handlePublish = () => {
-    if (!user || user.credits < 1) {
-      toast({
-        variant: "destructive",
-        title: "Insufficient Credits",
-        description: "Please purchase more credits to publish this site.",
-      });
-      return;
-    }
+  const handleSave = () => {
+    if (!siteId) return;
 
-    createSiteMutation.mutate(
+    updateSiteMutation.mutate(
       {
-        title: formData.title || null,
-        address: formData.address,
-        price: formData.price,
-        bedrooms: parseInt(formData.bedrooms) || 0,
-        bathrooms: parseInt(formData.bathrooms) || 0,
-        sqft: parseInt(formData.sqft) || 0,
-        description: formData.description || null,
-        imageUrl: null,
-        videoUrl: formData.videoUrl || null,
-        templateId: formData.templateId,
-        themeId: formData.themeId,
-        customDomain: null,
-        status: 'published',
-        photos: [],
-        stats: { views: 0, uniqueVisitors: 0, leads: 0 }
+        id: siteId,
+        updates: {
+          title: formData.title || null,
+          address: formData.address,
+          price: formData.price,
+          bedrooms: parseInt(formData.bedrooms) || 0,
+          bathrooms: parseInt(formData.bathrooms) || 0,
+          sqft: parseInt(formData.sqft) || 0,
+          description: formData.description || null,
+          videoUrl: formData.videoUrl || null,
+          templateId: formData.templateId,
+          themeId: formData.themeId,
+        }
       },
       {
         onSuccess: () => {
-          updateCreditsMutation.mutate(user.credits - 1);
           toast({
-            title: "Site Published!",
-            description: "Your new property site is live.",
+            title: "Site Updated!",
+            description: "Your changes have been saved.",
           });
           setLocation("/dashboard");
         },
@@ -105,7 +100,7 @@ export default function CreateSite() {
           toast({
             variant: "destructive",
             title: "Error",
-            description: "Failed to create site. Please try again.",
+            description: "Failed to update site. Please try again.",
           });
         }
       }
@@ -115,13 +110,48 @@ export default function CreateSite() {
   const selectedTemplate = TEMPLATES.find(t => t.id === formData.templateId);
   const selectedTheme = themes.find(t => t.id === formData.themeId);
 
+  if (isLoadingSite) {
+    return (
+      <div className="min-h-screen flex flex-col bg-muted/10">
+        <Navbar />
+        <main className="container mx-auto px-4 py-8 flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
+            <p className="text-muted-foreground">Loading site...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!site) {
+    return (
+      <div className="min-h-screen flex flex-col bg-muted/10">
+        <Navbar />
+        <main className="container mx-auto px-4 py-8 flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold mb-2">Site Not Found</h2>
+            <p className="text-muted-foreground mb-4">The site you're looking for doesn't exist.</p>
+            <Button onClick={() => setLocation("/dashboard")}>Back to Dashboard</Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-muted/10">
       <Navbar />
       
       <main className="container mx-auto px-4 py-8 flex-1">
         <div className="max-w-5xl mx-auto">
-          {/* Progress Steps */}
+          <div className="mb-8">
+            <h1 className="text-2xl font-bold text-secondary mb-2">Edit Site</h1>
+            <p className="text-muted-foreground">Update your property site details</p>
+          </div>
+
           <div className="mb-8">
             <div className="flex items-center justify-between relative">
               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-muted -z-10" />
@@ -150,7 +180,6 @@ export default function CreateSite() {
           </div>
 
           <div className="grid gap-6">
-            {/* Step 1: Property Details */}
             {step === 1 && (
               <Card>
                 <CardHeader>
@@ -164,6 +193,7 @@ export default function CreateSite() {
                       placeholder="e.g., Retro Mid-Mod in Westlake" 
                       value={formData.title}
                       onChange={e => setFormData({...formData, title: e.target.value})}
+                      data-testid="input-title"
                     />
                   </div>
 
@@ -174,6 +204,7 @@ export default function CreateSite() {
                       placeholder="123 Main St, Beverly Hills, CA" 
                       value={formData.address}
                       onChange={e => setFormData({...formData, address: e.target.value})}
+                      data-testid="input-address"
                     />
                   </div>
 
@@ -184,6 +215,7 @@ export default function CreateSite() {
                       placeholder="$1,250,000" 
                       value={formData.price}
                       onChange={e => setFormData({...formData, price: e.target.value})}
+                      data-testid="input-price"
                     />
                   </div>
 
@@ -195,6 +227,7 @@ export default function CreateSite() {
                         type="number" 
                         value={formData.bedrooms}
                         onChange={e => setFormData({...formData, bedrooms: e.target.value})}
+                        data-testid="input-bedrooms"
                       />
                     </div>
                     <div className="grid gap-2">
@@ -204,6 +237,7 @@ export default function CreateSite() {
                         type="number" 
                         value={formData.bathrooms}
                         onChange={e => setFormData({...formData, bathrooms: e.target.value})}
+                        data-testid="input-bathrooms"
                       />
                     </div>
                     <div className="grid gap-2">
@@ -213,6 +247,7 @@ export default function CreateSite() {
                         type="number" 
                         value={formData.sqft}
                         onChange={e => setFormData({...formData, sqft: e.target.value})}
+                        data-testid="input-sqft"
                       />
                     </div>
                   </div>
@@ -225,6 +260,7 @@ export default function CreateSite() {
                       placeholder="Describe this property..."
                       value={formData.description}
                       onChange={e => setFormData({...formData, description: e.target.value})}
+                      data-testid="input-description"
                     />
                   </div>
 
@@ -235,13 +271,13 @@ export default function CreateSite() {
                       placeholder="https://youtube.com/watch?v=..." 
                       value={formData.videoUrl}
                       onChange={e => setFormData({...formData, videoUrl: e.target.value})}
+                      data-testid="input-video-url"
                     />
                   </div>
                 </CardContent>
               </Card>
             )}
 
-            {/* Step 2: Choose Template */}
             {step === 2 && (
               <Card>
                 <CardHeader>
@@ -256,14 +292,14 @@ export default function CreateSite() {
                     {TEMPLATES.map((template) => (
                       <Label 
                         key={template.id}
-                        htmlFor={template.id}
+                        htmlFor={`edit-${template.id}`}
                         className={`cursor-pointer rounded-xl border-2 overflow-hidden transition-all ${
                           formData.templateId === template.id 
                             ? "border-primary ring-2 ring-primary/20" 
                             : "border-muted hover:border-primary/50"
                         }`}
                       >
-                        <RadioGroupItem value={template.id} id={template.id} className="sr-only" />
+                        <RadioGroupItem value={template.id} id={`edit-${template.id}`} className="sr-only" />
                         <div className="h-40 bg-muted">
                           <img src={template.thumbnailUrl} alt={template.name} className="w-full h-full object-cover" />
                         </div>
@@ -281,7 +317,6 @@ export default function CreateSite() {
               </Card>
             )}
 
-            {/* Step 3: Branding */}
             {step === 3 && (
               <Card>
                 <CardHeader>
@@ -296,14 +331,14 @@ export default function CreateSite() {
                     {themes.map((theme) => (
                       <Label 
                         key={theme.id}
-                        htmlFor={`theme-${theme.id}`}
+                        htmlFor={`edit-theme-${theme.id}`}
                         className={`cursor-pointer rounded-xl border-2 overflow-hidden transition-all ${
                           formData.themeId === theme.id 
                             ? "border-primary ring-2 ring-primary/20" 
                             : "border-muted hover:border-primary/50"
                         }`}
                       >
-                        <RadioGroupItem value={theme.id} id={`theme-${theme.id}`} className="sr-only" />
+                        <RadioGroupItem value={theme.id} id={`edit-theme-${theme.id}`} className="sr-only" />
                         <div 
                           className="h-24 relative"
                           style={{ backgroundColor: theme.colors.background }}
@@ -365,13 +400,12 @@ export default function CreateSite() {
               </Card>
             )}
 
-            {/* Step 4: Review */}
             {step === 4 && (
               <div className="grid md:grid-cols-3 gap-6">
                 <div className="md:col-span-2">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Review Your Site</CardTitle>
+                      <CardTitle>Review Your Changes</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-6">
                       <div className="grid gap-4">
@@ -407,26 +441,23 @@ export default function CreateSite() {
                 <div>
                   <Card className="sticky top-24">
                     <CardHeader>
-                      <CardTitle>Order Summary</CardTitle>
+                      <CardTitle>Save Changes</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <span>Single Property Site</span>
-                        <span className="font-medium">1 Credit</span>
-                      </div>
-                      <div className="border-t pt-4 flex justify-between items-center">
-                        <span className="font-bold">Total</span>
-                        <span className="font-bold text-primary">1 Credit</span>
-                      </div>
-                      
-                      <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded">
-                        Your current balance: <span className="font-bold text-foreground">{user?.credits ?? 0} Credits</span>
-                      </div>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground">
+                        Review your changes and click save when ready. No credits will be charged for editing existing sites.
+                      </p>
                     </CardContent>
                     <CardFooter>
-                      <Button className="w-full gap-2" size="lg" onClick={handlePublish} disabled={!user || user.credits < 1}>
-                        <CreditCard className="h-4 w-4" />
-                        {!user || user.credits < 1 ? "Insufficient Credits" : "Publish Site"}
+                      <Button 
+                        className="w-full gap-2" 
+                        size="lg" 
+                        onClick={handleSave}
+                        disabled={updateSiteMutation.isPending}
+                        data-testid="button-save-changes"
+                      >
+                        <Save className="h-4 w-4" />
+                        {updateSiteMutation.isPending ? "Saving..." : "Save Changes"}
                       </Button>
                     </CardFooter>
                   </Card>
@@ -434,7 +465,6 @@ export default function CreateSite() {
               </div>
             )}
 
-            {/* Navigation Buttons */}
             <div className="flex justify-between mt-8">
               <Button variant="outline" onClick={handleBack} disabled={step === 1}>
                 <ChevronLeft className="mr-2 h-4 w-4" /> Back

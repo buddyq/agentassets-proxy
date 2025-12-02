@@ -10,6 +10,7 @@ import Home from "@/pages/home";
 import AuthPage from "@/pages/auth-page";
 import Dashboard from "@/pages/dashboard";
 import CreateSite from "@/pages/create-site";
+import EditSite from "@/pages/edit-site";
 import Themes from "@/pages/themes";
 import AdminDashboard from "@/pages/admin";
 import Credits from "@/pages/credits";
@@ -26,6 +27,7 @@ function Router() {
       {/* Protected routes */}
       <ProtectedRoute path="/dashboard" component={Dashboard} />
       <ProtectedRoute path="/create-site" component={CreateSite} />
+      <ProtectedRoute path="/edit-site/:id" component={EditSite} />
       <ProtectedRoute path="/themes" component={Themes} />
       <ProtectedRoute path="/credits" component={Credits} />
       <ProtectedRoute path="/admin" component={AdminDashboard} />
