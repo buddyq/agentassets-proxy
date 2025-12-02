@@ -194,3 +194,22 @@ export function useRemovePhotoFromSite() {
     }
   });
 }
+
+export function useReorderPhotos() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ siteId, photos }: { siteId: string; photos: string[] }) => {
+      const res = await fetch(`${API_BASE}/sites/${siteId}/photos/reorder`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ photos })
+      });
+      if (!res.ok) throw new Error('Failed to reorder photos');
+      return res.json() as Promise<Site>;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['sites'] });
+      queryClient.setQueryData(['site', data.id], data);
+    }
+  });
+}

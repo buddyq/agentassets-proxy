@@ -3,10 +3,10 @@ import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { TEMPLATES } from "@/lib/store";
-import { useSites, useDeleteSite, useUpdateSite, useThemes, useAddPhotoToSite, useRemovePhotoFromSite, getUploadUrl } from "@/lib/api";
+import { useSites, useDeleteSite, useUpdateSite, useThemes, useAddPhotoToSite, useRemovePhotoFromSite, useReorderPhotos, getUploadUrl } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
-import { Plus, ExternalLink, Trash2, Globe, BarChart3, Users, MousePointerClick, TrendingUp, Image, X, Upload } from "lucide-react";
+import { Plus, ExternalLink, Trash2, Globe, BarChart3, Users, MousePointerClick, TrendingUp, Image, X, Upload, GripVertical } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format, subDays } from "date-fns";
 import { ObjectUploader } from "@/components/ObjectUploader";
@@ -43,7 +43,11 @@ export default function Dashboard() {
   const updateSiteMutation = useUpdateSite();
   const addPhotoMutation = useAddPhotoToSite();
   const removePhotoMutation = useRemovePhotoFromSite();
+  const reorderPhotosMutation = useReorderPhotos();
   const { toast } = useToast();
+
+  // Photo drag state
+  const [draggedPhoto, setDraggedPhoto] = useState<number | null>(null);
 
   const getThemeName = (id: string) => themes.find(t => t.id === id)?.name || 'Unknown Theme';
   const getTemplateName = (id: string) => TEMPLATES.find(t => t.id === id)?.name || 'Unknown Template';
@@ -150,6 +154,29 @@ export default function Dashboard() {
         }
       );
     }
+  };
+
+  const handleDragStart = (index: number) => {
+    setDraggedPhoto(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedPhoto === null || draggedPhoto === index) return;
+
+    const photos = [...(photosSite?.photos || [])];
+    const draggedItem = photos[draggedPhoto];
+    photos.splice(draggedPhoto, 1);
+    photos.splice(index, 0, draggedItem);
+
+    if (selectedSiteForPhotos) {
+      reorderPhotosMutation.mutate({ siteId: selectedSiteForPhotos, photos });
+    }
+    setDraggedPhoto(index);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedPhoto(null);
   };
 
   const photosSite = sites.find(s => s.id === selectedSiteForPhotos);
@@ -427,23 +454,42 @@ export default function Dashboard() {
             </div>
 
             {photosSite?.photos && photosSite.photos.length > 0 ? (
-              <div className="grid grid-cols-3 gap-4">
-                {photosSite.photos.map((photo, index) => (
-                  <div key={index} className="relative aspect-square rounded-lg overflow-hidden group">
-                    <img 
-                      src={photo} 
-                      alt={`Property photo ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                    <button
-                      className="absolute top-2 right-2 bg-destructive text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => handleRemovePhoto(photo)}
+              <>
+                <p className="text-sm text-muted-foreground mb-3">Drag photos to rearrange their order</p>
+                <div className="grid grid-cols-3 gap-4">
+                  {photosSite.photos.map((photo, index) => (
+                    <div 
+                      key={photo}
+                      draggable
+                      onDragStart={() => handleDragStart(index)}
+                      onDragOver={(e) => handleDragOver(e, index)}
+                      onDragEnd={handleDragEnd}
+                      className={`relative aspect-square rounded-lg overflow-hidden group cursor-grab active:cursor-grabbing ${
+                        draggedPhoto === index ? 'opacity-50 ring-2 ring-primary' : ''
+                      }`}
                     >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
+                      <div className="absolute top-2 left-2 bg-black/50 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                        <GripVertical className="h-4 w-4" />
+                      </div>
+                      <img 
+                        src={photo} 
+                        alt={`Property photo ${index + 1}`}
+                        className="w-full h-full object-cover pointer-events-none"
+                      />
+                      <div className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                        {index === 0 ? 'Main Photo' : `Photo ${index + 1}`}
+                      </div>
+                      <button
+                        className="absolute top-2 right-2 bg-destructive text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                        onClick={() => handleRemovePhoto(photo)}
+                        data-testid={`button-remove-photo-${index}`}
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </>
             ) : (
               <div className="text-center py-12 bg-muted/30 rounded-lg">
                 <Image className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />

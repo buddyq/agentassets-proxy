@@ -217,5 +217,26 @@ export async function registerRoutes(
     }
   });
 
+  // Reorder photos for a site
+  app.put("/api/sites/:id/photos/reorder", isAuthenticated, async (req: any, res) => {
+    try {
+      const { photos } = req.body;
+      if (!Array.isArray(photos)) {
+        return res.status(400).json({ error: "photos array is required" });
+      }
+
+      const site = await storage.getSite(req.params.id);
+      if (!site) {
+        return res.status(404).json({ error: "Site not found" });
+      }
+
+      const updatedSite = await storage.updateSite(req.params.id, { photos });
+      res.json(updatedSite);
+    } catch (error) {
+      console.error("Error reordering photos:", error);
+      res.status(500).json({ error: "Failed to reorder photos" });
+    }
+  });
+
   return httpServer;
 }
