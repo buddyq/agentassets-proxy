@@ -5,11 +5,10 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { TEMPLATES } from "@/lib/store";
-import { useSite, useUpdateSite, useThemes, useAddPhotoToSite, useRemovePhotoFromSite, useReorderPhotos, getUploadUrl } from "@/lib/api";
+import { useSite, useUpdateSite, useThemes, useLayouts, useAddPhotoToSite, useRemovePhotoFromSite, useReorderPhotos, getUploadUrl } from "@/lib/api";
 import { useState, useEffect } from "react";
 import { useLocation, useParams } from "wouter";
-import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, Save, Image, X, GripVertical, Star } from "lucide-react";
+import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, Save, Image, X, GripVertical, Star, LayoutGrid } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ObjectUploader } from "@/components/ObjectUploader";
@@ -17,8 +16,8 @@ import { ObjectUploader } from "@/components/ObjectUploader";
 const STEPS = [
   { id: 1, name: "Property Details", icon: Layout },
   { id: 2, name: "Photos", icon: Image },
-  { id: 3, name: "Choose Template", icon: Layout },
-  { id: 4, name: "Branding", icon: PaintBucket },
+  { id: 3, name: "Layout", icon: LayoutGrid },
+  { id: 4, name: "Color Theme", icon: PaintBucket },
   { id: 5, name: "Review", icon: Save },
 ];
 
@@ -30,6 +29,7 @@ export default function EditSite() {
   const [, setLocation] = useLocation();
   const { data: site, isLoading: isLoadingSite } = useSite(siteId);
   const { data: themes = [] } = useThemes();
+  const { data: layouts = [] } = useLayouts({ preset: true });
   const updateSiteMutation = useUpdateSite();
   const addPhotoMutation = useAddPhotoToSite();
   const removePhotoMutation = useRemovePhotoFromSite();
@@ -45,7 +45,7 @@ export default function EditSite() {
     sqft: "",
     description: "",
     videoUrl: "",
-    templateId: TEMPLATES[0].id,
+    layoutId: "",
     themeId: "",
   });
 
@@ -62,11 +62,11 @@ export default function EditSite() {
         sqft: site.sqft?.toString() || "",
         description: site.description || "",
         videoUrl: site.videoUrl || "",
-        templateId: site.templateId || TEMPLATES[0].id,
+        layoutId: site.layoutId || layouts[0]?.id || "",
         themeId: site.themeId || themes[0]?.id || "",
       });
     }
-  }, [site, themes]);
+  }, [site, themes, layouts]);
 
   const handleNext = () => {
     if (step < 5) setStep(step + 1);
@@ -91,7 +91,8 @@ export default function EditSite() {
           sqft: parseInt(formData.sqft) || 0,
           description: formData.description || null,
           videoUrl: formData.videoUrl || null,
-          templateId: formData.templateId,
+          layoutId: formData.layoutId,
+          templateId: formData.layoutId,
           themeId: formData.themeId,
         }
       },
@@ -211,7 +212,7 @@ export default function EditSite() {
     );
   };
 
-  const selectedTemplate = TEMPLATES.find(t => t.id === formData.templateId);
+  const selectedLayout = layouts.find(l => l.id === formData.layoutId);
   const selectedTheme = themes.find(t => t.id === formData.themeId);
 
   if (isLoadingSite) {
@@ -487,34 +488,71 @@ export default function EditSite() {
             {step === 3 && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Choose a Template</CardTitle>
+                  <CardTitle>Choose a Layout</CardTitle>
+                  <p className="text-muted-foreground text-sm">
+                    Layouts define the structure and typography of your property site.
+                  </p>
                 </CardHeader>
                 <CardContent>
                   <RadioGroup 
-                    value={formData.templateId} 
-                    onValueChange={(v) => setFormData({...formData, templateId: v})}
-                    className="grid md:grid-cols-3 gap-4"
+                    value={formData.layoutId} 
+                    onValueChange={(v) => setFormData({...formData, layoutId: v})}
+                    className="grid md:grid-cols-2 lg:grid-cols-4 gap-4"
                   >
-                    {TEMPLATES.map((template) => (
+                    {layouts.map((layout) => (
                       <Label 
-                        key={template.id}
-                        htmlFor={`edit-${template.id}`}
+                        key={layout.id}
+                        htmlFor={`edit-layout-${layout.id}`}
                         className={`cursor-pointer rounded-xl border-2 overflow-hidden transition-all ${
-                          formData.templateId === template.id 
+                          formData.layoutId === layout.id 
                             ? "border-primary ring-2 ring-primary/20" 
                             : "border-muted hover:border-primary/50"
                         }`}
+                        data-testid={`edit-layout-option-${layout.id}`}
                       >
-                        <RadioGroupItem value={template.id} id={`edit-${template.id}`} className="sr-only" />
-                        <div className="h-40 bg-muted">
-                          <img src={template.thumbnailUrl} alt={template.name} className="w-full h-full object-cover" />
+                        <RadioGroupItem value={layout.id} id={`edit-layout-${layout.id}`} className="sr-only" />
+                        <div className="h-32 bg-gradient-to-br from-muted to-muted/50 p-4 flex flex-col justify-end">
+                          <div className="flex gap-1 mb-2">
+                            {layout.structure?.heroStyle === 'fullscreen' && (
+                              <div className="w-full h-6 bg-primary/20 rounded" />
+                            )}
+                            {layout.structure?.heroStyle === 'split' && (
+                              <>
+                                <div className="w-1/2 h-6 bg-primary/20 rounded" />
+                                <div className="w-1/2 h-6 bg-muted-foreground/10 rounded" />
+                              </>
+                            )}
+                            {layout.structure?.heroStyle === 'minimal' && (
+                              <div className="w-2/3 h-4 bg-primary/20 rounded mx-auto" />
+                            )}
+                            {layout.structure?.heroStyle === 'slider' && (
+                              <>
+                                <div className="w-1/4 h-6 bg-primary/30 rounded" />
+                                <div className="w-1/4 h-6 bg-primary/20 rounded" />
+                                <div className="w-1/4 h-6 bg-primary/10 rounded" />
+                                <div className="w-1/4 h-6 bg-primary/5 rounded" />
+                              </>
+                            )}
+                          </div>
+                          <div className="flex gap-1">
+                            <div className="w-1/3 h-3 bg-muted-foreground/20 rounded" />
+                            <div className="w-1/4 h-3 bg-muted-foreground/10 rounded" />
+                          </div>
                         </div>
-                        <div className="p-4">
-                          <h3 className="font-medium flex items-center gap-2">
-                            {template.name}
-                            {formData.templateId === template.id && <Check className="h-4 w-4 text-primary" />}
+                        <div className="p-4 bg-white">
+                          <h3 className="font-medium flex items-center justify-between">
+                            {layout.name}
+                            {formData.layoutId === layout.id && <Check className="h-4 w-4 text-primary" />}
                           </h3>
-                          <p className="text-sm text-muted-foreground">{template.description}</p>
+                          <p className="text-xs text-muted-foreground mt-1">{layout.description}</p>
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded">
+                              {layout.structure?.heroStyle}
+                            </span>
+                            <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded">
+                              {layout.structure?.galleryStyle}
+                            </span>
+                          </div>
                         </div>
                       </Label>
                     ))}
@@ -526,7 +564,10 @@ export default function EditSite() {
             {step === 4 && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Choose a Theme</CardTitle>
+                  <CardTitle>Choose a Color Theme</CardTitle>
+                  <p className="text-muted-foreground text-sm">
+                    Color themes control the color palette of your site. They work with any layout.
+                  </p>
                 </CardHeader>
                 <CardContent>
                   <RadioGroup 
@@ -636,8 +677,8 @@ export default function EditSite() {
                           <span className="font-medium">{site.photos?.length || 0} photos</span>
                         </div>
                         <div>
-                          <span className="text-muted-foreground block">Template</span>
-                          <span className="font-medium">{selectedTemplate?.name}</span>
+                          <span className="text-muted-foreground block">Layout</span>
+                          <span className="font-medium">{selectedLayout?.name}</span>
                         </div>
                         <div>
                           <span className="text-muted-foreground block">Theme</span>
