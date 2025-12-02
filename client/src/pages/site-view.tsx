@@ -428,7 +428,7 @@ function ShoalwoodDescription({ description }: { description: string }) {
   );
 }
 
-function ShoalwoodDetails({ site }: { site: Site }) {
+function ShoalwoodDetails({ site, theme }: { site: Site; theme?: Theme }) {
   const details = [
     { label: 'Bedrooms', value: site.bedrooms },
     { label: 'Bathrooms', value: site.bathrooms },
@@ -438,39 +438,65 @@ function ShoalwoodDetails({ site }: { site: Site }) {
     { label: 'Stories', value: site.stories || '—' },
   ];
 
+  const primaryColor = theme?.colors?.primary || '#558B73';
+  const bgColor = `${primaryColor}0D`;
+
   return (
-    <section id="details" className="py-16 px-4 md:px-8 border-t border-gray-100">
-      <div className="container mx-auto max-w-4xl">
-        <h2 
-          className="text-2xl md:text-3xl mb-10 text-center" 
-          style={{ 
-            fontFamily: 'var(--font-heading)', 
-            color: 'var(--theme-text)',
-            fontWeight: '600',
-            letterSpacing: '-0.01em'
-          }}
-        >
-          Property Details
-        </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-8 gap-y-8 md:gap-x-16 md:gap-y-10">
-          {details.map(({ label, value }) => (
-            <div key={label} className="text-center border-b border-gray-100 pb-4">
-              <p 
-                className="text-xs uppercase tracking-[0.12em] mb-2"
-                style={{ color: '#999', fontFamily: 'var(--font-body)', fontWeight: '500' }}
+    <section 
+      id="details" 
+      className="py-16 px-4 md:px-8"
+      style={{ backgroundColor: bgColor }}
+    >
+      <div className="container mx-auto max-w-3xl">
+        {/* Section title with divider - left aligned */}
+        <div className="mb-10">
+          <h2 
+            className="text-sm uppercase tracking-[0.2em] mb-4" 
+            style={{ 
+              fontFamily: 'var(--font-heading)', 
+              color: 'var(--theme-text)',
+              fontWeight: '600'
+            }}
+          >
+            PROPERTY DETAILS
+          </h2>
+          {/* Section title divider */}
+          <div 
+            className="w-12 h-0.5"
+            style={{ backgroundColor: primaryColor }}
+          />
+        </div>
+        
+        {/* Details list - each on own line with underline */}
+        <div className="space-y-0">
+          {details.map(({ label, value }, index) => (
+            <div 
+              key={label} 
+              className="flex justify-between items-center py-4"
+              style={{ 
+                borderBottom: index < details.length - 1 ? '1px solid rgba(0,0,0,0.1)' : 'none'
+              }}
+            >
+              <span 
+                className="text-sm uppercase tracking-[0.1em]"
+                style={{ 
+                  color: '#666', 
+                  fontFamily: 'var(--font-body)',
+                  fontWeight: '500'
+                }}
               >
                 {label}
-              </p>
-              <p 
-                className="text-xl md:text-2xl"
+              </span>
+              <span 
+                className="text-base"
                 style={{ 
                   color: 'var(--theme-text)', 
-                  fontFamily: 'var(--font-heading)',
+                  fontFamily: 'var(--font-body)',
                   fontWeight: '400'
                 }}
               >
                 {value}
-              </p>
+              </span>
             </div>
           ))}
         </div>
@@ -835,7 +861,7 @@ export default function SiteView() {
         <ShoalwoodNavigation site={site} theme={theme} hasPhotos={!!hasPhotos} hasVideo={hasVideo} />
         <ShoalwoodHero site={site} theme={theme} heroImage={heroImage} />
         <ShoalwoodDescription description={site.description || "A beautiful property awaiting your discovery."} />
-        <ShoalwoodDetails site={site} />
+        <ShoalwoodDetails site={site} theme={theme} />
         
         {hasPhotos && <PhotoGallery photos={site.photos!} themeColors={theme?.colors} />}
         
