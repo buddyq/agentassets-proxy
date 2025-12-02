@@ -37,6 +37,17 @@ function getLayoutTypography(layout?: Layout) {
   }
   
   const { headingFont, bodyFont, headingWeight } = structure.typography;
+  
+  // Shoalwood layout uses specific typography matching the source site
+  if (layout?.id === 'layout-shoalwood') {
+    return {
+      '--font-heading': '"freight-display-pro", "Playfair Display", Georgia, serif',
+      '--font-body': '"freight-text-pro", "Source Sans Pro", -apple-system, BlinkMacSystemFont, sans-serif',
+      '--heading-weight': '400',
+      '--font-nav': '"proxima-nova", "Source Sans Pro", -apple-system, BlinkMacSystemFont, sans-serif',
+    } as React.CSSProperties;
+  }
+  
   return {
     '--font-heading': `"${headingFont}", serif`,
     '--font-body': `"${bodyFont}", sans-serif`,
@@ -112,15 +123,36 @@ function ShoalwoodHero({ site, theme, heroImage }: { site: Site; theme?: Theme; 
       
       <div className="absolute bottom-0 left-0 right-0 p-8 md:p-16 z-10">
         <div className="container mx-auto">
-          <div className="inline-block bg-white/90 backdrop-blur-sm px-4 py-2 rounded-md mb-4">
-            <span className="text-sm font-semibold tracking-wide" style={{ color: theme?.colors?.primary || '#1a1a1a' }}>
-              FOR SALE
+          {/* Status badge */}
+          <div className="inline-block bg-white/95 backdrop-blur-sm px-5 py-2.5 rounded mb-6">
+            <span 
+              className="text-xs font-semibold tracking-[0.2em] uppercase" 
+              style={{ color: theme?.colors?.primary || '#1a1a1a' }}
+            >
+              For Sale
             </span>
           </div>
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-4 drop-shadow-2xl" style={{ fontFamily: 'var(--font-heading)' }}>
+          {/* Price - large elegant display */}
+          <h1 
+            className="text-5xl md:text-7xl lg:text-8xl text-white mb-3 drop-shadow-2xl"
+            style={{ 
+              fontFamily: 'var(--font-heading)', 
+              fontWeight: '400',
+              letterSpacing: '-0.02em',
+              lineHeight: '1.1'
+            }}
+          >
             {site.price}
           </h1>
-          <h2 className="text-xl md:text-2xl text-white/90 font-light tracking-wide">
+          {/* Address */}
+          <h2 
+            className="text-lg md:text-xl text-white/90 tracking-wide"
+            style={{ 
+              fontFamily: 'var(--font-body)',
+              fontWeight: '400',
+              letterSpacing: '0.02em'
+            }}
+          >
             {site.address}
           </h2>
         </div>
@@ -163,13 +195,13 @@ function ShoalwoodNavigation({ site, theme, hasPhotos, hasVideo }: { site: Site;
   }, [isMobileMenuOpen]);
 
   const navLinks = [
-    { href: '#overview', label: 'Overview', show: true },
-    { href: '#details', label: 'Details', show: true },
+    { href: '#overview', label: 'Property Description' },
+    { href: '#details', label: 'Details' },
     { href: '#photos', label: 'Photos', show: hasPhotos },
     { href: '#video', label: 'Video', show: hasVideo },
-    { href: '#map', label: 'Map', show: true },
-    { href: '#contact', label: 'Contact', show: true },
-  ].filter(link => link.show);
+    { href: '#map', label: 'Map' },
+    { href: '#contact', label: 'Contact' },
+  ].filter(link => link.show !== false);
 
   const handleNavClick = (href: string) => {
     setIsMobileMenuOpen(false);
@@ -178,143 +210,185 @@ function ShoalwoodNavigation({ site, theme, hasPhotos, hasVideo }: { site: Site;
 
   return (
     <>
-      <nav className={`sticky top-0 z-50 w-full transition-all duration-300 ${
-        isScrolled ? 'bg-white shadow-lg' : 'bg-white/95 backdrop-blur-sm'
-      }`}>
-        <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setIsMobileMenuOpen(true)}
-              className="md:hidden p-2 -ml-2 hover:bg-gray-100 rounded-lg transition-colors"
-              aria-label="Open menu"
-              data-testid="button-mobile-menu"
-            >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="3" y1="12" x2="21" y2="12"></line>
-                <line x1="3" y1="6" x2="21" y2="6"></line>
-                <line x1="3" y1="18" x2="21" y2="18"></line>
-              </svg>
-            </button>
-            
-            {theme?.logoUrl ? (
+      {/* Fixed floating navigation overlay - sits on top of hero */}
+      <nav 
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          isScrolled 
+            ? 'bg-white shadow-lg' 
+            : 'bg-transparent'
+        }`}
+      >
+        <div className="flex items-center justify-between p-4 md:px-6 md:py-4">
+          {/* Left side - Hamburger menu button */}
+          <button
+            onClick={() => setIsMobileMenuOpen(true)}
+            className={`flex items-center gap-3 p-3 rounded-md transition-all duration-300 ${
+              isScrolled 
+                ? 'bg-gray-100 text-gray-800 hover:bg-gray-200' 
+                : 'bg-black/30 backdrop-blur-sm text-white hover:bg-black/50'
+            }`}
+            aria-label="Open menu"
+            data-testid="button-mobile-menu"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+            <span className="text-sm font-medium tracking-wide uppercase hidden sm:inline">Menu</span>
+          </button>
+
+          {/* Right side - Logo and Request Info */}
+          <div className="flex items-center gap-4">
+            {theme?.logoUrl && (
               <img 
                 src={theme.logoUrl} 
                 alt="Logo" 
-                className="h-10 w-auto object-contain"
+                className={`h-10 md:h-12 w-auto object-contain transition-all duration-300 ${
+                  isScrolled ? '' : 'brightness-0 invert'
+                }`}
                 data-testid="img-nav-logo"
               />
-            ) : (
-              <div className="text-lg font-semibold truncate max-w-[200px] md:max-w-none" style={{ color: 'var(--theme-primary)', fontFamily: 'var(--font-heading)' }}>
-                {site.title || site.address}
-              </div>
             )}
+            <Button 
+              size="sm" 
+              className={`font-medium px-4 md:px-6 text-sm tracking-wide transition-all duration-300 ${
+                isScrolled 
+                  ? 'text-white' 
+                  : 'bg-white/20 backdrop-blur-sm text-white border border-white/40 hover:bg-white/30'
+              }`}
+              style={isScrolled ? { backgroundColor: theme?.colors?.primary || '#1a1a1a' } : {}}
+              onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
+              data-testid="button-request-info"
+            >
+              Request Info
+            </Button>
           </div>
-          
-          <div className="hidden md:flex items-center gap-6 text-sm font-medium">
-            {navLinks.map(link => (
-              <a 
-                key={link.href}
-                href={link.href} 
-                className="hover:opacity-70 transition-opacity" 
-                style={{ color: 'var(--theme-text)' }}
-              >
-                {link.label}
-              </a>
-            ))}
-          </div>
-
-          <Button 
-            size="sm" 
-            className="text-white font-medium px-5"
-            style={{ backgroundColor: 'var(--theme-primary)' }}
-            onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
-            data-testid="button-request-info"
-          >
-            Request Info
-          </Button>
         </div>
       </nav>
 
+      {/* Slide-out menu panel */}
       {isMobileMenuOpen && (
         <div className="fixed inset-0 z-[100]" data-testid="mobile-menu-overlay">
           <div 
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setIsMobileMenuOpen(false)}
           />
-          <div className="absolute left-0 top-0 bottom-0 w-80 max-w-[85vw] bg-white shadow-2xl transform transition-transform">
-            <div className="flex items-center justify-between p-4 border-b">
+          <div 
+            className="absolute left-0 top-0 bottom-0 w-[340px] max-w-[90vw] bg-white shadow-2xl flex flex-col"
+            style={{ 
+              animation: 'slideIn 0.3s ease-out',
+            }}
+          >
+            {/* Menu header with logo and close */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
               {theme?.logoUrl ? (
-                <img src={theme.logoUrl} alt="Logo" className="h-10 w-auto" />
+                <img src={theme.logoUrl} alt="Logo" className="h-12 w-auto" />
               ) : (
-                <div className="text-lg font-semibold" style={{ color: 'var(--theme-primary)', fontFamily: 'var(--font-heading)' }}>
-                  {site.title || 'Menu'}
+                <div 
+                  className="text-xl font-semibold" 
+                  style={{ color: theme?.colors?.primary || '#1a1a1a', fontFamily: 'var(--font-heading)' }}
+                >
+                  {site.title || site.address.split(',')[0]}
                 </div>
               )}
               <button
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                 aria-label="Close menu"
                 data-testid="button-close-menu"
               >
-                <X className="h-6 w-6" />
+                <X className="h-6 w-6 text-gray-600" />
               </button>
             </div>
+
+            {/* Property address */}
+            <div className="px-6 py-4 border-b border-gray-100">
+              <p className="text-sm text-gray-500 uppercase tracking-wider mb-1">Property</p>
+              <p className="text-base font-medium text-gray-800">{site.address}</p>
+            </div>
             
-            <div className="p-4">
-              <div className="space-y-1">
+            {/* Navigation links */}
+            <div className="flex-1 overflow-y-auto py-4">
+              <nav className="px-4">
                 {navLinks.map(link => (
                   <button
                     key={link.href}
                     onClick={() => handleNavClick(link.href)}
-                    className="block w-full text-left px-4 py-3 text-lg font-medium hover:bg-gray-50 rounded-lg transition-colors"
-                    style={{ color: 'var(--theme-text)' }}
-                    data-testid={`link-nav-${link.label.toLowerCase()}`}
+                    className="block w-full text-left px-4 py-4 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors border-b border-gray-50"
+                    data-testid={`link-nav-${link.label.toLowerCase().replace(/\s+/g, '-')}`}
                   >
                     {link.label}
                   </button>
                 ))}
-              </div>
-              
-              <div className="mt-6 pt-6 border-t">
-                <Button 
-                  className="w-full text-white font-medium"
-                  style={{ backgroundColor: 'var(--theme-primary)' }}
-                  onClick={() => handleNavClick('#contact')}
-                  data-testid="button-mobile-request-info"
-                >
-                  Request Info
-                </Button>
-              </div>
+              </nav>
+            </div>
+            
+            {/* Bottom CTA */}
+            <div className="p-6 border-t border-gray-100">
+              <Button 
+                className="w-full text-white font-medium py-3 text-base"
+                style={{ backgroundColor: theme?.colors?.primary || '#1a1a1a' }}
+                onClick={() => handleNavClick('#contact')}
+                data-testid="button-mobile-request-info"
+              >
+                Request Info
+              </Button>
             </div>
           </div>
         </div>
       )}
+
+      <style>{`
+        @keyframes slideIn {
+          from { transform: translateX(-100%); }
+          to { transform: translateX(0); }
+        }
+      `}</style>
     </>
   );
 }
 
 function ShoalwoodDescription({ description }: { description: string }) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const isLong = description.length > 400;
+  const isLong = description.length > 500;
   
   return (
-    <section id="overview" className="py-16 px-4">
-      <div className="container mx-auto max-w-4xl">
-        <h2 className="text-2xl md:text-3xl font-bold mb-8" style={{ fontFamily: 'var(--font-heading)', color: 'var(--theme-primary)' }}>
+    <section id="overview" className="py-20 px-4 md:px-8">
+      <div className="container mx-auto max-w-3xl">
+        <h2 
+          className="text-3xl md:text-4xl mb-10 text-center" 
+          style={{ 
+            fontFamily: 'var(--font-heading)', 
+            color: 'var(--theme-text)',
+            fontWeight: '400',
+            letterSpacing: '-0.01em'
+          }}
+        >
           Property Description
         </h2>
         <div className="prose prose-lg max-w-none">
-          <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-            {isLong && !isExpanded ? description.slice(0, 400) + '...' : description}
+          <p 
+            className="leading-[1.8] whitespace-pre-wrap text-center md:text-left"
+            style={{ 
+              color: '#555',
+              fontSize: '1.0625rem',
+              fontFamily: 'var(--font-body)',
+              fontWeight: '400'
+            }}
+          >
+            {isLong && !isExpanded ? description.slice(0, 500) + '...' : description}
           </p>
           {isLong && (
-            <button 
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="mt-4 font-semibold hover:underline"
-              style={{ color: 'var(--theme-primary)' }}
-            >
-              {isExpanded ? 'Read Less' : 'Read More'}
-            </button>
+            <div className="text-center mt-6">
+              <button 
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="text-sm font-medium tracking-wide uppercase hover:opacity-70 transition-opacity"
+                style={{ color: 'var(--theme-primary)' }}
+              >
+                {isExpanded ? 'Read Less' : 'Read More'}
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -324,27 +398,44 @@ function ShoalwoodDescription({ description }: { description: string }) {
 
 function ShoalwoodDetails({ site }: { site: Site }) {
   const details = [
-    { icon: Bed, label: 'Bedrooms', value: site.bedrooms },
-    { icon: Bath, label: 'Bathrooms', value: site.bathrooms },
-    { icon: Square, label: 'Living Area', value: `${site.sqft.toLocaleString()} sqft` },
+    { label: 'Bedrooms', value: site.bedrooms },
+    { label: 'Bathrooms', value: site.bathrooms },
+    { label: 'Living Area', value: `${site.sqft.toLocaleString()} sqft` },
   ];
 
   return (
-    <section id="details" className="py-16 px-4 bg-gray-50">
-      <div className="container mx-auto max-w-4xl">
-        <h2 className="text-2xl md:text-3xl font-bold mb-8" style={{ fontFamily: 'var(--font-heading)', color: 'var(--theme-primary)' }}>
+    <section id="details" className="py-20 px-4 md:px-8 border-t border-gray-100">
+      <div className="container mx-auto max-w-3xl">
+        <h2 
+          className="text-3xl md:text-4xl mb-12 text-center" 
+          style={{ 
+            fontFamily: 'var(--font-heading)', 
+            color: 'var(--theme-text)',
+            fontWeight: '400',
+            letterSpacing: '-0.01em'
+          }}
+        >
           Property Details
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {details.map(({ icon: Icon, label, value }) => (
-            <div key={label} className="bg-white p-6 rounded-xl shadow-sm border flex items-center gap-4">
-              <div className="p-3 rounded-full" style={{ backgroundColor: 'var(--theme-primary-10)' }}>
-                <Icon className="h-6 w-6" style={{ color: 'var(--theme-primary)' }} />
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">{label}</p>
-                <p className="text-xl font-bold" style={{ color: 'var(--theme-text)' }}>{value}</p>
-              </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 md:gap-12">
+          {details.map(({ label, value }) => (
+            <div key={label} className="text-center">
+              <p 
+                className="text-xs uppercase tracking-[0.15em] mb-2"
+                style={{ color: '#888', fontFamily: 'var(--font-body)' }}
+              >
+                {label}
+              </p>
+              <p 
+                className="text-2xl md:text-3xl"
+                style={{ 
+                  color: 'var(--theme-text)', 
+                  fontFamily: 'var(--font-heading)',
+                  fontWeight: '400'
+                }}
+              >
+                {value}
+              </p>
             </div>
           ))}
         </div>
@@ -401,13 +492,21 @@ function ShoalwoodContact({ site, theme }: { site: Site; theme?: Theme }) {
   };
 
   return (
-    <section id="contact" className="py-16 px-4 bg-gray-50">
-      <div className="container mx-auto max-w-4xl">
-        <h2 className="text-2xl md:text-3xl font-bold mb-8" style={{ fontFamily: 'var(--font-heading)', color: 'var(--theme-primary)' }}>
+    <section id="contact" className="py-20 px-4 md:px-8 border-t border-gray-100">
+      <div className="container mx-auto max-w-2xl">
+        <h2 
+          className="text-3xl md:text-4xl mb-10 text-center" 
+          style={{ 
+            fontFamily: 'var(--font-heading)', 
+            color: 'var(--theme-text)',
+            fontWeight: '400',
+            letterSpacing: '-0.01em'
+          }}
+        >
           Get in Touch
         </h2>
         
-        <div className="bg-white p-8 rounded-xl shadow-sm border">
+        <div className="bg-white p-8 md:p-10 rounded-lg shadow-sm border border-gray-100">
           <form onSubmit={handleSubmit} className="grid gap-6">
             <div className="grid md:grid-cols-2 gap-4">
               <div>
@@ -697,20 +796,29 @@ export default function SiteView() {
           fontFamily: 'var(--font-body)'
         }}
       >
-        <ShoalwoodHero site={site} theme={theme} heroImage={heroImage} />
+        {/* Navigation overlay - rendered first, floats on top of hero */}
         <ShoalwoodNavigation site={site} theme={theme} hasPhotos={!!hasPhotos} hasVideo={hasVideo} />
+        <ShoalwoodHero site={site} theme={theme} heroImage={heroImage} />
         <ShoalwoodDescription description={site.description || "A beautiful property awaiting your discovery."} />
         <ShoalwoodDetails site={site} />
         
         {hasPhotos && <PhotoGallery photos={site.photos!} themeColors={theme?.colors} />}
         
         {hasVideo && (
-          <section id="video" className="py-16 px-4">
-            <div className="container mx-auto max-w-4xl">
-              <h2 className="text-2xl md:text-3xl font-bold mb-8" style={{ fontFamily: 'var(--font-heading)', color: 'var(--theme-primary)' }}>
+          <section id="video" className="py-20 px-4 md:px-8 border-t border-gray-100">
+            <div className="container mx-auto max-w-3xl">
+              <h2 
+                className="text-3xl md:text-4xl mb-10 text-center" 
+                style={{ 
+                  fontFamily: 'var(--font-heading)', 
+                  color: 'var(--theme-text)',
+                  fontWeight: '400',
+                  letterSpacing: '-0.01em'
+                }}
+              >
                 Property Tour
               </h2>
-              <div className="aspect-video rounded-xl overflow-hidden shadow-lg">
+              <div className="aspect-video rounded-lg overflow-hidden shadow-md">
                 <iframe
                   src={embedUrl}
                   className="w-full h-full"
@@ -723,17 +831,27 @@ export default function SiteView() {
           </section>
         )}
 
-        <section id="map" className="py-16 px-4">
-          <div className="container mx-auto max-w-4xl">
-            <h2 className="text-2xl md:text-3xl font-bold mb-8" style={{ fontFamily: 'var(--font-heading)', color: 'var(--theme-primary)' }}>
+        <section id="map" className="py-20 px-4 md:px-8 border-t border-gray-100">
+          <div className="container mx-auto max-w-3xl">
+            <h2 
+              className="text-3xl md:text-4xl mb-10 text-center" 
+              style={{ 
+                fontFamily: 'var(--font-heading)', 
+                color: 'var(--theme-text)',
+                fontWeight: '400',
+                letterSpacing: '-0.01em'
+              }}
+            >
               Map
             </h2>
-            <div className="bg-white p-4 rounded-xl shadow-sm border">
-              <div className="flex items-center gap-3 mb-4">
-                <MapPin className="h-5 w-5" style={{ color: 'var(--theme-primary)' }} />
-                <span className="font-medium">{site.address}</span>
+            <div className="rounded-lg overflow-hidden shadow-md">
+              <div className="bg-gray-50 px-6 py-4 border-b border-gray-100">
+                <div className="flex items-center gap-3">
+                  <MapPin className="h-5 w-5" style={{ color: 'var(--theme-primary)' }} />
+                  <span className="font-medium text-gray-700">{site.address}</span>
+                </div>
               </div>
-              <div className="aspect-[16/9] bg-muted rounded-lg overflow-hidden">
+              <div className="aspect-[16/9]">
                 <iframe
                   src={`https://www.google.com/maps?q=${encodeURIComponent(site.address)}&output=embed`}
                   className="w-full h-full border-0"
@@ -992,23 +1110,21 @@ function PhotoGallery({ photos, themeColors }: { photos: string[], themeColors?:
   }, [selectedIndex, scrollPrev, scrollNext]);
 
   return (
-    <section id="photos" className="py-24 px-4 bg-muted/30">
-      <div className="container mx-auto max-w-6xl">
-        <div className="text-center mb-16">
-          <h2 
-            className="text-3xl mb-4" 
-            style={{ 
-              color: 'var(--theme-primary)',
-              fontFamily: 'var(--font-heading)',
-              fontWeight: 'var(--heading-weight)'
-            }}
-          >
-            Photo Gallery
-          </h2>
-          <div className="h-1 w-20 mx-auto" style={{ backgroundColor: 'var(--theme-secondary)' }}></div>
-        </div>
+    <section id="photos" className="py-20 px-4 md:px-8 border-t border-gray-100">
+      <div className="container mx-auto max-w-5xl">
+        <h2 
+          className="text-3xl md:text-4xl mb-12 text-center" 
+          style={{ 
+            fontFamily: 'var(--font-heading)', 
+            color: 'var(--theme-text)',
+            fontWeight: '400',
+            letterSpacing: '-0.01em'
+          }}
+        >
+          Photos
+        </h2>
         
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
           {photos.map((photo, index) => (
             <div 
               key={index}
