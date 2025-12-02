@@ -3,6 +3,7 @@ import {
   sites, 
   themes,
   layouts,
+  leads,
   type User, 
   type InsertUser,
   type Site,
@@ -10,7 +11,9 @@ import {
   type Theme,
   type InsertTheme,
   type Layout,
-  type InsertLayout
+  type InsertLayout,
+  type Lead,
+  type InsertLead
 } from "@shared/schema";
 import { db, pool } from "./db";
 import { eq } from "drizzle-orm";
@@ -54,6 +57,11 @@ export interface IStorage {
   createLayout(layout: InsertLayout): Promise<Layout>;
   updateLayout(id: string, layout: Partial<InsertLayout>): Promise<Layout>;
   deleteLayout(id: string): Promise<void>;
+  
+  // Lead methods
+  createLead(lead: InsertLead): Promise<Lead>;
+  getLeadsBySite(siteId: string): Promise<Lead[]>;
+  getLeadsByUser(userId: string): Promise<Lead[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -217,6 +225,32 @@ export class DatabaseStorage implements IStorage {
 
   async deleteLayout(id: string): Promise<void> {
     await db.delete(layouts).where(eq(layouts.id, id));
+  }
+
+  // Lead methods
+  async createLead(insertLead: InsertLead): Promise<Lead> {
+    const [lead] = await db
+      .insert(leads)
+      .values(insertLead)
+      .returning();
+    return lead;
+  }
+
+  async getLeadsBySite(siteId: string): Promise<Lead[]> {
+    return await db.select().from(leads).where(eq(leads.siteId, siteId));
+  }
+
+  async getLeadsByUser(userId: string): Promise<Lead[]> {
+    const userSites = await db.select().from(sites).where(eq(sites.userId, userId));
+    const siteIds = userSites.map(s => s.id);
+    if (siteIds.length === 0) return [];
+    
+    const allLeads: Lead[] = [];
+    for (const siteId of siteIds) {
+      const siteLeads = await db.select().from(leads).where(eq(leads.siteId, siteId));
+      allLeads.push(...siteLeads);
+    }
+    return allLeads;
   }
 }
 

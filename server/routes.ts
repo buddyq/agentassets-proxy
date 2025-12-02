@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./auth";
-import { insertSiteSchema, insertThemeSchema, insertLayoutSchema } from "@shared/schema";
+import { insertSiteSchema, insertThemeSchema, insertLayoutSchema, insertLeadSchema } from "@shared/schema";
 import { z } from "zod";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 
@@ -213,6 +213,50 @@ export async function registerRoutes(
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ error: "Failed to delete layout" });
+    }
+  });
+
+  // Lead/Inquiry routes - public submission, authenticated viewing
+  app.post("/api/leads", async (req, res) => {
+    try {
+      const validated = insertLeadSchema.parse(req.body);
+      const lead = await storage.createLead(validated);
+      
+      // Update site stats to increment leads count
+      const site = await storage.getSite(validated.siteId);
+      if (site && site.stats) {
+        await storage.updateSiteStats(validated.siteId, {
+          ...site.stats,
+          leads: (site.stats.leads || 0) + 1
+        });
+      }
+      
+      res.status(201).json({ success: true, lead });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      console.error("Error creating lead:", error);
+      res.status(500).json({ error: "Failed to submit inquiry" });
+    }
+  });
+
+  app.get("/api/leads", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const leads = await storage.getLeadsByUser(userId);
+      res.json(leads);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch leads" });
+    }
+  });
+
+  app.get("/api/sites/:siteId/leads", isAuthenticated, async (req: any, res) => {
+    try {
+      const leads = await storage.getLeadsBySite(req.params.siteId);
+      res.json(leads);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch leads" });
     }
   });
 

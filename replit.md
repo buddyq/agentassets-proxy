@@ -114,4 +114,17 @@ Currently uses a demo user system with hardcoded `DEMO_USER_ID`. Authentication 
 
 ### External Integrations
 
-None currently implemented. Payment processing (Stripe), email services (Nodemailer), and session storage (connect-pg-simple) dependencies are installed but not actively used - suggesting future planned features for production deployment.
+**Email Sending (TODO)**: Contact form submissions are currently stored in the `leads` table but email notifications to site owners are not yet implemented. To enable email notifications:
+1. Set up Resend or SendGrid integration via Replit's integration panel
+2. Update the `/api/leads` endpoint in `server/routes.ts` to send email notifications
+3. The email should be sent to the site owner's email address (found via `site.userId` → `users.email`)
+
+Payment processing (Stripe), email services (Nodemailer), and session storage (connect-pg-simple) dependencies are installed but not actively used - suggesting future planned features for production deployment.
+
+### Leads/Inquiries System
+
+Contact form submissions from property sites are stored in the `leads` table:
+- Public endpoint `POST /api/leads` accepts form submissions
+- Authenticated users can view their leads via `GET /api/leads`
+- Site-specific leads available at `GET /api/sites/:siteId/leads`
+- Lead count is tracked in site analytics (`site.stats.leads`)

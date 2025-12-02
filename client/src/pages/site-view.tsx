@@ -361,10 +361,43 @@ function ShoalwoodContact({ site, theme }: { site: Site; theme?: Theme }) {
     phone: '',
     message: `I am interested in ${site.address}`
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert('Thank you for your inquiry! We will be in touch soon.');
+    setIsSubmitting(true);
+    setSubmitStatus('idle');
+    
+    try {
+      const response = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          siteId: site.id,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phone,
+          message: formData.message,
+        }),
+      });
+      
+      if (!response.ok) throw new Error('Failed to submit');
+      
+      setSubmitStatus('success');
+      setFormData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        message: `I am interested in ${site.address}`
+      });
+    } catch (error) {
+      setSubmitStatus('error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -433,13 +466,27 @@ function ShoalwoodContact({ site, theme }: { site: Site; theme?: Theme }) {
                 rows={4}
               />
             </div>
+            {submitStatus === 'success' && (
+              <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">
+                Thank you for your inquiry! The agent will be in touch with you soon.
+              </div>
+            )}
+            
+            {submitStatus === 'error' && (
+              <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+                Something went wrong. Please try again or contact us directly.
+              </div>
+            )}
+            
             <Button 
               type="submit" 
               size="lg"
               className="w-full md:w-auto text-white"
               style={{ backgroundColor: theme?.colors?.primary || '#1a1a1a' }}
+              disabled={isSubmitting}
+              data-testid="button-send-inquiry"
             >
-              Send Inquiry
+              {isSubmitting ? 'Sending...' : 'Send Inquiry'}
             </Button>
           </form>
         </div>
