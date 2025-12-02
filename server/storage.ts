@@ -2,12 +2,15 @@ import {
   users, 
   sites, 
   themes,
+  layouts,
   type User, 
   type InsertUser,
   type Site,
   type InsertSite,
   type Theme,
-  type InsertTheme
+  type InsertTheme,
+  type Layout,
+  type InsertLayout
 } from "@shared/schema";
 import { db, pool } from "./db";
 import { eq } from "drizzle-orm";
@@ -42,6 +45,15 @@ export interface IStorage {
   createTheme(theme: InsertTheme): Promise<Theme>;
   updateTheme(id: string, theme: Partial<InsertTheme>): Promise<Theme>;
   deleteTheme(id: string): Promise<void>;
+  
+  // Layout methods
+  getLayout(id: string): Promise<Layout | undefined>;
+  getLayoutsByUser(userId: string): Promise<Layout[]>;
+  getAllLayouts(): Promise<Layout[]>;
+  getPresetLayouts(): Promise<Layout[]>;
+  createLayout(layout: InsertLayout): Promise<Layout>;
+  updateLayout(id: string, layout: Partial<InsertLayout>): Promise<Layout>;
+  deleteLayout(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -166,6 +178,45 @@ export class DatabaseStorage implements IStorage {
 
   async deleteTheme(id: string): Promise<void> {
     await db.delete(themes).where(eq(themes.id, id));
+  }
+
+  // Layout methods
+  async getLayout(id: string): Promise<Layout | undefined> {
+    const [layout] = await db.select().from(layouts).where(eq(layouts.id, id));
+    return layout || undefined;
+  }
+
+  async getLayoutsByUser(userId: string): Promise<Layout[]> {
+    return await db.select().from(layouts).where(eq(layouts.userId, userId));
+  }
+
+  async getAllLayouts(): Promise<Layout[]> {
+    return await db.select().from(layouts);
+  }
+
+  async getPresetLayouts(): Promise<Layout[]> {
+    return await db.select().from(layouts).where(eq(layouts.type, 'preset'));
+  }
+
+  async createLayout(insertLayout: InsertLayout): Promise<Layout> {
+    const [layout] = await db
+      .insert(layouts)
+      .values(insertLayout as any)
+      .returning();
+    return layout;
+  }
+
+  async updateLayout(id: string, layoutUpdate: Partial<InsertLayout>): Promise<Layout> {
+    const [layout] = await db
+      .update(layouts)
+      .set(layoutUpdate as any)
+      .where(eq(layouts.id, id))
+      .returning();
+    return layout;
+  }
+
+  async deleteLayout(id: string): Promise<void> {
+    await db.delete(layouts).where(eq(layouts.id, id));
   }
 }
 

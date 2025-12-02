@@ -36,7 +36,34 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
-// Themes table
+// Layouts table - defines page structure, sections, typography
+export const layouts = pgTable("layouts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  description: text("description"),
+  thumbnailUrl: text("thumbnail_url"),
+  type: text("type").notNull().default('preset'),
+  structure: jsonb("structure").notNull().$type<{
+    heroStyle: 'fullscreen' | 'split' | 'minimal' | 'slider';
+    galleryStyle: 'grid' | 'masonry' | 'carousel' | 'lightbox';
+    detailsStyle: 'sidebar' | 'stacked' | 'cards' | 'minimal';
+    typography: {
+      headingFont: string;
+      bodyFont: string;
+      headingWeight: string;
+      scale: 'compact' | 'normal' | 'spacious';
+    };
+    sections: string[];
+  }>(),
+  userId: text("user_id"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertLayoutSchema = createInsertSchema(layouts).omit({ id: true, createdAt: true });
+export type InsertLayout = z.infer<typeof insertLayoutSchema>;
+export type Layout = typeof layouts.$inferSelect;
+
+// Themes table - defines color palette only
 export const themes = pgTable("themes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
@@ -71,6 +98,7 @@ export const sites = pgTable("sites", {
   photos: text("photos").array(),
   heroPhotos: text("hero_photos").array(),
   videoUrl: text("video_url"),
+  layoutId: text("layout_id"),
   templateId: text("template_id").notNull(),
   themeId: text("theme_id").notNull(),
   customDomain: text("custom_domain"),

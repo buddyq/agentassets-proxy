@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./auth";
-import { insertSiteSchema, insertThemeSchema } from "@shared/schema";
+import { insertSiteSchema, insertThemeSchema, insertLayoutSchema } from "@shared/schema";
 import { z } from "zod";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 
@@ -147,6 +147,72 @@ export async function registerRoutes(
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ error: "Failed to delete theme" });
+    }
+  });
+
+  // Layout routes
+  app.get("/api/layouts", async (req, res) => {
+    try {
+      const { preset, userId } = req.query;
+      
+      if (preset === 'true') {
+        const layouts = await storage.getPresetLayouts();
+        return res.json(layouts);
+      }
+      
+      if (userId && typeof userId === 'string') {
+        const layouts = await storage.getLayoutsByUser(userId);
+        return res.json(layouts);
+      }
+      
+      const layouts = await storage.getAllLayouts();
+      res.json(layouts);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch layouts" });
+    }
+  });
+
+  app.get("/api/layouts/:id", async (req, res) => {
+    try {
+      const layout = await storage.getLayout(req.params.id);
+      if (!layout) {
+        return res.status(404).json({ error: "Layout not found" });
+      }
+      res.json(layout);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch layout" });
+    }
+  });
+
+  app.post("/api/layouts", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const validated = insertLayoutSchema.parse({ ...req.body, userId });
+      const layout = await storage.createLayout(validated);
+      res.status(201).json(layout);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: "Failed to create layout" });
+    }
+  });
+
+  app.patch("/api/layouts/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const layout = await storage.updateLayout(req.params.id, req.body);
+      res.json(layout);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update layout" });
+    }
+  });
+
+  app.delete("/api/layouts/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      await storage.deleteLayout(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete layout" });
     }
   });
 
