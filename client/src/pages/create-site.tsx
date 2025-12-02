@@ -9,9 +9,10 @@ import { useCreateSite, useUpdateCredits, useThemes, useLayouts } from "@/lib/ap
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, CreditCard, LayoutGrid } from "lucide-react";
+import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, CreditCard, LayoutGrid, Plus, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import type { CustomDetail } from "@shared/schema";
 
 const STEPS = [
   { id: 1, name: "Property Details", icon: Layout },
@@ -50,11 +51,30 @@ export default function CreateSite() {
     bedrooms: "",
     bathrooms: "",
     sqft: "",
+    yearBuilt: "",
+    stories: "",
     description: "",
     videoUrl: "",
     layoutId: '',
     themeId: '',
   });
+  
+  // Custom details state
+  const [customDetails, setCustomDetails] = useState<CustomDetail[]>([]);
+  
+  const addCustomDetail = () => {
+    setCustomDetails([...customDetails, { label: '', value: '' }]);
+  };
+  
+  const removeCustomDetail = (index: number) => {
+    setCustomDetails(customDetails.filter((_, i) => i !== index));
+  };
+  
+  const updateCustomDetail = (index: number, field: 'label' | 'value', value: string) => {
+    const updated = [...customDetails];
+    updated[index] = { ...updated[index], [field]: value };
+    setCustomDetails(updated);
+  };
   
   // Set default layoutId and themeId once data loads
   useEffect(() => {
@@ -87,20 +107,27 @@ export default function CreateSite() {
       return;
     }
 
+    const validCustomDetails = customDetails.filter(d => d.label.trim() && d.value.trim());
+    
     createSiteMutation.mutate(
       {
         title: formData.title || null,
         address: formData.address,
         price: formData.price,
-        bedrooms: parseInt(formData.bedrooms) || 0,
-        bathrooms: parseInt(formData.bathrooms) || 0,
-        sqft: parseInt(formData.sqft) || 0,
+        bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
+        bathrooms: formData.bathrooms ? parseInt(formData.bathrooms) : null,
+        sqft: formData.sqft ? parseInt(formData.sqft) : null,
+        yearBuilt: formData.yearBuilt || null,
+        stories: formData.stories || null,
+        lotSize: null,
         description: formData.description || null,
         imageUrl: null,
         videoUrl: formData.videoUrl || null,
         layoutId: formData.layoutId,
+        templateId: null,
         themeId: formData.themeId,
         customDomain: null,
+        customDetails: validCustomDetails,
         status: 'published',
         photos: [],
         heroPhotos: [],
@@ -201,14 +228,16 @@ export default function CreateSite() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="grid gap-2">
                       <Label htmlFor="bedrooms">Bedrooms</Label>
                       <Input 
                         id="bedrooms" 
                         type="number" 
+                        placeholder="e.g., 3"
                         value={formData.bedrooms}
                         onChange={e => setFormData({...formData, bedrooms: e.target.value})}
+                        data-testid="input-bedrooms"
                       />
                     </div>
                     <div className="grid gap-2">
@@ -216,19 +245,86 @@ export default function CreateSite() {
                       <Input 
                         id="bathrooms" 
                         type="number" 
+                        placeholder="e.g., 2"
                         value={formData.bathrooms}
                         onChange={e => setFormData({...formData, bathrooms: e.target.value})}
+                        data-testid="input-bathrooms"
                       />
                     </div>
                     <div className="grid gap-2">
-                      <Label htmlFor="sqft">Square Feet</Label>
+                      <Label htmlFor="yearBuilt">Year Built</Label>
                       <Input 
-                        id="sqft" 
-                        type="number" 
-                        value={formData.sqft}
-                        onChange={e => setFormData({...formData, sqft: e.target.value})}
+                        id="yearBuilt" 
+                        placeholder="e.g., 1985"
+                        value={formData.yearBuilt}
+                        onChange={e => setFormData({...formData, yearBuilt: e.target.value})}
+                        data-testid="input-year-built"
                       />
                     </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="stories">Stories</Label>
+                      <Input 
+                        id="stories" 
+                        placeholder="e.g., 2"
+                        value={formData.stories}
+                        onChange={e => setFormData({...formData, stories: e.target.value})}
+                        data-testid="input-stories"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Custom Details Section */}
+                  <div className="border-t pt-4 mt-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <Label className="text-base">Custom Details</Label>
+                        <p className="text-sm text-muted-foreground">Add any additional property details</p>
+                      </div>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={addCustomDetail}
+                        data-testid="button-add-custom-detail"
+                      >
+                        <Plus className="h-4 w-4 mr-1" /> Add Detail
+                      </Button>
+                    </div>
+                    
+                    {customDetails.length > 0 && (
+                      <div className="space-y-3">
+                        {customDetails.map((detail, index) => (
+                          <div key={index} className="flex gap-3 items-start">
+                            <div className="flex-1 grid gap-2">
+                              <Input 
+                                placeholder="Label (e.g., Lot Size)"
+                                value={detail.label}
+                                onChange={e => updateCustomDetail(index, 'label', e.target.value)}
+                                data-testid={`input-custom-label-${index}`}
+                              />
+                            </div>
+                            <div className="flex-1 grid gap-2">
+                              <Input 
+                                placeholder="Value (e.g., 0.25 acre)"
+                                value={detail.value}
+                                onChange={e => updateCustomDetail(index, 'value', e.target.value)}
+                                data-testid={`input-custom-value-${index}`}
+                              />
+                            </div>
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => removeCustomDetail(index)}
+                              className="text-muted-foreground hover:text-destructive"
+                              data-testid={`button-remove-custom-detail-${index}`}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div className="grid gap-2">
@@ -442,8 +538,19 @@ export default function CreateSite() {
                           <span className="font-medium">{formData.price}</span>
                         </div>
                         <div>
-                          <span className="text-muted-foreground block">Specs</span>
-                          <span className="font-medium">{formData.bedrooms} BD | {formData.bathrooms} BA | {formData.sqft} SqFt</span>
+                          <span className="text-muted-foreground block">Details</span>
+                          <div className="font-medium space-y-1">
+                            {formData.bedrooms && <span className="block">{formData.bedrooms} Bedrooms</span>}
+                            {formData.bathrooms && <span className="block">{formData.bathrooms} Bathrooms</span>}
+                            {formData.yearBuilt && <span className="block">Built in {formData.yearBuilt}</span>}
+                            {formData.stories && <span className="block">{formData.stories} Stories</span>}
+                            {customDetails.filter(d => d.label && d.value).map((d, i) => (
+                              <span key={i} className="block">{d.label}: {d.value}</span>
+                            ))}
+                            {!formData.bedrooms && !formData.bathrooms && !formData.yearBuilt && !formData.stories && customDetails.filter(d => d.label && d.value).length === 0 && (
+                              <span className="text-muted-foreground italic">No details added</span>
+                            )}
+                          </div>
                         </div>
                         <div>
                           <span className="text-muted-foreground block">Layout</span>

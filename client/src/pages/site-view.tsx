@@ -429,17 +429,30 @@ function ShoalwoodDescription({ description }: { description: string }) {
 }
 
 function ShoalwoodDetails({ site, theme }: { site: Site; theme?: Theme }) {
-  const details = [
+  const standardDetails: { label: string; value: string | number | null | undefined }[] = [
     { label: 'Bedrooms', value: site.bedrooms },
     { label: 'Bathrooms', value: site.bathrooms },
-    { label: 'Living Area', value: `${site.sqft.toLocaleString()} sqft` },
-    { label: 'Lot Size', value: site.lotSize || '—' },
-    { label: 'Year Built', value: site.yearBuilt || '—' },
-    { label: 'Stories', value: site.stories || '—' },
+    { label: 'Living Area', value: site.sqft ? `${site.sqft.toLocaleString()} sqft` : null },
+    { label: 'Lot Size', value: site.lotSize },
+    { label: 'Year Built', value: site.yearBuilt },
+    { label: 'Stories', value: site.stories },
+  ];
+
+  const filteredStandardDetails = standardDetails.filter(d => d.value !== null && d.value !== undefined && d.value !== '');
+  
+  const customDetails = (site.customDetails || []).filter(d => d.label && d.value);
+  
+  const allDetails = [
+    ...filteredStandardDetails.map(d => ({ label: d.label, value: String(d.value) })),
+    ...customDetails,
   ];
 
   const primaryColor = theme?.colors?.primary || '#558B73';
   const bgColor = `${primaryColor}0D`;
+
+  if (allDetails.length === 0) {
+    return null;
+  }
 
   return (
     <section 
@@ -470,12 +483,12 @@ function ShoalwoodDetails({ site, theme }: { site: Site; theme?: Theme }) {
         
         {/* Details list - each on own line with underline */}
         <div className="space-y-0">
-          {details.map(({ label, value }, index) => (
+          {allDetails.map(({ label, value }, index) => (
             <div 
-              key={label} 
+              key={`${label}-${index}`} 
               className="flex justify-between items-center py-4"
               style={{ 
-                borderBottom: index < details.length - 1 ? '1px solid rgba(0,0,0,0.1)' : 'none'
+                borderBottom: index < allDetails.length - 1 ? '1px solid rgba(0,0,0,0.1)' : 'none'
               }}
             >
               <span 
@@ -1012,18 +1025,24 @@ export default function SiteView() {
                    <span className="text-muted-foreground">Price</span>
                    <span className="font-bold">{site.price}</span>
                  </div>
+                 {site.bedrooms && (
                  <div className="flex justify-between border-b border-dashed pb-2">
                    <span className="text-muted-foreground">Bedrooms</span>
                    <span className="font-medium">{site.bedrooms}</span>
                  </div>
+                 )}
+                 {site.bathrooms && (
                  <div className="flex justify-between border-b border-dashed pb-2">
                    <span className="text-muted-foreground">Bathrooms</span>
                    <span className="font-medium">{site.bathrooms}</span>
                  </div>
+                 )}
+                 {site.sqft && (
                  <div className="flex justify-between border-b border-dashed pb-2">
                    <span className="text-muted-foreground">Square Feet</span>
                    <span className="font-medium">{site.sqft.toLocaleString()}</span>
                  </div>
+                 )}
                </div>
             </div>
 
