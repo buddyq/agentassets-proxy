@@ -85,6 +85,12 @@ export const insertThemeSchema = createInsertSchema(themes).omit({ id: true, cre
 export type InsertTheme = z.infer<typeof insertThemeSchema>;
 export type Theme = typeof themes.$inferSelect;
 
+// Custom detail field type
+export type CustomDetail = {
+  label: string;
+  value: string;
+};
+
 // Sites table
 export const sites = pgTable("sites", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -92,9 +98,9 @@ export const sites = pgTable("sites", {
   title: text("title"),
   address: text("address").notNull(),
   price: text("price").notNull(),
-  bedrooms: integer("bedrooms").notNull(),
-  bathrooms: integer("bathrooms").notNull(),
-  sqft: integer("sqft").notNull(),
+  bedrooms: integer("bedrooms"),
+  bathrooms: integer("bathrooms"),
+  sqft: integer("sqft"),
   lotSize: text("lot_size"),
   yearBuilt: text("year_built"),
   stories: text("stories"),
@@ -107,6 +113,7 @@ export const sites = pgTable("sites", {
   templateId: text("template_id"),
   themeId: text("theme_id").notNull(),
   customDomain: text("custom_domain"),
+  customDetails: jsonb("custom_details").$type<CustomDetail[]>().default([]),
   status: text("status").notNull().default('draft'),
   stats: jsonb("stats").notNull().$type<{
     views: number;
@@ -117,8 +124,17 @@ export const sites = pgTable("sites", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+const customDetailSchema = z.object({
+  label: z.string().min(1).max(50),
+  value: z.string().min(1).max(100),
+});
+
 export const insertSiteSchema = createInsertSchema(sites).omit({ id: true, createdAt: true, updatedAt: true }).extend({
   templateId: z.string().nullable().optional(),
+  customDetails: z.array(customDetailSchema).optional().default([]),
+  bedrooms: z.number().nullable().optional(),
+  bathrooms: z.number().nullable().optional(),
+  sqft: z.number().nullable().optional(),
 });
 export type InsertSite = z.infer<typeof insertSiteSchema>;
 export type Site = typeof sites.$inferSelect;
