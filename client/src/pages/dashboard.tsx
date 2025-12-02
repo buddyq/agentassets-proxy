@@ -163,8 +163,12 @@ export default function Dashboard() {
             {sites.map((site) => (
               <Card key={site.id} className="overflow-hidden group hover:shadow-md transition-shadow flex flex-col">
                 <div className="h-48 bg-muted relative overflow-hidden shrink-0">
-                  {site.imageUrl ? (
-                    <img src={site.imageUrl} alt={site.address} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                  {(site.imageUrl || (site.photos && site.photos.length > 0)) ? (
+                    <img 
+                      src={site.imageUrl || site.photos![0]} 
+                      alt={site.address} 
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                    />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-secondary/5">
                       <span className="text-muted-foreground">No Image</span>
