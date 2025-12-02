@@ -5,20 +5,22 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useCreateSite, useUpdateCredits, useThemes, useLayouts } from "@/lib/api";
+import { useCreateSite, useUpdateCredits, useThemes, useLayouts, getUploadUrl } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, CreditCard, LayoutGrid, Plus, X } from "lucide-react";
+import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, CreditCard, LayoutGrid, Plus, X, Image, GripVertical, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { ObjectUploader } from "@/components/ObjectUploader";
 import type { CustomDetail } from "@shared/schema";
 
 const STEPS = [
   { id: 1, name: "Property Details", icon: Layout },
-  { id: 2, name: "Choose Layout", icon: LayoutGrid },
-  { id: 3, name: "Color Theme", icon: PaintBucket },
-  { id: 4, name: "Review", icon: CreditCard },
+  { id: 2, name: "Photos", icon: Image },
+  { id: 3, name: "Choose Layout", icon: LayoutGrid },
+  { id: 4, name: "Color Theme", icon: PaintBucket },
+  { id: 5, name: "Review", icon: CreditCard },
 ];
 
 export default function CreateSite() {
@@ -62,6 +64,11 @@ export default function CreateSite() {
   // Custom details state
   const [customDetails, setCustomDetails] = useState<CustomDetail[]>([]);
   
+  // Photo state
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [heroPhotos, setHeroPhotos] = useState<string[]>([]);
+  const [draggedPhoto, setDraggedPhoto] = useState<number | null>(null);
+  
   const addCustomDetail = () => {
     setCustomDetails([...customDetails, { label: '', value: '' }]);
   };
@@ -74,6 +81,60 @@ export default function CreateSite() {
     const updated = [...customDetails];
     updated[index] = { ...updated[index], [field]: value };
     setCustomDetails(updated);
+  };
+  
+  const handlePhotoUploadComplete = (result: { successful: Array<{ uploadURL: string }> }) => {
+    if (result.successful && result.successful.length > 0) {
+      const newPhotos = result.successful.map(upload => upload.uploadURL);
+      setPhotos(prev => [...prev, ...newPhotos]);
+      toast({
+        title: "Photos Added",
+        description: `${newPhotos.length} photo(s) added to your property site.`,
+      });
+    }
+  };
+  
+  const handleRemovePhoto = (photoUrl: string) => {
+    setPhotos(photos.filter(p => p !== photoUrl));
+    setHeroPhotos(heroPhotos.filter(p => p !== photoUrl));
+  };
+  
+  const handleDragStart = (index: number) => {
+    setDraggedPhoto(index);
+  };
+  
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedPhoto === null || draggedPhoto === index) return;
+    
+    const newPhotos = [...photos];
+    const draggedItem = newPhotos[draggedPhoto];
+    newPhotos.splice(draggedPhoto, 1);
+    newPhotos.splice(index, 0, draggedItem);
+    setPhotos(newPhotos);
+    setDraggedPhoto(index);
+  };
+  
+  const handleDragEnd = () => {
+    setDraggedPhoto(null);
+  };
+  
+  const handleToggleHeroPhoto = (photoUrl: string) => {
+    const isHero = heroPhotos.includes(photoUrl);
+    
+    if (isHero) {
+      setHeroPhotos(heroPhotos.filter(p => p !== photoUrl));
+    } else {
+      if (heroPhotos.length >= 4) {
+        toast({
+          variant: "destructive",
+          title: "Maximum Hero Photos",
+          description: "You can select up to 4 photos for the hero slider.",
+        });
+        return;
+      }
+      setHeroPhotos([...heroPhotos, photoUrl]);
+    }
   };
   
   // Set default layoutId and themeId once data loads
@@ -90,7 +151,7 @@ export default function CreateSite() {
   }, [themes, formData.themeId]);
 
   const handleNext = () => {
-    if (step < 4) setStep(step + 1);
+    if (step < 5) setStep(step + 1);
   };
 
   const handleBack = () => {
@@ -129,8 +190,8 @@ export default function CreateSite() {
         customDomain: null,
         customDetails: validCustomDetails,
         status: 'published',
-        photos: [],
-        heroPhotos: [],
+        photos: photos,
+        heroPhotos: heroPhotos,
         stats: { views: 0, uniqueVisitors: 0, leads: 0 }
       },
       {
@@ -351,8 +412,114 @@ export default function CreateSite() {
               </Card>
             )}
 
-            {/* Step 2: Choose Layout */}
+            {/* Step 2: Photos */}
             {step === 2 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Property Photos</CardTitle>
+                  <p className="text-muted-foreground text-sm">
+                    Upload photos of your property. You can add more photos later from the edit page.
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <ObjectUploader
+                    maxNumberOfFiles={20}
+                    maxFileSize={10485760}
+                    variant="dropzone"
+                    onGetUploadParameters={async () => {
+                      const { url } = await getUploadUrl();
+                      return { method: 'PUT' as const, url };
+                    }}
+                    onComplete={handlePhotoUploadComplete}
+                  />
+
+                  {photos.length > 0 ? (
+                    <>
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground">Drag photos to rearrange their order. The first photo will be the main image.</p>
+                        <p className="text-sm text-muted-foreground">Click the <Star className="inline h-3 w-3" /> star to select photos for the hero slider (up to 4).</p>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {photos.map((photo, index) => {
+                          const isHero = heroPhotos.includes(photo);
+                          const heroIndex = heroPhotos.indexOf(photo);
+                          return (
+                            <div 
+                              key={photo}
+                              draggable
+                              onDragStart={() => handleDragStart(index)}
+                              onDragOver={(e) => handleDragOver(e, index)}
+                              onDragEnd={handleDragEnd}
+                              className={`relative aspect-square rounded-lg overflow-hidden group cursor-grab active:cursor-grabbing ${
+                                draggedPhoto === index ? 'opacity-50 ring-2 ring-primary' : ''
+                              } ${isHero ? 'ring-2 ring-yellow-500' : ''}`}
+                            >
+                              <div className="absolute top-2 left-2 bg-black/50 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                <GripVertical className="h-4 w-4" />
+                              </div>
+                              <img 
+                                src={photo} 
+                                alt={`Property photo ${index + 1}`}
+                                className="w-full h-full object-cover pointer-events-none"
+                              />
+                              <div className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                {index === 0 ? 'Main Photo' : `Photo ${index + 1}`}
+                              </div>
+                              {isHero && (
+                                <div className="absolute bottom-2 right-2 bg-yellow-500 text-black text-xs px-2 py-1 rounded font-medium">
+                                  Hero #{heroIndex + 1}
+                                </div>
+                              )}
+                              <div className="absolute top-2 right-2 flex gap-1 z-10">
+                                <button
+                                  type="button"
+                                  className={`p-1.5 rounded-full transition-opacity z-10 ${
+                                    isHero 
+                                      ? 'bg-yellow-500 text-black opacity-100' 
+                                      : 'bg-black/50 text-white opacity-0 group-hover:opacity-100'
+                                  }`}
+                                  onClick={() => handleToggleHeroPhoto(photo)}
+                                  data-testid={`button-toggle-hero-${index}`}
+                                  title={isHero ? 'Remove from hero slider' : 'Add to hero slider'}
+                                >
+                                  <Star className={`h-4 w-4 ${isHero ? 'fill-current' : ''}`} />
+                                </button>
+                                <button
+                                  type="button"
+                                  className="bg-destructive text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                  onClick={() => handleRemovePhoto(photo)}
+                                  data-testid={`button-remove-photo-${index}`}
+                                >
+                                  <X className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {heroPhotos.length > 0 && (
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                          <h4 className="font-medium text-yellow-800 mb-2 flex items-center gap-2">
+                            <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
+                            Hero Slider Photos ({heroPhotos.length}/4)
+                          </h4>
+                          <p className="text-sm text-yellow-700">These photos will rotate in the hero section of your property site.</p>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-center py-8 bg-muted/30 rounded-lg">
+                      <Image className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                      <p className="text-muted-foreground">No photos uploaded yet</p>
+                      <p className="text-sm text-muted-foreground">Use the dropzone above to add photos</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Step 3: Choose Layout */}
+            {step === 3 && (
               <Card>
                 <CardHeader>
                   <CardTitle>Choose a Layout</CardTitle>
@@ -428,8 +595,8 @@ export default function CreateSite() {
               </Card>
             )}
 
-            {/* Step 3: Color Theme */}
-            {step === 3 && (
+            {/* Step 4: Color Theme */}
+            {step === 4 && (
               <Card>
                 <CardHeader>
                   <CardTitle>Choose a Color Theme</CardTitle>
@@ -515,8 +682,8 @@ export default function CreateSite() {
               </Card>
             )}
 
-            {/* Step 4: Review */}
-            {step === 4 && (
+            {/* Step 5: Review */}
+            {step === 5 && (
               <div className="grid md:grid-cols-3 gap-6">
                 <div className="md:col-span-2">
                   <Card>
@@ -601,7 +768,7 @@ export default function CreateSite() {
                 <ChevronLeft className="mr-2 h-4 w-4" /> Back
               </Button>
               
-              {step < 4 && (
+              {step < 5 && (
                 <Button onClick={handleNext} disabled={!formData.address && step === 1}>
                   Next <ChevronRight className="ml-2 h-4 w-4" />
                 </Button>

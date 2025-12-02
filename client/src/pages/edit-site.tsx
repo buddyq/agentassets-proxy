@@ -8,10 +8,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { useSite, useUpdateSite, useThemes, useLayouts, useAddPhotoToSite, useRemovePhotoFromSite, useReorderPhotos, getUploadUrl } from "@/lib/api";
 import { useState, useEffect } from "react";
 import { useLocation, useParams } from "wouter";
-import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, Save, Image, X, GripVertical, Star, LayoutGrid } from "lucide-react";
+import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, Save, Image, X, GripVertical, Star, LayoutGrid, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ObjectUploader } from "@/components/ObjectUploader";
+import type { CustomDetail } from "@shared/schema";
 
 const STEPS = [
   { id: 1, name: "Property Details", icon: Layout },
@@ -43,13 +44,30 @@ export default function EditSite() {
     bedrooms: "",
     bathrooms: "",
     sqft: "",
+    yearBuilt: "",
+    stories: "",
     description: "",
     videoUrl: "",
     layoutId: "",
     themeId: "",
   });
 
+  const [customDetails, setCustomDetails] = useState<CustomDetail[]>([]);
   const [draggedPhoto, setDraggedPhoto] = useState<number | null>(null);
+
+  const addCustomDetail = () => {
+    setCustomDetails([...customDetails, { label: '', value: '' }]);
+  };
+  
+  const removeCustomDetail = (index: number) => {
+    setCustomDetails(customDetails.filter((_, i) => i !== index));
+  };
+  
+  const updateCustomDetail = (index: number, field: 'label' | 'value', value: string) => {
+    const updated = [...customDetails];
+    updated[index] = { ...updated[index], [field]: value };
+    setCustomDetails(updated);
+  };
 
   useEffect(() => {
     if (site) {
@@ -60,11 +78,14 @@ export default function EditSite() {
         bedrooms: site.bedrooms?.toString() || "",
         bathrooms: site.bathrooms?.toString() || "",
         sqft: site.sqft?.toString() || "",
+        yearBuilt: site.yearBuilt || "",
+        stories: site.stories || "",
         description: site.description || "",
         videoUrl: site.videoUrl || "",
         layoutId: site.layoutId || layouts[0]?.id || "",
         themeId: site.themeId || themes[0]?.id || "",
       });
+      setCustomDetails(site.customDetails || []);
     }
   }, [site, themes, layouts]);
 
@@ -79,6 +100,8 @@ export default function EditSite() {
   const handleSave = () => {
     if (!siteId) return;
 
+    const validCustomDetails = customDetails.filter(d => d.label.trim() && d.value.trim());
+
     updateSiteMutation.mutate(
       {
         id: siteId,
@@ -86,13 +109,16 @@ export default function EditSite() {
           title: formData.title || null,
           address: formData.address,
           price: formData.price,
-          bedrooms: parseInt(formData.bedrooms) || 0,
-          bathrooms: parseInt(formData.bathrooms) || 0,
-          sqft: parseInt(formData.sqft) || 0,
+          bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
+          bathrooms: formData.bathrooms ? parseInt(formData.bathrooms) : null,
+          sqft: formData.sqft ? parseInt(formData.sqft) : null,
+          yearBuilt: formData.yearBuilt || null,
+          stories: formData.stories || null,
           description: formData.description || null,
           videoUrl: formData.videoUrl || null,
           layoutId: formData.layoutId,
           themeId: formData.themeId,
+          customDetails: validCustomDetails,
         }
       },
       {
@@ -323,12 +349,13 @@ export default function EditSite() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="grid gap-2">
                       <Label htmlFor="bedrooms">Bedrooms</Label>
                       <Input 
                         id="bedrooms" 
                         type="number" 
+                        placeholder="e.g., 3"
                         value={formData.bedrooms}
                         onChange={e => setFormData({...formData, bedrooms: e.target.value})}
                         data-testid="input-bedrooms"
@@ -339,21 +366,86 @@ export default function EditSite() {
                       <Input 
                         id="bathrooms" 
                         type="number" 
+                        placeholder="e.g., 2"
                         value={formData.bathrooms}
                         onChange={e => setFormData({...formData, bathrooms: e.target.value})}
                         data-testid="input-bathrooms"
                       />
                     </div>
                     <div className="grid gap-2">
-                      <Label htmlFor="sqft">Square Feet</Label>
+                      <Label htmlFor="yearBuilt">Year Built</Label>
                       <Input 
-                        id="sqft" 
-                        type="number" 
-                        value={formData.sqft}
-                        onChange={e => setFormData({...formData, sqft: e.target.value})}
-                        data-testid="input-sqft"
+                        id="yearBuilt" 
+                        placeholder="e.g., 1985"
+                        value={formData.yearBuilt}
+                        onChange={e => setFormData({...formData, yearBuilt: e.target.value})}
+                        data-testid="input-year-built"
                       />
                     </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="stories">Stories</Label>
+                      <Input 
+                        id="stories" 
+                        placeholder="e.g., 2"
+                        value={formData.stories}
+                        onChange={e => setFormData({...formData, stories: e.target.value})}
+                        data-testid="input-stories"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Custom Details Section */}
+                  <div className="border-t pt-4 mt-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <Label className="text-base">Custom Details</Label>
+                        <p className="text-sm text-muted-foreground">Add any additional property details</p>
+                      </div>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={addCustomDetail}
+                        data-testid="button-add-custom-detail"
+                      >
+                        <Plus className="h-4 w-4 mr-1" /> Add Detail
+                      </Button>
+                    </div>
+                    
+                    {customDetails.length > 0 && (
+                      <div className="space-y-3">
+                        {customDetails.map((detail, index) => (
+                          <div key={index} className="flex gap-3 items-start">
+                            <div className="flex-1 grid gap-2">
+                              <Input 
+                                placeholder="Label (e.g., Lot Size)"
+                                value={detail.label}
+                                onChange={e => updateCustomDetail(index, 'label', e.target.value)}
+                                data-testid={`input-custom-label-${index}`}
+                              />
+                            </div>
+                            <div className="flex-1 grid gap-2">
+                              <Input 
+                                placeholder="Value (e.g., 0.25 acre)"
+                                value={detail.value}
+                                onChange={e => updateCustomDetail(index, 'value', e.target.value)}
+                                data-testid={`input-custom-value-${index}`}
+                              />
+                            </div>
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => removeCustomDetail(index)}
+                              className="text-muted-foreground hover:text-destructive"
+                              data-testid={`button-remove-custom-detail-${index}`}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div className="grid gap-2">
