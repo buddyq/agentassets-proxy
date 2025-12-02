@@ -15,14 +15,16 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import type { CustomDetail } from "@shared/schema";
 
-const STEPS = [
+const ALL_STEPS = [
   { id: 1, name: "Property Details", icon: Layout },
   { id: 2, name: "Photos", icon: Image },
   { id: 3, name: "Choose Layout", icon: LayoutGrid },
-  { id: 4, name: "Layout Options", icon: Settings },
+  { id: 4, name: "Layout Options", icon: Settings, layoutSpecific: true },
   { id: 5, name: "Color Theme", icon: PaintBucket },
   { id: 6, name: "Review", icon: CreditCard },
 ];
+
+const LAYOUTS_WITH_OPTIONS = ['layout-shoalwood'];
 
 export default function CreateSite() {
   const [step, setStep] = useState(1);
@@ -152,12 +154,24 @@ export default function CreateSite() {
     }
   }, [themes, formData.themeId]);
 
+  const hasLayoutOptions = LAYOUTS_WITH_OPTIONS.includes(formData.layoutId);
+  
+  const visibleSteps = ALL_STEPS.filter(s => !s.layoutSpecific || hasLayoutOptions);
+
   const handleNext = () => {
-    if (step < 6) setStep(step + 1);
+    let nextStep = step + 1;
+    if (nextStep === 4 && !hasLayoutOptions) {
+      nextStep = 5;
+    }
+    if (nextStep <= 6) setStep(nextStep);
   };
 
   const handleBack = () => {
-    if (step > 1) setStep(step - 1);
+    let prevStep = step - 1;
+    if (prevStep === 4 && !hasLayoutOptions) {
+      prevStep = 3;
+    }
+    if (prevStep >= 1) setStep(prevStep);
   };
 
   const handlePublish = () => {
@@ -229,28 +243,41 @@ export default function CreateSite() {
           {/* Progress Steps */}
           <div className="mb-8">
             <div className="flex items-center justify-between relative">
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-muted -z-10" />
-              <div 
-                className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-primary -z-10 transition-all duration-300" 
-                style={{ width: `${((step - 1) / (STEPS.length - 1)) * 100}%` }}
-              />
-              
-              {STEPS.map((s) => (
-                <div key={s.id} className="flex flex-col items-center gap-2 bg-muted/10 p-2 rounded-lg backdrop-blur-sm">
-                  <div 
-                    className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors ${
-                      step >= s.id 
-                        ? "bg-primary border-primary text-white" 
-                        : "bg-white border-muted text-muted-foreground"
-                    }`}
-                  >
-                    <s.icon className="h-5 w-5" />
+              {visibleSteps.map((s, index) => {
+                const isActive = step >= s.id;
+                const isCompleted = step > s.id;
+                return (
+                  <div key={s.id} className="flex flex-col items-center gap-2 relative">
+                    {/* Connecting line - only between steps, centered to circles */}
+                    {index < visibleSteps.length - 1 && (
+                      <div 
+                        className="absolute top-5 left-1/2 h-0.5 -z-10"
+                        style={{ 
+                          width: `calc(100% + ${100 / (visibleSteps.length - 1)}vw - 2.5rem)`,
+                          maxWidth: '200px'
+                        }}
+                      >
+                        <div className="w-full h-full bg-muted" />
+                        <div 
+                          className={`absolute top-0 left-0 h-full bg-primary transition-all duration-300 ${isCompleted ? 'w-full' : 'w-0'}`}
+                        />
+                      </div>
+                    )}
+                    <div 
+                      className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors border-4 border-white shadow-sm ${
+                        isActive 
+                          ? "bg-primary text-white" 
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      <s.icon className="h-5 w-5" />
+                    </div>
+                    <span className={`text-xs font-medium ${isActive ? "text-primary" : "text-muted-foreground"}`}>
+                      {s.name}
+                    </span>
                   </div>
-                  <span className={`text-xs font-medium ${step >= s.id ? "text-primary" : "text-muted-foreground"}`}>
-                    {s.name}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
