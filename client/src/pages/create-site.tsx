@@ -90,6 +90,7 @@ export default function CreateSite() {
         customDomain: null,
         status: 'published',
         photos: [],
+        heroPhotos: [],
         stats: { views: 0, uniqueVisitors: 0, leads: 0 }
       },
       {

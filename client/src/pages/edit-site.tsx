@@ -9,7 +9,7 @@ import { TEMPLATES } from "@/lib/store";
 import { useSite, useUpdateSite, useThemes, useAddPhotoToSite, useRemovePhotoFromSite, useReorderPhotos, getUploadUrl } from "@/lib/api";
 import { useState, useEffect } from "react";
 import { useLocation, useParams } from "wouter";
-import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, Save, Image, X, GripVertical } from "lucide-react";
+import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, Save, Image, X, GripVertical, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ObjectUploader } from "@/components/ObjectUploader";
@@ -173,6 +173,42 @@ export default function EditSite() {
 
   const handleDragEnd = () => {
     setDraggedPhoto(null);
+  };
+
+  const handleToggleHeroPhoto = (photoUrl: string) => {
+    if (!site || !siteId) return;
+    
+    const currentHeroPhotos = site.heroPhotos || [];
+    const isHero = currentHeroPhotos.includes(photoUrl);
+    
+    let newHeroPhotos: string[];
+    if (isHero) {
+      newHeroPhotos = currentHeroPhotos.filter(p => p !== photoUrl);
+    } else {
+      if (currentHeroPhotos.length >= 4) {
+        toast({
+          variant: "destructive",
+          title: "Maximum Hero Photos",
+          description: "You can select up to 4 photos for the hero slider.",
+        });
+        return;
+      }
+      newHeroPhotos = [...currentHeroPhotos, photoUrl];
+    }
+
+    updateSiteMutation.mutate(
+      { id: siteId, heroPhotos: newHeroPhotos },
+      {
+        onSuccess: () => {
+          toast({
+            title: isHero ? "Hero Photo Removed" : "Hero Photo Added",
+            description: isHero 
+              ? "Photo removed from hero slider." 
+              : `Photo added to hero slider (${newHeroPhotos.length}/4).`,
+          });
+        }
+      }
+    );
   };
 
   const selectedTemplate = TEMPLATES.find(t => t.id === formData.templateId);
@@ -365,41 +401,77 @@ export default function EditSite() {
 
                   {site.photos && site.photos.length > 0 ? (
                     <>
-                      <p className="text-sm text-muted-foreground">Drag photos to rearrange their order. The first photo will be the main image.</p>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {site.photos.map((photo, index) => (
-                          <div 
-                            key={photo}
-                            draggable
-                            onDragStart={() => handleDragStart(index)}
-                            onDragOver={(e) => handleDragOver(e, index)}
-                            onDragEnd={handleDragEnd}
-                            className={`relative aspect-square rounded-lg overflow-hidden group cursor-grab active:cursor-grabbing ${
-                              draggedPhoto === index ? 'opacity-50 ring-2 ring-primary' : ''
-                            }`}
-                          >
-                            <div className="absolute top-2 left-2 bg-black/50 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                              <GripVertical className="h-4 w-4" />
-                            </div>
-                            <img 
-                              src={photo} 
-                              alt={`Property photo ${index + 1}`}
-                              className="w-full h-full object-cover pointer-events-none"
-                            />
-                            <div className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                              {index === 0 ? 'Main Photo' : `Photo ${index + 1}`}
-                            </div>
-                            <button
-                              type="button"
-                              className="absolute top-2 right-2 bg-destructive text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                              onClick={() => handleRemovePhoto(photo)}
-                              data-testid={`button-remove-photo-${index}`}
-                            >
-                              <X className="h-4 w-4" />
-                            </button>
-                          </div>
-                        ))}
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground">Drag photos to rearrange their order. The first photo will be the main image.</p>
+                        <p className="text-sm text-muted-foreground">Click the <Star className="inline h-3 w-3" /> star to select photos for the hero slider (up to 4).</p>
                       </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {site.photos.map((photo, index) => {
+                          const isHero = site.heroPhotos?.includes(photo) || false;
+                          const heroIndex = site.heroPhotos?.indexOf(photo) ?? -1;
+                          return (
+                            <div 
+                              key={photo}
+                              draggable
+                              onDragStart={() => handleDragStart(index)}
+                              onDragOver={(e) => handleDragOver(e, index)}
+                              onDragEnd={handleDragEnd}
+                              className={`relative aspect-square rounded-lg overflow-hidden group cursor-grab active:cursor-grabbing ${
+                                draggedPhoto === index ? 'opacity-50 ring-2 ring-primary' : ''
+                              } ${isHero ? 'ring-2 ring-yellow-500' : ''}`}
+                            >
+                              <div className="absolute top-2 left-2 bg-black/50 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                <GripVertical className="h-4 w-4" />
+                              </div>
+                              <img 
+                                src={photo} 
+                                alt={`Property photo ${index + 1}`}
+                                className="w-full h-full object-cover pointer-events-none"
+                              />
+                              <div className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                {index === 0 ? 'Main Photo' : `Photo ${index + 1}`}
+                              </div>
+                              {isHero && (
+                                <div className="absolute bottom-2 right-2 bg-yellow-500 text-black text-xs px-2 py-1 rounded font-medium">
+                                  Hero #{heroIndex + 1}
+                                </div>
+                              )}
+                              <div className="absolute top-2 right-2 flex gap-1 z-10">
+                                <button
+                                  type="button"
+                                  className={`p-1.5 rounded-full transition-opacity z-10 ${
+                                    isHero 
+                                      ? 'bg-yellow-500 text-black opacity-100' 
+                                      : 'bg-black/50 text-white opacity-0 group-hover:opacity-100'
+                                  }`}
+                                  onClick={() => handleToggleHeroPhoto(photo)}
+                                  data-testid={`button-toggle-hero-${index}`}
+                                  title={isHero ? 'Remove from hero slider' : 'Add to hero slider'}
+                                >
+                                  <Star className={`h-4 w-4 ${isHero ? 'fill-current' : ''}`} />
+                                </button>
+                                <button
+                                  type="button"
+                                  className="bg-destructive text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                  onClick={() => handleRemovePhoto(photo)}
+                                  data-testid={`button-remove-photo-${index}`}
+                                >
+                                  <X className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {site.heroPhotos && site.heroPhotos.length > 0 && (
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                          <h4 className="font-medium text-yellow-800 mb-2 flex items-center gap-2">
+                            <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
+                            Hero Slider Photos ({site.heroPhotos.length}/4)
+                          </h4>
+                          <p className="text-sm text-yellow-700">These photos will rotate in the hero section of your property site.</p>
+                        </div>
+                      )}
                     </>
                   ) : (
                     <div className="text-center py-8 bg-muted/30 rounded-lg">

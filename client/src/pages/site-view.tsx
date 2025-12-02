@@ -5,6 +5,145 @@ import { MapPin, Play, Home, Info, Video, Image, X, ChevronLeft, ChevronRight } 
 import heroImage from "@assets/generated_images/luxury_living_room_interior_for_hero_background.png";
 import { useState, useEffect, useCallback } from "react";
 import useEmblaCarousel from "embla-carousel-react";
+import type { Site, Theme } from "@shared/schema";
+
+function HeroSection({ site, theme, heroImage }: { site: Site; theme?: Theme; heroImage: string }) {
+  const hasHeroSlider = site.heroPhotos && site.heroPhotos.length > 1;
+  const heroImages = site.heroPhotos && site.heroPhotos.length > 0 
+    ? site.heroPhotos 
+    : [site.imageUrl || (site.photos && site.photos.length > 0 ? site.photos[0] : heroImage)];
+  
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
+
+  const scrollPrev = useCallback(() => {
+    if (emblaApi) emblaApi.scrollPrev();
+  }, [emblaApi]);
+
+  const scrollNext = useCallback(() => {
+    if (emblaApi) emblaApi.scrollNext();
+  }, [emblaApi]);
+
+  const scrollTo = useCallback((index: number) => {
+    if (emblaApi) emblaApi.scrollTo(index);
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    
+    const onSelect = () => {
+      setCurrentSlide(emblaApi.selectedScrollSnap());
+    };
+    
+    emblaApi.on('select', onSelect);
+    onSelect();
+    
+    return () => {
+      emblaApi.off('select', onSelect);
+    };
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi || !hasHeroSlider) return;
+    
+    const autoplayInterval = setInterval(() => {
+      emblaApi.scrollNext();
+    }, 5000);
+    
+    return () => clearInterval(autoplayInterval);
+  }, [emblaApi, hasHeroSlider]);
+
+  if (!hasHeroSlider) {
+    return (
+      <section id="home" className="relative h-[80vh] w-full overflow-hidden">
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${heroImages[0]})` }}
+        />
+        <div className="absolute inset-0 bg-black/30" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-4">
+          <h1 className="text-4xl md:text-6xl font-serif font-bold mb-4 drop-shadow-lg">
+            {site.title || site.address}
+          </h1>
+          <p className="text-xl md:text-2xl font-light mb-8 drop-shadow-md">
+            {site.price}
+          </p>
+          <Button size="lg" className="text-lg px-8 h-14" style={{ backgroundColor: theme?.colors?.primary || '#558B73' }}>
+            View Details
+          </Button>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section id="home" className="relative h-[80vh] w-full overflow-hidden">
+      <div className="absolute inset-0" ref={emblaRef}>
+        <div className="flex h-full">
+          {heroImages.map((image, index) => (
+            <div 
+              key={index}
+              className="flex-[0_0_100%] min-w-0 relative"
+            >
+              <div 
+                className="absolute inset-0 bg-cover bg-center transition-transform duration-700"
+                style={{ backgroundImage: `url(${image})` }}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      <div className="absolute inset-0 bg-black/30" />
+      
+      <button 
+        onClick={scrollPrev}
+        className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-white/40 text-white p-3 rounded-full transition-colors backdrop-blur-sm"
+        aria-label="Previous slide"
+      >
+        <ChevronLeft className="h-6 w-6" />
+      </button>
+      <button 
+        onClick={scrollNext}
+        className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-white/40 text-white p-3 rounded-full transition-colors backdrop-blur-sm"
+        aria-label="Next slide"
+      >
+        <ChevronRight className="h-6 w-6" />
+      </button>
+      
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+        {heroImages.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => scrollTo(index)}
+            className={`w-3 h-3 rounded-full transition-all ${
+              currentSlide === index 
+                ? 'bg-white scale-110' 
+                : 'bg-white/50 hover:bg-white/80'
+            }`}
+            aria-label={`Go to slide ${index + 1}`}
+          />
+        ))}
+      </div>
+      
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-4 pointer-events-none z-10">
+        <h1 className="text-4xl md:text-6xl font-serif font-bold mb-4 drop-shadow-lg">
+          {site.title || site.address}
+        </h1>
+        <p className="text-xl md:text-2xl font-light mb-8 drop-shadow-md">
+          {site.price}
+        </p>
+        <Button 
+          size="lg" 
+          className="text-lg px-8 h-14 pointer-events-auto" 
+          style={{ backgroundColor: theme?.colors?.primary || '#558B73' }}
+        >
+          View Details
+        </Button>
+      </div>
+    </section>
+  );
+}
 
 export default function SiteView() {
   const [, params] = useRoute("/site/:id");
@@ -79,24 +218,11 @@ export default function SiteView() {
       </nav>
 
       {/* Hero Section */}
-      <section id="home" className="relative h-[80vh] w-full overflow-hidden">
-        <div 
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${site.imageUrl || heroImage})` }}
-        />
-        <div className="absolute inset-0 bg-black/30" />
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-4">
-          <h1 className="text-4xl md:text-6xl font-serif font-bold mb-4 drop-shadow-lg">
-            {site.title || site.address}
-          </h1>
-          <p className="text-xl md:text-2xl font-light mb-8 drop-shadow-md">
-            {site.price}
-          </p>
-          <Button size="lg" className="text-lg px-8 h-14" style={{ backgroundColor: theme?.colors?.primary || '#558B73' }}>
-            View Details
-          </Button>
-        </div>
-      </section>
+      <HeroSection 
+        site={site} 
+        theme={theme} 
+        heroImage={heroImage}
+      />
 
       {/* Details Section */}
       <section id="details" className="py-24 px-4">
