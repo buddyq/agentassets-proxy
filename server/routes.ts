@@ -28,6 +28,21 @@ export async function registerRoutes(
     }
   });
 
+  // User logo route - update user's default logo (protected)
+  app.patch("/api/user/logo", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { logo } = req.body;
+      if (logo !== null && typeof logo !== 'string') {
+        return res.status(400).json({ error: "Logo must be a string or null" });
+      }
+      const user = await storage.updateUserLogo(userId, logo);
+      res.json(user);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update logo" });
+    }
+  });
+
   // Site routes (protected)
   app.get("/api/sites", isAuthenticated, async (req: any, res) => {
     try {

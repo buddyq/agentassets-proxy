@@ -46,6 +46,25 @@ export function useUpdateCredits() {
   });
 }
 
+// Update logo for current user
+export function useUpdateUserLogo() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (logo: string | null) => {
+      const res = await fetch(`${API_BASE}/user/logo`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ logo })
+      });
+      if (!res.ok) throw new Error('Failed to update logo');
+      return res.json() as Promise<User>;
+    },
+    onSuccess: (updatedUser) => {
+      queryClient.setQueryData(['/api/user'], updatedUser);
+    }
+  });
+}
+
 // Sites API (uses authenticated user)
 export function useSites() {
   return useQuery({
