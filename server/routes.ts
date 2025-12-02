@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./auth";
 import { insertSiteSchema, insertThemeSchema } from "@shared/schema";
 import { z } from "zod";
+import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -137,6 +138,82 @@ export async function registerRoutes(
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ error: "Failed to delete theme" });
+    }
+  });
+
+  // Object storage routes for photo uploads
+  app.post("/api/objects/upload", isAuthenticated, async (req: any, res) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      res.json({ uploadURL });
+    } catch (error) {
+      console.error("Error getting upload URL:", error);
+      res.status(500).json({ error: "Failed to get upload URL" });
+    }
+  });
+
+  // Serve uploaded objects (public access for property photos)
+  app.get("/objects/:objectPath(*)", async (req, res) => {
+    const objectStorageService = new ObjectStorageService();
+    try {
+      const objectFile = await objectStorageService.getObjectEntityFile(req.path);
+      objectStorageService.downloadObject(objectFile, res);
+    } catch (error) {
+      console.error("Error serving object:", error);
+      if (error instanceof ObjectNotFoundError) {
+        return res.sendStatus(404);
+      }
+      return res.sendStatus(500);
+    }
+  });
+
+  // Update site photos
+  app.post("/api/sites/:id/photos", isAuthenticated, async (req: any, res) => {
+    try {
+      const { photoUrl } = req.body;
+      if (!photoUrl) {
+        return res.status(400).json({ error: "photoUrl is required" });
+      }
+
+      const objectStorageService = new ObjectStorageService();
+      const normalizedPath = objectStorageService.normalizeObjectEntityPath(photoUrl);
+      
+      const site = await storage.getSite(req.params.id);
+      if (!site) {
+        return res.status(404).json({ error: "Site not found" });
+      }
+
+      const photos = site.photos || [];
+      photos.push(normalizedPath);
+      
+      const updatedSite = await storage.updateSite(req.params.id, { photos });
+      res.json(updatedSite);
+    } catch (error) {
+      console.error("Error adding photo:", error);
+      res.status(500).json({ error: "Failed to add photo" });
+    }
+  });
+
+  // Delete photo from site
+  app.delete("/api/sites/:id/photos", isAuthenticated, async (req: any, res) => {
+    try {
+      const { photoUrl } = req.body;
+      if (!photoUrl) {
+        return res.status(400).json({ error: "photoUrl is required" });
+      }
+
+      const site = await storage.getSite(req.params.id);
+      if (!site) {
+        return res.status(404).json({ error: "Site not found" });
+      }
+
+      const photos = (site.photos || []).filter((p: string) => p !== photoUrl);
+      const updatedSite = await storage.updateSite(req.params.id, { photos });
+      res.json(updatedSite);
+    } catch (error) {
+      console.error("Error removing photo:", error);
+      res.status(500).json({ error: "Failed to remove photo" });
     }
   });
 

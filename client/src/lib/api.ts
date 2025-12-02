@@ -145,3 +145,52 @@ export function useDeleteTheme() {
     }
   });
 }
+
+// Photo upload API
+export async function getUploadUrl(): Promise<{ url: string }> {
+  const res = await fetch(`${API_BASE}/objects/upload`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  });
+  if (!res.ok) throw new Error('Failed to get upload URL');
+  const data = await res.json();
+  return { url: data.uploadURL };
+}
+
+export function useAddPhotoToSite() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ siteId, photoUrl }: { siteId: string; photoUrl: string }) => {
+      const res = await fetch(`${API_BASE}/sites/${siteId}/photos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ photoUrl })
+      });
+      if (!res.ok) throw new Error('Failed to add photo');
+      return res.json() as Promise<Site>;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['sites'] });
+      queryClient.setQueryData(['site', data.id], data);
+    }
+  });
+}
+
+export function useRemovePhotoFromSite() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ siteId, photoUrl }: { siteId: string; photoUrl: string }) => {
+      const res = await fetch(`${API_BASE}/sites/${siteId}/photos`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ photoUrl })
+      });
+      if (!res.ok) throw new Error('Failed to remove photo');
+      return res.json() as Promise<Site>;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['sites'] });
+      queryClient.setQueryData(['site', data.id], data);
+    }
+  });
+}

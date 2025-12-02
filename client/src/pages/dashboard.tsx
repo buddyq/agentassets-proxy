@@ -3,12 +3,13 @@ import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { TEMPLATES } from "@/lib/store";
-import { useSites, useDeleteSite, useUpdateSite, useThemes } from "@/lib/api";
+import { useSites, useDeleteSite, useUpdateSite, useThemes, useAddPhotoToSite, useRemovePhotoFromSite, getUploadUrl } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
-import { Plus, ExternalLink, Edit, Trash2, Globe, BarChart3, Users, MousePointerClick, TrendingUp } from "lucide-react";
+import { Plus, ExternalLink, Trash2, Globe, BarChart3, Users, MousePointerClick, TrendingUp, Image, X, Upload } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format, subDays } from "date-fns";
+import { ObjectUploader } from "@/components/ObjectUploader";
 import {
   Dialog,
   DialogContent,
@@ -40,6 +41,8 @@ export default function Dashboard() {
   const { data: themes = [] } = useThemes();
   const deleteSiteMutation = useDeleteSite();
   const updateSiteMutation = useUpdateSite();
+  const addPhotoMutation = useAddPhotoToSite();
+  const removePhotoMutation = useRemovePhotoFromSite();
   const { toast } = useToast();
 
   const getThemeName = (id: string) => themes.find(t => t.id === id)?.name || 'Unknown Theme';
@@ -57,6 +60,10 @@ export default function Dashboard() {
   // Analytics Dialog State
   const [analyticsDialogOpen, setAnalyticsDialogOpen] = useState(false);
   const [selectedSiteForAnalytics, setSelectedSiteForAnalytics] = useState<string | null>(null);
+
+  // Photos Dialog State
+  const [photosDialogOpen, setPhotosDialogOpen] = useState(false);
+  const [selectedSiteForPhotos, setSelectedSiteForPhotos] = useState<string | null>(null);
 
   const handleOpenDomainDialog = (siteId: string, currentDomain?: string) => {
     setSelectedSiteId(siteId);
@@ -106,6 +113,46 @@ export default function Dashboard() {
     setSelectedSiteForAnalytics(siteId);
     setAnalyticsDialogOpen(true);
   };
+
+  const handleOpenPhotos = (siteId: string) => {
+    setSelectedSiteForPhotos(siteId);
+    setPhotosDialogOpen(true);
+  };
+
+  const handlePhotoUploadComplete = (result: any) => {
+    if (result.successful && result.successful.length > 0 && selectedSiteForPhotos) {
+      const uploadUrl = result.successful[0].uploadURL;
+      addPhotoMutation.mutate(
+        { siteId: selectedSiteForPhotos, photoUrl: uploadUrl },
+        {
+          onSuccess: () => {
+            toast({
+              title: "Photo Added",
+              description: "Photo has been added to your property site.",
+            });
+          }
+        }
+      );
+    }
+  };
+
+  const handleRemovePhoto = (photoUrl: string) => {
+    if (selectedSiteForPhotos) {
+      removePhotoMutation.mutate(
+        { siteId: selectedSiteForPhotos, photoUrl },
+        {
+          onSuccess: () => {
+            toast({
+              title: "Photo Removed",
+              description: "Photo has been removed from your property site.",
+            });
+          }
+        }
+      );
+    }
+  };
+
+  const photosSite = sites.find(s => s.id === selectedSiteForPhotos);
 
   // Mock data generation for chart based on selected site
   const analyticsData = useMemo(() => {
@@ -207,8 +254,13 @@ export default function Dashboard() {
                 </CardContent>
                 <CardFooter className="flex flex-col gap-2 border-t bg-muted/5 p-4">
                   <div className="flex gap-2 w-full">
-                    <Button variant="outline" size="sm" className="flex-1 gap-1">
-                      <Edit className="h-3 w-3" /> Edit
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1 gap-1"
+                      onClick={() => handleOpenPhotos(site.id)}
+                    >
+                      <Image className="h-3 w-3" /> Photos
                     </Button>
                     <Link href={`/site/${site.id}`} className="flex-1">
                       <Button variant="outline" size="sm" className="w-full gap-1">
@@ -342,6 +394,63 @@ export default function Dashboard() {
                 </BarChart>
               </ResponsiveContainer>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Photos Dialog */}
+      <Dialog open={photosDialogOpen} onOpenChange={setPhotosDialogOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Manage Photos</DialogTitle>
+            <DialogDescription>
+              {photosSite?.address} - Add or remove property photos
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="mb-6">
+              <ObjectUploader
+                maxNumberOfFiles={1}
+                maxFileSize={10485760}
+                onGetUploadParameters={async () => {
+                  const { url } = await getUploadUrl();
+                  return { method: 'PUT' as const, url };
+                }}
+                onComplete={handlePhotoUploadComplete}
+                buttonClassName="w-full"
+              >
+                <div className="flex items-center gap-2">
+                  <Upload className="h-4 w-4" />
+                  <span>Upload New Photo</span>
+                </div>
+              </ObjectUploader>
+            </div>
+
+            {photosSite?.photos && photosSite.photos.length > 0 ? (
+              <div className="grid grid-cols-3 gap-4">
+                {photosSite.photos.map((photo, index) => (
+                  <div key={index} className="relative aspect-square rounded-lg overflow-hidden group">
+                    <img 
+                      src={photo} 
+                      alt={`Property photo ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                    <button
+                      className="absolute top-2 right-2 bg-destructive text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => handleRemovePhoto(photo)}
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 bg-muted/30 rounded-lg">
+                <Image className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                <p className="text-muted-foreground">No photos uploaded yet</p>
+                <p className="text-sm text-muted-foreground">Click the button above to add photos</p>
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>

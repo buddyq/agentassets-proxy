@@ -1,8 +1,9 @@
 import { useRoute, Link } from "wouter";
 import { useSite, useThemes } from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { MapPin, Play, Home, Info, Video } from "lucide-react";
+import { MapPin, Play, Home, Info, Video, Image, X } from "lucide-react";
 import heroImage from "@assets/generated_images/luxury_living_room_interior_for_hero_background.png";
+import { useState } from "react";
 
 export default function SiteView() {
   const [, params] = useRoute("/site/:id");
@@ -64,6 +65,9 @@ export default function SiteView() {
               <a href="#video" className="hover:opacity-70 transition-opacity">Video</a>
             )}
             <a href="#location" className="hover:opacity-70 transition-opacity">Location</a>
+            {site.photos && site.photos.length > 0 && (
+              <a href="#photos" className="hover:opacity-70 transition-opacity">Photos</a>
+            )}
           </div>
           
           <Button className="md:hidden" size="icon" variant="ghost">
@@ -183,6 +187,11 @@ export default function SiteView() {
         </div>
       </section>
 
+      {/* Photos Section */}
+      {site.photos && site.photos.length > 0 && (
+        <PhotoGallery photos={site.photos} themeColors={theme?.colors} />
+      )}
+
       {/* Footer */}
       <footer className="py-8 px-4 border-t">
         <div className="container mx-auto text-center text-sm text-muted-foreground">
@@ -190,5 +199,57 @@ export default function SiteView() {
         </div>
       </footer>
     </div>
+  );
+}
+
+function PhotoGallery({ photos, themeColors }: { photos: string[], themeColors?: any }) {
+  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+
+  return (
+    <section id="photos" className="py-24 px-4 bg-muted/30">
+      <div className="container mx-auto max-w-6xl">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl font-serif font-bold mb-4" style={{ color: themeColors?.primary || '#558B73' }}>Photo Gallery</h2>
+          <div className="h-1 w-20 mx-auto" style={{ backgroundColor: themeColors?.secondary || '#2C3E50' }}></div>
+        </div>
+        
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {photos.map((photo, index) => (
+            <div 
+              key={index}
+              className="aspect-square rounded-xl overflow-hidden shadow-lg cursor-pointer hover:opacity-90 transition-opacity"
+              onClick={() => setSelectedPhoto(photo)}
+              data-testid={`photo-${index}`}
+            >
+              <img 
+                src={photo} 
+                alt={`Property photo ${index + 1}`}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {selectedPhoto && (
+        <div 
+          className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
+          onClick={() => setSelectedPhoto(null)}
+        >
+          <button 
+            className="absolute top-4 right-4 text-white hover:text-gray-300"
+            onClick={() => setSelectedPhoto(null)}
+          >
+            <X className="h-8 w-8" />
+          </button>
+          <img 
+            src={selectedPhoto} 
+            alt="Full size property photo"
+            className="max-w-full max-h-[90vh] object-contain rounded-lg"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+    </section>
   );
 }

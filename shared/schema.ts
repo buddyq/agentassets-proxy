@@ -68,6 +68,7 @@ export const sites = pgTable("sites", {
   sqft: integer("sqft").notNull(),
   description: text("description"),
   imageUrl: text("image_url"),
+  photos: text("photos").array(),
   videoUrl: text("video_url"),
   templateId: text("template_id").notNull(),
   themeId: text("theme_id").notNull(),
