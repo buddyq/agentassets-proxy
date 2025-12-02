@@ -197,7 +197,7 @@ export default function EditSite() {
     }
 
     updateSiteMutation.mutate(
-      { id: siteId, heroPhotos: newHeroPhotos },
+      { id: siteId, updates: { heroPhotos: newHeroPhotos } },
       {
         onSuccess: () => {
           toast({
