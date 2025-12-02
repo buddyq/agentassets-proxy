@@ -9,7 +9,7 @@ import { useCreateSite, useUpdateCredits, useThemes, useLayouts, getUploadUrl, n
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, CreditCard, LayoutGrid, Plus, X, Image, GripVertical, Star } from "lucide-react";
+import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, CreditCard, LayoutGrid, Plus, X, Image, GripVertical, Star, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ObjectUploader } from "@/components/ObjectUploader";
@@ -19,8 +19,9 @@ const STEPS = [
   { id: 1, name: "Property Details", icon: Layout },
   { id: 2, name: "Photos", icon: Image },
   { id: 3, name: "Choose Layout", icon: LayoutGrid },
-  { id: 4, name: "Color Theme", icon: PaintBucket },
-  { id: 5, name: "Review", icon: CreditCard },
+  { id: 4, name: "Layout Options", icon: Settings },
+  { id: 5, name: "Color Theme", icon: PaintBucket },
+  { id: 6, name: "Review", icon: CreditCard },
 ];
 
 export default function CreateSite() {
@@ -152,7 +153,7 @@ export default function CreateSite() {
   }, [themes, formData.themeId]);
 
   const handleNext = () => {
-    if (step < 5) setStep(step + 1);
+    if (step < 6) setStep(step + 1);
   };
 
   const handleBack = () => {
@@ -639,8 +640,71 @@ export default function CreateSite() {
               </Card>
             )}
 
-            {/* Step 4: Color Theme */}
+            {/* Step 4: Layout Options */}
             {step === 4 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Layout Options</CardTitle>
+                  <p className="text-muted-foreground text-sm">
+                    Configure options specific to your selected layout.
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {formData.layoutId === 'layout-shoalwood' ? (
+                    <>
+                      <div className="grid gap-2">
+                        <Label>Description Image (Optional)</Label>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Add a portrait-style image to display alongside your property description. Vertical/portrait orientation works best.
+                        </p>
+                        {formData.descriptionImage ? (
+                          <div className="relative w-48 aspect-[3/4] rounded-lg overflow-hidden border group">
+                            <img 
+                              src={formData.descriptionImage} 
+                              alt="Description" 
+                              className="w-full h-full object-cover"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setFormData({...formData, descriptionImage: ""})}
+                              className="absolute top-2 right-2 bg-destructive text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                              data-testid="button-remove-description-image"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <ObjectUploader
+                            maxNumberOfFiles={1}
+                            maxFileSize={10485760}
+                            variant="dropzone"
+                            onGetUploadParameters={async () => {
+                              const { url } = await getUploadUrl();
+                              return { method: 'PUT' as const, url };
+                            }}
+                            onComplete={(result) => {
+                              if (result.successful && result.successful.length > 0) {
+                                const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
+                                setFormData({...formData, descriptionImage: normalizedUrl});
+                              }
+                            }}
+                          />
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Settings className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>No additional options available for this layout.</p>
+                      <p className="text-sm">You can proceed to the next step.</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Step 5: Color Theme */}
+            {step === 5 && (
               <Card>
                 <CardHeader>
                   <CardTitle>Choose a Color Theme</CardTitle>
@@ -726,8 +790,8 @@ export default function CreateSite() {
               </Card>
             )}
 
-            {/* Step 5: Review */}
-            {step === 5 && (
+            {/* Step 6: Review */}
+            {step === 6 && (
               <div className="grid md:grid-cols-3 gap-6">
                 <div className="md:col-span-2">
                   <Card>
@@ -812,7 +876,7 @@ export default function CreateSite() {
                 <ChevronLeft className="mr-2 h-4 w-4" /> Back
               </Button>
               
-              {step < 5 && (
+              {step < 6 && (
                 <Button onClick={handleNext} disabled={!formData.address && step === 1}>
                   Next <ChevronRight className="ml-2 h-4 w-4" />
                 </Button>
