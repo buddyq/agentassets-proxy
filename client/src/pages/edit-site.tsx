@@ -92,7 +92,6 @@ export default function EditSite() {
           description: formData.description || null,
           videoUrl: formData.videoUrl || null,
           layoutId: formData.layoutId,
-          templateId: formData.layoutId,
           themeId: formData.themeId,
         }
       },

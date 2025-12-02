@@ -98,7 +98,6 @@ export default function CreateSite() {
         description: formData.description || null,
         imageUrl: null,
         videoUrl: formData.videoUrl || null,
-        templateId: formData.layoutId,
         layoutId: formData.layoutId,
         themeId: formData.themeId,
         customDomain: null,

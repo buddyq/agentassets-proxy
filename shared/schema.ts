@@ -59,7 +59,9 @@ export const layouts = pgTable("layouts", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const insertLayoutSchema = createInsertSchema(layouts).omit({ id: true, createdAt: true });
+export const insertLayoutSchema = createInsertSchema(layouts).omit({ id: true, createdAt: true }).extend({
+  thumbnailUrl: z.string().nullable().optional(),
+});
 export type InsertLayout = z.infer<typeof insertLayoutSchema>;
 export type Layout = typeof layouts.$inferSelect;
 
@@ -99,7 +101,7 @@ export const sites = pgTable("sites", {
   heroPhotos: text("hero_photos").array(),
   videoUrl: text("video_url"),
   layoutId: text("layout_id"),
-  templateId: text("template_id").notNull(),
+  templateId: text("template_id"),
   themeId: text("theme_id").notNull(),
   customDomain: text("custom_domain"),
   status: text("status").notNull().default('draft'),
@@ -112,6 +114,8 @@ export const sites = pgTable("sites", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-export const insertSiteSchema = createInsertSchema(sites).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertSiteSchema = createInsertSchema(sites).omit({ id: true, createdAt: true, updatedAt: true }).extend({
+  templateId: z.string().nullable().optional(),
+});
 export type InsertSite = z.infer<typeof insertSiteSchema>;
 export type Site = typeof sites.$inferSelect;
