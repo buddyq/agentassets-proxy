@@ -2,8 +2,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { TEMPLATES } from "@/lib/store";
-import { useSites, useDeleteSite, useUpdateSite, useThemes, useLeads } from "@/lib/api";
+import { useSites, useDeleteSite, useUpdateSite, useThemes, useLeads, useLayouts } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
 import { Plus, ExternalLink, Trash2, Globe, BarChart3, Users, MousePointerClick, TrendingUp, Pencil, MessageSquare, Mail, Phone, Calendar, ChevronRight, LayoutDashboard } from "lucide-react";
@@ -39,13 +38,14 @@ export default function Dashboard() {
   const { user } = useAuth();
   const { data: sites = [] } = useSites();
   const { data: themes = [] } = useThemes();
+  const { data: layouts = [] } = useLayouts();
   const { data: leads = [] } = useLeads();
   const deleteSiteMutation = useDeleteSite();
   const updateSiteMutation = useUpdateSite();
   const { toast } = useToast();
 
   const getThemeName = (id: string) => themes.find(t => t.id === id)?.name || 'Unknown Theme';
-  const getTemplateName = (id: string | null) => id ? TEMPLATES.find(t => t.id === id)?.name || 'Unknown Template' : 'N/A';
+  const getLayoutName = (id: string | null) => id ? layouts.find(l => l.id === id)?.name || 'Unknown Layout' : 'N/A';
   const getSiteName = (siteId: string) => {
     const site = sites.find(s => s.id === siteId);
     return site?.title || site?.address || "Unknown Property";
@@ -252,8 +252,8 @@ export default function Dashboard() {
                           <span className="font-medium">{site.price}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Template:</span>
-                          <span>{getTemplateName(site.templateId)}</span>
+                          <span className="text-muted-foreground">Layout:</span>
+                          <span>{getLayoutName(site.layoutId)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Theme:</span>
