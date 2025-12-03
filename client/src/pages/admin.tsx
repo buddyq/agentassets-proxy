@@ -11,11 +11,12 @@ import {
   useThemes, useCreateTheme, useUpdateTheme, useDeleteTheme, 
   useLayouts, useCreateLayout, useUpdateLayout, useDeleteLayout,
   useAdminCoupons, useCreateCoupon, useUpdateCoupon, useDeleteCoupon,
-  useAdminUsers, useAdminUpdateUserCredits
+  useAdminUsers, useAdminUpdateUserCredits, useAdminDeleteUser
 } from "@/lib/api";
 import { Plus, Palette, Trash2, Shield, Pencil, LayoutTemplate, Ticket, Users, CreditCard, Gift, Clock, Hash, Calendar } from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -37,6 +38,7 @@ export default function AdminDashboard() {
   const updateCouponMutation = useUpdateCoupon();
   const deleteCouponMutation = useDeleteCoupon();
   const updateUserCreditsMutation = useAdminUpdateUserCredits();
+  const deleteUserMutation = useAdminDeleteUser();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isLayoutDialogOpen, setIsLayoutDialogOpen] = useState(false);
@@ -1396,16 +1398,65 @@ export default function AdminDashboard() {
                               {user.createdAt ? format(new Date(user.createdAt), 'MMM d, yyyy') : '-'}
                             </td>
                             <td className="px-4 py-3 text-right">
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="gap-1"
-                                onClick={() => handleEditUserCredits(user)}
-                                data-testid={`button-edit-credits-${user.id}`}
-                              >
-                                <CreditCard className="h-3 w-3" />
-                                Adjust Credits
-                              </Button>
+                              <div className="flex items-center justify-end gap-2">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="gap-1"
+                                  onClick={() => handleEditUserCredits(user)}
+                                  data-testid={`button-edit-credits-${user.id}`}
+                                >
+                                  <CreditCard className="h-3 w-3" />
+                                  Adjust Credits
+                                </Button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm" 
+                                      className="gap-1 text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                                      data-testid={`button-delete-user-${user.id}`}
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                      Delete
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete User</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to delete <strong>{user.name || user.username}</strong>? This will permanently remove the user and all their data including sites, themes, and leads. This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel data-testid={`button-cancel-delete-${user.id}`}>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                        onClick={() => {
+                                          deleteUserMutation.mutate(user.id, {
+                                            onSuccess: () => {
+                                              toast({
+                                                title: "User Deleted",
+                                                description: `${user.name || user.username} has been deleted.`,
+                                              });
+                                            },
+                                            onError: () => {
+                                              toast({
+                                                title: "Error",
+                                                description: "Failed to delete user. Please try again.",
+                                                variant: "destructive"
+                                              });
+                                            }
+                                          });
+                                        }}
+                                        data-testid={`button-confirm-delete-${user.id}`}
+                                      >
+                                        Delete User
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </div>
                             </td>
                           </tr>
                         ))

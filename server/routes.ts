@@ -523,6 +523,17 @@ export async function registerRoutes(
     }
   });
 
+  // Admin route to delete a user
+  app.delete("/api/admin/users/:id", async (req, res) => {
+    try {
+      await storage.deleteUser(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({ error: "Failed to delete user" });
+    }
+  });
+
   // Public coupon validation endpoint (for users to check/redeem coupons)
   app.post("/api/coupons/validate", isAuthenticated, async (req: any, res) => {
     try {

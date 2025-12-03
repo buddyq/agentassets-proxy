@@ -83,6 +83,7 @@ export interface IStorage {
   
   // User management methods (admin)
   getAllUsers(): Promise<User[]>;
+  deleteUser(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -363,6 +364,18 @@ export class DatabaseStorage implements IStorage {
   // User management methods (admin)
   async getAllUsers(): Promise<User[]> {
     return await db.select().from(users);
+  }
+
+  async deleteUser(id: string): Promise<void> {
+    // First delete all related data (sites, leads, themes, coupon redemptions)
+    const userSites = await this.getSitesByUser(id);
+    for (const site of userSites) {
+      await db.delete(leads).where(eq(leads.siteId, site.id));
+      await db.delete(sites).where(eq(sites.id, site.id));
+    }
+    await db.delete(themes).where(eq(themes.userId, id));
+    await db.delete(couponRedemptions).where(eq(couponRedemptions.userId, id));
+    await db.delete(users).where(eq(users.id, id));
   }
 }
 

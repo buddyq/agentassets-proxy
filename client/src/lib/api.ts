@@ -496,6 +496,22 @@ export function useAdminUpdateUserCredits() {
   });
 }
 
+export function useAdminDeleteUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`${API_BASE}/admin/users/${id}`, {
+        method: 'DELETE'
+      });
+      if (!res.ok) throw new Error('Failed to delete user');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+    }
+  });
+}
+
 // User coupon redemption
 export function useRedeemCoupon() {
   const queryClient = useQueryClient();
