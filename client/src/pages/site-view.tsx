@@ -48,6 +48,16 @@ function getLayoutTypography(layout?: Layout) {
     } as React.CSSProperties;
   }
   
+  // Modern layout uses Playfair Display for headings and Source Sans Pro for body
+  if (layout?.id === 'layout-modern') {
+    return {
+      '--font-heading': '"Playfair Display", Georgia, serif',
+      '--font-body': '"Source Sans Pro", -apple-system, BlinkMacSystemFont, sans-serif',
+      '--heading-weight': '600',
+      '--font-nav': '"Source Sans Pro", -apple-system, BlinkMacSystemFont, sans-serif',
+    } as React.CSSProperties;
+  }
+  
   return {
     '--font-heading': `"${headingFont}", serif`,
     '--font-body': `"${bodyFont}", sans-serif`,
@@ -758,6 +768,585 @@ function ShoalwoodContact({ site, theme }: { site: Site; theme?: Theme }) {
   );
 }
 
+// Modern Layout Components - Transparent nav that becomes solid on scroll, fade hero slider
+function ModernNavigation({ site, theme, hasPhotos, hasVideo, effectiveHeroLogo }: { 
+  site: Site; 
+  theme?: Theme; 
+  hasPhotos: boolean; 
+  hasVideo: boolean; 
+  effectiveHeroLogo?: string | null;
+}) {
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 100);
+    };
+    window.addEventListener('scroll', handleScroll);
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [isMobileMenuOpen]);
+
+  const navLinks = [
+    { href: '#home', label: 'Home' },
+    { href: '#details', label: 'Details' },
+    { href: '#photos', label: 'Photos', show: hasPhotos },
+    { href: '#video', label: 'Video', show: hasVideo },
+    { href: '#map', label: 'Map' },
+    { href: '#contact', label: 'Contact' },
+  ].filter(link => link.show !== false);
+
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    setIsMobileMenuOpen(false);
+    document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  return (
+    <>
+      <nav 
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+          isScrolled 
+            ? 'bg-white shadow-md py-3' 
+            : 'bg-transparent py-6'
+        }`}
+        style={isScrolled ? { borderBottom: `2px solid ${theme?.colors?.primary || '#558B73'}` } : undefined}
+      >
+        <div className="container mx-auto px-6 flex items-center justify-between">
+          {/* Logo */}
+          <div className="flex items-center">
+            {effectiveHeroLogo ? (
+              <img 
+                src={effectiveHeroLogo} 
+                alt="Logo" 
+                className={`h-10 md:h-12 w-auto object-contain transition-all duration-500 ${
+                  isScrolled ? '' : 'brightness-0 invert drop-shadow-lg'
+                }`}
+                data-testid="img-modern-nav-logo"
+              />
+            ) : (
+              <span 
+                className={`text-xl md:text-2xl font-semibold transition-colors duration-500 ${
+                  isScrolled ? '' : 'text-white drop-shadow-lg'
+                }`}
+                style={{ 
+                  fontFamily: 'var(--font-heading)',
+                  color: isScrolled ? (theme?.colors?.primary || '#558B73') : undefined
+                }}
+              >
+                {site.title || site.address.split(',')[0]}
+              </span>
+            )}
+          </div>
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-8">
+            {navLinks.map(link => (
+              <a
+                key={link.href}
+                href={link.href}
+                onClick={(e) => handleNavClick(e, link.href)}
+                className={`text-sm font-medium tracking-wide uppercase transition-all duration-300 hover:opacity-70 ${
+                  isScrolled ? 'text-gray-700' : 'text-white drop-shadow-sm'
+                }`}
+                style={{ fontFamily: 'var(--font-nav)' }}
+              >
+                {link.label}
+              </a>
+            ))}
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="md:hidden p-2"
+            aria-label="Open menu"
+            data-testid="button-modern-mobile-menu"
+          >
+            <svg 
+              width="24" 
+              height="24" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke={isScrolled ? '#333' : 'white'} 
+              strokeWidth="2"
+            >
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
+        </div>
+      </nav>
+
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-[100]" data-testid="modern-mobile-menu-overlay">
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+          <div 
+            className="absolute right-0 top-0 bottom-0 w-[300px] max-w-[85vw] bg-white shadow-2xl flex flex-col"
+            style={{ animation: 'slideInRight 0.3s ease-out' }}
+          >
+            <div className="flex items-center justify-between p-6 border-b">
+              <span 
+                className="text-lg font-semibold"
+                style={{ fontFamily: 'var(--font-heading)', color: theme?.colors?.primary }}
+              >
+                Menu
+              </span>
+              <button
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-2 hover:bg-gray-100 rounded-full"
+                data-testid="button-close-modern-menu"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            <nav className="flex-1 py-6">
+              {navLinks.map(link => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  onClick={(e) => handleNavClick(e, link.href)}
+                  className="block px-6 py-4 text-gray-700 hover:bg-gray-50 text-lg"
+                  style={{ fontFamily: 'var(--font-body)' }}
+                >
+                  {link.label}
+                </a>
+              ))}
+            </nav>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes slideInRight {
+          from { transform: translateX(100%); }
+          to { transform: translateX(0); }
+        }
+      `}</style>
+    </>
+  );
+}
+
+function ModernHero({ site, theme, heroImage, effectiveHeroLogo }: { 
+  site: Site; 
+  theme?: Theme; 
+  heroImage: string;
+  effectiveHeroLogo?: string | null;
+}) {
+  const slides = site.heroSlides && site.heroSlides.length > 0 
+    ? site.heroSlides 
+    : [{ 
+        title: site.title || site.address, 
+        subtitle: site.price || 'Luxury Living Awaits',
+        backgroundImage: site.heroPhotos?.[0] || site.photos?.[0] || heroImage
+      }];
+  
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  // Auto-advance slides with fade
+  useEffect(() => {
+    if (slides.length <= 1) return;
+    
+    const interval = setInterval(() => {
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setCurrentSlide(prev => (prev + 1) % slides.length);
+        setIsTransitioning(false);
+      }, 500);
+    }, 6000);
+    
+    return () => clearInterval(interval);
+  }, [slides.length]);
+
+  const currentSlideData = slides[currentSlide];
+  const bgImage = currentSlideData.backgroundImage || site.heroPhotos?.[currentSlide] || site.photos?.[currentSlide] || heroImage;
+
+  const scrollToDetails = () => {
+    document.getElementById('details')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  return (
+    <section id="home" className="relative h-screen w-full overflow-hidden">
+      {/* Background images - fade between them */}
+      {slides.map((slide, index) => (
+        <div
+          key={index}
+          className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ${
+            index === currentSlide && !isTransitioning ? 'opacity-100' : 'opacity-0'
+          }`}
+          style={{ 
+            backgroundImage: `url(${slide.backgroundImage || site.photos?.[index] || heroImage})`,
+            zIndex: index === currentSlide ? 1 : 0
+          }}
+        />
+      ))}
+      
+      {/* Gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/30 z-10" />
+
+      {/* Content */}
+      <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center px-6">
+        {/* Hero logo at top center */}
+        {effectiveHeroLogo && (
+          <img 
+            src={effectiveHeroLogo} 
+            alt="Logo" 
+            className="h-16 md:h-20 w-auto object-contain mb-8 brightness-0 invert drop-shadow-lg"
+            data-testid="img-modern-hero-logo"
+          />
+        )}
+
+        {/* Slide content with fade */}
+        <div className={`transition-opacity duration-500 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
+          <h1 
+            className="text-4xl md:text-6xl lg:text-7xl text-white mb-6 drop-shadow-lg"
+            style={{ 
+              fontFamily: 'var(--font-heading)',
+              fontWeight: 'var(--heading-weight)',
+              letterSpacing: '-0.02em',
+              lineHeight: '1.1'
+            }}
+          >
+            {currentSlideData.title || site.title || site.address}
+          </h1>
+          
+          <p 
+            className="text-xl md:text-2xl text-white/90 mb-10 max-w-2xl mx-auto drop-shadow-md"
+            style={{ 
+              fontFamily: 'var(--font-body)',
+              fontWeight: '400',
+              letterSpacing: '0.02em'
+            }}
+          >
+            {currentSlideData.subtitle || site.price}
+          </p>
+        </div>
+
+        {/* CTA Button */}
+        <button
+          onClick={scrollToDetails}
+          className="px-8 py-4 bg-white/20 backdrop-blur-sm text-white text-base font-medium tracking-wider uppercase border border-white/40 hover:bg-white/30 transition-all duration-300 rounded-sm"
+          style={{ fontFamily: 'var(--font-nav)' }}
+          data-testid="button-have-a-look"
+        >
+          Have a look
+        </button>
+      </div>
+
+      {/* Slide indicators */}
+      {slides.length > 1 && (
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-30 flex gap-3">
+          {slides.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => {
+                if (index !== currentSlide) {
+                  setIsTransitioning(true);
+                  setTimeout(() => {
+                    setCurrentSlide(index);
+                    setIsTransitioning(false);
+                  }, 500);
+                }
+              }}
+              className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                currentSlide === index 
+                  ? 'bg-white w-10' 
+                  : 'bg-white/40 hover:bg-white/60'
+              }`}
+              data-testid={`slide-indicator-${index}`}
+            />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function ModernDetails({ site, theme }: { site: Site; theme?: Theme }) {
+  const details = [
+    { label: 'Bedrooms', value: site.bedrooms, icon: Bed },
+    { label: 'Bathrooms', value: site.bathrooms, icon: Bath },
+    { label: 'Square Feet', value: site.sqft?.toLocaleString(), icon: Square },
+    { label: 'Year Built', value: site.yearBuilt, icon: Calendar },
+    { label: 'Stories', value: site.stories, icon: Building },
+  ].filter(d => d.value);
+
+  const customDetails = site.customDetails?.filter(d => d.label && d.value) || [];
+
+  return (
+    <section id="details" className="py-20 px-6 bg-white">
+      <div className="container mx-auto max-w-5xl">
+        <h2 
+          className="text-3xl md:text-4xl text-center mb-4"
+          style={{ 
+            fontFamily: 'var(--font-heading)',
+            fontWeight: 'var(--heading-weight)',
+            color: 'var(--theme-text)'
+          }}
+        >
+          Property Details
+        </h2>
+        <p 
+          className="text-center text-gray-500 mb-12 text-lg"
+          style={{ fontFamily: 'var(--font-body)' }}
+        >
+          {site.address}
+        </p>
+
+        {/* Price badge */}
+        <div className="flex justify-center mb-12">
+          <div 
+            className="inline-block px-8 py-4 rounded-lg"
+            style={{ backgroundColor: `${theme?.colors?.primary}15` }}
+          >
+            <span 
+              className="text-3xl font-semibold"
+              style={{ color: theme?.colors?.primary, fontFamily: 'var(--font-heading)' }}
+            >
+              {site.price}
+            </span>
+          </div>
+        </div>
+
+        {/* Details grid */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-12">
+          {details.map((detail, index) => {
+            const Icon = detail.icon;
+            return (
+              <div 
+                key={index} 
+                className="text-center p-6 rounded-lg bg-gray-50"
+              >
+                <Icon 
+                  className="h-8 w-8 mx-auto mb-3"
+                  style={{ color: theme?.colors?.primary }}
+                />
+                <div 
+                  className="text-2xl font-semibold mb-1"
+                  style={{ fontFamily: 'var(--font-heading)', color: 'var(--theme-text)' }}
+                >
+                  {detail.value}
+                </div>
+                <div 
+                  className="text-sm text-gray-500 uppercase tracking-wide"
+                  style={{ fontFamily: 'var(--font-body)' }}
+                >
+                  {detail.label}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Custom details */}
+        {customDetails.length > 0 && (
+          <div className="grid md:grid-cols-2 gap-4 mb-12">
+            {customDetails.map((detail, index) => (
+              <div key={index} className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                <span className="text-gray-600" style={{ fontFamily: 'var(--font-body)' }}>
+                  {detail.label}
+                </span>
+                <span className="font-medium" style={{ fontFamily: 'var(--font-body)', color: 'var(--theme-text)' }}>
+                  {detail.value}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Description */}
+        {site.description && (
+          <div className="max-w-3xl mx-auto">
+            <h3 
+              className="text-2xl mb-6 text-center"
+              style={{ fontFamily: 'var(--font-heading)', fontWeight: 'var(--heading-weight)' }}
+            >
+              About This Property
+            </h3>
+            <p 
+              className="text-gray-600 leading-relaxed text-lg text-center"
+              style={{ fontFamily: 'var(--font-body)' }}
+            >
+              {site.description}
+            </p>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function ModernContact({ site, theme }: { site: Site; theme?: Theme }) {
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    message: `I am interested in ${site.address}`
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitStatus('idle');
+    
+    try {
+      const response = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          siteId: site.id,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phone,
+          message: formData.message,
+        }),
+      });
+      
+      if (!response.ok) throw new Error('Failed to submit');
+      
+      setSubmitStatus('success');
+      setFormData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        message: `I am interested in ${site.address}`
+      });
+    } catch (error) {
+      setSubmitStatus('error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <section id="contact" className="py-20 px-6" style={{ backgroundColor: theme?.colors?.primary + '08' }}>
+      <div className="container mx-auto max-w-2xl">
+        <h2 
+          className="text-3xl md:text-4xl text-center mb-4"
+          style={{ 
+            fontFamily: 'var(--font-heading)',
+            fontWeight: 'var(--heading-weight)',
+            color: 'var(--theme-text)'
+          }}
+        >
+          Schedule a Viewing
+        </h2>
+        <p 
+          className="text-center text-gray-500 mb-10"
+          style={{ fontFamily: 'var(--font-body)' }}
+        >
+          Interested in this property? Get in touch with us today.
+        </p>
+        
+        <div className="bg-white p-8 md:p-10 rounded-xl shadow-lg">
+          <form onSubmit={handleSubmit} className="grid gap-6">
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="modernFirstName">First Name *</Label>
+                <Input 
+                  id="modernFirstName" 
+                  value={formData.firstName}
+                  onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                  required 
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="modernLastName">Last Name *</Label>
+                <Input 
+                  id="modernLastName" 
+                  value={formData.lastName}
+                  onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                  required 
+                  className="mt-1"
+                />
+              </div>
+            </div>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="modernEmail">Email *</Label>
+                <Input 
+                  id="modernEmail" 
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  required 
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="modernPhone">Phone *</Label>
+                <Input 
+                  id="modernPhone" 
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                  required 
+                  className="mt-1"
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="modernMessage">Message *</Label>
+              <Textarea 
+                id="modernMessage" 
+                value={formData.message}
+                onChange={(e) => setFormData({...formData, message: e.target.value})}
+                required 
+                className="mt-1"
+                rows={4}
+              />
+            </div>
+            {submitStatus === 'success' && (
+              <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">
+                Thank you for your inquiry! The agent will be in touch with you soon.
+              </div>
+            )}
+            
+            {submitStatus === 'error' && (
+              <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+                Something went wrong. Please try again or contact us directly.
+              </div>
+            )}
+            
+            <Button 
+              type="submit" 
+              size="lg"
+              className="w-full text-white text-lg py-6"
+              style={{ backgroundColor: theme?.colors?.primary || '#558B73' }}
+              disabled={isSubmitting}
+              data-testid="button-modern-send-inquiry"
+            >
+              {isSubmitting ? 'Sending...' : 'Send Inquiry'}
+            </Button>
+          </form>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function HeroSection({ site, theme, heroImage }: { site: Site; theme?: Theme; heroImage: string }) {
   const hasHeroSlider = site.heroPhotos && site.heroPhotos.length > 1;
   const heroImages = site.heroPhotos && site.heroPhotos.length > 0 
@@ -948,8 +1537,11 @@ export default function SiteView() {
   const hasPhotos = site.photos && site.photos.length > 0;
   const hasVideo = !!embedUrl;
   const isShoalwoodLayout = site.layoutId === 'layout-shoalwood';
+  const isModernLayout = site.layoutId === 'layout-modern';
   // Get effective logo: site-specific logo or fallback to user default logo
   const effectiveLogo = (site as any).effectiveLogo || null;
+  // Get effective hero logo: heroLogo → site.logo → user.logo
+  const effectiveHeroLogo = (site as any).effectiveHeroLogo || null;
 
   if (isShoalwoodLayout) {
     return (
@@ -1033,6 +1625,104 @@ export default function SiteView() {
         <ShoalwoodContact site={site} theme={theme} />
 
         <footer className="py-8 px-4 border-t bg-white">
+          <div className="container mx-auto text-center text-sm text-gray-500">
+            <p>Property listing powered by AgentAssets</p>
+          </div>
+        </footer>
+      </div>
+    );
+  }
+
+  // Modern Layout - transparent nav that becomes solid, fade hero slider
+  if (isModernLayout) {
+    return (
+      <div 
+        className="min-h-screen flex flex-col" 
+        style={{ 
+          ...combinedStyles,
+          backgroundColor: 'var(--theme-background)',
+          color: 'var(--theme-text)',
+          fontFamily: 'var(--font-body)'
+        }}
+      >
+        <ModernNavigation 
+          site={site} 
+          theme={theme} 
+          hasPhotos={!!hasPhotos} 
+          hasVideo={hasVideo} 
+          effectiveHeroLogo={effectiveHeroLogo}
+        />
+        <ModernHero 
+          site={site} 
+          theme={theme} 
+          heroImage={heroImage}
+          effectiveHeroLogo={effectiveHeroLogo}
+        />
+        <ModernDetails site={site} theme={theme} />
+        
+        {hasPhotos && <PhotoGallery photos={site.photos!} themeColors={theme?.colors} />}
+        
+        {hasVideo && (
+          <section id="video" className="py-20 px-6 bg-white">
+            <div className="container mx-auto max-w-4xl">
+              <h2 
+                className="text-3xl md:text-4xl mb-10 text-center"
+                style={{ 
+                  fontFamily: 'var(--font-heading)',
+                  fontWeight: 'var(--heading-weight)',
+                  color: 'var(--theme-text)'
+                }}
+              >
+                Property Video
+              </h2>
+              <div className="aspect-video rounded-xl overflow-hidden shadow-lg">
+                <iframe
+                  src={embedUrl}
+                  className="w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  title="Property Video"
+                />
+              </div>
+            </div>
+          </section>
+        )}
+
+        <section id="map" className="py-20 px-6 bg-gray-50">
+          <div className="container mx-auto max-w-4xl">
+            <h2 
+              className="text-3xl md:text-4xl mb-10 text-center"
+              style={{ 
+                fontFamily: 'var(--font-heading)',
+                fontWeight: 'var(--heading-weight)',
+                color: 'var(--theme-text)'
+              }}
+            >
+              Location
+            </h2>
+            <div className="rounded-xl overflow-hidden shadow-lg">
+              <div className="bg-white px-6 py-4 border-b">
+                <div className="flex items-center gap-3">
+                  <MapPin className="h-5 w-5" style={{ color: 'var(--theme-primary)' }} />
+                  <span className="font-medium text-gray-700">{site.address}</span>
+                </div>
+              </div>
+              <div className="aspect-[16/9]">
+                <iframe
+                  src={`https://www.google.com/maps?q=${encodeURIComponent(site.address)}&output=embed`}
+                  className="w-full h-full border-0"
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="Property Location"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <ModernContact site={site} theme={theme} />
+
+        <footer className="py-8 px-6 border-t bg-white">
           <div className="container mx-auto text-center text-sm text-gray-500">
             <p>Property listing powered by AgentAssets</p>
           </div>

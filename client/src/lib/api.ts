@@ -111,7 +111,7 @@ export function useSite(siteId: string) {
 export function useCreateSite() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (site: Omit<Site, 'id' | 'createdAt' | 'updatedAt' | 'userId'>) => {
+    mutationFn: async (site: Omit<Site, 'id' | 'createdAt' | 'updatedAt' | 'userId' | 'expiresAt'>) => {
       const res = await fetch(`${API_BASE}/sites`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

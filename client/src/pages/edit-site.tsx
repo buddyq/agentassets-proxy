@@ -13,7 +13,7 @@ import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, Save, Image, X, 
 import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ObjectUploader } from "@/components/ObjectUploader";
-import type { CustomDetail } from "@shared/schema";
+import type { CustomDetail, HeroSlide } from "@shared/schema";
 
 const ALL_STEPS = [
   { id: 1, name: "Property Details", icon: Layout },
@@ -24,7 +24,7 @@ const ALL_STEPS = [
   { id: 6, name: "Review", icon: Save },
 ];
 
-const LAYOUTS_WITH_OPTIONS = ['layout-shoalwood'];
+const LAYOUTS_WITH_OPTIONS = ['layout-shoalwood', 'layout-modern'];
 const ALWAYS_SHOW_STEP_4 = true; // Always show step 4 for logo branding option
 
 export default function EditSite() {
@@ -58,6 +58,8 @@ export default function EditSite() {
     layoutId: "",
     themeId: "",
     logo: "", // Site-specific logo override
+    heroLogo: "", // Hero-specific logo for Modern layout
+    heroSlides: [] as HeroSlide[], // Up to 3 slides for Modern layout
   });
 
   const [customDetails, setCustomDetails] = useState<CustomDetail[]>([]);
@@ -94,6 +96,8 @@ export default function EditSite() {
         layoutId: site.layoutId || layouts[0]?.id || "",
         themeId: site.themeId || themes[0]?.id || "",
         logo: site.logo || "",
+        heroLogo: site.heroLogo || "",
+        heroSlides: site.heroSlides || [],
       });
       setCustomDetails(site.customDetails || []);
     }
@@ -144,6 +148,8 @@ export default function EditSite() {
           themeId: formData.themeId,
           customDetails: validCustomDetails,
           logo: formData.logo || null,
+          heroLogo: formData.heroLogo || null,
+          heroSlides: formData.heroSlides,
         }
       },
       {
@@ -797,6 +803,189 @@ export default function EditSite() {
                             }}
                           />
                         )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Modern Layout Options */}
+                  {formData.layoutId === 'layout-modern' && (
+                    <div className="border-t pt-6 space-y-6">
+                      {/* Hero Logo for Modern Layout */}
+                      <div className="grid gap-2">
+                        <Label>Hero Logo (Optional)</Label>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Upload a logo specifically for the hero section. Use a PNG with transparent background for best results. 
+                          If not uploaded, your default logo will be used.
+                        </p>
+                        {formData.heroLogo ? (
+                          <div className="relative inline-block">
+                            <div className="p-4 bg-slate-900 rounded-lg inline-block">
+                              <img 
+                                src={formData.heroLogo} 
+                                alt="Hero logo" 
+                                className="max-h-16 max-w-[200px] object-contain"
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setFormData({...formData, heroLogo: ""})}
+                              className="absolute -top-2 -right-2 bg-destructive text-white p-1.5 rounded-full shadow-md"
+                              data-testid="button-remove-hero-logo"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <ObjectUploader
+                            maxNumberOfFiles={1}
+                            maxFileSize={5242880}
+                            variant="dropzone"
+                            onGetUploadParameters={async () => {
+                              const { url } = await getUploadUrl();
+                              return { method: 'PUT' as const, url };
+                            }}
+                            onComplete={(result) => {
+                              if (result.successful && result.successful.length > 0) {
+                                const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
+                                setFormData({...formData, heroLogo: normalizedUrl});
+                              }
+                            }}
+                          />
+                        )}
+                      </div>
+
+                      {/* Hero Slides */}
+                      <div className="grid gap-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label>Hero Slides</Label>
+                            <p className="text-sm text-muted-foreground">
+                              Add up to 3 slides with title and subtitle. Each slide will fade into the next.
+                            </p>
+                          </div>
+                          {formData.heroSlides.length < 3 && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const newSlide: HeroSlide = { title: '', subtitle: '', backgroundImage: '' };
+                                setFormData({...formData, heroSlides: [...formData.heroSlides, newSlide]});
+                              }}
+                              data-testid="button-add-hero-slide"
+                            >
+                              <Plus className="h-4 w-4 mr-1" />
+                              Add Slide
+                            </Button>
+                          )}
+                        </div>
+
+                        {formData.heroSlides.length === 0 && (
+                          <div className="border-2 border-dashed border-muted rounded-lg p-8 text-center">
+                            <p className="text-muted-foreground mb-4">No hero slides added yet</p>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => {
+                                const newSlide: HeroSlide = { title: '', subtitle: '', backgroundImage: '' };
+                                setFormData({...formData, heroSlides: [newSlide]});
+                              }}
+                              data-testid="button-add-first-hero-slide"
+                            >
+                              <Plus className="h-4 w-4 mr-1" />
+                              Add First Slide
+                            </Button>
+                          </div>
+                        )}
+
+                        {formData.heroSlides.map((slide, index) => (
+                          <div key={index} className="border rounded-lg p-4 bg-muted/20">
+                            <div className="flex items-center justify-between mb-4">
+                              <span className="font-medium text-sm">Slide {index + 1}</span>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="text-destructive hover:text-destructive"
+                                onClick={() => {
+                                  const updated = formData.heroSlides.filter((_, i) => i !== index);
+                                  setFormData({...formData, heroSlides: updated});
+                                }}
+                                data-testid={`button-remove-hero-slide-${index}`}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            <div className="grid gap-4">
+                              <div className="grid gap-2">
+                                <Label htmlFor={`edit-slide-title-${index}`}>Title</Label>
+                                <Input
+                                  id={`edit-slide-title-${index}`}
+                                  placeholder="e.g., Stunning Modern Home"
+                                  value={slide.title}
+                                  onChange={(e) => {
+                                    const updated = [...formData.heroSlides];
+                                    updated[index] = { ...updated[index], title: e.target.value };
+                                    setFormData({...formData, heroSlides: updated});
+                                  }}
+                                  data-testid={`input-slide-title-${index}`}
+                                />
+                              </div>
+                              <div className="grid gap-2">
+                                <Label htmlFor={`edit-slide-subtitle-${index}`}>Subtitle</Label>
+                                <Input
+                                  id={`edit-slide-subtitle-${index}`}
+                                  placeholder="e.g., Experience luxury living at its finest"
+                                  value={slide.subtitle}
+                                  onChange={(e) => {
+                                    const updated = [...formData.heroSlides];
+                                    updated[index] = { ...updated[index], subtitle: e.target.value };
+                                    setFormData({...formData, heroSlides: updated});
+                                  }}
+                                  data-testid={`input-slide-subtitle-${index}`}
+                                />
+                              </div>
+                              {site?.photos && site.photos.length > 0 && (
+                                <div className="grid gap-2">
+                                  <Label>Background Image</Label>
+                                  <div className="grid grid-cols-4 gap-2">
+                                    {site.photos.map((photo, photoIndex) => (
+                                      <div
+                                        key={photoIndex}
+                                        className={`relative aspect-video rounded-md overflow-hidden cursor-pointer border-2 transition-all ${
+                                          slide.backgroundImage === photo
+                                            ? 'border-primary ring-2 ring-primary/20'
+                                            : 'border-transparent hover:border-primary/50'
+                                        }`}
+                                        onClick={() => {
+                                          const updated = [...formData.heroSlides];
+                                          updated[index] = { ...updated[index], backgroundImage: photo };
+                                          setFormData({...formData, heroSlides: updated});
+                                        }}
+                                        data-testid={`select-slide-bg-${index}-${photoIndex}`}
+                                      >
+                                        <img
+                                          src={photo}
+                                          alt={`Photo ${photoIndex + 1}`}
+                                          className="w-full h-full object-cover"
+                                        />
+                                        {slide.backgroundImage === photo && (
+                                          <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                                            <Check className="h-6 w-6 text-white drop-shadow-lg" />
+                                          </div>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+
+                        <p className="text-xs text-muted-foreground">
+                          Each slide includes an automatic "Have a look" button that scrolls to the property details.
+                        </p>
                       </div>
                     </div>
                   )}

@@ -160,7 +160,7 @@ const heroSlideSchema = z.object({
   backgroundImage: z.string().optional(),
 });
 
-export const insertSiteSchema = createInsertSchema(sites).omit({ id: true, createdAt: true, updatedAt: true }).extend({
+export const insertSiteSchema = createInsertSchema(sites).omit({ id: true, createdAt: true, updatedAt: true, expiresAt: true }).extend({
   templateId: z.string().nullable().optional(),
   customDetails: z.array(customDetailSchema).optional().default([]),
   heroSlides: z.array(heroSlideSchema).max(3).optional().default([]),
