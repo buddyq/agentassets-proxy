@@ -28,6 +28,8 @@ export default function Themes() {
   const [newThemeName, setNewThemeName] = useState("");
   const [primaryColor, setPrimaryColor] = useState("#000000");
   const [secondaryColor, setSecondaryColor] = useState("#ffffff");
+  const [backgroundColor, setBackgroundColor] = useState("#ffffff");
+  const [textColor, setTextColor] = useState("#000000");
   const [logoUrl, setLogoUrl] = useState<string | undefined>(undefined);
 
   const handleCreateTheme = () => {
@@ -40,8 +42,8 @@ export default function Themes() {
         colors: {
           primary: primaryColor,
           secondary: secondaryColor,
-          background: '#ffffff',
-          text: '#000000'
+          background: backgroundColor,
+          text: textColor
         },
         logoUrl: logoUrl || null
       },
@@ -63,6 +65,8 @@ export default function Themes() {
     setNewThemeName(theme.name);
     setPrimaryColor(theme.colors.primary);
     setSecondaryColor(theme.colors.secondary);
+    setBackgroundColor(theme.colors.background);
+    setTextColor(theme.colors.text);
     setLogoUrl(theme.logoUrl || undefined);
     setIsEditMode(true);
     setIsDialogOpen(true);
@@ -79,8 +83,8 @@ export default function Themes() {
           colors: {
             primary: primaryColor,
             secondary: secondaryColor,
-            background: '#ffffff',
-            text: '#000000'
+            background: backgroundColor,
+            text: textColor
           },
           logoUrl: logoUrl || null
         }
@@ -104,6 +108,8 @@ export default function Themes() {
     setNewThemeName("");
     setPrimaryColor("#000000");
     setSecondaryColor("#ffffff");
+    setBackgroundColor("#ffffff");
+    setTextColor("#000000");
     setLogoUrl(undefined);
     setIsEditMode(false);
     setSelectedThemeId(null);
@@ -186,6 +192,43 @@ export default function Themes() {
                     </div>
                   </div>
                 </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="background">Background Color</Label>
+                    <div className="flex gap-2">
+                      <Input 
+                        id="background" 
+                        type="color" 
+                        className="w-12 h-10 p-1" 
+                        value={backgroundColor}
+                        onChange={(e) => setBackgroundColor(e.target.value)}
+                      />
+                      <Input 
+                        value={backgroundColor}
+                        onChange={(e) => setBackgroundColor(e.target.value)}
+                        className="uppercase"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="text">Text Color</Label>
+                    <div className="flex gap-2">
+                      <Input 
+                        id="text" 
+                        type="color" 
+                        className="w-12 h-10 p-1" 
+                        value={textColor}
+                        onChange={(e) => setTextColor(e.target.value)}
+                      />
+                      <Input 
+                        value={textColor}
+                        onChange={(e) => setTextColor(e.target.value)}
+                        className="uppercase"
+                      />
+                    </div>
+                  </div>
+                </div>
                 
                 <div className="grid gap-2">
                   <Label>Logo (Optional)</Label>
@@ -208,15 +251,35 @@ export default function Themes() {
 
                 <div className="p-4 rounded-lg border bg-muted/30">
                   <p className="text-sm text-muted-foreground mb-2">Preview</p>
-                  <div className="flex gap-4">
-                    <div 
-                      className="w-12 h-12 rounded-lg border shadow-sm" 
-                      style={{ backgroundColor: primaryColor }}
-                    />
-                    <div 
-                      className="w-12 h-12 rounded-lg border shadow-sm" 
-                      style={{ backgroundColor: secondaryColor }}
-                    />
+                  <div className="flex gap-3">
+                    <div className="text-center">
+                      <div 
+                        className="w-10 h-10 rounded-lg border shadow-sm mb-1" 
+                        style={{ backgroundColor: primaryColor }}
+                      />
+                      <span className="text-xs text-muted-foreground">Primary</span>
+                    </div>
+                    <div className="text-center">
+                      <div 
+                        className="w-10 h-10 rounded-lg border shadow-sm mb-1" 
+                        style={{ backgroundColor: secondaryColor }}
+                      />
+                      <span className="text-xs text-muted-foreground">Secondary</span>
+                    </div>
+                    <div className="text-center">
+                      <div 
+                        className="w-10 h-10 rounded-lg border shadow-sm mb-1" 
+                        style={{ backgroundColor: backgroundColor }}
+                      />
+                      <span className="text-xs text-muted-foreground">Background</span>
+                    </div>
+                    <div className="text-center">
+                      <div 
+                        className="w-10 h-10 rounded-lg border shadow-sm mb-1" 
+                        style={{ backgroundColor: textColor }}
+                      />
+                      <span className="text-xs text-muted-foreground">Text</span>
+                    </div>
                   </div>
                 </div>
               </div>
