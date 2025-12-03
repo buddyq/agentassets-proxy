@@ -1084,6 +1084,8 @@ function ModernHero({ site, theme, heroImage, effectiveHeroLogo }: {
 }
 
 function ModernDetails({ site, theme }: { site: Site; theme?: Theme }) {
+  const primaryColor = theme?.colors?.primary || '#558B73';
+  
   const details = [
     { label: 'Bedrooms', value: site.bedrooms, icon: Bed },
     { label: 'Bathrooms', value: site.bathrooms, icon: Bath },
@@ -1093,99 +1095,140 @@ function ModernDetails({ site, theme }: { site: Site; theme?: Theme }) {
   ].filter(d => d.value);
 
   const customDetails = site.customDetails?.filter(d => d.label && d.value) || [];
+  const allDetails = [...details, ...customDetails.map(d => ({ label: d.label, value: d.value, icon: null }))];
 
   return (
-    <section id="details" className="py-20 px-6 bg-white">
-      <div className="container mx-auto max-w-5xl">
-        <h2 
-          className="text-3xl md:text-4xl text-center mb-4"
-          style={{ 
-            fontFamily: 'var(--font-heading)',
-            fontWeight: 'var(--heading-weight)',
-            color: 'var(--theme-text)'
-          }}
-        >
-          Property Details
-        </h2>
-        <p 
-          className="text-center text-gray-500 mb-12 text-lg"
-          style={{ fontFamily: 'var(--font-body)' }}
-        >
-          {site.address}
-        </p>
-
-        {/* Price badge */}
-        <div className="flex justify-center mb-12">
-          <div 
-            className="inline-block px-8 py-4 rounded-lg"
-            style={{ backgroundColor: `${theme?.colors?.primary}15` }}
-          >
+    <section 
+      id="details" 
+      className="py-20 md:py-28 px-6 relative overflow-hidden"
+      style={{
+        background: `
+          linear-gradient(135deg, ${primaryColor}08 0%, transparent 50%, ${primaryColor}03 100%),
+          radial-gradient(ellipse at 0% 100%, ${primaryColor}12 0%, transparent 50%),
+          radial-gradient(ellipse at 100% 0%, ${primaryColor}06 0%, transparent 50%),
+          linear-gradient(180deg, #fafafa 0%, #ffffff 100%)
+        `
+      }}
+    >
+      {/* Subtle pattern overlay */}
+      <div 
+        className="absolute inset-0 opacity-[0.03]"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23${primaryColor.replace('#', '')}' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+        }}
+      />
+      
+      <div className="container mx-auto max-w-5xl relative">
+        {/* Header with Overview title (left) and Price (right) */}
+        <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-6 md:gap-8 mt-8 mb-12">
+          {/* Left - Overview title */}
+          <div>
+            <h2 
+              className="text-3xl md:text-4xl mb-3"
+              style={{ 
+                fontFamily: 'var(--font-heading)',
+                fontWeight: 'var(--heading-weight)',
+                color: 'var(--theme-text)'
+              }}
+            >
+              Overview
+            </h2>
+            {/* Short separator */}
+            <div 
+              className="w-16 h-1 rounded-full"
+              style={{ backgroundColor: primaryColor }}
+            />
+            <p 
+              className="mt-4 text-gray-500 text-lg"
+              style={{ fontFamily: 'var(--font-body)' }}
+            >
+              {site.address}
+            </p>
+          </div>
+          
+          {/* Right - Price */}
+          <div className="text-left md:text-right">
+            <p 
+              className="text-sm uppercase tracking-widest mb-1 text-gray-400"
+              style={{ fontFamily: 'var(--font-body)' }}
+            >
+              Offered for
+            </p>
             <span 
-              className="text-3xl font-semibold"
-              style={{ color: theme?.colors?.primary, fontFamily: 'var(--font-heading)' }}
+              className="text-3xl md:text-4xl font-semibold"
+              style={{ color: primaryColor, fontFamily: 'var(--font-heading)' }}
             >
               {site.price}
             </span>
           </div>
         </div>
 
-        {/* Details grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-12">
-          {details.map((detail, index) => {
-            const Icon = detail.icon;
+        {/* Details list - each on its own line */}
+        <div className="space-y-4 mb-12">
+          {allDetails.map((detail, index) => {
+            const Icon = 'icon' in detail && detail.icon ? detail.icon : null;
             return (
               <div 
                 key={index} 
-                className="text-center p-6 rounded-lg bg-gray-50"
+                className="flex items-center justify-between py-4 border-b"
+                style={{ borderColor: `${primaryColor}15` }}
               >
-                <Icon 
-                  className="h-8 w-8 mx-auto mb-3"
-                  style={{ color: theme?.colors?.primary }}
-                />
-                <div 
-                  className="text-2xl font-semibold mb-1"
+                <div className="flex items-center gap-4">
+                  {Icon && (
+                    <div 
+                      className="w-10 h-10 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: `${primaryColor}10` }}
+                    >
+                      <Icon 
+                        className="h-5 w-5"
+                        style={{ color: primaryColor }}
+                      />
+                    </div>
+                  )}
+                  {!Icon && (
+                    <div 
+                      className="w-10 h-10 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: `${primaryColor}10` }}
+                    >
+                      <div 
+                        className="w-2 h-2 rounded-full"
+                        style={{ backgroundColor: primaryColor }}
+                      />
+                    </div>
+                  )}
+                  <span 
+                    className="text-gray-600"
+                    style={{ fontFamily: 'var(--font-body)' }}
+                  >
+                    {detail.label}
+                  </span>
+                </div>
+                <span 
+                  className="text-lg font-medium"
                   style={{ fontFamily: 'var(--font-heading)', color: 'var(--theme-text)' }}
                 >
                   {detail.value}
-                </div>
-                <div 
-                  className="text-sm text-gray-500 uppercase tracking-wide"
-                  style={{ fontFamily: 'var(--font-body)' }}
-                >
-                  {detail.label}
-                </div>
+                </span>
               </div>
             );
           })}
         </div>
 
-        {/* Custom details */}
-        {customDetails.length > 0 && (
-          <div className="grid md:grid-cols-2 gap-4 mb-12">
-            {customDetails.map((detail, index) => (
-              <div key={index} className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                <span className="text-gray-600" style={{ fontFamily: 'var(--font-body)' }}>
-                  {detail.label}
-                </span>
-                <span className="font-medium" style={{ fontFamily: 'var(--font-body)', color: 'var(--theme-text)' }}>
-                  {detail.value}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-
         {/* Description */}
         {site.description && (
-          <div className="max-w-3xl mx-auto">
+          <div className="max-w-3xl">
             <h3 
-              className="text-2xl mb-6 text-center"
+              className="text-2xl mb-2"
               style={{ fontFamily: 'var(--font-heading)', fontWeight: 'var(--heading-weight)' }}
             >
               About This Property
             </h3>
+            <div 
+              className="w-12 h-1 rounded-full mb-6"
+              style={{ backgroundColor: primaryColor }}
+            />
             <p 
-              className="text-gray-600 leading-relaxed text-lg text-center"
+              className="text-gray-600 leading-relaxed text-lg"
               style={{ fontFamily: 'var(--font-body)' }}
             >
               {site.description}
