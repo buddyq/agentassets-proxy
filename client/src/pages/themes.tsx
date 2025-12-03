@@ -5,15 +5,19 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Theme } from "@shared/schema";
-import { useThemes, useCreateTheme } from "@/lib/api";
+import { useThemes, useCreateTheme, useDeleteTheme } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
 import { Plus, Palette, Trash2, Check, Upload, Image as ImageIcon } from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Themes() {
-  const { data: themes = [] } = useThemes();
+  const { user } = useAuth();
+  const { data: presetThemes = [] } = useThemes({ preset: true });
+  const { data: userThemes = [] } = useThemes({ userId: user?.id });
   const createThemeMutation = useCreateTheme();
+  const deleteThemeMutation = useDeleteTheme();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
 
@@ -177,59 +181,128 @@ export default function Themes() {
           </Dialog>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {themes.map((theme) => (
-            <Card key={theme.id} className="overflow-hidden">
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Palette className="h-4 w-4" style={{ color: theme.colors.primary }} />
-                    {theme.name}
-                  </CardTitle>
-                  {theme.type === 'preset' && (
-                    <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">Preset</span>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex gap-2 mb-4">
-                  <div 
-                    className="w-10 h-10 rounded-lg border shadow-sm" 
-                    style={{ backgroundColor: theme.colors.primary }}
-                    title="Primary"
-                  />
-                  <div 
-                    className="w-10 h-10 rounded-lg border shadow-sm" 
-                    style={{ backgroundColor: theme.colors.secondary }}
-                    title="Secondary"
-                  />
-                  <div 
-                    className="w-10 h-10 rounded-lg border shadow-sm" 
-                    style={{ backgroundColor: theme.colors.background }}
-                    title="Background"
-                  />
-                  <div 
-                    className="w-10 h-10 rounded-lg border shadow-sm" 
-                    style={{ backgroundColor: theme.colors.text }}
-                    title="Text"
-                  />
-                </div>
-                {theme.logoUrl && (
-                  <div className="h-8 flex items-center">
-                    <img src={theme.logoUrl} alt={`${theme.name} logo`} className="max-h-full max-w-full object-contain" />
-                  </div>
-                )}
-              </CardContent>
-              {theme.type === 'custom' && (
-                <CardFooter className="border-t pt-4">
-                  <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive/90 hover:bg-destructive/10 w-full">
-                    <Trash2 className="h-4 w-4 mr-2" /> Delete
-                  </Button>
-                </CardFooter>
-              )}
-            </Card>
-          ))}
-        </div>
+        {/* My Custom Themes */}
+        {userThemes.length > 0 && (
+          <div className="mb-12">
+            <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
+              <Palette className="h-5 w-5 text-primary" />
+              My Custom Themes
+            </h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {userThemes.map((theme) => (
+                <Card key={theme.id} className="overflow-hidden border-primary/20">
+                  <CardHeader className="pb-2 bg-primary/5">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Palette className="h-4 w-4" style={{ color: theme.colors.primary }} />
+                        {theme.name}
+                      </CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <div className="flex gap-2 mb-4">
+                      <div 
+                        className="w-10 h-10 rounded-lg border shadow-sm" 
+                        style={{ backgroundColor: theme.colors.primary }}
+                        title="Primary"
+                      />
+                      <div 
+                        className="w-10 h-10 rounded-lg border shadow-sm" 
+                        style={{ backgroundColor: theme.colors.secondary }}
+                        title="Secondary"
+                      />
+                      <div 
+                        className="w-10 h-10 rounded-lg border shadow-sm" 
+                        style={{ backgroundColor: theme.colors.background }}
+                        title="Background"
+                      />
+                      <div 
+                        className="w-10 h-10 rounded-lg border shadow-sm" 
+                        style={{ backgroundColor: theme.colors.text }}
+                        title="Text"
+                      />
+                    </div>
+                    {theme.logoUrl && (
+                      <div className="h-8 flex items-center">
+                        <img src={theme.logoUrl} alt={`${theme.name} logo`} className="max-h-full max-w-full object-contain" />
+                      </div>
+                    )}
+                  </CardContent>
+                  <CardFooter className="border-t pt-4">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-destructive hover:text-destructive/90 hover:bg-destructive/10 w-full"
+                      onClick={() => {
+                        deleteThemeMutation.mutate(theme.id, {
+                          onSuccess: () => {
+                            toast({
+                              title: "Theme Deleted",
+                              description: `${theme.name} has been removed.`,
+                            });
+                          }
+                        });
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" /> Delete
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Preset Themes */}
+        {presetThemes.length > 0 && (
+          <div>
+            <h2 className="text-xl font-semibold mb-6 text-muted-foreground">Preset Themes</h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {presetThemes.map((theme) => (
+                <Card key={theme.id} className="overflow-hidden opacity-75">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Palette className="h-4 w-4" style={{ color: theme.colors.primary }} />
+                        {theme.name}
+                      </CardTitle>
+                      <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">Preset</span>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex gap-2 mb-4">
+                      <div 
+                        className="w-10 h-10 rounded-lg border shadow-sm" 
+                        style={{ backgroundColor: theme.colors.primary }}
+                        title="Primary"
+                      />
+                      <div 
+                        className="w-10 h-10 rounded-lg border shadow-sm" 
+                        style={{ backgroundColor: theme.colors.secondary }}
+                        title="Secondary"
+                      />
+                      <div 
+                        className="w-10 h-10 rounded-lg border shadow-sm" 
+                        style={{ backgroundColor: theme.colors.background }}
+                        title="Background"
+                      />
+                      <div 
+                        className="w-10 h-10 rounded-lg border shadow-sm" 
+                        style={{ backgroundColor: theme.colors.text }}
+                        title="Text"
+                      />
+                    </div>
+                    {theme.logoUrl && (
+                      <div className="h-8 flex items-center">
+                        <img src={theme.logoUrl} alt={`${theme.name} logo`} className="max-h-full max-w-full object-contain" />
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
       </main>
 
       <Footer />
