@@ -4,6 +4,8 @@ import {
   themes,
   layouts,
   leads,
+  coupons,
+  couponRedemptions,
   type User, 
   type InsertUser,
   type Site,
@@ -13,7 +15,10 @@ import {
   type Layout,
   type InsertLayout,
   type Lead,
-  type InsertLead
+  type InsertLead,
+  type Coupon,
+  type InsertCoupon,
+  type CouponRedemption
 } from "@shared/schema";
 import { db, pool } from "./db";
 import { eq } from "drizzle-orm";
@@ -64,6 +69,20 @@ export interface IStorage {
   createLead(lead: InsertLead): Promise<Lead>;
   getLeadsBySite(siteId: string): Promise<Lead[]>;
   getLeadsByUser(userId: string): Promise<Lead[]>;
+  
+  // Coupon methods
+  getCoupon(id: string): Promise<Coupon | undefined>;
+  getCouponByCode(code: string): Promise<Coupon | undefined>;
+  getAllCoupons(): Promise<Coupon[]>;
+  createCoupon(coupon: InsertCoupon): Promise<Coupon>;
+  updateCoupon(id: string, coupon: Partial<InsertCoupon>): Promise<Coupon>;
+  deleteCoupon(id: string): Promise<void>;
+  redeemCoupon(couponId: string, userId: string): Promise<CouponRedemption>;
+  hasUserRedeemedCoupon(couponId: string, userId: string): Promise<boolean>;
+  incrementCouponUsage(id: string): Promise<void>;
+  
+  // User management methods (admin)
+  getAllUsers(): Promise<User[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -272,6 +291,78 @@ export class DatabaseStorage implements IStorage {
       allLeads.push(...siteLeads);
     }
     return allLeads;
+  }
+
+  // Coupon methods
+  async getCoupon(id: string): Promise<Coupon | undefined> {
+    const [coupon] = await db.select().from(coupons).where(eq(coupons.id, id));
+    return coupon || undefined;
+  }
+
+  async getCouponByCode(code: string): Promise<Coupon | undefined> {
+    const [coupon] = await db.select().from(coupons).where(eq(coupons.code, code.toUpperCase()));
+    return coupon || undefined;
+  }
+
+  async getAllCoupons(): Promise<Coupon[]> {
+    return await db.select().from(coupons);
+  }
+
+  async createCoupon(insertCoupon: InsertCoupon): Promise<Coupon> {
+    const [coupon] = await db
+      .insert(coupons)
+      .values({
+        ...insertCoupon,
+        code: insertCoupon.code.toUpperCase()
+      })
+      .returning();
+    return coupon;
+  }
+
+  async updateCoupon(id: string, couponUpdate: Partial<InsertCoupon>): Promise<Coupon> {
+    const updateData = { ...couponUpdate };
+    if (updateData.code) {
+      updateData.code = updateData.code.toUpperCase();
+    }
+    const [coupon] = await db
+      .update(coupons)
+      .set(updateData)
+      .where(eq(coupons.id, id))
+      .returning();
+    return coupon;
+  }
+
+  async deleteCoupon(id: string): Promise<void> {
+    await db.delete(coupons).where(eq(coupons.id, id));
+  }
+
+  async redeemCoupon(couponId: string, userId: string): Promise<CouponRedemption> {
+    const [redemption] = await db
+      .insert(couponRedemptions)
+      .values({ couponId, userId })
+      .returning();
+    return redemption;
+  }
+
+  async hasUserRedeemedCoupon(couponId: string, userId: string): Promise<boolean> {
+    const redemptions = await db.select().from(couponRedemptions)
+      .where(eq(couponRedemptions.couponId, couponId));
+    return redemptions.some(r => r.userId === userId);
+  }
+
+  async incrementCouponUsage(id: string): Promise<void> {
+    const coupon = await this.getCoupon(id);
+    if (coupon) {
+      await db
+        .update(coupons)
+        .set({ usedCount: coupon.usedCount + 1 })
+        .where(eq(coupons.id, id));
+    }
+  }
+
+  // User management methods (admin)
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users);
   }
 }
 
