@@ -17,7 +17,6 @@ export default function OurStory() {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 to-white">
       <Navbar />
-      
       {/* Hero Section */}
       <section className="relative py-24 md:py-32 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-secondary via-slate-800 to-secondary" />
@@ -40,7 +39,6 @@ export default function OurStory() {
           </div>
         </div>
       </section>
-
       {/* Main Story Section */}
       <section className="py-20 md:py-28">
         <div className="container mx-auto px-4">
@@ -172,7 +170,6 @@ export default function OurStory() {
           </div>
         </div>
       </section>
-
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-r from-primary via-teal-600 to-primary relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
@@ -183,9 +180,7 @@ export default function OurStory() {
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             Ready to Experience the Difference?
           </h2>
-          <p className="text-xl text-white/80 mb-8 max-w-2xl mx-auto">
-            Join thousands of agents who showcase their properties the right way.
-          </p>
+          <p className="text-xl text-white/80 mb-8 max-w-2xl mx-auto">Join hundreds of agents who showcase their properties the right way.</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/auth">
               <Button size="lg" className="text-lg px-10 h-14 bg-white text-primary hover:bg-white/90 shadow-xl group">
@@ -201,7 +196,6 @@ export default function OurStory() {
           </div>
         </div>
       </section>
-
       <Footer />
     </div>
   );
