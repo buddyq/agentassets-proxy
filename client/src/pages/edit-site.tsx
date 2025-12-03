@@ -12,6 +12,7 @@ import { useLocation, useParams } from "wouter";
 import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, Save, Image, X, GripVertical, Star, LayoutGrid, Plus, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import type { CustomDetail, HeroSlide, SiteDocument } from "@shared/schema";
 import { FileText, Download, Trash2 } from "lucide-react";
@@ -708,14 +709,27 @@ export default function EditSite() {
             {step === 4 && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Layout Options & Branding</CardTitle>
+                  <CardTitle>Customize Your Site</CardTitle>
                   <p className="text-muted-foreground text-sm">
-                    Customize the branding and options for your property site.
+                    Customize the branding, layout options, and documents for your property site.
                   </p>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Site Logo Override */}
-                  <div className="grid gap-2">
+                <CardContent>
+                  <Tabs defaultValue="branding" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2 mb-6">
+                      <TabsTrigger value="branding" data-testid="tab-branding">
+                        <Settings className="h-4 w-4 mr-2" />
+                        Branding & Options
+                      </TabsTrigger>
+                      <TabsTrigger value="documents" data-testid="tab-documents">
+                        <FileText className="h-4 w-4 mr-2" />
+                        Documents {documents.length > 0 && `(${documents.length})`}
+                      </TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="branding" className="space-y-6">
+                      {/* Site Logo Override */}
+                      <div className="grid gap-2">
                     <Label>Site Logo (Optional)</Label>
                     <p className="text-sm text-muted-foreground mb-2">
                       {user?.logo 
@@ -1039,17 +1053,20 @@ export default function EditSite() {
                     </div>
                   )}
 
-                  {/* Documents Section */}
-                  <div className="grid gap-4 pt-6 border-t">
-                    <div>
-                      <Label className="text-lg font-semibold flex items-center gap-2">
-                        <FileText className="h-5 w-5" />
-                        Property Documents
-                      </Label>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Upload documents like floor plans, disclosures, or brochures. Visitors can download these from your property site.
-                      </p>
-                    </div>
+                    </TabsContent>
+
+                    <TabsContent value="documents" className="space-y-6">
+                      {/* Documents Section */}
+                      <div className="grid gap-4">
+                        <div>
+                          <Label className="text-lg font-semibold flex items-center gap-2">
+                            <FileText className="h-5 w-5" />
+                            Property Documents
+                          </Label>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Upload documents like floor plans, disclosures, or brochures. Visitors can download these from your property site.
+                          </p>
+                        </div>
 
                     {/* Document Upload */}
                     <div className="space-y-4">
@@ -1164,8 +1181,10 @@ export default function EditSite() {
                           </div>
                         </div>
                       )}
+                      </div>
                     </div>
-                  </div>
+                    </TabsContent>
+                  </Tabs>
                 </CardContent>
               </Card>
             )}
