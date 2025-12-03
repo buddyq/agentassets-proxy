@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { LayoutDashboard, CreditCard, Palette, User, Settings, LogOut as LogOutIcon, MessageSquare } from "lucide-react";
+import { LayoutDashboard, CreditCard, Palette, User, Settings, LogOut as LogOutIcon } from "lucide-react";
 import logoUrl from "@/assets/logo.png";
 import {
   DropdownMenu,
@@ -33,12 +33,6 @@ export function Navbar() {
                   <Button variant={location === "/dashboard" ? "secondary" : "ghost"} size="sm" className="gap-2">
                     <LayoutDashboard className="h-4 w-4" />
                     Dashboard
-                  </Button>
-                </Link>
-                <Link href="/leads">
-                  <Button variant={location === "/leads" ? "secondary" : "ghost"} size="sm" className="gap-2">
-                    <MessageSquare className="h-4 w-4" />
-                    Leads
                   </Button>
                 </Link>
                 <Link href="/themes">

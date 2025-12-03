@@ -17,7 +17,6 @@ import Credits from "@/pages/credits";
 import Profile from "@/pages/profile";
 import SiteView from "@/pages/site-view";
 import HowItWorks from "@/pages/how-it-works";
-import Leads from "@/pages/leads";
 
 function Router() {
   return (
@@ -35,7 +34,6 @@ function Router() {
       <ProtectedRoute path="/themes" component={Themes} />
       <ProtectedRoute path="/credits" component={Credits} />
       <ProtectedRoute path="/profile" component={Profile} />
-      <ProtectedRoute path="/leads" component={Leads} />
       <ProtectedRoute path="/admin" component={AdminDashboard} />
       
       <Route component={NotFound} />
