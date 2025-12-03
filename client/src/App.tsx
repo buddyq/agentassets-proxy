@@ -30,6 +30,7 @@ import SiteView from "@/pages/site-view";
 import HowItWorks from "@/pages/how-it-works";
 import Contact from "@/pages/contact";
 import Support from "@/pages/support";
+import OurStory from "@/pages/our-story";
 
 function Router() {
   return (
@@ -39,6 +40,7 @@ function Router() {
       <Route path="/how-it-works" component={HowItWorks} />
       <Route path="/contact" component={Contact} />
       <Route path="/support" component={Support} />
+      <Route path="/our-story" component={OurStory} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/site/:id" component={SiteView} />
       
