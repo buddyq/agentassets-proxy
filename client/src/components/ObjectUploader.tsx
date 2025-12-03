@@ -220,7 +220,7 @@ export function ObjectUploader({
       />
       <button 
         onClick={handleButtonClick} 
-        className={buttonClassName} 
+        className={`${buttonClassName} transition-all hover:bg-gray-100 hover:shadow-sm disabled:opacity-50`}
         type="button"
         disabled={isUploading}
       >
