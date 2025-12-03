@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { MapPin, Play, Home, Info, Video, Image, X, ChevronLeft, ChevronRight, Bed, Bath, Square, Calendar, Building, Phone, Mail, User } from "lucide-react";
+import { MapPin, Play, Home, Info, Video, Image, X, ChevronLeft, ChevronRight, Bed, Bath, Square, Calendar, Building, Phone, Mail, User, Instagram, Facebook, Linkedin, Youtube, Twitter } from "lucide-react";
 import heroImage from "@assets/generated_images/luxury_living_room_interior_for_hero_background.png";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import useEmblaCarousel from "embla-carousel-react";
@@ -1197,7 +1197,24 @@ function ModernDetails({ site, theme }: { site: Site; theme?: Theme }) {
   );
 }
 
-function ModernContact({ site, theme }: { site: Site; theme?: Theme }) {
+interface AgentInfo {
+  name: string | null;
+  email: string | null;
+  phone: string | null;
+  profileImageUrl: string | null;
+  brokerage: string | null;
+  teamName: string | null;
+  address: string | null;
+  socialMedia: {
+    instagram?: string;
+    youtube?: string;
+    facebook?: string;
+    linkedin?: string;
+    x?: string;
+  } | null;
+}
+
+function ModernContact({ site, theme, agentInfo }: { site: Site; theme?: Theme; agentInfo?: AgentInfo | null }) {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -1244,108 +1261,301 @@ function ModernContact({ site, theme }: { site: Site; theme?: Theme }) {
     }
   };
 
+  const primaryColor = theme?.colors?.primary || '#558B73';
+
   return (
-    <section id="contact" className="py-20 px-6" style={{ backgroundColor: theme?.colors?.primary + '08' }}>
-      <div className="container mx-auto max-w-2xl">
+    <section id="contact" className="py-16 md:py-24 px-4 md:px-6" style={{ backgroundColor: '#fafafa' }}>
+      <div className="container mx-auto max-w-6xl">
         <h2 
-          className="text-3xl md:text-4xl text-center mb-4"
+          className="text-3xl md:text-4xl text-center mb-3"
           style={{ 
             fontFamily: 'var(--font-heading)',
             fontWeight: 'var(--heading-weight)',
             color: 'var(--theme-text)'
           }}
         >
-          Schedule a Viewing
+          Get In Touch
         </h2>
         <p 
-          className="text-center text-gray-500 mb-10"
+          className="text-center text-gray-500 mb-12 md:mb-16 max-w-xl mx-auto"
           style={{ fontFamily: 'var(--font-body)' }}
         >
-          Interested in this property? Get in touch with us today.
+          Ready to schedule a viewing or have questions? We'd love to hear from you.
         </p>
         
-        <div className="bg-white p-8 md:p-10 rounded-xl shadow-lg">
-          <form onSubmit={handleSubmit} className="grid gap-6">
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="modernFirstName">First Name *</Label>
-                <Input 
-                  id="modernFirstName" 
-                  value={formData.firstName}
-                  onChange={(e) => setFormData({...formData, firstName: e.target.value})}
-                  required 
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="modernLastName">Last Name *</Label>
-                <Input 
-                  id="modernLastName" 
-                  value={formData.lastName}
-                  onChange={(e) => setFormData({...formData, lastName: e.target.value})}
-                  required 
-                  className="mt-1"
-                />
-              </div>
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          <div className="grid md:grid-cols-2">
+            {/* Left Column - Contact Form */}
+            <div className="p-8 md:p-12">
+              <h3 
+                className="text-xl font-semibold mb-6"
+                style={{ fontFamily: 'var(--font-heading)', color: 'var(--theme-text)' }}
+              >
+                Send Us a Message
+              </h3>
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="modernFirstName" className="text-sm text-gray-600">First Name *</Label>
+                    <Input 
+                      id="modernFirstName" 
+                      value={formData.firstName}
+                      onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                      required 
+                      className="mt-1.5 border-gray-200 focus:border-gray-400 focus:ring-gray-400"
+                      placeholder="John"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="modernLastName" className="text-sm text-gray-600">Last Name *</Label>
+                    <Input 
+                      id="modernLastName" 
+                      value={formData.lastName}
+                      onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                      required 
+                      className="mt-1.5 border-gray-200 focus:border-gray-400 focus:ring-gray-400"
+                      placeholder="Doe"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="modernEmail" className="text-sm text-gray-600">Email Address *</Label>
+                  <Input 
+                    id="modernEmail" 
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    required 
+                    className="mt-1.5 border-gray-200 focus:border-gray-400 focus:ring-gray-400"
+                    placeholder="john@example.com"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="modernPhone" className="text-sm text-gray-600">Phone Number *</Label>
+                  <Input 
+                    id="modernPhone" 
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    required 
+                    className="mt-1.5 border-gray-200 focus:border-gray-400 focus:ring-gray-400"
+                    placeholder="(555) 123-4567"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="modernMessage" className="text-sm text-gray-600">Message *</Label>
+                  <Textarea 
+                    id="modernMessage" 
+                    value={formData.message}
+                    onChange={(e) => setFormData({...formData, message: e.target.value})}
+                    required 
+                    className="mt-1.5 border-gray-200 focus:border-gray-400 focus:ring-gray-400 resize-none"
+                    rows={4}
+                  />
+                </div>
+                
+                {submitStatus === 'success' && (
+                  <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg text-sm">
+                    Thank you for your inquiry! We'll be in touch soon.
+                  </div>
+                )}
+                
+                {submitStatus === 'error' && (
+                  <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-sm">
+                    Something went wrong. Please try again.
+                  </div>
+                )}
+                
+                <Button 
+                  type="submit" 
+                  size="lg"
+                  className="w-full text-white font-medium"
+                  style={{ backgroundColor: primaryColor }}
+                  disabled={isSubmitting}
+                  data-testid="button-modern-send-inquiry"
+                >
+                  {isSubmitting ? 'Sending...' : 'Send Message'}
+                </Button>
+              </form>
             </div>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="modernEmail">Email *</Label>
-                <Input 
-                  id="modernEmail" 
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
-                  required 
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="modernPhone">Phone *</Label>
-                <Input 
-                  id="modernPhone" 
-                  type="tel"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                  required 
-                  className="mt-1"
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="modernMessage">Message *</Label>
-              <Textarea 
-                id="modernMessage" 
-                value={formData.message}
-                onChange={(e) => setFormData({...formData, message: e.target.value})}
-                required 
-                className="mt-1"
-                rows={4}
+
+            {/* Separator - vertical line on desktop, horizontal on mobile */}
+            <div className="hidden md:flex items-stretch">
+              <div 
+                className="w-px my-12"
+                style={{ backgroundColor: primaryColor + '30' }}
               />
             </div>
-            {submitStatus === 'success' && (
-              <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">
-                Thank you for your inquiry! The agent will be in touch with you soon.
+            <div className="md:hidden px-8">
+              <div 
+                className="h-px w-full"
+                style={{ backgroundColor: primaryColor + '30' }}
+              />
+            </div>
+
+            {/* Right Column - Agent Info */}
+            <div className="p-8 md:p-12 flex flex-col justify-center" style={{ backgroundColor: primaryColor + '05' }}>
+              <div className="text-center md:text-left">
+                {/* Agent Photo */}
+                <div className="flex justify-center md:justify-start mb-6">
+                  {agentInfo?.profileImageUrl ? (
+                    <div 
+                      className="w-28 h-28 rounded-full overflow-hidden shadow-lg border-4"
+                      style={{ borderColor: primaryColor + '30' }}
+                    >
+                      <img 
+                        src={agentInfo.profileImageUrl} 
+                        alt={agentInfo.name || 'Agent'} 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div 
+                      className="w-28 h-28 rounded-full flex items-center justify-center text-white text-3xl font-semibold shadow-lg"
+                      style={{ backgroundColor: primaryColor }}
+                    >
+                      {agentInfo?.name ? agentInfo.name.charAt(0).toUpperCase() : 'A'}
+                    </div>
+                  )}
+                </div>
+
+                {/* Agent Name & Title */}
+                <h3 
+                  className="text-2xl font-semibold mb-1"
+                  style={{ fontFamily: 'var(--font-heading)', color: 'var(--theme-text)' }}
+                >
+                  {agentInfo?.name || 'Your Real Estate Agent'}
+                </h3>
+                {agentInfo?.teamName && (
+                  <p className="text-gray-500 mb-1" style={{ fontFamily: 'var(--font-body)' }}>
+                    {agentInfo.teamName}
+                  </p>
+                )}
+                {agentInfo?.brokerage && (
+                  <p className="text-gray-400 text-sm mb-6" style={{ fontFamily: 'var(--font-body)' }}>
+                    {agentInfo.brokerage}
+                  </p>
+                )}
+
+                {/* Contact Details */}
+                <div className="space-y-4 mt-6">
+                  {agentInfo?.phone && (
+                    <a 
+                      href={`tel:${agentInfo.phone}`}
+                      className="flex items-center justify-center md:justify-start gap-3 text-gray-600 hover:text-gray-900 transition-colors group"
+                    >
+                      <div 
+                        className="w-10 h-10 rounded-full flex items-center justify-center transition-colors"
+                        style={{ backgroundColor: primaryColor + '15' }}
+                      >
+                        <Phone className="w-4 h-4" style={{ color: primaryColor }} />
+                      </div>
+                      <span className="font-medium" style={{ fontFamily: 'var(--font-body)' }}>
+                        {agentInfo.phone}
+                      </span>
+                    </a>
+                  )}
+                  
+                  {agentInfo?.email && (
+                    <a 
+                      href={`mailto:${agentInfo.email}`}
+                      className="flex items-center justify-center md:justify-start gap-3 text-gray-600 hover:text-gray-900 transition-colors group"
+                    >
+                      <div 
+                        className="w-10 h-10 rounded-full flex items-center justify-center transition-colors"
+                        style={{ backgroundColor: primaryColor + '15' }}
+                      >
+                        <Mail className="w-4 h-4" style={{ color: primaryColor }} />
+                      </div>
+                      <span className="font-medium" style={{ fontFamily: 'var(--font-body)' }}>
+                        {agentInfo.email}
+                      </span>
+                    </a>
+                  )}
+                  
+                  {agentInfo?.address && (
+                    <div className="flex items-center justify-center md:justify-start gap-3 text-gray-600">
+                      <div 
+                        className="w-10 h-10 rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: primaryColor + '15' }}
+                      >
+                        <MapPin className="w-4 h-4" style={{ color: primaryColor }} />
+                      </div>
+                      <span className="font-medium" style={{ fontFamily: 'var(--font-body)' }}>
+                        {agentInfo.address}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Social Media */}
+                {agentInfo?.socialMedia && Object.values(agentInfo.socialMedia).some(v => v) && (
+                  <div className="mt-8 pt-6 border-t" style={{ borderColor: primaryColor + '20' }}>
+                    <p className="text-sm text-gray-400 mb-4" style={{ fontFamily: 'var(--font-body)' }}>
+                      Connect with me
+                    </p>
+                    <div className="flex justify-center md:justify-start gap-3">
+                      {agentInfo.socialMedia.instagram && (
+                        <a 
+                          href={agentInfo.socialMedia.instagram}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
+                          style={{ backgroundColor: primaryColor + '15' }}
+                        >
+                          <Instagram className="w-4 h-4" style={{ color: primaryColor }} />
+                        </a>
+                      )}
+                      {agentInfo.socialMedia.facebook && (
+                        <a 
+                          href={agentInfo.socialMedia.facebook}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
+                          style={{ backgroundColor: primaryColor + '15' }}
+                        >
+                          <Facebook className="w-4 h-4" style={{ color: primaryColor }} />
+                        </a>
+                      )}
+                      {agentInfo.socialMedia.linkedin && (
+                        <a 
+                          href={agentInfo.socialMedia.linkedin}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
+                          style={{ backgroundColor: primaryColor + '15' }}
+                        >
+                          <Linkedin className="w-4 h-4" style={{ color: primaryColor }} />
+                        </a>
+                      )}
+                      {agentInfo.socialMedia.youtube && (
+                        <a 
+                          href={agentInfo.socialMedia.youtube}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
+                          style={{ backgroundColor: primaryColor + '15' }}
+                        >
+                          <Youtube className="w-4 h-4" style={{ color: primaryColor }} />
+                        </a>
+                      )}
+                      {agentInfo.socialMedia.x && (
+                        <a 
+                          href={agentInfo.socialMedia.x}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
+                          style={{ backgroundColor: primaryColor + '15' }}
+                        >
+                          <Twitter className="w-4 h-4" style={{ color: primaryColor }} />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-            
-            {submitStatus === 'error' && (
-              <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
-                Something went wrong. Please try again or contact us directly.
-              </div>
-            )}
-            
-            <Button 
-              type="submit" 
-              size="lg"
-              className="w-full text-white text-lg py-6"
-              style={{ backgroundColor: theme?.colors?.primary || '#558B73' }}
-              disabled={isSubmitting}
-              data-testid="button-modern-send-inquiry"
-            >
-              {isSubmitting ? 'Sending...' : 'Send Inquiry'}
-            </Button>
-          </form>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -1547,6 +1757,8 @@ export default function SiteView() {
   const effectiveLogo = (site as any).effectiveLogo || null;
   // Get effective hero logo: heroLogo → site.logo → user.logo
   const effectiveHeroLogo = (site as any).effectiveHeroLogo || null;
+  // Get agent info for contact section
+  const agentInfo = (site as any).agentInfo || null;
 
   if (isShoalwoodLayout) {
     return (
@@ -1726,7 +1938,7 @@ export default function SiteView() {
           </div>
         </section>
 
-        <ModernContact site={site} theme={theme} />
+        <ModernContact site={site} theme={theme} agentInfo={agentInfo} />
 
         <footer className="py-8 px-6 border-t bg-white">
           <div className="container mx-auto text-center text-sm text-gray-500">
