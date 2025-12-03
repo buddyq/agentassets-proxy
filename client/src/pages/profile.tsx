@@ -162,7 +162,7 @@ export default function Profile() {
                     onGetUploadParameters={getUploadUrl}
                     onComplete={handleProfileImageUpload}
                   >
-                    <Button type="button" variant="outline">
+                    <Button type="button" className="bg-[#117f84] text-[#fcfcfc] hover:bg-[#0d6266]">
                       {formData.profileImageUrl ? "Change Photo" : "Upload Photo"}
                     </Button>
                   </ObjectUploader>
