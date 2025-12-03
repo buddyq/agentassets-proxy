@@ -5,6 +5,7 @@ import { Upload, X, Image } from "lucide-react";
 interface ObjectUploaderProps {
   maxNumberOfFiles?: number;
   maxFileSize?: number;
+  allowedFileTypes?: string[];
   onGetUploadParameters: () => Promise<{
     method: "PUT";
     url: string;
@@ -18,6 +19,7 @@ interface ObjectUploaderProps {
 export function ObjectUploader({
   maxNumberOfFiles = 10,
   maxFileSize = 10485760,
+  allowedFileTypes,
   onGetUploadParameters,
   onComplete,
   buttonClassName,
@@ -30,14 +32,37 @@ export function ObjectUploader({
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const isFileTypeAllowed = (file: File): boolean => {
+    if (!allowedFileTypes || allowedFileTypes.length === 0) {
+      return file.type.startsWith('image/');
+    }
+    return allowedFileTypes.some(type => {
+      if (type.endsWith('/*')) {
+        return file.type.startsWith(type.replace('/*', '/'));
+      }
+      return file.type === type;
+    });
+  };
+
+  const getFileTypeLabel = (): string => {
+    if (!allowedFileTypes || allowedFileTypes.length === 0) {
+      return 'image files';
+    }
+    const labels: string[] = [];
+    if (allowedFileTypes.some(t => t.includes('image'))) labels.push('images');
+    if (allowedFileTypes.some(t => t.includes('pdf'))) labels.push('PDFs');
+    if (allowedFileTypes.some(t => t.includes('word') || t.includes('document'))) labels.push('documents');
+    return labels.length > 0 ? labels.join(', ') : 'supported files';
+  };
+
   const uploadFiles = async (files: File[]) => {
     const validFiles = files.filter(file => {
       if (file.size > maxFileSize) {
         setError(`Some files exceed ${Math.round(maxFileSize / 1024 / 1024)}MB limit`);
         return false;
       }
-      if (!file.type.startsWith('image/')) {
-        setError('Only image files are allowed');
+      if (!isFileTypeAllowed(file)) {
+        setError(`Only ${getFileTypeLabel()} are allowed`);
         return false;
       }
       return true;

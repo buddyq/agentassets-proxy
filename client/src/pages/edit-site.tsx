@@ -1081,6 +1081,7 @@ export default function EditSite() {
                         <ObjectUploader
                           maxNumberOfFiles={1}
                           maxFileSize={52428800}
+                          allowedFileTypes={['application/pdf', 'image/*']}
                           onGetUploadParameters={async () => {
                             const { url } = await getUploadUrl();
                             return { method: 'PUT' as const, url };
