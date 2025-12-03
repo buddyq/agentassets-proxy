@@ -133,18 +133,12 @@ export default function Dashboard() {
             <h1 className="text-3xl font-bold text-secondary">My Property Sites</h1>
             <p className="text-muted-foreground">Manage your listings and create new microsites.</p>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="bg-white px-4 py-2 rounded-lg border shadow-sm">
-              <span className="text-sm text-muted-foreground block">Available Credits</span>
-              <span className="text-2xl font-bold text-primary">{user?.credits ?? 0}</span>
-            </div>
-            <Link href={user && user.credits > 0 ? "/create-site" : "/credits"}>
-              <Button size="lg" className="gap-2 shadow-lg shadow-primary/20">
-                <Plus className="h-4 w-4" />
-                Create New Site
-              </Button>
-            </Link>
-          </div>
+          <Link href={user && user.credits > 0 ? "/create-site" : "/credits"}>
+            <Button size="lg" className="gap-2 shadow-lg shadow-primary/20">
+              <Plus className="h-4 w-4" />
+              Create New Site
+            </Button>
+          </Link>
         </div>
 
         {sites.length === 0 ? (
