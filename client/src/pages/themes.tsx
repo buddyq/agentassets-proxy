@@ -284,7 +284,7 @@ export default function Themes() {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="flex-1"
+                      className="flex-1 hover:bg-primary/10 hover:border-primary/50"
                       onClick={() => handleEditTheme(theme)}
                     >
                       <Edit2 className="h-4 w-4 mr-2" /> Edit
