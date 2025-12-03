@@ -24,6 +24,17 @@ export const users = pgTable("users", {
   profileImageUrl: text("profile_image_url"),
   logo: text("logo"),
   credits: integer("credits").notNull().default(3),
+  phone: text("phone"),
+  brokerage: text("brokerage"),
+  teamName: text("team_name"),
+  address: text("address"),
+  socialMedia: jsonb("social_media").$type<{
+    instagram?: string;
+    youtube?: string;
+    facebook?: string;
+    linkedin?: string;
+    x?: string;
+  }>().default({}),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

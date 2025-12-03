@@ -50,17 +50,20 @@ export function Navbar() {
                 </Button>
               </Link>
               
-              {user.profileImageUrl ? (
-                <img 
-                  src={user.profileImageUrl} 
-                  alt="Profile" 
-                  className="w-8 h-8 rounded-full object-cover border"
-                />
-              ) : (
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <User className="h-4 w-4 text-primary" />
-                </div>
-              )}
+              <Link href="/profile">
+                {user.profileImageUrl ? (
+                  <img 
+                    src={user.profileImageUrl} 
+                    alt="Profile" 
+                    className="w-8 h-8 rounded-full object-cover border cursor-pointer hover:opacity-80 transition-opacity"
+                    data-testid="button-profile"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center cursor-pointer hover:bg-primary/20 transition-colors">
+                    <User className="h-4 w-4 text-primary" data-testid="button-profile" />
+                  </div>
+                )}
+              </Link>
               
               <Button 
                 variant="ghost" 
@@ -68,6 +71,7 @@ export function Navbar() {
                 className="text-muted-foreground"
                 onClick={handleLogout}
                 disabled={logoutMutation.isPending}
+                data-testid="button-logout"
               >
                 <LogOut className="h-4 w-4" />
               </Button>

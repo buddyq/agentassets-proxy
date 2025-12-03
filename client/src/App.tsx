@@ -14,6 +14,7 @@ import EditSite from "@/pages/edit-site";
 import Themes from "@/pages/themes";
 import AdminDashboard from "@/pages/admin";
 import Credits from "@/pages/credits";
+import Profile from "@/pages/profile";
 import SiteView from "@/pages/site-view";
 
 function Router() {
@@ -30,6 +31,7 @@ function Router() {
       <ProtectedRoute path="/edit-site/:id" component={EditSite} />
       <ProtectedRoute path="/themes" component={Themes} />
       <ProtectedRoute path="/credits" component={Credits} />
+      <ProtectedRoute path="/profile" component={Profile} />
       <ProtectedRoute path="/admin" component={AdminDashboard} />
       
       <Route component={NotFound} />

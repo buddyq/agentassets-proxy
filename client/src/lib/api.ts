@@ -65,6 +65,25 @@ export function useUpdateUserLogo() {
   });
 }
 
+// Update full user profile
+export function useUpdateUserProfile() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (profile: Partial<User>) => {
+      const res = await fetch(`${API_BASE}/user/profile`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profile)
+      });
+      if (!res.ok) throw new Error('Failed to update profile');
+      return res.json() as Promise<User>;
+    },
+    onSuccess: (updatedUser) => {
+      queryClient.setQueryData(['/api/user'], updatedUser);
+    }
+  });
+}
+
 // Sites API (uses authenticated user)
 export function useSites() {
   return useQuery({
