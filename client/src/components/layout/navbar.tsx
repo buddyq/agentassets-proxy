@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { LayoutDashboard, Plus, CreditCard, Palette, LogOut, User } from "lucide-react";
+import { LayoutDashboard, CreditCard, Palette, LogOut, User } from "lucide-react";
 import logoUrl from "@/assets/logo.png";
 
 export function Navbar() {
@@ -42,13 +42,6 @@ export function Navbar() {
                   </Button>
                 </Link>
               </div>
-              
-              <Link href={user.credits > 0 ? "/create-site" : "/credits"}>
-                <Button size="sm" className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  New Site
-                </Button>
-              </Link>
               
               <Link href="/profile">
                 {user.profileImageUrl ? (
