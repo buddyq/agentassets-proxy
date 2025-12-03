@@ -109,13 +109,13 @@ export default function OurStory() {
               </div>
               <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-lg transition-shadow">
                 <Users className="h-8 w-8 text-primary mb-4" />
-                <div className="text-3xl font-bold text-secondary mb-1">1,400+</div>
-                <div className="text-sm text-muted-foreground">Agents in Austin Network</div>
+                <div className="text-3xl font-bold text-secondary mb-1">500+</div>
+                <div className="text-sm text-muted-foreground">Sites Created</div>
               </div>
               <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-lg transition-shadow">
                 <MapPin className="h-8 w-8 text-primary mb-4" />
-                <div className="text-3xl font-bold text-secondary mb-1">2</div>
-                <div className="text-sm text-muted-foreground">Markets & Growing</div>
+                <div className="text-3xl font-bold text-secondary mb-1">Austin</div>
+                <div className="text-sm text-muted-foreground">Based, Worldwide Reach</div>
               </div>
             </div>
 
@@ -133,10 +133,10 @@ export default function OurStory() {
               
               <div className="prose prose-lg max-w-none">
                 <p className="text-muted-foreground leading-relaxed text-lg">
-                  Now, AgentAssets has been completely reimagined from the ground up. The mission remains the same, but the technology is faster, smarter, and more powerful than ever. What once took hours now takes minutes. Creating a stunning property website is now stupid simple.
+                  Now, AgentAssets has been completely reimagined from the ground up. The mission remains the same, but the technology is faster, smarter, and more powerful than ever. What once took hours now takes minutes. Creating a stunning property website is now stupid simple—available for agents anywhere in the world.
                 </p>
                 <p className="text-muted-foreground leading-relaxed text-lg mt-4">
-                  Beyond AgentAssets, Buddy has built the premier luxury pocket network in Austin with over 1,400 agents, and recently expanded to Nashville. It's all part of the same vision: giving agents the tools and connections they need to market properties the way they deserve.
+                  Beyond AgentAssets, Buddy has also built the premier luxury pocket listing network in Austin with over 1,400 agents, recently expanding to Nashville. It's all part of the same vision: giving agents the tools and connections they need to market properties the way they deserve.
                 </p>
               </div>
             </div>
