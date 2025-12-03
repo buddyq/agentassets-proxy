@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { User, Site, Theme, Layout } from '@shared/schema';
+import type { User, Site, Theme, Layout, Lead } from '@shared/schema';
 
 const API_BASE = '/api';
 
@@ -370,5 +370,29 @@ export function useDeleteLayout() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['layouts'] });
     }
+  });
+}
+
+// Leads API
+export function useLeads() {
+  return useQuery({
+    queryKey: ['leads'],
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE}/leads`);
+      if (!res.ok) throw new Error('Failed to fetch leads');
+      return res.json() as Promise<Lead[]>;
+    }
+  });
+}
+
+export function useSiteLeads(siteId: string) {
+  return useQuery({
+    queryKey: ['leads', siteId],
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE}/sites/${siteId}/leads`);
+      if (!res.ok) throw new Error('Failed to fetch site leads');
+      return res.json() as Promise<Lead[]>;
+    },
+    enabled: !!siteId
   });
 }
