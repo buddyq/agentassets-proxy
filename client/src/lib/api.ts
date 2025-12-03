@@ -227,14 +227,14 @@ export function useDeleteTheme() {
 }
 
 // Photo upload API
-export async function getUploadUrl(): Promise<{ url: string }> {
+export async function getUploadUrl(): Promise<{ method: "PUT"; url: string }> {
   const res = await fetch(`${API_BASE}/objects/upload`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' }
   });
   if (!res.ok) throw new Error('Failed to get upload URL');
   const data = await res.json();
-  return { url: data.uploadURL };
+  return { method: "PUT", url: data.uploadURL };
 }
 
 export function useAddPhotoToSite() {

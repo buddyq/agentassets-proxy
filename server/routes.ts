@@ -43,6 +43,18 @@ export async function registerRoutes(
     }
   });
 
+  // User profile route - update user's full profile (protected)
+  app.patch("/api/user/profile", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const profile = req.body;
+      const user = await storage.updateUserProfile(userId, profile);
+      res.json(user);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update profile" });
+    }
+  });
+
   // Site routes (protected)
   app.get("/api/sites", isAuthenticated, async (req: any, res) => {
     try {

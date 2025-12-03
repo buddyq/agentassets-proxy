@@ -3,13 +3,12 @@ import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { TEMPLATES } from "@/lib/store";
-import { useSites, useDeleteSite, useUpdateSite, useThemes, useUpdateUserLogo, getUploadUrl, normalizeObjectUrl } from "@/lib/api";
+import { useSites, useDeleteSite, useUpdateSite, useThemes } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
-import { Plus, ExternalLink, Trash2, Globe, BarChart3, Users, MousePointerClick, TrendingUp, Pencil, Image, X } from "lucide-react";
+import { Plus, ExternalLink, Trash2, Globe, BarChart3, Users, MousePointerClick, TrendingUp, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format, subDays, isPast } from "date-fns";
-import { ObjectUploader } from "@/components/ObjectUploader";
 import {
   Dialog,
   DialogContent,
@@ -40,11 +39,7 @@ export default function Dashboard() {
   const { data: themes = [] } = useThemes();
   const deleteSiteMutation = useDeleteSite();
   const updateSiteMutation = useUpdateSite();
-  const updateUserLogoMutation = useUpdateUserLogo();
   const { toast } = useToast();
-
-  // Logo Dialog State
-  const [logoDialogOpen, setLogoDialogOpen] = useState(false);
 
   const getThemeName = (id: string) => themes.find(t => t.id === id)?.name || 'Unknown Theme';
   const getTemplateName = (id: string | null) => id ? TEMPLATES.find(t => t.id === id)?.name || 'Unknown Template' : 'N/A';
@@ -111,33 +106,6 @@ export default function Dashboard() {
     setAnalyticsDialogOpen(true);
   };
 
-  const handleLogoUploadComplete = (result: { successful?: { uploadURL: string }[] }) => {
-    if (result.successful && result.successful.length > 0) {
-      const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
-      updateUserLogoMutation.mutate(normalizedUrl, {
-        onSuccess: () => {
-          toast({
-            title: "Logo Updated",
-            description: "Your default logo has been saved and will be used on all new sites.",
-          });
-          setLogoDialogOpen(false);
-        }
-      });
-    }
-  };
-
-  const handleRemoveLogo = () => {
-    updateUserLogoMutation.mutate(null, {
-      onSuccess: () => {
-        toast({
-          title: "Logo Removed",
-          description: "Your default logo has been removed.",
-        });
-        setLogoDialogOpen(false);
-      }
-    });
-  };
-
   // Mock data generation for chart based on selected site
   const analyticsData = useMemo(() => {
     if (!selectedSiteForAnalytics) return [];
@@ -166,28 +134,6 @@ export default function Dashboard() {
             <p className="text-muted-foreground">Manage your listings and create new microsites.</p>
           </div>
           <div className="flex items-center gap-4">
-            {/* Default Logo */}
-            <button
-              onClick={() => setLogoDialogOpen(true)}
-              className="bg-white px-4 py-2 rounded-lg border shadow-sm hover:border-primary/50 transition-colors cursor-pointer flex items-center gap-3"
-              data-testid="button-manage-logo"
-            >
-              {user?.logo ? (
-                <img 
-                  src={user.logo} 
-                  alt="Your logo" 
-                  className="h-10 w-auto max-w-[80px] object-contain"
-                />
-              ) : (
-                <div className="h-10 w-10 bg-muted rounded flex items-center justify-center">
-                  <Image className="h-5 w-5 text-muted-foreground" />
-                </div>
-              )}
-              <div className="text-left">
-                <span className="text-sm text-muted-foreground block">Default Logo</span>
-                <span className="text-xs font-medium text-primary">{user?.logo ? 'Change' : 'Add'}</span>
-              </div>
-            </button>
             <div className="bg-white px-4 py-2 rounded-lg border shadow-sm">
               <span className="text-sm text-muted-foreground block">Available Credits</span>
               <span className="text-2xl font-bold text-primary">{user?.credits ?? 0}</span>
@@ -409,71 +355,6 @@ export default function Dashboard() {
                 </BarChart>
               </ResponsiveContainer>
             </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Logo Management Dialog */}
-      <Dialog open={logoDialogOpen} onOpenChange={setLogoDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Manage Default Logo</DialogTitle>
-            <DialogDescription>
-              Upload a logo to use across all your property sites. Individual sites can override this with their own logo.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            {user?.logo ? (
-              <div className="space-y-4">
-                <div className="flex items-center justify-center p-6 bg-muted/30 rounded-lg">
-                  <img 
-                    src={user.logo} 
-                    alt="Your logo" 
-                    className="max-h-24 max-w-full object-contain"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    className="flex-1"
-                    onClick={handleRemoveLogo}
-                    disabled={updateUserLogoMutation.isPending}
-                  >
-                    <X className="h-4 w-4 mr-2" />
-                    Remove Logo
-                  </Button>
-                </div>
-                <div className="border-t pt-4">
-                  <Label className="text-sm text-muted-foreground mb-2 block">Upload a new logo</Label>
-                  <ObjectUploader
-                    maxNumberOfFiles={1}
-                    maxFileSize={5242880}
-                    variant="dropzone"
-                    onGetUploadParameters={async () => {
-                      const { url } = await getUploadUrl();
-                      return { method: 'PUT' as const, url };
-                    }}
-                    onComplete={handleLogoUploadComplete}
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  Your logo will appear on all your property sites. Recommended formats: PNG, JPG, or SVG.
-                </p>
-                <ObjectUploader
-                  maxNumberOfFiles={1}
-                  maxFileSize={5242880}
-                  variant="dropzone"
-                  onGetUploadParameters={async () => {
-                    const { url } = await getUploadUrl();
-                    return { method: 'PUT' as const, url };
-                  }}
-                  onComplete={handleLogoUploadComplete}
-                />
-              </div>
-            )}
           </div>
         </DialogContent>
       </Dialog>
