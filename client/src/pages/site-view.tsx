@@ -48,13 +48,13 @@ function getLayoutTypography(layout?: Layout) {
     } as React.CSSProperties;
   }
   
-  // Modern layout uses Playfair Display for headings and Source Sans Pro for body
+  // Modern layout uses Outfit for all text
   if (layout?.id === 'layout-modern') {
     return {
-      '--font-heading': '"Playfair Display", Georgia, serif',
-      '--font-body': '"Source Sans Pro", -apple-system, BlinkMacSystemFont, sans-serif',
+      '--font-heading': '"Outfit", -apple-system, BlinkMacSystemFont, sans-serif',
+      '--font-body': '"Outfit", -apple-system, BlinkMacSystemFont, sans-serif',
       '--heading-weight': '600',
-      '--font-nav': '"Source Sans Pro", -apple-system, BlinkMacSystemFont, sans-serif',
+      '--font-nav': '"Outfit", -apple-system, BlinkMacSystemFont, sans-serif',
     } as React.CSSProperties;
   }
   
@@ -829,15 +829,16 @@ function ModernNavigation({ site, theme, hasPhotos, hasVideo, effectiveHeroLogo 
               <img 
                 src={effectiveHeroLogo} 
                 alt="Logo" 
-                className={`h-10 md:h-12 w-auto object-contain transition-all duration-500 ${
+                className={`w-auto object-contain transition-all duration-500 ${
                   isScrolled ? '' : 'brightness-0 invert drop-shadow-lg'
                 }`}
+                style={{ height: isScrolled ? '48px' : '70px' }}
                 data-testid="img-modern-nav-logo"
               />
             ) : (
               <span 
-                className={`text-xl md:text-2xl font-semibold transition-colors duration-500 ${
-                  isScrolled ? '' : 'text-white drop-shadow-lg'
+                className={`font-semibold transition-all duration-500 ${
+                  isScrolled ? 'text-xl md:text-2xl' : 'text-2xl md:text-3xl text-white drop-shadow-lg'
                 }`}
                 style={{ 
                   fontFamily: 'var(--font-heading)',
@@ -997,41 +998,34 @@ function ModernHero({ site, theme, heroImage, effectiveHeroLogo }: {
         />
       ))}
       
-      {/* Gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/30 z-10" />
+      {/* Gradient overlay - more transparent */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/25 to-black/15 z-10" />
 
-      {/* Content */}
+      {/* Content - no logo, just title, subtitle, and button */}
       <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center px-6">
-        {/* Hero logo at top center */}
-        {effectiveHeroLogo && (
-          <img 
-            src={effectiveHeroLogo} 
-            alt="Logo" 
-            className="h-16 md:h-20 w-auto object-contain mb-8 brightness-0 invert drop-shadow-lg"
-            data-testid="img-modern-hero-logo"
-          />
-        )}
-
         {/* Slide content with fade */}
         <div className={`transition-opacity duration-500 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
           <h1 
-            className="text-4xl md:text-6xl lg:text-7xl text-white mb-6 drop-shadow-lg"
+            className="text-white mb-6"
             style={{ 
               fontFamily: 'var(--font-heading)',
               fontWeight: 'var(--heading-weight)',
               letterSpacing: '-0.02em',
-              lineHeight: '1.1'
+              lineHeight: '1.1',
+              fontSize: '46px',
+              textShadow: '0 2px 8px rgba(0,0,0,0.3)'
             }}
           >
             {currentSlideData.title || site.title || site.address}
           </h1>
           
           <p 
-            className="text-xl md:text-2xl text-white/90 mb-10 max-w-2xl mx-auto drop-shadow-md"
+            className="text-xl md:text-2xl text-white/90 mb-10 max-w-2xl mx-auto"
             style={{ 
               fontFamily: 'var(--font-body)',
               fontWeight: '400',
-              letterSpacing: '0.02em'
+              letterSpacing: '0.02em',
+              textShadow: '0 1px 4px rgba(0,0,0,0.2)'
             }}
           >
             {currentSlideData.subtitle || site.price}
