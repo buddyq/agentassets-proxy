@@ -5,6 +5,7 @@ import { setupAuth, isAuthenticated } from "./auth";
 import { insertSiteSchema, insertThemeSchema, insertLayoutSchema, insertLeadSchema, insertCouponSchema } from "@shared/schema";
 import { z } from "zod";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
+import archiver from "archiver";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -342,6 +343,49 @@ export async function registerRoutes(
       res.json(leads);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch leads" });
+    }
+  });
+
+  // Download all documents as zip
+  app.get("/api/sites/:siteId/documents/download-all", async (req, res) => {
+    try {
+      const site = await storage.getSite(req.params.siteId);
+      if (!site) {
+        return res.status(404).json({ error: "Site not found" });
+      }
+
+      const documents = site.documents || [];
+      if (documents.length === 0) {
+        return res.status(400).json({ error: "No documents to download" });
+      }
+
+      const objectStorageService = new ObjectStorageService();
+      
+      res.setHeader('Content-Type', 'application/zip');
+      res.setHeader('Content-Disposition', `attachment; filename="${site.title || 'property'}-documents.zip"`);
+
+      const archive = archiver('zip', { zlib: { level: 9 } });
+      archive.pipe(res);
+
+      for (const doc of documents) {
+        try {
+          const objectFile = await objectStorageService.getObjectEntityFile(doc.url);
+          const [metadata] = await objectFile.getMetadata();
+          const extension = metadata.contentType ? getExtensionFromMime(metadata.contentType) : '';
+          const filename = `${doc.name}${extension}`;
+          
+          archive.append(objectFile.createReadStream(), { name: filename });
+        } catch (error) {
+          console.error(`Error adding document ${doc.name} to archive:`, error);
+        }
+      }
+
+      await archive.finalize();
+    } catch (error) {
+      console.error("Error creating documents zip:", error);
+      if (!res.headersSent) {
+        res.status(500).json({ error: "Failed to create documents archive" });
+      }
     }
   });
 
