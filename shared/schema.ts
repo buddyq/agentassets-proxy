@@ -188,3 +188,32 @@ export const leads = pgTable("leads", {
 export const insertLeadSchema = createInsertSchema(leads).omit({ id: true, createdAt: true });
 export type InsertLead = z.infer<typeof insertLeadSchema>;
 export type Lead = typeof leads.$inferSelect;
+
+// Coupons/Promotions table
+export const coupons = pgTable("coupons", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  code: text("code").notNull().unique(),
+  description: text("description"),
+  type: text("type").notNull(), // 'free_credits', 'percentage_off', 'fixed_amount_off', 'first_site_free'
+  value: integer("value").notNull(), // credits to give, percentage, or fixed amount in cents
+  maxUses: integer("max_uses"), // null = unlimited
+  usedCount: integer("used_count").notNull().default(0),
+  minPurchase: integer("min_purchase"), // minimum credits purchase to apply (for discounts)
+  isActive: text("is_active").notNull().default('true'),
+  expiresAt: timestamp("expires_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertCouponSchema = createInsertSchema(coupons).omit({ id: true, createdAt: true, usedCount: true });
+export type InsertCoupon = z.infer<typeof insertCouponSchema>;
+export type Coupon = typeof coupons.$inferSelect;
+
+// Coupon redemptions tracking
+export const couponRedemptions = pgTable("coupon_redemptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  couponId: text("coupon_id").notNull(),
+  userId: text("user_id").notNull(),
+  redeemedAt: timestamp("redeemed_at").notNull().defaultNow(),
+});
+
+export type CouponRedemption = typeof couponRedemptions.$inferSelect;
