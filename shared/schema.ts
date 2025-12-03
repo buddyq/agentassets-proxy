@@ -23,7 +23,7 @@ export const users = pgTable("users", {
   name: text("name"),
   profileImageUrl: text("profile_image_url"),
   logo: text("logo"),
-  credits: integer("credits").notNull().default(3),
+  credits: integer("credits").notNull().default(0),
   phone: text("phone"),
   brokerage: text("brokerage"),
   teamName: text("team_name"),

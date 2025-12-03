@@ -49,7 +49,7 @@ Preferred communication style: Simple, everyday language.
 **ORM**: Drizzle ORM for type-safe database queries and schema management. Schema definitions in `shared/schema.ts` create shared types between frontend and backend.
 
 **Schema Design**:
-- **Users**: ID, name, email, credits, logo (default logo URL), timestamps. Credits track available site creation capacity.
+- **Users**: ID, name, email, credits (default 0), logo (default logo URL), timestamps. New users start with 0 credits and must purchase credits to create sites.
 - **Sites**: Property details (address, price, bedrooms, etc.), associated user, theme, template, custom domain, logo (per-site override), analytics stats (views, unique visitors, leads), timestamps.
 - **Themes**: Preset and custom themes with color palettes and optional logos. Preset themes (userId null) available to all users, custom themes tied to specific users.
 
