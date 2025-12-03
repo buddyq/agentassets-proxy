@@ -1,6 +1,5 @@
 import { useState, useRef, useCallback } from "react";
 import type { ReactNode } from "react";
-import { Button } from "@/components/ui/button";
 import { Upload, X, Image } from "lucide-react";
 
 interface ObjectUploaderProps {
@@ -194,7 +193,7 @@ export function ObjectUploader({
         onChange={handleFileSelect}
         className="hidden"
       />
-      <Button 
+      <button 
         onClick={handleButtonClick} 
         className={buttonClassName} 
         type="button"
@@ -212,7 +211,7 @@ export function ObjectUploader({
         ) : (
           children
         )}
-      </Button>
+      </button>
       {error && (
         <p className="text-sm text-destructive mt-2">{error}</p>
       )}
