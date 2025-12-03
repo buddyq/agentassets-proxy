@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./auth";
-import { insertSiteSchema, insertThemeSchema, insertLayoutSchema, insertLeadSchema } from "@shared/schema";
+import { insertSiteSchema, insertThemeSchema, insertLayoutSchema, insertLeadSchema, insertCouponSchema } from "@shared/schema";
 import { z } from "zod";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 
@@ -439,6 +439,199 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error reordering photos:", error);
       res.status(500).json({ error: "Failed to reorder photos" });
+    }
+  });
+
+  // ========= ADMIN ROUTES =========
+
+  // Coupon management routes (admin)
+  app.get("/api/admin/coupons", async (req, res) => {
+    try {
+      const coupons = await storage.getAllCoupons();
+      res.json(coupons);
+    } catch (error) {
+      console.error("Error fetching coupons:", error);
+      res.status(500).json({ error: "Failed to fetch coupons" });
+    }
+  });
+
+  app.post("/api/admin/coupons", async (req, res) => {
+    try {
+      const result = insertCouponSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ error: "Invalid coupon data", details: result.error.issues });
+      }
+      const coupon = await storage.createCoupon(result.data);
+      res.json(coupon);
+    } catch (error: any) {
+      console.error("Error creating coupon:", error);
+      if (error.code === '23505') {
+        return res.status(400).json({ error: "A coupon with this code already exists" });
+      }
+      res.status(500).json({ error: "Failed to create coupon" });
+    }
+  });
+
+  app.patch("/api/admin/coupons/:id", async (req, res) => {
+    try {
+      const coupon = await storage.updateCoupon(req.params.id, req.body);
+      res.json(coupon);
+    } catch (error: any) {
+      console.error("Error updating coupon:", error);
+      if (error.code === '23505') {
+        return res.status(400).json({ error: "A coupon with this code already exists" });
+      }
+      res.status(500).json({ error: "Failed to update coupon" });
+    }
+  });
+
+  app.delete("/api/admin/coupons/:id", async (req, res) => {
+    try {
+      await storage.deleteCoupon(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting coupon:", error);
+      res.status(500).json({ error: "Failed to delete coupon" });
+    }
+  });
+
+  // User management routes (admin)
+  app.get("/api/admin/users", async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      // Remove password from response
+      const safeUsers = users.map(user => {
+        const { password, ...safeUser } = user;
+        return safeUser;
+      });
+      res.json(safeUsers);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ error: "Failed to fetch users" });
+    }
+  });
+
+  // Admin route to adjust user credits
+  app.patch("/api/admin/users/:id/credits", async (req, res) => {
+    try {
+      const { credits } = req.body;
+      if (typeof credits !== 'number') {
+        return res.status(400).json({ error: "Credits must be a number" });
+      }
+      const user = await storage.updateUserCredits(req.params.id, credits);
+      const { password, ...safeUser } = user;
+      res.json(safeUser);
+    } catch (error) {
+      console.error("Error updating user credits:", error);
+      res.status(500).json({ error: "Failed to update user credits" });
+    }
+  });
+
+  // Public coupon validation endpoint (for users to check/redeem coupons)
+  app.post("/api/coupons/validate", isAuthenticated, async (req: any, res) => {
+    try {
+      const { code } = req.body;
+      if (!code) {
+        return res.status(400).json({ error: "Coupon code is required" });
+      }
+
+      const coupon = await storage.getCouponByCode(code);
+      if (!coupon) {
+        return res.status(404).json({ error: "Coupon not found" });
+      }
+
+      // Check if coupon is active
+      if (coupon.isActive !== 'true') {
+        return res.status(400).json({ error: "This coupon is no longer active" });
+      }
+
+      // Check if coupon has expired
+      if (coupon.expiresAt && new Date(coupon.expiresAt) < new Date()) {
+        return res.status(400).json({ error: "This coupon has expired" });
+      }
+
+      // Check if coupon has reached max uses
+      if (coupon.maxUses !== null && coupon.usedCount >= coupon.maxUses) {
+        return res.status(400).json({ error: "This coupon has reached its maximum uses" });
+      }
+
+      // Check if user has already used this coupon
+      const hasRedeemed = await storage.hasUserRedeemedCoupon(coupon.id, req.user.id);
+      if (hasRedeemed) {
+        return res.status(400).json({ error: "You have already used this coupon" });
+      }
+
+      res.json({ valid: true, coupon });
+    } catch (error) {
+      console.error("Error validating coupon:", error);
+      res.status(500).json({ error: "Failed to validate coupon" });
+    }
+  });
+
+  // Redeem coupon (apply it to user)
+  app.post("/api/coupons/redeem", isAuthenticated, async (req: any, res) => {
+    try {
+      const { code } = req.body;
+      if (!code) {
+        return res.status(400).json({ error: "Coupon code is required" });
+      }
+
+      const coupon = await storage.getCouponByCode(code);
+      if (!coupon) {
+        return res.status(404).json({ error: "Coupon not found" });
+      }
+
+      // Validation checks
+      if (coupon.isActive !== 'true') {
+        return res.status(400).json({ error: "This coupon is no longer active" });
+      }
+
+      if (coupon.expiresAt && new Date(coupon.expiresAt) < new Date()) {
+        return res.status(400).json({ error: "This coupon has expired" });
+      }
+
+      if (coupon.maxUses !== null && coupon.usedCount >= coupon.maxUses) {
+        return res.status(400).json({ error: "This coupon has reached its maximum uses" });
+      }
+
+      const hasRedeemed = await storage.hasUserRedeemedCoupon(coupon.id, req.user.id);
+      if (hasRedeemed) {
+        return res.status(400).json({ error: "You have already used this coupon" });
+      }
+
+      // Apply the coupon based on type
+      const user = await storage.getUser(req.user.id);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      let message = "";
+      if (coupon.type === 'free_credits') {
+        const newCredits = user.credits + coupon.value;
+        await storage.updateUserCredits(user.id, newCredits);
+        message = `Added ${coupon.value} credit${coupon.value !== 1 ? 's' : ''} to your account!`;
+      } else if (coupon.type === 'first_site_free') {
+        // Give 1 free credit
+        const newCredits = user.credits + 1;
+        await storage.updateUserCredits(user.id, newCredits);
+        message = "Your first site is now free! 1 credit has been added.";
+      } else {
+        message = "Coupon applied successfully!";
+      }
+
+      // Record the redemption and increment usage
+      await storage.redeemCoupon(coupon.id, user.id);
+      await storage.incrementCouponUsage(coupon.id);
+
+      const updatedUser = await storage.getUser(req.user.id);
+      res.json({ 
+        success: true, 
+        message,
+        credits: updatedUser?.credits || user.credits
+      });
+    } catch (error) {
+      console.error("Error redeeming coupon:", error);
+      res.status(500).json({ error: "Failed to redeem coupon" });
     }
   });
 
