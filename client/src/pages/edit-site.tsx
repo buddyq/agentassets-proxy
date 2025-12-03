@@ -133,6 +133,7 @@ export default function EditSite() {
     if (!siteId) return;
 
     const validCustomDetails = customDetails.filter(d => d.label.trim() && d.value.trim());
+    const validDocuments = documents.filter(d => d.name.trim() && d.url.trim());
 
     updateSiteMutation.mutate(
       {
@@ -155,7 +156,7 @@ export default function EditSite() {
           logo: formData.logo || null,
           heroLogo: formData.heroLogo || null,
           heroSlides: formData.heroSlides,
-          documents: documents,
+          documents: validDocuments,
         }
       },
       {

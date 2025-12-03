@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { MapPin, Play, Home, Info, Video, Image, X, ChevronLeft, ChevronRight, Bed, Bath, Square, Calendar, Building, Phone, Mail, User, Instagram, Facebook, Linkedin, Youtube, Twitter } from "lucide-react";
+import { MapPin, Play, Home, Info, Video, Image, X, ChevronLeft, ChevronRight, Bed, Bath, Square, Calendar, Building, Phone, Mail, User, Instagram, Facebook, Linkedin, Youtube, Twitter, FileText, Download, Package } from "lucide-react";
 import heroImage from "@assets/generated_images/luxury_living_room_interior_for_hero_background.png";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import useEmblaCarousel from "embla-carousel-react";
@@ -769,11 +769,12 @@ function ShoalwoodContact({ site, theme }: { site: Site; theme?: Theme }) {
 }
 
 // Modern Layout Components - Transparent nav that becomes solid on scroll, fade hero slider
-function ModernNavigation({ site, theme, hasPhotos, hasVideo, effectiveHeroLogo, effectiveLogo }: { 
+function ModernNavigation({ site, theme, hasPhotos, hasVideo, hasDocuments, effectiveHeroLogo, effectiveLogo }: { 
   site: Site; 
   theme?: Theme; 
   hasPhotos: boolean; 
-  hasVideo: boolean; 
+  hasVideo: boolean;
+  hasDocuments: boolean;
   effectiveHeroLogo?: string | null;
   effectiveLogo?: string | null;
 }) {
@@ -803,6 +804,7 @@ function ModernNavigation({ site, theme, hasPhotos, hasVideo, effectiveHeroLogo,
     { href: '#details', label: 'Details' },
     { href: '#photos', label: 'Photos', show: hasPhotos },
     { href: '#video', label: 'Video', show: hasVideo },
+    { href: '#documents', label: 'Documents', show: hasDocuments },
     { href: '#map', label: 'Map' },
     { href: '#contact', label: 'Contact' },
   ].filter(link => link.show !== false);
@@ -1612,6 +1614,125 @@ function ModernContact({ site, theme, agentInfo }: { site: Site; theme?: Theme; 
   );
 }
 
+function ModernDocuments({ site, theme }: { site: Site; theme?: Theme }) {
+  const primaryColor = theme?.colors?.primary || '#558B73';
+  const [isDownloadingAll, setIsDownloadingAll] = useState(false);
+  
+  const documents = site.documents || [];
+  
+  if (documents.length === 0) {
+    return null;
+  }
+  
+  const handleDownloadAll = async () => {
+    setIsDownloadingAll(true);
+    try {
+      const response = await fetch(`/api/sites/${site.id}/documents/download-all`);
+      if (!response.ok) throw new Error('Failed to download');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${site.address.replace(/[^a-zA-Z0-9]/g, '-')}-documents.zip`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Download failed:', error);
+    } finally {
+      setIsDownloadingAll(false);
+    }
+  };
+  
+  return (
+    <section id="documents" className="py-16 md:py-24 px-4 md:px-6 bg-white">
+      <div className="container mx-auto max-w-4xl">
+        <h2 
+          className="text-3xl md:text-4xl text-center mb-3"
+          style={{ 
+            fontFamily: 'var(--font-heading)',
+            fontWeight: 'var(--heading-weight)',
+            color: 'var(--theme-text)'
+          }}
+        >
+          Property Documents
+        </h2>
+        <p 
+          className="text-center text-gray-500 mb-10 max-w-xl mx-auto"
+          style={{ fontFamily: 'var(--font-body)' }}
+        >
+          Download important documents related to this property.
+        </p>
+        
+        <div className="bg-gray-50 rounded-2xl p-6 md:p-8">
+          <div className="flex justify-between items-center mb-6">
+            <span className="text-sm text-gray-500" style={{ fontFamily: 'var(--font-body)' }}>
+              {documents.length} document{documents.length !== 1 ? 's' : ''} available
+            </span>
+            {documents.length > 1 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDownloadAll}
+                disabled={isDownloadingAll}
+                className="gap-2"
+                data-testid="button-download-all-documents"
+              >
+                <Package className="h-4 w-4" />
+                {isDownloadingAll ? 'Preparing...' : 'Download All'}
+              </Button>
+            )}
+          </div>
+          
+          <div className="divide-y divide-gray-200">
+            {documents.map((doc, index) => (
+              <div 
+                key={index} 
+                className="flex items-center justify-between py-4 group"
+                data-testid={`document-row-${index}`}
+              >
+                <div className="flex items-center gap-4">
+                  <div 
+                    className="w-12 h-12 rounded-xl flex items-center justify-center"
+                    style={{ backgroundColor: primaryColor + '15' }}
+                  >
+                    <FileText className="h-6 w-6" style={{ color: primaryColor }} />
+                  </div>
+                  <span 
+                    className="font-medium text-gray-800"
+                    style={{ fontFamily: 'var(--font-body)' }}
+                  >
+                    {doc.name}
+                  </span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  asChild
+                  className="opacity-70 group-hover:opacity-100 transition-opacity"
+                >
+                  <a 
+                    href={doc.url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    download
+                    data-testid={`button-download-doc-${index}`}
+                  >
+                    <Download className="h-5 w-5" style={{ color: primaryColor }} />
+                    <span className="sr-only">Download {doc.name}</span>
+                  </a>
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function HeroSection({ site, theme, heroImage }: { site: Site; theme?: Theme; heroImage: string }) {
   const hasHeroSlider = site.heroPhotos && site.heroPhotos.length > 1;
   const heroImages = site.heroPhotos && site.heroPhotos.length > 0 
@@ -1916,7 +2037,8 @@ export default function SiteView() {
           site={site} 
           theme={theme} 
           hasPhotos={!!hasPhotos} 
-          hasVideo={hasVideo} 
+          hasVideo={hasVideo}
+          hasDocuments={!!(site.documents && site.documents.length > 0)}
           effectiveHeroLogo={effectiveHeroLogo}
           effectiveLogo={effectiveLogo}
         />
@@ -1955,6 +2077,8 @@ export default function SiteView() {
             </div>
           </section>
         )}
+
+        <ModernDocuments site={site} theme={theme} />
 
         <section id="map" className="py-20 px-6 bg-gray-50">
           <div className="container mx-auto max-w-4xl">
