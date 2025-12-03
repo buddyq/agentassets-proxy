@@ -44,11 +44,32 @@ export async function registerRoutes(
   });
 
   // User profile route - update user's full profile (protected)
+  const updateProfileSchema = z.object({
+    name: z.string().optional(),
+    email: z.string().email().optional().or(z.literal("")),
+    phone: z.string().optional().nullable(),
+    brokerage: z.string().optional().nullable(),
+    teamName: z.string().optional().nullable(),
+    address: z.string().optional().nullable(),
+    logo: z.string().optional().nullable(),
+    profileImageUrl: z.string().optional().nullable(),
+    socialMedia: z.object({
+      instagram: z.string().optional(),
+      youtube: z.string().optional(),
+      facebook: z.string().optional(),
+      linkedin: z.string().optional(),
+      x: z.string().optional(),
+    }).optional().nullable(),
+  });
+  
   app.patch("/api/user/profile", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
-      const profile = req.body;
-      const user = await storage.updateUserProfile(userId, profile);
+      const result = updateProfileSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ error: "Invalid profile data", details: result.error.issues });
+      }
+      const user = await storage.updateUserProfile(userId, result.data);
       res.json(user);
     } catch (error) {
       res.status(500).json({ error: "Failed to update profile" });
