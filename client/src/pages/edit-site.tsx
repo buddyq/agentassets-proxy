@@ -13,7 +13,8 @@ import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, Save, Image, X, 
 import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ObjectUploader } from "@/components/ObjectUploader";
-import type { CustomDetail, HeroSlide } from "@shared/schema";
+import type { CustomDetail, HeroSlide, SiteDocument } from "@shared/schema";
+import { FileText, Download, Trash2 } from "lucide-react";
 
 const ALL_STEPS = [
   { id: 1, name: "Property Details", icon: Layout },
@@ -63,6 +64,9 @@ export default function EditSite() {
   });
 
   const [customDetails, setCustomDetails] = useState<CustomDetail[]>([]);
+  const [documents, setDocuments] = useState<SiteDocument[]>([]);
+  const [newDocName, setNewDocName] = useState("");
+  const [pendingDocUrl, setPendingDocUrl] = useState<string | null>(null);
   const [draggedPhoto, setDraggedPhoto] = useState<number | null>(null);
 
   const addCustomDetail = () => {
@@ -100,6 +104,7 @@ export default function EditSite() {
         heroSlides: site.heroSlides || [],
       });
       setCustomDetails(site.customDetails || []);
+      setDocuments(site.documents || []);
     }
   }, [site, themes, layouts]);
 
@@ -150,6 +155,7 @@ export default function EditSite() {
           logo: formData.logo || null,
           heroLogo: formData.heroLogo || null,
           heroSlides: formData.heroSlides,
+          documents: documents,
         }
       },
       {
@@ -1031,6 +1037,134 @@ export default function EditSite() {
                       </div>
                     </div>
                   )}
+
+                  {/* Documents Section */}
+                  <div className="grid gap-4 pt-6 border-t">
+                    <div>
+                      <Label className="text-lg font-semibold flex items-center gap-2">
+                        <FileText className="h-5 w-5" />
+                        Property Documents
+                      </Label>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Upload documents like floor plans, disclosures, or brochures. Visitors can download these from your property site.
+                      </p>
+                    </div>
+
+                    {/* Document Upload */}
+                    <div className="space-y-4">
+                      <div className="flex gap-3">
+                        <Input
+                          placeholder="Document name (e.g., Floor Plan, Property Disclosure)"
+                          value={newDocName}
+                          onChange={(e) => setNewDocName(e.target.value)}
+                          className="flex-1"
+                          data-testid="input-document-name"
+                        />
+                        <ObjectUploader
+                          maxNumberOfFiles={1}
+                          maxFileSize={52428800}
+                          onGetUploadParameters={async () => {
+                            const { url } = await getUploadUrl();
+                            return { method: 'PUT' as const, url };
+                          }}
+                          onComplete={(result) => {
+                            if (result.successful && result.successful.length > 0) {
+                              const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
+                              if (newDocName.trim()) {
+                                setDocuments([...documents, { name: newDocName.trim(), url: normalizedUrl }]);
+                                setNewDocName("");
+                                toast({
+                                  title: "Document Uploaded",
+                                  description: `"${newDocName.trim()}" has been added.`,
+                                });
+                              } else {
+                                setPendingDocUrl(normalizedUrl);
+                                toast({
+                                  title: "Enter Document Name",
+                                  description: "Please enter a name for the document, then click Add.",
+                                });
+                              }
+                            }
+                          }}
+                          buttonClassName="gap-2"
+                        >
+                          <Plus className="h-4 w-4" />
+                          Upload Document
+                        </ObjectUploader>
+                      </div>
+
+                      {pendingDocUrl && (
+                        <div className="flex gap-3 items-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                          <FileText className="h-5 w-5 text-yellow-600" />
+                          <span className="text-sm flex-1">Document uploaded. Enter a name:</span>
+                          <Input
+                            placeholder="Document name"
+                            value={newDocName}
+                            onChange={(e) => setNewDocName(e.target.value)}
+                            className="w-48"
+                            data-testid="input-pending-document-name"
+                          />
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              if (newDocName.trim() && pendingDocUrl) {
+                                setDocuments([...documents, { name: newDocName.trim(), url: pendingDocUrl }]);
+                                setNewDocName("");
+                                setPendingDocUrl(null);
+                              }
+                            }}
+                            disabled={!newDocName.trim()}
+                            data-testid="button-add-pending-document"
+                          >
+                            Add
+                          </Button>
+                        </div>
+                      )}
+
+                      {/* Document List */}
+                      {documents.length > 0 && (
+                        <div className="space-y-2">
+                          <Label className="text-sm text-muted-foreground">Uploaded Documents ({documents.length})</Label>
+                          <div className="border rounded-lg divide-y">
+                            {documents.map((doc, index) => (
+                              <div key={index} className="flex items-center justify-between p-3 hover:bg-muted/30" data-testid={`document-item-${index}`}>
+                                <div className="flex items-center gap-3">
+                                  <FileText className="h-5 w-5 text-primary" />
+                                  <span className="font-medium">{doc.name}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    asChild
+                                  >
+                                    <a href={doc.url} target="_blank" rel="noopener noreferrer" data-testid={`button-download-document-${index}`}>
+                                      <Download className="h-4 w-4" />
+                                    </a>
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-destructive hover:text-destructive"
+                                    onClick={() => {
+                                      setDocuments(documents.filter((_, i) => i !== index));
+                                      toast({
+                                        title: "Document Removed",
+                                        description: `"${doc.name}" has been removed.`,
+                                      });
+                                    }}
+                                    data-testid={`button-remove-document-${index}`}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             )}
