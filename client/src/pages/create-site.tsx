@@ -437,14 +437,16 @@ export default function CreateSite() {
                     />
                   </div>
 
-                  {formData.layoutId === 'layout-shoalwood' && (
+                  {(formData.layoutId === 'layout-shoalwood' || formData.layoutId === 'layout-modern') && (
                     <div className="grid gap-2">
                       <Label>Description Image (Optional)</Label>
                       <p className="text-sm text-muted-foreground mb-2">
-                        Add a portrait-style image to display alongside your property description. Vertical/portrait orientation works best.
+                        {formData.layoutId === 'layout-modern' 
+                          ? 'Add an image to display next to your property description.'
+                          : 'Add a portrait-style image to display alongside your property description. Vertical/portrait orientation works best.'}
                       </p>
                       {formData.descriptionImage ? (
-                        <div className="relative w-48 aspect-[3/4] rounded-lg overflow-hidden border group">
+                        <div className={`relative ${formData.layoutId === 'layout-modern' ? 'w-64 aspect-[4/3]' : 'w-48 aspect-[3/4]'} rounded-lg overflow-hidden border group`}>
                           <img 
                             src={formData.descriptionImage} 
                             alt="Description" 

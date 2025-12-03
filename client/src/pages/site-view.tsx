@@ -1214,25 +1214,38 @@ function ModernDetails({ site, theme }: { site: Site; theme?: Theme }) {
           })}
         </div>
 
-        {/* Description */}
+        {/* Description with optional image */}
         {site.description && (
-          <div className="max-w-3xl">
-            <h3 
-              className="text-2xl mb-2"
-              style={{ fontFamily: 'var(--font-heading)', fontWeight: 'var(--heading-weight)' }}
-            >
-              About This Property
-            </h3>
-            <div 
-              className="w-12 h-1 rounded-full mb-6"
-              style={{ backgroundColor: primaryColor }}
-            />
-            <p 
-              className="text-gray-600 leading-relaxed text-lg"
-              style={{ fontFamily: 'var(--font-body)' }}
-            >
-              {site.description}
-            </p>
+          <div className={`${site.descriptionImage ? 'flex flex-col md:flex-row gap-8 md:gap-12 items-start' : ''}`}>
+            <div className={site.descriptionImage ? 'flex-1' : 'max-w-3xl'}>
+              <h3 
+                className="text-2xl mb-2"
+                style={{ fontFamily: 'var(--font-heading)', fontWeight: 'var(--heading-weight)' }}
+              >
+                About This Property
+              </h3>
+              <div 
+                className="w-12 h-1 rounded-full mb-6"
+                style={{ backgroundColor: primaryColor }}
+              />
+              <p 
+                className="text-gray-600 leading-relaxed text-lg"
+                style={{ fontFamily: 'var(--font-body)' }}
+              >
+                {site.description}
+              </p>
+            </div>
+            {site.descriptionImage && (
+              <div className="flex-1 md:max-w-md">
+                <div className="rounded-2xl overflow-hidden shadow-lg">
+                  <img 
+                    src={site.descriptionImage} 
+                    alt="Property" 
+                    className="w-full h-auto object-cover"
+                  />
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
