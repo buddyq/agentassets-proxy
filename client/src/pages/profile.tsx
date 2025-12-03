@@ -203,7 +203,7 @@ export default function Profile() {
                     onGetUploadParameters={getUploadUrl}
                     onComplete={handleLogoUpload}
                   >
-                    <Button type="button" variant="outline">
+                    <Button type="button" className="text-[#fcfcfc] bg-[#117f84] hover:bg-[#0d6266]">
                       {formData.logo ? "Change Logo" : "Upload Logo"}
                     </Button>
                   </ObjectUploader>
