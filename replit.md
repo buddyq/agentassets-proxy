@@ -57,7 +57,17 @@ Preferred communication style: Simple, everyday language.
 - Users upload a default logo in the dashboard (stored in `users.logo`)
 - Individual sites can override with a site-specific logo (stored in `sites.logo`)
 - API returns `effectiveLogo` (site logo with fallback to user default) for frontend display
+- API returns `effectiveHeroLogo` (heroLogo with fallback to site logo, then user logo) for Modern layout hero
 - Layouts display the effective logo in navigation/hero sections
+
+**Modern Layout Features**:
+- Hero slider with fade transitions between up to 3 customizable slides (title, subtitle, background image)
+- Transparent navigation that becomes solid white with animated logo transition on scroll
+- Hero logo (70px) switches to regular profile logo (48px) when scrolled
+- All text uses Google Font "Outfit"
+- Slide titles at 46px with subtle drop-shadow
+- Lighter gradient overlay on hero for better image visibility
+- "Have a look" CTA button scrolls to property details
 
 **Migration Strategy**: Drizzle Kit handles schema migrations with `npm run db:push` command.
 
