@@ -7,27 +7,17 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
   Mail, 
-  Phone, 
   MapPin, 
   Send, 
   Clock, 
-  MessageSquare,
   Headphones,
   Sparkles,
   ArrowRight,
-  CheckCircle2,
-  Building2,
   Zap
 } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 
 export default function Contact() {
   const { toast } = useToast();
@@ -55,29 +45,6 @@ export default function Contact() {
     setFormData({ name: "", email: "", company: "", subject: "", message: "" });
     setIsSubmitting(false);
   };
-
-  const faqs = [
-    {
-      question: "How quickly can I get started?",
-      answer: "You can create your first property website in under 15 minutes! Simply sign up, add your listing details, choose a theme, and publish. It's that easy."
-    },
-    {
-      question: "Do I need any technical skills?",
-      answer: "Absolutely not! AgentAssets is designed for real estate agents, not developers. Our intuitive wizard guides you through every step of the process."
-    },
-    {
-      question: "Can I use my own domain name?",
-      answer: "Yes! Every site supports custom domain integration. You can use your own branded domain to make your listings even more professional."
-    },
-    {
-      question: "How long do my sites stay active?",
-      answer: "Each site credit gives you 4 months of hosting. This is typically enough time to sell most properties. Need more time? Contact us for extension options."
-    },
-    {
-      question: "What kind of support do you offer?",
-      answer: "We offer email support for all users with a 24-hour response time. Premium support packages with priority response and phone support are available for high-volume users."
-    }
-  ];
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 to-white">
@@ -255,32 +222,8 @@ export default function Contact() {
               </form>
             </div>
 
-            {/* Right Column - Why Contact Us + Trust Signals */}
+            {/* Right Column - Quick Response */}
             <div className="space-y-10">
-              <div className="bg-gradient-to-br from-slate-50 to-white rounded-3xl p-8 md:p-10 border border-slate-100">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="h-12 w-12 bg-gradient-to-br from-primary to-teal-600 text-white rounded-xl flex items-center justify-center shadow-lg shadow-primary/25">
-                    <MessageSquare className="h-6 w-6" />
-                  </div>
-                  <h3 className="text-xl font-bold text-secondary">Why Reach Out?</h3>
-                </div>
-                
-                <ul className="space-y-4">
-                  {[
-                    "Get personalized demo of our platform",
-                    "Discuss enterprise or team pricing",
-                    "Technical support for your sites",
-                    "Partnership opportunities",
-                    "Feature requests or feedback"
-                  ].map((item, i) => (
-                    <li key={i} className="flex items-start gap-3">
-                      <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                      <span className="text-muted-foreground">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
               <div className="bg-gradient-to-br from-primary/5 to-teal-500/5 rounded-3xl p-8 md:p-10 border border-primary/10">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="h-12 w-12 bg-gradient-to-br from-primary to-teal-600 text-white rounded-xl flex items-center justify-center shadow-lg shadow-primary/25">
@@ -306,59 +249,7 @@ export default function Contact() {
                   </div>
                 </div>
               </div>
-
-              <div className="bg-secondary rounded-3xl p-8 md:p-10 text-white relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-2xl" />
-                <div className="relative">
-                  <Building2 className="h-10 w-10 text-primary mb-4" />
-                  <h3 className="text-xl font-bold mb-3">Looking for Enterprise?</h3>
-                  <p className="text-white/70 mb-6">
-                    We offer custom solutions for brokerages and teams with volume pricing and dedicated support.
-                  </p>
-                  <Link href="/credits">
-                    <Button variant="secondary" className="bg-white text-secondary hover:bg-white/90 group">
-                      View Enterprise Plans
-                      <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                    </Button>
-                  </Link>
-                </div>
-              </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ Section */}
-      <section className="py-20 md:py-32 bg-gradient-to-b from-white to-slate-50">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <span className="inline-block text-primary font-semibold text-sm uppercase tracking-wider mb-4">FAQ</span>
-            <h2 className="text-3xl md:text-4xl font-bold text-secondary mb-4">
-              Frequently Asked <span className="bg-gradient-to-r from-primary to-teal-600 bg-clip-text text-transparent">Questions</span>
-            </h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Find answers to common questions about AgentAssets
-            </p>
-          </div>
-
-          <div className="max-w-3xl mx-auto">
-            <Accordion type="single" collapsible className="space-y-4">
-              {faqs.map((faq, index) => (
-                <AccordionItem 
-                  key={index} 
-                  value={`item-${index}`}
-                  className="bg-white rounded-2xl border border-slate-200 px-6 shadow-sm hover:shadow-md transition-shadow"
-                  data-testid={`accordion-faq-${index}`}
-                >
-                  <AccordionTrigger className="text-left font-semibold text-secondary hover:text-primary py-6 hover:no-underline">
-                    {faq.question}
-                  </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground pb-6 leading-relaxed">
-                    {faq.answer}
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
           </div>
         </div>
       </section>
