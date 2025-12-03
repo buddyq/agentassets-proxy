@@ -162,7 +162,7 @@ export default function Profile() {
                     onGetUploadParameters={getUploadUrl}
                     onComplete={handleProfileImageUpload}
                   >
-                    <Button type="button" className="bg-[#117f84] text-[#fcfcfc] hover:bg-[#0d6266]">
+                    <Button type="button" className="bg-primary text-primary-foreground hover:bg-primary/90">
                       {formData.profileImageUrl ? "Change Photo" : "Upload Photo"}
                     </Button>
                   </ObjectUploader>
@@ -203,7 +203,7 @@ export default function Profile() {
                     onGetUploadParameters={getUploadUrl}
                     onComplete={handleLogoUpload}
                   >
-                    <Button type="button" className="text-[#fcfcfc] bg-[#117f84] hover:bg-[#0d6266]">
+                    <Button type="button" className="bg-primary text-primary-foreground hover:bg-primary/90">
                       {formData.logo ? "Change Logo" : "Upload Logo"}
                     </Button>
                   </ObjectUploader>
