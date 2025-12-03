@@ -265,18 +265,19 @@ export default function CreateSite() {
                           maxWidth: '200px'
                         }}
                       >
-                        <div className="w-full h-full bg-muted" />
+                        <div className="w-full h-full bg-gray-300" />
                         <div 
                           className={`absolute top-0 left-0 h-full bg-primary transition-all duration-300 ${isCompleted ? 'w-full' : 'w-0'}`}
                         />
                       </div>
                     )}
                     <div 
-                      className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors border-4 border-white shadow-sm ${
+                      className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors border-4 border-white shadow-sm cursor-pointer ${
                         isActive 
                           ? "bg-primary text-white" 
                           : "bg-muted text-muted-foreground"
                       }`}
+                      onClick={() => setStep(s.id)}
                     >
                       <s.icon className="h-5 w-5" />
                     </div>
