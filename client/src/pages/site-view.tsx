@@ -1565,7 +1565,7 @@ export default function SiteView() {
         <ShoalwoodDescription description={site.description || "A beautiful property awaiting your discovery."} descriptionImage={site.descriptionImage} />
         <ShoalwoodDetails site={site} theme={theme} />
         
-        {hasPhotos && <PhotoGallery photos={site.photos!} themeColors={theme?.colors} />}
+        {hasPhotos && <PhotoGallery photos={site.photos!} themeColors={theme?.colors} galleryStyle={layout?.structure?.galleryStyle} />}
         
         {hasVideo && (
           <section id="video" className="py-20 px-4 md:px-8 border-t border-gray-100">
@@ -1666,7 +1666,7 @@ export default function SiteView() {
         />
         <ModernDetails site={site} theme={theme} />
         
-        {hasPhotos && <PhotoGallery photos={site.photos!} themeColors={theme?.colors} />}
+        {hasPhotos && <PhotoGallery photos={site.photos!} themeColors={theme?.colors} galleryStyle={layout?.structure?.galleryStyle} />}
         
         {hasVideo && (
           <section id="video" className="py-20 px-6 bg-white">
@@ -1912,7 +1912,7 @@ export default function SiteView() {
 
       {/* Photos Section */}
       {site.photos && site.photos.length > 0 && (
-        <PhotoGallery photos={site.photos} themeColors={theme?.colors} />
+        <PhotoGallery photos={site.photos} themeColors={theme?.colors} galleryStyle={layout?.structure?.galleryStyle} />
       )}
 
       {/* Footer */}
@@ -1925,9 +1925,14 @@ export default function SiteView() {
   );
 }
 
-function PhotoGallery({ photos, themeColors }: { photos: string[], themeColors?: any }) {
+function PhotoGallery({ photos, themeColors, galleryStyle = 'grid' }: { 
+  photos: string[], 
+  themeColors?: any,
+  galleryStyle?: 'grid' | 'masonry' | 'carousel' | 'lightbox'
+}) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, startIndex: selectedIndex || 0 });
+  const [carouselRef, carouselApi] = useEmblaCarousel({ loop: true, align: 'start' });
 
   const scrollPrev = useCallback(() => {
     if (emblaApi) emblaApi.scrollPrev();
@@ -1937,7 +1942,16 @@ function PhotoGallery({ photos, themeColors }: { photos: string[], themeColors?:
     if (emblaApi) emblaApi.scrollNext();
   }, [emblaApi]);
 
+  const carouselScrollPrev = useCallback(() => {
+    if (carouselApi) carouselApi.scrollPrev();
+  }, [carouselApi]);
+
+  const carouselScrollNext = useCallback(() => {
+    if (carouselApi) carouselApi.scrollNext();
+  }, [carouselApi]);
+
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [carouselSlide, setCarouselSlide] = useState(0);
 
   useEffect(() => {
     if (!emblaApi) return;
@@ -1953,6 +1967,21 @@ function PhotoGallery({ photos, themeColors }: { photos: string[], themeColors?:
       emblaApi.off('select', onSelect);
     };
   }, [emblaApi]);
+
+  useEffect(() => {
+    if (!carouselApi) return;
+    
+    const onSelect = () => {
+      setCarouselSlide(carouselApi.selectedScrollSnap());
+    };
+    
+    carouselApi.on('select', onSelect);
+    onSelect();
+    
+    return () => {
+      carouselApi.off('select', onSelect);
+    };
+  }, [carouselApi]);
 
   useEffect(() => {
     if (selectedIndex !== null && emblaApi) {
@@ -1977,6 +2006,93 @@ function PhotoGallery({ photos, themeColors }: { photos: string[], themeColors?:
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedIndex, scrollPrev, scrollNext]);
 
+  // Render gallery based on style
+  const renderGalleryContent = () => {
+    switch (galleryStyle) {
+      case 'masonry':
+        return (
+          <div className="columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-4 space-y-3 md:space-y-4">
+            {photos.map((photo, index) => (
+              <div 
+                key={index}
+                className="break-inside-avoid rounded-xl overflow-hidden shadow-lg cursor-pointer hover:scale-[1.02] hover:shadow-xl transition-all duration-300"
+                onClick={() => setSelectedIndex(index)}
+                data-testid={`photo-${index}`}
+              >
+                <img 
+                  src={photo} 
+                  alt={`Property photo ${index + 1}`}
+                  className="w-full h-auto object-cover"
+                />
+              </div>
+            ))}
+          </div>
+        );
+
+      case 'carousel':
+        return (
+          <div className="relative">
+            <div className="overflow-hidden" ref={carouselRef}>
+              <div className="flex gap-4">
+                {photos.map((photo, index) => (
+                  <div 
+                    key={index}
+                    className="flex-[0_0_80%] md:flex-[0_0_45%] lg:flex-[0_0_30%] min-w-0"
+                  >
+                    <div 
+                      className="aspect-[4/3] rounded-xl overflow-hidden shadow-lg cursor-pointer hover:shadow-xl transition-all duration-300"
+                      onClick={() => setSelectedIndex(index)}
+                      data-testid={`photo-${index}`}
+                    >
+                      <img 
+                        src={photo} 
+                        alt={`Property photo ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <button
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full bg-white/90 shadow-lg hover:bg-white transition-all"
+              onClick={carouselScrollPrev}
+            >
+              <ChevronLeft className="h-6 w-6" />
+            </button>
+            <button
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full bg-white/90 shadow-lg hover:bg-white transition-all"
+              onClick={carouselScrollNext}
+            >
+              <ChevronRight className="h-6 w-6" />
+            </button>
+          </div>
+        );
+
+      case 'lightbox':
+      case 'grid':
+      default:
+        return (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+            {photos.map((photo, index) => (
+              <div 
+                key={index}
+                className="aspect-square rounded-xl overflow-hidden shadow-lg cursor-pointer hover:scale-[1.02] hover:shadow-xl transition-all duration-300"
+                onClick={() => setSelectedIndex(index)}
+                data-testid={`photo-${index}`}
+              >
+                <img 
+                  src={photo} 
+                  alt={`Property photo ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ))}
+          </div>
+        );
+    }
+  };
+
   return (
     <section id="photos" className="py-20 px-4 md:px-8 border-t border-gray-100">
       <div className="container mx-auto max-w-5xl">
@@ -1992,22 +2108,7 @@ function PhotoGallery({ photos, themeColors }: { photos: string[], themeColors?:
           Photos
         </h2>
         
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-          {photos.map((photo, index) => (
-            <div 
-              key={index}
-              className="aspect-square rounded-xl overflow-hidden shadow-lg cursor-pointer hover:scale-[1.02] hover:shadow-xl transition-all duration-300"
-              onClick={() => setSelectedIndex(index)}
-              data-testid={`photo-${index}`}
-            >
-              <img 
-                src={photo} 
-                alt={`Property photo ${index + 1}`}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          ))}
-        </div>
+        {renderGalleryContent()}
       </div>
 
       {selectedIndex !== null && (
