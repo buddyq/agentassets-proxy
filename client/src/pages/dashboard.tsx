@@ -330,7 +330,7 @@ export default function Dashboard() {
                 <p className="text-sm text-muted-foreground mb-4">
                   {leads.length} lead{leads.length !== 1 ? 's' : ''} from your property sites
                 </p>
-                {leads.map((lead) => (
+                {[...leads].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map((lead) => (
                   <Card 
                     key={lead.id} 
                     className="hover:shadow-md transition-shadow cursor-pointer"
