@@ -207,7 +207,8 @@ export async function registerRoutes(
       if (!theme) {
         return res.status(404).json({ error: "Theme not found" });
       }
-      if (theme.userId !== req.user.id) {
+      // Allow editing preset themes (userId null) or user's own themes
+      if (theme.userId !== null && theme.userId !== req.user.id) {
         return res.status(403).json({ error: "You can only edit your own themes" });
       }
       const updated = await storage.updateTheme(req.params.id, req.body);
@@ -223,7 +224,8 @@ export async function registerRoutes(
       if (!theme) {
         return res.status(404).json({ error: "Theme not found" });
       }
-      if (theme.userId !== req.user.id) {
+      // Allow deleting preset themes (userId null) or user's own themes
+      if (theme.userId !== null && theme.userId !== req.user.id) {
         return res.status(403).json({ error: "You can only delete your own themes" });
       }
       await storage.deleteTheme(req.params.id);
