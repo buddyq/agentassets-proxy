@@ -10,10 +10,10 @@ import { useUpdateUserProfile, getUploadUrl, normalizeObjectUrl } from "@/lib/ap
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { useToast } from "@/hooks/use-toast";
 import { Instagram, Youtube, Facebook, Linkedin, X, Image, Trash2 } from "lucide-react";
-import { useNavigate } from "wouter";
+import { useLocation } from "wouter";
 
 export default function Profile() {
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   const { user, isLoading } = useAuth();
   const { toast } = useToast();
   const updateProfileMutation = useUpdateUserProfile();
@@ -104,7 +104,7 @@ export default function Profile() {
           title: "Profile Updated",
           description: "Your agent information has been saved.",
         });
-        navigate("/dashboard");
+        setLocation("/dashboard");
       },
       onError: () => {
         toast({
@@ -159,8 +159,8 @@ export default function Profile() {
                 )}
                 <div className="flex-1">
                   <ObjectUploader 
-                    onUploadComplete={handleProfileImageUpload}
-                    folder="profile-images"
+                    onGetUploadParameters={getUploadUrl}
+                    onComplete={handleProfileImageUpload}
                   >
                     <Button type="button" variant="outline">
                       {formData.profileImageUrl ? "Change Photo" : "Upload Photo"}
@@ -200,8 +200,8 @@ export default function Profile() {
                 )}
                 <div className="flex-1">
                   <ObjectUploader 
-                    onUploadComplete={handleLogoUpload}
-                    folder="logos"
+                    onGetUploadParameters={getUploadUrl}
+                    onComplete={handleLogoUpload}
                   >
                     <Button type="button" variant="outline">
                       {formData.logo ? "Change Logo" : "Upload Logo"}
@@ -354,7 +354,7 @@ export default function Profile() {
             <Button type="submit" size="lg" disabled={updateProfileMutation.isPending} data-testid="button-save-profile">
               {updateProfileMutation.isPending ? "Saving..." : "Save Profile"}
             </Button>
-            <Button type="button" variant="outline" size="lg" onClick={() => navigate("/dashboard")} data-testid="button-cancel">
+            <Button type="button" variant="outline" size="lg" onClick={() => setLocation("/dashboard")} data-testid="button-cancel">
               Cancel
             </Button>
           </div>
