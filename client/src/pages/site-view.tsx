@@ -2011,11 +2011,12 @@ function PhotoGallery({ photos, themeColors, galleryStyle = 'grid' }: {
     switch (galleryStyle) {
       case 'masonry':
         return (
-          <div className="columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-4 space-y-3 md:space-y-4">
+          <div className="columns-2 md:columns-3 lg:columns-4" style={{ columnGap: '2px' }}>
             {photos.map((photo, index) => (
               <div 
                 key={index}
-                className="break-inside-avoid rounded-xl overflow-hidden shadow-lg cursor-pointer hover:scale-[1.02] hover:shadow-xl transition-all duration-300"
+                className="break-inside-avoid overflow-hidden cursor-pointer hover:opacity-90 transition-all duration-300"
+                style={{ marginBottom: '2px' }}
                 onClick={() => setSelectedIndex(index)}
                 data-testid={`photo-${index}`}
               >
