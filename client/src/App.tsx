@@ -18,6 +18,7 @@ import Profile from "@/pages/profile";
 import SiteView from "@/pages/site-view";
 import HowItWorks from "@/pages/how-it-works";
 import Contact from "@/pages/contact";
+import Support from "@/pages/support";
 
 function Router() {
   return (
@@ -26,6 +27,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/how-it-works" component={HowItWorks} />
       <Route path="/contact" component={Contact} />
+      <Route path="/support" component={Support} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/site/:id" component={SiteView} />
       
