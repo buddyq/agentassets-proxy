@@ -103,6 +103,14 @@ export type CustomDetail = {
   value: string;
 };
 
+// Hero slide type for Modern layout
+export type HeroSlide = {
+  title: string;
+  subtitle: string;
+  backgroundImage?: string;
+};
+
+
 // Sites table
 export const sites = pgTable("sites", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -122,6 +130,8 @@ export const sites = pgTable("sites", {
   logo: text("logo"),
   photos: text("photos").array(),
   heroPhotos: text("hero_photos").array(),
+  heroSlides: jsonb("hero_slides").$type<HeroSlide[]>().default([]),
+  heroLogo: text("hero_logo"),
   videoUrl: text("video_url"),
   layoutId: text("layout_id"),
   templateId: text("template_id"),
@@ -144,9 +154,17 @@ const customDetailSchema = z.object({
   value: z.string().min(1).max(100),
 });
 
+const heroSlideSchema = z.object({
+  title: z.string().max(100),
+  subtitle: z.string().max(200),
+  backgroundImage: z.string().optional(),
+});
+
 export const insertSiteSchema = createInsertSchema(sites).omit({ id: true, createdAt: true, updatedAt: true }).extend({
   templateId: z.string().nullable().optional(),
   customDetails: z.array(customDetailSchema).optional().default([]),
+  heroSlides: z.array(heroSlideSchema).max(3).optional().default([]),
+  heroLogo: z.string().nullable().optional(),
   bedrooms: z.number().nullable().optional(),
   bathrooms: z.number().nullable().optional(),
   sqft: z.number().nullable().optional(),
