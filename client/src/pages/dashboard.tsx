@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
 import { Plus, ExternalLink, Trash2, Globe, BarChart3, Users, MousePointerClick, TrendingUp, Pencil, Image, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { format, subDays } from "date-fns";
+import { format, subDays, isPast } from "date-fns";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import {
   Dialog,
@@ -47,7 +47,7 @@ export default function Dashboard() {
   const [logoDialogOpen, setLogoDialogOpen] = useState(false);
 
   const getThemeName = (id: string) => themes.find(t => t.id === id)?.name || 'Unknown Theme';
-  const getTemplateName = (id: string) => TEMPLATES.find(t => t.id === id)?.name || 'Unknown Template';
+  const getTemplateName = (id: string | null) => id ? TEMPLATES.find(t => t.id === id)?.name || 'Unknown Template' : 'N/A';
 
   // Domain Dialog State
   const [domainDialogOpen, setDomainDialogOpen] = useState(false);
@@ -236,7 +236,14 @@ export default function Dashboard() {
                 </div>
                 <CardHeader>
                   <CardTitle className="line-clamp-1 text-lg">{site.title || site.address}</CardTitle>
-                  <p className="text-sm text-muted-foreground">Created on {format(new Date(site.createdAt), 'MMM d, yyyy')}</p>
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Created on {format(new Date(site.createdAt), 'MMM d, yyyy')}</p>
+                    {site.expiresAt && (
+                      <p className={`text-sm ${isPast(new Date(site.expiresAt)) ? 'text-red-600' : 'text-green-600'}`} data-testid={`text-expires-${site.id}`}>
+                        {isPast(new Date(site.expiresAt)) ? 'Expired' : 'Expires'} on {format(new Date(site.expiresAt), 'MMM d, yyyy')}
+                      </p>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent className="flex-1">
                   <div className="space-y-2 text-sm">
