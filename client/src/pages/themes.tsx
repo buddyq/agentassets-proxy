@@ -5,9 +5,9 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Theme } from "@shared/schema";
-import { useThemes, useCreateTheme, useDeleteTheme } from "@/lib/api";
+import { useThemes, useCreateTheme, useDeleteTheme, useUpdateTheme } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
-import { Plus, Palette, Trash2, Check, Upload, Image as ImageIcon } from "lucide-react";
+import { Plus, Palette, Trash2, Check, Upload, Image as ImageIcon, Edit2 } from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -17,11 +17,14 @@ export default function Themes() {
   const { data: presetThemes = [] } = useThemes({ preset: true });
   const { data: userThemes = [] } = useThemes({ userId: user?.id });
   const createThemeMutation = useCreateTheme();
+  const updateThemeMutation = useUpdateTheme();
   const deleteThemeMutation = useDeleteTheme();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [selectedThemeId, setSelectedThemeId] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // New Theme State
+  // Form State
   const [newThemeName, setNewThemeName] = useState("");
   const [primaryColor, setPrimaryColor] = useState("#000000");
   const [secondaryColor, setSecondaryColor] = useState("#ffffff");
@@ -55,11 +58,55 @@ export default function Themes() {
     );
   };
 
+  const handleEditTheme = (theme: Theme) => {
+    setSelectedThemeId(theme.id);
+    setNewThemeName(theme.name);
+    setPrimaryColor(theme.colors.primary);
+    setSecondaryColor(theme.colors.secondary);
+    setLogoUrl(theme.logoUrl || undefined);
+    setIsEditMode(true);
+    setIsDialogOpen(true);
+  };
+
+  const handleSaveEdit = () => {
+    if (!newThemeName || !selectedThemeId) return;
+    
+    updateThemeMutation.mutate(
+      {
+        id: selectedThemeId,
+        updates: {
+          name: newThemeName,
+          colors: {
+            primary: primaryColor,
+            secondary: secondaryColor,
+            background: '#ffffff',
+            text: '#000000'
+          },
+          logoUrl: logoUrl || null
+        }
+      },
+      {
+        onSuccess: () => {
+          setIsDialogOpen(false);
+          resetForm();
+          setIsEditMode(false);
+          setSelectedThemeId(null);
+          toast({
+            title: "Theme Updated",
+            description: "Your custom theme has been updated.",
+          });
+        }
+      }
+    );
+  };
+
   const resetForm = () => {
     setNewThemeName("");
     setPrimaryColor("#000000");
     setSecondaryColor("#ffffff");
     setLogoUrl(undefined);
+    setIsEditMode(false);
+    setSelectedThemeId(null);
   };
 
   // Mock logo upload
@@ -91,7 +138,7 @@ export default function Themes() {
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px]">
               <DialogHeader>
-                <DialogTitle>Create Custom Theme</DialogTitle>
+                <DialogTitle>{isEditMode ? 'Edit Theme' : 'Create Custom Theme'}</DialogTitle>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
@@ -174,8 +221,13 @@ export default function Themes() {
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                <Button onClick={handleCreateTheme} disabled={!newThemeName}>Create Theme</Button>
+                <Button variant="outline" onClick={() => {
+                  setIsDialogOpen(false);
+                  resetForm();
+                }}>Cancel</Button>
+                <Button onClick={isEditMode ? handleSaveEdit : handleCreateTheme} disabled={!newThemeName}>
+                  {isEditMode ? 'Save Changes' : 'Create Theme'}
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -228,11 +280,19 @@ export default function Themes() {
                       </div>
                     )}
                   </CardContent>
-                  <CardFooter className="border-t pt-4">
+                  <CardFooter className="border-t pt-3 gap-2 flex">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={() => handleEditTheme(theme)}
+                    >
+                      <Edit2 className="h-4 w-4 mr-2" /> Edit
+                    </Button>
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="text-destructive hover:text-destructive/90 hover:bg-destructive/10 w-full"
+                      className="flex-1 text-destructive hover:text-destructive/90 hover:bg-destructive/10"
                       onClick={() => {
                         deleteThemeMutation.mutate(theme.id, {
                           onSuccess: () => {
