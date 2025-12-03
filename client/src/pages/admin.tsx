@@ -5,31 +5,71 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { Theme, Layout } from "@shared/schema";
-import { useThemes, useCreateTheme, useUpdateTheme, useDeleteTheme, useLayouts, useCreateLayout, useUpdateLayout, useDeleteLayout } from "@/lib/api";
-import { Plus, Palette, Trash2, Shield, Pencil, LayoutTemplate } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import type { Theme, Layout, Coupon, User } from "@shared/schema";
+import { 
+  useThemes, useCreateTheme, useUpdateTheme, useDeleteTheme, 
+  useLayouts, useCreateLayout, useUpdateLayout, useDeleteLayout,
+  useAdminCoupons, useCreateCoupon, useUpdateCoupon, useDeleteCoupon,
+  useAdminUsers, useAdminUpdateUserCredits
+} from "@/lib/api";
+import { Plus, Palette, Trash2, Shield, Pencil, LayoutTemplate, Ticket, Users, CreditCard, Gift, Clock, Hash, Calendar } from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
 
 export default function AdminDashboard() {
   const { data: themes = [] } = useThemes();
   const { data: layouts = [] } = useLayouts({ preset: true });
+  const { data: coupons = [] } = useAdminCoupons();
+  const { data: users = [] } = useAdminUsers();
   const createThemeMutation = useCreateTheme();
   const updateThemeMutation = useUpdateTheme();
   const deleteThemeMutation = useDeleteTheme();
   const createLayoutMutation = useCreateLayout();
   const updateLayoutMutation = useUpdateLayout();
   const deleteLayoutMutation = useDeleteLayout();
+  const createCouponMutation = useCreateCoupon();
+  const updateCouponMutation = useUpdateCoupon();
+  const deleteCouponMutation = useDeleteCoupon();
+  const updateUserCreditsMutation = useAdminUpdateUserCredits();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isLayoutDialogOpen, setIsLayoutDialogOpen] = useState(false);
   const [isLayoutEditDialogOpen, setIsLayoutEditDialogOpen] = useState(false);
+  const [isCouponDialogOpen, setIsCouponDialogOpen] = useState(false);
+  const [isCouponEditDialogOpen, setIsCouponEditDialogOpen] = useState(false);
+  const [isUserCreditsDialogOpen, setIsUserCreditsDialogOpen] = useState(false);
   const [editingTheme, setEditingTheme] = useState<Theme | null>(null);
   const [editingLayout, setEditingLayout] = useState<Layout | null>(null);
+  const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
+  const [editingUser, setEditingUser] = useState<Omit<User, 'password'> | null>(null);
   const { toast } = useToast();
+
+  // Coupon form state
+  const [couponCode, setCouponCode] = useState("");
+  const [couponDescription, setCouponDescription] = useState("");
+  const [couponType, setCouponType] = useState<string>("free_credits");
+  const [couponValue, setCouponValue] = useState<number>(1);
+  const [couponMaxUses, setCouponMaxUses] = useState<number | null>(null);
+  const [couponExpiresAt, setCouponExpiresAt] = useState<string>("");
+  const [couponIsActive, setCouponIsActive] = useState(true);
+
+  // Edit coupon form state
+  const [editCouponCode, setEditCouponCode] = useState("");
+  const [editCouponDescription, setEditCouponDescription] = useState("");
+  const [editCouponType, setEditCouponType] = useState<string>("free_credits");
+  const [editCouponValue, setEditCouponValue] = useState<number>(1);
+  const [editCouponMaxUses, setEditCouponMaxUses] = useState<number | null>(null);
+  const [editCouponExpiresAt, setEditCouponExpiresAt] = useState<string>("");
+  const [editCouponIsActive, setEditCouponIsActive] = useState(true);
+
+  // User credits form state
+  const [newCreditsAmount, setNewCreditsAmount] = useState<number>(0);
 
   const [newThemeName, setNewThemeName] = useState("");
   const [primaryColor, setPrimaryColor] = useState("#000000");
@@ -237,6 +277,145 @@ export default function AdminDashboard() {
     }
   };
 
+  // Coupon handlers
+  const handleCreateCoupon = () => {
+    if (!couponCode) return;
+    
+    createCouponMutation.mutate(
+      {
+        code: couponCode,
+        description: couponDescription || null,
+        type: couponType,
+        value: couponValue,
+        maxUses: couponMaxUses,
+        minPurchase: null,
+        isActive: couponIsActive ? 'true' : 'false',
+        expiresAt: couponExpiresAt ? new Date(couponExpiresAt) : null
+      },
+      {
+        onSuccess: () => {
+          setIsCouponDialogOpen(false);
+          setCouponCode("");
+          setCouponDescription("");
+          setCouponType("free_credits");
+          setCouponValue(1);
+          setCouponMaxUses(null);
+          setCouponExpiresAt("");
+          setCouponIsActive(true);
+          toast({
+            title: "Coupon Created",
+            description: "New coupon has been added successfully.",
+          });
+        },
+        onError: (error: Error) => {
+          toast({
+            title: "Error",
+            description: error.message,
+            variant: "destructive"
+          });
+        }
+      }
+    );
+  };
+
+  const handleEditCoupon = (coupon: Coupon) => {
+    setEditingCoupon(coupon);
+    setEditCouponCode(coupon.code);
+    setEditCouponDescription(coupon.description || "");
+    setEditCouponType(coupon.type);
+    setEditCouponValue(coupon.value);
+    setEditCouponMaxUses(coupon.maxUses);
+    setEditCouponExpiresAt(coupon.expiresAt ? new Date(coupon.expiresAt).toISOString().split('T')[0] : "");
+    setEditCouponIsActive(coupon.isActive === 'true');
+    setIsCouponEditDialogOpen(true);
+  };
+
+  const handleSaveCouponEdit = () => {
+    if (!editingCoupon || !editCouponCode) return;
+
+    updateCouponMutation.mutate(
+      {
+        id: editingCoupon.id,
+        updates: {
+          code: editCouponCode,
+          description: editCouponDescription || null,
+          type: editCouponType,
+          value: editCouponValue,
+          maxUses: editCouponMaxUses,
+          isActive: editCouponIsActive ? 'true' : 'false',
+          expiresAt: editCouponExpiresAt ? new Date(editCouponExpiresAt) : null
+        }
+      },
+      {
+        onSuccess: () => {
+          setIsCouponEditDialogOpen(false);
+          setEditingCoupon(null);
+          toast({
+            title: "Coupon Updated",
+            description: "Coupon has been updated successfully.",
+          });
+        },
+        onError: (error: Error) => {
+          toast({
+            title: "Error",
+            description: error.message,
+            variant: "destructive"
+          });
+        }
+      }
+    );
+  };
+
+  const handleDeleteCoupon = (couponId: string) => {
+    if (confirm("Are you sure you want to delete this coupon? This action cannot be undone.")) {
+      deleteCouponMutation.mutate(couponId, {
+        onSuccess: () => {
+          toast({
+            title: "Coupon Deleted",
+            description: "Coupon has been removed.",
+          });
+        }
+      });
+    }
+  };
+
+  const handleEditUserCredits = (user: Omit<User, 'password'>) => {
+    setEditingUser(user);
+    setNewCreditsAmount(user.credits);
+    setIsUserCreditsDialogOpen(true);
+  };
+
+  const handleSaveUserCredits = () => {
+    if (!editingUser) return;
+
+    updateUserCreditsMutation.mutate(
+      {
+        id: editingUser.id,
+        credits: newCreditsAmount
+      },
+      {
+        onSuccess: () => {
+          setIsUserCreditsDialogOpen(false);
+          setEditingUser(null);
+          toast({
+            title: "Credits Updated",
+            description: `User now has ${newCreditsAmount} credits.`,
+          });
+        }
+      }
+    );
+  };
+
+  const getCouponTypeLabel = (type: string) => {
+    switch (type) {
+      case 'free_credits': return 'Free Credits';
+      case 'first_site_free': return 'First Site Free';
+      case 'percentage_off': return 'Percentage Off';
+      case 'fixed_amount_off': return 'Fixed Amount Off';
+      default: return type;
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-muted/10">
       <Navbar />
@@ -263,6 +442,14 @@ export default function AdminDashboard() {
             <TabsTrigger value="layouts" className="gap-2">
               <LayoutTemplate className="h-4 w-4" />
               Layouts
+            </TabsTrigger>
+            <TabsTrigger value="coupons" className="gap-2">
+              <Ticket className="h-4 w-4" />
+              Coupons
+            </TabsTrigger>
+            <TabsTrigger value="users" className="gap-2">
+              <Users className="h-4 w-4" />
+              Users
             </TabsTrigger>
           </TabsList>
 
@@ -824,6 +1011,410 @@ export default function AdminDashboard() {
                 </Card>
               ))}
             </div>
+          </TabsContent>
+
+          {/* Coupons Tab */}
+          <TabsContent value="coupons">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+              <div>
+                <h2 className="text-xl font-bold text-secondary">Coupon Management</h2>
+                <p className="text-muted-foreground">Create and manage promotional codes and specials.</p>
+              </div>
+              
+              <Dialog open={isCouponDialogOpen} onOpenChange={setIsCouponDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="gap-2 bg-secondary hover:bg-secondary/90" data-testid="button-add-coupon">
+                    <Plus className="h-4 w-4" />
+                    Create Coupon
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Create New Coupon</DialogTitle>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="coupon-code">Coupon Code</Label>
+                      <Input 
+                        id="coupon-code" 
+                        value={couponCode} 
+                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                        placeholder="e.g., WELCOME10" 
+                        data-testid="input-coupon-code"
+                      />
+                      <p className="text-xs text-muted-foreground">Will be converted to uppercase automatically</p>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="coupon-description">Description</Label>
+                      <Textarea 
+                        id="coupon-description" 
+                        value={couponDescription} 
+                        onChange={(e) => setCouponDescription(e.target.value)}
+                        placeholder="e.g., Welcome offer for new users" 
+                        data-testid="input-coupon-description"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="grid gap-2">
+                        <Label>Coupon Type</Label>
+                        <Select value={couponType} onValueChange={setCouponType}>
+                          <SelectTrigger data-testid="select-coupon-type">
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="free_credits">Free Credits</SelectItem>
+                            <SelectItem value="first_site_free">First Site Free</SelectItem>
+                            <SelectItem value="percentage_off">Percentage Off</SelectItem>
+                            <SelectItem value="fixed_amount_off">Fixed Amount Off</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="coupon-value">
+                          {couponType === 'free_credits' ? 'Credits to Give' : 
+                           couponType === 'first_site_free' ? 'Value (1)' :
+                           couponType === 'percentage_off' ? 'Percentage' : 'Amount (cents)'}
+                        </Label>
+                        <Input 
+                          id="coupon-value" 
+                          type="number" 
+                          value={couponValue} 
+                          onChange={(e) => setCouponValue(parseInt(e.target.value) || 0)}
+                          min={1}
+                          data-testid="input-coupon-value"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="coupon-max-uses">Max Uses (optional)</Label>
+                        <Input 
+                          id="coupon-max-uses" 
+                          type="number" 
+                          value={couponMaxUses ?? ""} 
+                          onChange={(e) => setCouponMaxUses(e.target.value ? parseInt(e.target.value) : null)}
+                          placeholder="Unlimited" 
+                          min={1}
+                          data-testid="input-coupon-max-uses"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="coupon-expires">Expires On (optional)</Label>
+                        <Input 
+                          id="coupon-expires" 
+                          type="date" 
+                          value={couponExpiresAt} 
+                          onChange={(e) => setCouponExpiresAt(e.target.value)}
+                          data-testid="input-coupon-expires"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Switch 
+                        id="coupon-active" 
+                        checked={couponIsActive} 
+                        onCheckedChange={setCouponIsActive}
+                        data-testid="switch-coupon-active"
+                      />
+                      <Label htmlFor="coupon-active">Coupon is active</Label>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsCouponDialogOpen(false)}>Cancel</Button>
+                    <Button onClick={handleCreateCoupon} disabled={!couponCode} data-testid="button-create-coupon">Create Coupon</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            {/* Edit Coupon Dialog */}
+            <Dialog open={isCouponEditDialogOpen} onOpenChange={setIsCouponEditDialogOpen}>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Edit Coupon</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-coupon-code">Coupon Code</Label>
+                    <Input 
+                      id="edit-coupon-code" 
+                      value={editCouponCode} 
+                      onChange={(e) => setEditCouponCode(e.target.value.toUpperCase())}
+                      data-testid="input-edit-coupon-code"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-coupon-description">Description</Label>
+                    <Textarea 
+                      id="edit-coupon-description" 
+                      value={editCouponDescription} 
+                      onChange={(e) => setEditCouponDescription(e.target.value)}
+                      data-testid="input-edit-coupon-description"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label>Coupon Type</Label>
+                      <Select value={editCouponType} onValueChange={setEditCouponType}>
+                        <SelectTrigger data-testid="select-edit-coupon-type">
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="free_credits">Free Credits</SelectItem>
+                          <SelectItem value="first_site_free">First Site Free</SelectItem>
+                          <SelectItem value="percentage_off">Percentage Off</SelectItem>
+                          <SelectItem value="fixed_amount_off">Fixed Amount Off</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="edit-coupon-value">Value</Label>
+                      <Input 
+                        id="edit-coupon-value" 
+                        type="number" 
+                        value={editCouponValue} 
+                        onChange={(e) => setEditCouponValue(parseInt(e.target.value) || 0)}
+                        min={1}
+                        data-testid="input-edit-coupon-value"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="edit-coupon-max-uses">Max Uses</Label>
+                      <Input 
+                        id="edit-coupon-max-uses" 
+                        type="number" 
+                        value={editCouponMaxUses ?? ""} 
+                        onChange={(e) => setEditCouponMaxUses(e.target.value ? parseInt(e.target.value) : null)}
+                        placeholder="Unlimited" 
+                        min={1}
+                        data-testid="input-edit-coupon-max-uses"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="edit-coupon-expires">Expires On</Label>
+                      <Input 
+                        id="edit-coupon-expires" 
+                        type="date" 
+                        value={editCouponExpiresAt} 
+                        onChange={(e) => setEditCouponExpiresAt(e.target.value)}
+                        data-testid="input-edit-coupon-expires"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch 
+                      id="edit-coupon-active" 
+                      checked={editCouponIsActive} 
+                      onCheckedChange={setEditCouponIsActive}
+                      data-testid="switch-edit-coupon-active"
+                    />
+                    <Label htmlFor="edit-coupon-active">Coupon is active</Label>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsCouponEditDialogOpen(false)}>Cancel</Button>
+                  <Button onClick={handleSaveCouponEdit} disabled={!editCouponCode} data-testid="button-save-coupon">Save Changes</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* Coupons Grid */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {coupons.length === 0 ? (
+                <Card className="col-span-full p-8 text-center">
+                  <Ticket className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                  <h3 className="font-semibold mb-2">No Coupons Yet</h3>
+                  <p className="text-muted-foreground text-sm">Create your first coupon to get started.</p>
+                </Card>
+              ) : (
+                coupons.map((coupon) => (
+                  <Card key={coupon.id} className="overflow-hidden" data-testid={`card-coupon-${coupon.id}`}>
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Gift className="h-5 w-5 text-primary" />
+                          <CardTitle className="text-lg font-mono">{coupon.code}</CardTitle>
+                        </div>
+                        <Badge variant={coupon.isActive === 'true' ? 'default' : 'secondary'}>
+                          {coupon.isActive === 'true' ? 'Active' : 'Inactive'}
+                        </Badge>
+                      </div>
+                      <CardDescription>{coupon.description || 'No description'}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-2">
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-center gap-2">
+                          <Ticket className="h-4 w-4 text-muted-foreground" />
+                          <span>{getCouponTypeLabel(coupon.type)}</span>
+                          <span className="font-semibold">
+                            {coupon.type === 'free_credits' ? `${coupon.value} credits` :
+                             coupon.type === 'first_site_free' ? '1 free site' :
+                             coupon.type === 'percentage_off' ? `${coupon.value}% off` :
+                             `$${(coupon.value / 100).toFixed(2)} off`}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Hash className="h-4 w-4 text-muted-foreground" />
+                          <span>Uses: {coupon.usedCount}{coupon.maxUses ? ` / ${coupon.maxUses}` : ' (unlimited)'}</span>
+                        </div>
+                        {coupon.expiresAt && (
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-muted-foreground" />
+                            <span>Expires: {format(new Date(coupon.expiresAt), 'MMM d, yyyy')}</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 mt-4 pt-4 border-t">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="gap-1"
+                          onClick={() => handleEditCoupon(coupon)}
+                          data-testid={`button-edit-coupon-${coupon.id}`}
+                        >
+                          <Pencil className="h-3 w-3" />
+                          Edit
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="gap-1 text-destructive hover:text-destructive"
+                          onClick={() => handleDeleteCoupon(coupon.id)}
+                          data-testid={`button-delete-coupon-${coupon.id}`}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                          Delete
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
+          </TabsContent>
+
+          {/* Users Tab */}
+          <TabsContent value="users">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+              <div>
+                <h2 className="text-xl font-bold text-secondary">User Management</h2>
+                <p className="text-muted-foreground">View all users and manage their credits.</p>
+              </div>
+            </div>
+
+            {/* Edit User Credits Dialog */}
+            <Dialog open={isUserCreditsDialogOpen} onOpenChange={setIsUserCreditsDialogOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Adjust User Credits</DialogTitle>
+                </DialogHeader>
+                <div className="py-4">
+                  {editingUser && (
+                    <div className="space-y-4">
+                      <div className="p-4 bg-muted rounded-lg">
+                        <p className="font-medium">{editingUser.name || editingUser.username || 'Unknown User'}</p>
+                        <p className="text-sm text-muted-foreground">{editingUser.email}</p>
+                        <p className="text-sm text-muted-foreground">Current credits: {editingUser.credits}</p>
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="new-credits">New Credit Amount</Label>
+                        <Input 
+                          id="new-credits" 
+                          type="number" 
+                          value={newCreditsAmount} 
+                          onChange={(e) => setNewCreditsAmount(parseInt(e.target.value) || 0)}
+                          min={0}
+                          data-testid="input-new-credits"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          {newCreditsAmount > editingUser.credits 
+                            ? `Adding ${newCreditsAmount - editingUser.credits} credits` 
+                            : newCreditsAmount < editingUser.credits 
+                              ? `Removing ${editingUser.credits - newCreditsAmount} credits`
+                              : 'No change'}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsUserCreditsDialogOpen(false)}>Cancel</Button>
+                  <Button onClick={handleSaveUserCredits} data-testid="button-save-credits">Save Credits</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* Users Table */}
+            <Card>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-muted/50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">User</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Email</th>
+                        <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">Credits</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Joined</th>
+                        <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {users.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
+                            No users found
+                          </td>
+                        </tr>
+                      ) : (
+                        users.map((user) => (
+                          <tr key={user.id} className="hover:bg-muted/25" data-testid={`row-user-${user.id}`}>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-3">
+                                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                                  {user.profileImageUrl ? (
+                                    <img src={user.profileImageUrl} alt="" className="h-10 w-10 rounded-full object-cover" />
+                                  ) : (
+                                    <Users className="h-5 w-5 text-primary" />
+                                  )}
+                                </div>
+                                <div>
+                                  <p className="font-medium">{user.name || 'No name'}</p>
+                                  <p className="text-xs text-muted-foreground">@{user.username}</p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-sm">{user.email || '-'}</td>
+                            <td className="px-4 py-3 text-center">
+                              <Badge variant={user.credits > 0 ? 'default' : 'secondary'} className="gap-1">
+                                <CreditCard className="h-3 w-3" />
+                                {user.credits}
+                              </Badge>
+                            </td>
+                            <td className="px-4 py-3 text-sm text-muted-foreground">
+                              {user.createdAt ? format(new Date(user.createdAt), 'MMM d, yyyy') : '-'}
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="gap-1"
+                                onClick={() => handleEditUserCredits(user)}
+                                data-testid={`button-edit-credits-${user.id}`}
+                              >
+                                <CreditCard className="h-3 w-3" />
+                                Adjust Credits
+                              </Button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </main>

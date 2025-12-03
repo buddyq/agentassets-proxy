@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { User, Site, Theme, Layout, Lead } from '@shared/schema';
+import type { User, Site, Theme, Layout, Lead, Coupon } from '@shared/schema';
 
 const API_BASE = '/api';
 
@@ -394,5 +394,126 @@ export function useSiteLeads(siteId: string) {
       return res.json() as Promise<Lead[]>;
     },
     enabled: !!siteId
+  });
+}
+
+// ========= Admin API Hooks =========
+
+// Admin Coupons
+export function useAdminCoupons() {
+  return useQuery({
+    queryKey: ['admin', 'coupons'],
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE}/admin/coupons`);
+      if (!res.ok) throw new Error('Failed to fetch coupons');
+      return res.json() as Promise<Coupon[]>;
+    }
+  });
+}
+
+export function useCreateCoupon() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (coupon: Omit<Coupon, 'id' | 'createdAt' | 'usedCount'>) => {
+      const res = await fetch(`${API_BASE}/admin/coupons`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(coupon)
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to create coupon');
+      }
+      return res.json() as Promise<Coupon>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'coupons'] });
+    }
+  });
+}
+
+export function useUpdateCoupon() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<Coupon> }) => {
+      const res = await fetch(`${API_BASE}/admin/coupons/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to update coupon');
+      }
+      return res.json() as Promise<Coupon>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'coupons'] });
+    }
+  });
+}
+
+export function useDeleteCoupon() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`${API_BASE}/admin/coupons/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete coupon');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'coupons'] });
+    }
+  });
+}
+
+// Admin Users
+export function useAdminUsers() {
+  return useQuery({
+    queryKey: ['admin', 'users'],
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE}/admin/users`);
+      if (!res.ok) throw new Error('Failed to fetch users');
+      return res.json() as Promise<Omit<User, 'password'>[]>;
+    }
+  });
+}
+
+export function useAdminUpdateUserCredits() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, credits }: { id: string; credits: number }) => {
+      const res = await fetch(`${API_BASE}/admin/users/${id}/credits`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credits })
+      });
+      if (!res.ok) throw new Error('Failed to update user credits');
+      return res.json() as Promise<Omit<User, 'password'>>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+    }
+  });
+}
+
+// User coupon redemption
+export function useRedeemCoupon() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (code: string) => {
+      const res = await fetch(`${API_BASE}/coupons/redeem`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code })
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to redeem coupon');
+      }
+      return res.json() as Promise<{ success: boolean; message: string; credits: number }>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+    }
   });
 }

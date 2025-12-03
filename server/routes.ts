@@ -499,11 +499,7 @@ export async function registerRoutes(
   app.get("/api/admin/users", async (req, res) => {
     try {
       const users = await storage.getAllUsers();
-      // Remove password from response
-      const safeUsers = users.map(user => {
-        const { password, ...safeUser } = user;
-        return safeUser;
-      });
+      const safeUsers = users.map(({ password: _, ...safeUser }) => safeUser);
       res.json(safeUsers);
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -515,11 +511,11 @@ export async function registerRoutes(
   app.patch("/api/admin/users/:id/credits", async (req, res) => {
     try {
       const { credits } = req.body;
-      if (typeof credits !== 'number') {
-        return res.status(400).json({ error: "Credits must be a number" });
+      if (typeof credits !== 'number' || credits < 0) {
+        return res.status(400).json({ error: "Credits must be a non-negative number" });
       }
       const user = await storage.updateUserCredits(req.params.id, credits);
-      const { password, ...safeUser } = user;
+      const { password: _, ...safeUser } = user;
       res.json(safeUser);
     } catch (error) {
       console.error("Error updating user credits:", error);
