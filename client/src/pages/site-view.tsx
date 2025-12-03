@@ -1284,9 +1284,9 @@ function ModernContact({ site, theme, agentInfo }: { site: Site; theme?: Theme; 
         </p>
         
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          <div className="grid md:grid-cols-2">
+          <div className="flex flex-col md:flex-row">
             {/* Left Column - Contact Form */}
-            <div className="p-8 md:p-12">
+            <div className="flex-1 p-8 md:p-12 md:border-r" style={{ borderColor: primaryColor + '30' }}>
               <h3 
                 className="text-xl font-semibold mb-6"
                 style={{ fontFamily: 'var(--font-heading)', color: 'var(--theme-text)' }}
@@ -1379,13 +1379,7 @@ function ModernContact({ site, theme, agentInfo }: { site: Site; theme?: Theme; 
               </form>
             </div>
 
-            {/* Separator - vertical line on desktop, horizontal on mobile */}
-            <div className="hidden md:flex items-stretch">
-              <div 
-                className="w-px my-12"
-                style={{ backgroundColor: primaryColor + '30' }}
-              />
-            </div>
+            {/* Mobile Separator */}
             <div className="md:hidden px-8">
               <div 
                 className="h-px w-full"
@@ -1394,7 +1388,7 @@ function ModernContact({ site, theme, agentInfo }: { site: Site; theme?: Theme; 
             </div>
 
             {/* Right Column - Agent Info */}
-            <div className="p-8 md:p-12 flex flex-col justify-center" style={{ backgroundColor: primaryColor + '05' }}>
+            <div className="flex-1 p-8 md:p-12 flex flex-col justify-center" style={{ backgroundColor: primaryColor + '05' }}>
               <div className="text-center md:text-left">
                 {/* Agent Photo */}
                 <div className="flex justify-center md:justify-start mb-6">
