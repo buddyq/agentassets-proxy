@@ -21,7 +21,7 @@ export function Navbar() {
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link href={user ? "/dashboard" : "/"} className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2">
           <img src={logoUrl} alt="AgentAssets" className="h-12 w-auto" />
         </Link>
 
