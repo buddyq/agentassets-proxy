@@ -16,12 +16,14 @@ import AdminDashboard from "@/pages/admin";
 import Credits from "@/pages/credits";
 import Profile from "@/pages/profile";
 import SiteView from "@/pages/site-view";
+import HowItWorks from "@/pages/how-it-works";
 
 function Router() {
   return (
     <Switch>
       {/* Public routes */}
       <Route path="/" component={Home} />
+      <Route path="/how-it-works" component={HowItWorks} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/site/:id" component={SiteView} />
       
