@@ -110,6 +110,12 @@ export type HeroSlide = {
   backgroundImage?: string;
 };
 
+// Document type for site documents
+export type SiteDocument = {
+  name: string;
+  url: string;
+};
+
 
 // Sites table
 export const sites = pgTable("sites", {
@@ -133,6 +139,7 @@ export const sites = pgTable("sites", {
   heroSlides: jsonb("hero_slides").$type<HeroSlide[]>().default([]),
   heroLogo: text("hero_logo"),
   videoUrl: text("video_url"),
+  documents: jsonb("documents").$type<SiteDocument[]>().default([]),
   layoutId: text("layout_id"),
   templateId: text("template_id"),
   themeId: text("theme_id").notNull(),
@@ -160,11 +167,17 @@ const heroSlideSchema = z.object({
   backgroundImage: z.string().optional(),
 });
 
+const documentSchema = z.object({
+  name: z.string().min(1).max(100),
+  url: z.string().min(1),
+});
+
 export const insertSiteSchema = createInsertSchema(sites).omit({ id: true, createdAt: true, updatedAt: true, expiresAt: true }).extend({
   templateId: z.string().nullable().optional(),
   customDetails: z.array(customDetailSchema).optional().default([]),
   heroSlides: z.array(heroSlideSchema).max(3).optional().default([]),
   heroLogo: z.string().nullable().optional(),
+  documents: z.array(documentSchema).optional().default([]),
   bedrooms: z.number().nullable().optional(),
   bathrooms: z.number().nullable().optional(),
   sqft: z.number().nullable().optional(),
