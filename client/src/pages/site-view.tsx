@@ -769,12 +769,13 @@ function ShoalwoodContact({ site, theme }: { site: Site; theme?: Theme }) {
 }
 
 // Modern Layout Components - Transparent nav that becomes solid on scroll, fade hero slider
-function ModernNavigation({ site, theme, hasPhotos, hasVideo, effectiveHeroLogo }: { 
+function ModernNavigation({ site, theme, hasPhotos, hasVideo, effectiveHeroLogo, effectiveLogo }: { 
   site: Site; 
   theme?: Theme; 
   hasPhotos: boolean; 
   hasVideo: boolean; 
   effectiveHeroLogo?: string | null;
+  effectiveLogo?: string | null;
 }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -823,19 +824,34 @@ function ModernNavigation({ site, theme, hasPhotos, hasVideo, effectiveHeroLogo 
         style={isScrolled ? { borderBottom: `2px solid ${theme?.colors?.primary || '#558B73'}` } : undefined}
       >
         <div className="container mx-auto px-6 flex items-center justify-between">
-          {/* Logo */}
-          <div className="flex items-center">
-            {effectiveHeroLogo ? (
+          {/* Logo - switches between hero logo (when on hero) and regular logo (when scrolled) */}
+          <div className="flex items-center relative" style={{ height: isScrolled ? '48px' : '70px' }}>
+            {/* Hero logo - shown when NOT scrolled */}
+            {effectiveHeroLogo && (
               <img 
                 src={effectiveHeroLogo} 
                 alt="Logo" 
-                className={`w-auto object-contain transition-all duration-500 ${
-                  isScrolled ? '' : 'brightness-0 invert drop-shadow-lg'
+                className={`w-auto object-contain transition-all duration-500 absolute left-0 brightness-0 invert drop-shadow-lg ${
+                  isScrolled ? 'opacity-0' : 'opacity-100'
                 }`}
-                style={{ height: isScrolled ? '48px' : '70px' }}
+                style={{ height: '70px' }}
+                data-testid="img-modern-nav-hero-logo"
+              />
+            )}
+            {/* Regular logo - shown when scrolled */}
+            {effectiveLogo && (
+              <img 
+                src={effectiveLogo} 
+                alt="Logo" 
+                className={`w-auto object-contain transition-all duration-500 absolute left-0 ${
+                  isScrolled ? 'opacity-100' : 'opacity-0'
+                }`}
+                style={{ height: '48px' }}
                 data-testid="img-modern-nav-logo"
               />
-            ) : (
+            )}
+            {/* Fallback text if no logos */}
+            {!effectiveHeroLogo && !effectiveLogo && (
               <span 
                 className={`font-semibold transition-all duration-500 ${
                   isScrolled ? 'text-xl md:text-2xl' : 'text-2xl md:text-3xl text-white drop-shadow-lg'
@@ -1645,6 +1661,7 @@ export default function SiteView() {
           hasPhotos={!!hasPhotos} 
           hasVideo={hasVideo} 
           effectiveHeroLogo={effectiveHeroLogo}
+          effectiveLogo={effectiveLogo}
         />
         <ModernHero 
           site={site} 
