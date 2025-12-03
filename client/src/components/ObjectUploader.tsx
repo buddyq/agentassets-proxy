@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import type { ReactNode } from "react";
-import { Upload, X, Image } from "lucide-react";
+import { Upload, X, Image, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface ObjectUploaderProps {
   maxNumberOfFiles?: number;
@@ -218,25 +219,26 @@ export function ObjectUploader({
         onChange={handleFileSelect}
         className="hidden"
       />
-      <button 
+      <Button 
         onClick={handleButtonClick} 
-        className={`${buttonClassName} transition-all hover:bg-gray-100 hover:shadow-sm disabled:opacity-50`}
+        variant="outline"
+        className={buttonClassName}
         type="button"
         disabled={isUploading}
       >
         {isUploading ? (
-          <div className="flex items-center gap-2">
-            <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" />
             <span>
               {uploadProgress 
                 ? `Uploading ${uploadProgress.current}/${uploadProgress.total}...` 
                 : 'Uploading...'}
             </span>
-          </div>
+          </>
         ) : (
           children
         )}
-      </button>
+      </Button>
       {error && (
         <p className="text-sm text-destructive mt-2">{error}</p>
       )}
