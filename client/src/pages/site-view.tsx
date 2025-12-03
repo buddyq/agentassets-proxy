@@ -825,33 +825,28 @@ function ModernNavigation({ site, theme, hasPhotos, hasVideo, effectiveHeroLogo,
       >
         <div className="container mx-auto px-6 flex items-center justify-between">
           {/* Logo - switches between hero logo (when on hero) and regular logo (when scrolled) */}
-          <div className="flex items-center relative" style={{ height: isScrolled ? '48px' : '70px' }}>
-            {/* Hero logo - shown when NOT scrolled */}
-            {effectiveHeroLogo && (
+          <div className="flex items-center">
+            {/* Show hero logo when NOT scrolled, regular logo when scrolled */}
+            {!isScrolled && effectiveHeroLogo && (
               <img 
                 src={effectiveHeroLogo} 
                 alt="Logo" 
-                className={`w-auto object-contain transition-all duration-500 absolute left-0 brightness-0 invert drop-shadow-lg ${
-                  isScrolled ? 'opacity-0' : 'opacity-100'
-                }`}
+                className="w-auto object-contain transition-all duration-500 brightness-0 invert drop-shadow-lg"
                 style={{ height: '70px' }}
                 data-testid="img-modern-nav-hero-logo"
               />
             )}
-            {/* Regular logo - shown when scrolled */}
-            {effectiveLogo && (
+            {isScrolled && effectiveLogo && (
               <img 
                 src={effectiveLogo} 
                 alt="Logo" 
-                className={`w-auto object-contain transition-all duration-500 absolute left-0 ${
-                  isScrolled ? 'opacity-100' : 'opacity-0'
-                }`}
+                className="w-auto object-contain transition-all duration-500"
                 style={{ height: '48px' }}
                 data-testid="img-modern-nav-logo"
               />
             )}
-            {/* Fallback text if no logos */}
-            {!effectiveHeroLogo && !effectiveLogo && (
+            {/* Fallback text if no logos available for current state */}
+            {((!isScrolled && !effectiveHeroLogo) || (isScrolled && !effectiveLogo)) && (
               <span 
                 className={`font-semibold transition-all duration-500 ${
                   isScrolled ? 'text-xl md:text-2xl' : 'text-2xl md:text-3xl text-white drop-shadow-lg'
