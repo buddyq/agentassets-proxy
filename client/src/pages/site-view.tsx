@@ -2713,7 +2713,7 @@ function MagazineContact({ site, theme, agentInfo }: { site: Site; theme?: Theme
   };
 
   return (
-    <section id="contact" className="py-20 px-6 bg-white" style={{ scrollMarginTop: '100px' }}>
+    <section id="contact" className="py-20 px-6" style={{ backgroundColor: theme?.colors?.background || '#F8FAF9', scrollMarginTop: '100px' }}>
       <div className="container mx-auto max-w-5xl">
         <div className="grid md:grid-cols-2 gap-12">
           <div>
@@ -3408,8 +3408,29 @@ export default function SiteView() {
           <MagazineDocuments site={site} theme={theme} />
         )}
         
-        <section id="map" className="py-16 px-6" style={{ backgroundColor: theme?.colors?.background || '#F8FAF9', scrollMarginTop: '100px' }}>
-          <div className="container mx-auto max-w-4xl">
+        <section 
+          id="map" 
+          className="py-16 px-6 relative overflow-hidden" 
+          style={{ 
+            backgroundColor: '#f5f5f5', 
+            scrollMarginTop: '100px' 
+          }}
+        >
+          {/* Subtle gradient pattern */}
+          <svg 
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            style={{ opacity: 0.4 }}
+            preserveAspectRatio="none"
+          >
+            <defs>
+              <linearGradient id="mapGradient" x1="0%" y1="100%" x2="100%" y2="0%">
+                <stop offset="0%" style={{ stopColor: theme?.colors?.primary || '#558B73', stopOpacity: 0.08 }} />
+                <stop offset="100%" style={{ stopColor: theme?.colors?.primary || '#558B73', stopOpacity: 0 }} />
+              </linearGradient>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#mapGradient)" />
+          </svg>
+          <div className="container mx-auto max-w-4xl relative z-10">
             <h2 
               className="text-3xl md:text-4xl mb-10 text-center"
               style={{ fontFamily: '"Shippori Mincho B1", serif', fontWeight: '400', color: theme?.colors?.text || '#2C3E50' }}
