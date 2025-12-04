@@ -1792,10 +1792,10 @@ function MagazineNavigation({ site, theme, effectiveLogo }: { site: Site; theme?
             <a
               key={index}
               href={item.href}
-              className={`text-sm uppercase tracking-widest transition-colors hover:opacity-70 ${
+              className={`transition-colors hover:opacity-70 ${
                 scrolled ? 'text-gray-800' : 'text-white'
               }`}
-              style={{ fontFamily: 'var(--font-body)', letterSpacing: '0.15em' }}
+              style={{ fontFamily: '"stevie-sans", sans-serif', fontSize: '16px', textTransform: 'capitalize' }}
               onClick={(e) => {
                 e.preventDefault();
                 document.querySelector(item.href)?.scrollIntoView({ behavior: 'smooth' });
