@@ -1908,6 +1908,7 @@ function MagazineFactsBar({ site, theme }: { site: Site; theme?: Theme }) {
       className="py-8 md:py-12"
       style={{ backgroundColor: primaryColor }}
     >
+      <link href="https://fonts.googleapis.com/css2?family=Dynalight&display=swap" rel="stylesheet" />
       <div className="container mx-auto px-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           {/* Left side - Offered At, Price, Compensation */}
@@ -1920,7 +1921,7 @@ function MagazineFactsBar({ site, theme }: { site: Site; theme?: Theme }) {
             </p>
             <p 
               className="text-3xl md:text-4xl mb-1"
-              style={{ fontFamily: '"stevie-sans", sans-serif', fontWeight: '300' }}
+              style={{ fontFamily: '"Dynalight", cursive', fontWeight: '400' }}
             >
               {site.price || '$0'}
             </p>
@@ -1934,26 +1935,27 @@ function MagazineFactsBar({ site, theme }: { site: Site; theme?: Theme }) {
             )}
           </div>
           
-          {/* Right side - Property stats with icons */}
-          <div className="flex flex-wrap items-center gap-6 md:gap-8 text-white">
+          {/* Right side - Property stats with icons above */}
+          <div className="flex flex-wrap items-end gap-8 md:gap-10 text-white">
             {site.bedrooms && (
-              <div className="flex items-center gap-2">
-                <Bed className="h-5 w-5 opacity-80" />
+              <div className="flex flex-col items-center">
+                <Bed className="h-8 w-8 mb-2 opacity-90" />
                 <span style={{ fontFamily: '"stevie-sans", sans-serif', fontWeight: '300', fontSize: '16px' }}>
                   {site.bedrooms} Beds
                 </span>
               </div>
             )}
             {site.bathrooms && (
-              <div className="flex items-center gap-2">
-                <Bath className="h-5 w-5 opacity-80" />
+              <div className="flex flex-col items-center">
+                <Bath className="h-8 w-8 mb-2 opacity-90" />
                 <span style={{ fontFamily: '"stevie-sans", sans-serif', fontWeight: '300', fontSize: '16px' }}>
                   {site.bathrooms} Baths
                 </span>
               </div>
             )}
             {site.sqft && (
-              <div className="flex flex-col">
+              <div className="flex flex-col items-center">
+                <Square className="h-8 w-8 mb-2 opacity-90" />
                 <span style={{ fontFamily: '"stevie-sans", sans-serif', fontWeight: '300', fontSize: '16px' }}>
                   {site.sqft.toLocaleString()} sqft
                 </span>
@@ -1966,7 +1968,8 @@ function MagazineFactsBar({ site, theme }: { site: Site; theme?: Theme }) {
               </div>
             )}
             {site.lotSize && (
-              <div className="flex flex-col">
+              <div className="flex flex-col items-center">
+                <Building className="h-8 w-8 mb-2 opacity-90" />
                 <span style={{ fontFamily: '"stevie-sans", sans-serif', fontWeight: '300', fontSize: '16px' }}>
                   {site.lotSize}
                 </span>
