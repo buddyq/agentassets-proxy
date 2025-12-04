@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { MapPin, Play, Home, Info, Video, Image, X, ChevronLeft, ChevronRight, Bed, Bath, Square, Calendar, Building, Phone, Mail, User, Instagram, Facebook, Linkedin, Youtube, Twitter, FileText, Download, Package } from "lucide-react";
+import { MapPin, Play, Home, Info, Video, Image, X, ChevronLeft, ChevronRight, ChevronDown, Bed, Bath, Square, Calendar, Building, Phone, Mail, User, Instagram, Facebook, Linkedin, Youtube, Twitter, FileText, Download, Package } from "lucide-react";
 import heroImage from "@assets/generated_images/luxury_living_room_interior_for_hero_background.png";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import useEmblaCarousel from "embla-carousel-react";
@@ -1756,6 +1756,17 @@ function MagazineNavigation({ site, theme, effectiveLogo }: { site: Site; theme?
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const hasPhotos = site.photos && site.photos.length > 0;
+  const hasDocuments = site.documents && site.documents.length > 0;
+
+  const navItems = [
+    { label: 'Home', href: '#home' },
+    { label: 'Gallery', href: '#gallery', show: hasPhotos },
+    { label: 'About', href: '#about', show: !!site.description },
+    { label: 'Documents', href: '#documents', show: hasDocuments },
+    { label: 'Contact', href: '#contact' },
+  ].filter(item => item.show !== false);
+
   return (
     <nav 
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -1767,25 +1778,34 @@ function MagazineNavigation({ site, theme, effectiveLogo }: { site: Site; theme?
           <img 
             src={effectiveLogo ?? theme?.logoUrl ?? ''} 
             alt="Logo" 
-            className={`h-10 w-auto object-contain transition-all duration-300 ${
+            className={`w-auto object-contain transition-all duration-300 ${
               scrolled ? '' : 'brightness-0 invert'
             }`}
+            style={{ height: '80px' }}
             data-testid="img-magazine-logo"
           />
         )}
         {!effectiveLogo && !theme?.logoUrl && <div />}
-        <Button
-          className={`transition-all duration-300 px-6 ${
-            scrolled 
-              ? 'text-white' 
-              : 'bg-white/20 text-white hover:bg-white/30 border border-white/50'
-          }`}
-          style={scrolled ? { backgroundColor: theme?.colors?.primary || '#558B73' } : undefined}
-          data-testid="button-magazine-contact"
-          onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
-        >
-          Schedule a Showing
-        </Button>
+        
+        <div className="hidden md:flex items-center gap-8">
+          {navItems.map((item, index) => (
+            <a
+              key={index}
+              href={item.href}
+              className={`text-sm uppercase tracking-widest transition-colors hover:opacity-70 ${
+                scrolled ? 'text-gray-800' : 'text-white'
+              }`}
+              style={{ fontFamily: 'var(--font-body)', letterSpacing: '0.15em' }}
+              onClick={(e) => {
+                e.preventDefault();
+                document.querySelector(item.href)?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              data-testid={`nav-${item.label.toLowerCase()}`}
+            >
+              {item.label}
+            </a>
+          ))}
+        </div>
       </div>
     </nav>
   );
@@ -1798,55 +1818,49 @@ function MagazineHero({ site, theme, heroImage }: { site: Site; theme?: Theme; h
 
   return (
     <section id="home" className="relative h-screen w-full overflow-hidden">
+      <style>{`
+        @import url('https://use.typekit.net/stevie-sans.css');
+        .magazine-hero-text {
+          font-family: "stevie-sans", sans-serif;
+        }
+        @keyframes scroll-arrow {
+          0%, 100% { transform: translateY(0); opacity: 1; }
+          50% { transform: translateY(8px); opacity: 0.5; }
+        }
+      `}</style>
+      
       <div 
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: `url(${backgroundImage})` }}
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/30" />
+      
+      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/70" />
       
       <div className="absolute inset-0 flex flex-col justify-end text-white pb-24 px-8">
         <div className="container mx-auto max-w-6xl">
-          <p 
-            className="text-lg tracking-widest uppercase mb-4 opacity-90"
-            style={{ fontFamily: 'var(--font-body)', letterSpacing: '0.2em' }}
-          >
-            {site.buyerAgentComp || 'Offered At'}
-          </p>
           <h1 
-            className="text-5xl md:text-7xl mb-6"
+            className="text-4xl md:text-6xl lg:text-7xl mb-4 magazine-hero-text"
             style={{ 
-              fontFamily: 'var(--font-heading)', 
-              fontWeight: '400',
+              fontWeight: '300',
               letterSpacing: '-0.02em'
             }}
           >
-            {site.price}
-          </h1>
-          <h2 
-            className="text-3xl md:text-4xl mb-8"
-            style={{ 
-              fontFamily: 'var(--font-heading)', 
-              fontWeight: '400',
-              opacity: 0.95
-            }}
-          >
             {site.title || site.address}
-          </h2>
-          
-          <Button
-            size="lg"
-            className="text-lg px-10 py-6 rounded-none bg-transparent border-2 border-white text-white hover:bg-white hover:text-black transition-all"
-            onClick={() => document.getElementById('facts')?.scrollIntoView({ behavior: 'smooth' })}
-            data-testid="button-magazine-explore"
-          >
-            Explore Property
-          </Button>
+          </h1>
         </div>
       </div>
       
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-        <ChevronLeft className="h-8 w-8 text-white rotate-[-90deg] opacity-70" />
-      </div>
+      <button
+        onClick={() => document.getElementById('facts')?.scrollIntoView({ behavior: 'smooth' })}
+        className="absolute bottom-8 right-8 w-14 h-14 rounded-full border-2 border-white/70 flex items-center justify-center hover:bg-white/10 transition-colors cursor-pointer"
+        data-testid="button-magazine-scroll"
+        aria-label="Scroll down"
+      >
+        <ChevronDown 
+          className="h-6 w-6 text-white" 
+          style={{ animation: 'scroll-arrow 2s ease-in-out infinite' }}
+        />
+      </button>
     </section>
   );
 }
