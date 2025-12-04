@@ -250,7 +250,7 @@ export class DatabaseStorage implements IStorage {
 
   async getEnabledPresetLayouts(): Promise<Layout[]> {
     return await db.select().from(layouts).where(
-      and(eq(layouts.type, 'preset'), eq(layouts.enabled, 'true'))
+      and(eq(layouts.type, 'preset'), eq(layouts.enabled, true))
     );
   }
 

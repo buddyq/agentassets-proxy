@@ -56,7 +56,12 @@ export default function CreateSite() {
   const [, setLocation] = useLocation();
   const { user, isLoading: isLoadingUser } = useAuth();
   const { data: themes = [] } = useThemes();
-  const { data: layouts = [] } = useLayouts({ preset: true });
+  
+  // Check for admin mode via URL query param (allows testing disabled layouts)
+  const isAdminMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('admin') === 'true';
+  
+  // Only show enabled layouts to regular users, show all to admin
+  const { data: layouts = [] } = useLayouts({ preset: true, enabledOnly: !isAdminMode });
   const createSiteMutation = useCreateSite();
   const updateCreditsMutation = useUpdateCredits();
   const { toast } = useToast();

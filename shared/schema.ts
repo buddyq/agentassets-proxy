@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, jsonb, index } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, jsonb, index, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -55,7 +55,7 @@ export const layouts = pgTable("layouts", {
   description: text("description"),
   thumbnailUrl: text("thumbnail_url"),
   type: text("type").notNull().default('preset'),
-  enabled: text("enabled").notNull().default('true'),
+  enabled: boolean("enabled").notNull().default(true),
   structure: jsonb("structure").notNull().$type<{
     heroStyle: 'fullscreen' | 'split' | 'minimal' | 'slider';
     galleryStyle: 'grid' | 'masonry' | 'carousel' | 'lightbox';

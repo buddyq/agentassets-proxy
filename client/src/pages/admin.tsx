@@ -189,6 +189,7 @@ export default function AdminDashboard() {
         name: newLayoutName,
         description: newLayoutDescription || null,
         type: 'preset',
+        enabled: true,
         thumbnailUrl: null,
         structure: {
           heroStyle: newLayoutHeroStyle,
@@ -966,7 +967,7 @@ export default function AdminDashboard() {
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {layouts.map((layout) => (
-                <Card key={layout.id} className={`overflow-hidden border-2 ${layout.enabled === 'true' ? 'border-secondary/20' : 'border-muted/40 opacity-60'}`} data-testid={`card-layout-${layout.id}`}>
+                <Card key={layout.id} className={`overflow-hidden border-2 ${layout.enabled ? 'border-secondary/20' : 'border-muted/40 opacity-60'}`} data-testid={`card-layout-${layout.id}`}>
                   <CardHeader className="pb-2 bg-secondary/5">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-base flex items-center gap-2">
@@ -1011,11 +1012,11 @@ export default function AdminDashboard() {
                     <div className="flex items-center justify-between mt-4 pt-3 border-t">
                       <div className="flex items-center gap-2">
                         <Switch
-                          checked={layout.enabled === 'true'}
+                          checked={layout.enabled === true}
                           onCheckedChange={(checked) => {
                             updateLayoutMutation.mutate({
                               id: layout.id,
-                              updates: { enabled: checked ? 'true' : 'false' }
+                              updates: { enabled: checked }
                             }, {
                               onSuccess: () => {
                                 toast({
@@ -1030,7 +1031,7 @@ export default function AdminDashboard() {
                           data-testid={`switch-layout-enabled-${layout.id}`}
                         />
                         <Label className="text-sm text-muted-foreground">
-                          {layout.enabled === 'true' ? 'Visible to users' : 'Hidden from users'}
+                          {layout.enabled ? 'Visible to users' : 'Hidden from users'}
                         </Label>
                       </div>
                     </div>
