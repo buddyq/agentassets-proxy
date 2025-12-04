@@ -13,6 +13,8 @@ import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, CreditCard, Layo
 import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ObjectUploader } from "@/components/ObjectUploader";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import type { CustomDetail, HeroSlide, OpenHouseEvent } from "@shared/schema";
 
 const ALL_STEPS = [
@@ -82,6 +84,10 @@ export default function CreateSite() {
   const [photos, setPhotos] = useState<string[]>([]);
   const [heroPhotos, setHeroPhotos] = useState<string[]>([]);
   const [draggedPhoto, setDraggedPhoto] = useState<number | null>(null);
+  
+  // Image picker sheet state
+  const [imagePickerOpen, setImagePickerOpen] = useState(false);
+  const [imagePickerTarget, setImagePickerTarget] = useState<'contentGridImage1' | 'contentGridImage2' | null>(null);
   
   const addCustomDetail = () => {
     setCustomDetails([...customDetails, { label: '', value: '' }]);
@@ -1225,91 +1231,170 @@ export default function CreateSite() {
                             </p>
                           </div>
                           
-                          <div className="grid md:grid-cols-2 gap-6">
+                          <div className="grid md:grid-cols-2 gap-4">
                             {/* Grid Image 1 (Top Right) */}
-                            <div className="space-y-3">
+                            <div className="border rounded-lg p-4 space-y-3">
                               <Label className="text-sm font-medium">Top Right Image</Label>
-                              <div className="grid grid-cols-4 gap-2">
-                                {photos.map((photo, photoIndex) => (
-                                  <div
-                                    key={photoIndex}
-                                    className={`relative aspect-square cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
-                                      formData.contentGridImage1 === photo 
-                                        ? 'border-primary ring-2 ring-primary/20' 
-                                        : 'border-transparent hover:border-primary/50'
-                                    }`}
-                                    onClick={() => setFormData({...formData, contentGridImage1: photo})}
-                                    data-testid={`select-grid-image-1-${photoIndex}`}
-                                  >
+                              {formData.contentGridImage1 ? (
+                                <div className="space-y-3">
+                                  <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
                                     <img
-                                      src={photo}
-                                      alt={`Photo ${photoIndex + 1}`}
+                                      src={formData.contentGridImage1}
+                                      alt="Selected top right"
                                       className="w-full h-full object-cover"
                                     />
-                                    {formData.contentGridImage1 === photo && (
-                                      <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                                        <Check className="h-6 w-6 text-white drop-shadow-lg" />
-                                      </div>
-                                    )}
                                   </div>
-                                ))}
-                              </div>
-                              {formData.contentGridImage1 && (
+                                  <div className="flex gap-2">
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        setImagePickerTarget('contentGridImage1');
+                                        setImagePickerOpen(true);
+                                      }}
+                                      data-testid="button-change-grid-image-1"
+                                    >
+                                      Change
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => setFormData({...formData, contentGridImage1: ''})}
+                                      className="text-muted-foreground"
+                                      data-testid="button-clear-grid-image-1"
+                                    >
+                                      Clear
+                                    </Button>
+                                  </div>
+                                </div>
+                              ) : (
                                 <Button
                                   type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => setFormData({...formData, contentGridImage1: ''})}
-                                  className="text-muted-foreground"
+                                  variant="outline"
+                                  className="w-full h-24 border-dashed"
+                                  onClick={() => {
+                                    setImagePickerTarget('contentGridImage1');
+                                    setImagePickerOpen(true);
+                                  }}
+                                  data-testid="button-select-grid-image-1"
                                 >
-                                  Clear selection
+                                  <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                                    <Image className="h-6 w-6" />
+                                    <span>Select Image</span>
+                                  </div>
                                 </Button>
                               )}
                             </div>
 
                             {/* Grid Image 2 (Bottom Left) */}
-                            <div className="space-y-3">
+                            <div className="border rounded-lg p-4 space-y-3">
                               <Label className="text-sm font-medium">Bottom Left Image</Label>
-                              <div className="grid grid-cols-4 gap-2">
-                                {photos.map((photo, photoIndex) => (
-                                  <div
-                                    key={photoIndex}
-                                    className={`relative aspect-square cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
-                                      formData.contentGridImage2 === photo 
-                                        ? 'border-primary ring-2 ring-primary/20' 
-                                        : 'border-transparent hover:border-primary/50'
-                                    }`}
-                                    onClick={() => setFormData({...formData, contentGridImage2: photo})}
-                                    data-testid={`select-grid-image-2-${photoIndex}`}
-                                  >
+                              {formData.contentGridImage2 ? (
+                                <div className="space-y-3">
+                                  <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
                                     <img
-                                      src={photo}
-                                      alt={`Photo ${photoIndex + 1}`}
+                                      src={formData.contentGridImage2}
+                                      alt="Selected bottom left"
                                       className="w-full h-full object-cover"
                                     />
-                                    {formData.contentGridImage2 === photo && (
-                                      <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                                        <Check className="h-6 w-6 text-white drop-shadow-lg" />
-                                      </div>
-                                    )}
                                   </div>
-                                ))}
-                              </div>
-                              {formData.contentGridImage2 && (
+                                  <div className="flex gap-2">
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        setImagePickerTarget('contentGridImage2');
+                                        setImagePickerOpen(true);
+                                      }}
+                                      data-testid="button-change-grid-image-2"
+                                    >
+                                      Change
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => setFormData({...formData, contentGridImage2: ''})}
+                                      className="text-muted-foreground"
+                                      data-testid="button-clear-grid-image-2"
+                                    >
+                                      Clear
+                                    </Button>
+                                  </div>
+                                </div>
+                              ) : (
                                 <Button
                                   type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => setFormData({...formData, contentGridImage2: ''})}
-                                  className="text-muted-foreground"
+                                  variant="outline"
+                                  className="w-full h-24 border-dashed"
+                                  onClick={() => {
+                                    setImagePickerTarget('contentGridImage2');
+                                    setImagePickerOpen(true);
+                                  }}
+                                  data-testid="button-select-grid-image-2"
                                 >
-                                  Clear selection
+                                  <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                                    <Image className="h-6 w-6" />
+                                    <span>Select Image</span>
+                                  </div>
                                 </Button>
                               )}
                             </div>
                           </div>
                         </div>
                       )}
+
+                      {/* Image Picker Sheet */}
+                      <Sheet open={imagePickerOpen} onOpenChange={setImagePickerOpen}>
+                        <SheetContent side="right" className="w-full sm:max-w-md">
+                          <SheetHeader>
+                            <SheetTitle>
+                              Select {imagePickerTarget === 'contentGridImage1' ? 'Top Right' : 'Bottom Left'} Image
+                            </SheetTitle>
+                          </SheetHeader>
+                          <ScrollArea className="h-[calc(100vh-120px)] mt-6 pr-4">
+                            <div className="grid grid-cols-2 gap-3">
+                              {photos.map((photo, photoIndex) => {
+                                const isSelected = imagePickerTarget === 'contentGridImage1' 
+                                  ? formData.contentGridImage1 === photo
+                                  : formData.contentGridImage2 === photo;
+                                return (
+                                  <div
+                                    key={photoIndex}
+                                    className={`relative aspect-square cursor-pointer rounded-lg overflow-hidden border-2 transition-all hover:opacity-90 ${
+                                      isSelected 
+                                        ? 'border-primary ring-2 ring-primary/20' 
+                                        : 'border-transparent hover:border-primary/50'
+                                    }`}
+                                    onClick={() => {
+                                      if (imagePickerTarget) {
+                                        setFormData({...formData, [imagePickerTarget]: photo});
+                                        setImagePickerOpen(false);
+                                        setImagePickerTarget(null);
+                                      }
+                                    }}
+                                    data-testid={`picker-image-${photoIndex}`}
+                                  >
+                                    <img
+                                      src={photo}
+                                      alt={`Photo ${photoIndex + 1}`}
+                                      className="w-full h-full object-cover"
+                                    />
+                                    {isSelected && (
+                                      <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                                        <Check className="h-8 w-8 text-white drop-shadow-lg" />
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </ScrollArea>
+                        </SheetContent>
+                      </Sheet>
                     </div>
                   )}
                 </CardContent>
