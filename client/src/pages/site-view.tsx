@@ -2369,12 +2369,6 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
             <div className="grid md:grid-cols-[1fr_auto_1fr] gap-8">
               {/* Left Column - Property Details */}
               <div>
-                <h3 
-                  className="text-xl mb-6 font-medium"
-                  style={{ fontFamily: '"Shippori Mincho B1", serif' }}
-                >
-                  Property Details
-                </h3>
                 <div className="space-y-0">
                   {site.bedrooms && (
                     <div className="flex justify-between py-3 border-b border-gray-200">
@@ -2434,12 +2428,6 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
               
               {/* Right Column - Features Tag Cloud */}
               <div>
-                <h3 
-                  className="text-xl mb-6 font-medium"
-                  style={{ fontFamily: '"Shippori Mincho B1", serif' }}
-                >
-                  Features
-                </h3>
                 <div className="flex flex-wrap gap-3">
                   {features?.map((feature: string, index: number) => (
                     <div
