@@ -260,6 +260,7 @@ export default function CreateSite() {
         brochureUrl: formData.brochureUrl || null,
         contentGridImage1: formData.contentGridImage1 || null,
         contentGridImage2: formData.contentGridImage2 || null,
+        features: formData.features ? formData.features.split(',').map(f => f.trim()).filter(f => f) : [],
       },
       {
         onSuccess: () => {

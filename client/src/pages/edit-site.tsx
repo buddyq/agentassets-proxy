@@ -92,6 +92,7 @@ export default function EditSite() {
     brochureUrl: "",
     contentGridImage1: "",
     contentGridImage2: "",
+    features: "",
   });
 
   const [customDetails, setCustomDetails] = useState<CustomDetail[]>([]);
@@ -143,6 +144,7 @@ export default function EditSite() {
         brochureUrl: site.brochureUrl || "",
         contentGridImage1: (site as any).contentGridImage1 || "",
         contentGridImage2: (site as any).contentGridImage2 || "",
+        features: (site as any).features && Array.isArray(site.features) ? (site.features as string[]).join(', ') : "",
       });
       setCustomDetails(site.customDetails || []);
       setDocuments(site.documents || []);

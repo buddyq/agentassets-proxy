@@ -2089,36 +2089,6 @@ function MagazineMarqueeGallery({ photos }: { photos: string[] }) {
         }
       `}</style>
 
-      {/* Features Section */}
-      {hasFeatures && (
-        <section id="features" className="py-20 px-6 bg-gray-50">
-          <div className="container mx-auto max-w-5xl">
-            <h2 
-              className="text-3xl md:text-4xl mb-12 text-center"
-              style={{ fontFamily: 'var(--font-heading)' }}
-            >
-              Features & Amenities
-            </h2>
-            <div className="flex flex-wrap justify-center gap-4">
-              {features?.map((feature, index) => (
-                <div
-                  key={index}
-                  className="px-6 py-3 rounded-full border-2"
-                  style={{ 
-                    borderColor: primaryColor,
-                    color: primaryColor
-                  }}
-                  data-testid={`tag-feature-${index}`}
-                >
-                  <span style={{ fontFamily: 'var(--font-body)' }}>
-                    {feature}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
 
       {selectedIndex !== null && (
         <div 
@@ -2205,6 +2175,9 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
     ? site.description.slice(0, 700) + '...'
     : site.description;
   const needsReadMore = site.description && site.description.length > 700;
+  
+  const features = (site as any).features as string[] | undefined;
+  const hasFeatures = features && features.length > 0;
   
   const photos = site.photos || [];
   const rightImage = (site as any).contentGridImage1 || photos[1] || photos[0];
