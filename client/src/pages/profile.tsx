@@ -161,10 +161,9 @@ export default function Profile() {
                   <ObjectUploader 
                     onGetUploadParameters={getUploadUrl}
                     onComplete={handleProfileImageUpload}
+                    buttonClassName="bg-primary text-primary-foreground hover:bg-primary/90"
                   >
-                    <Button type="button" className="bg-primary text-primary-foreground hover:bg-primary/90">
-                      {formData.profileImageUrl ? "Change Photo" : "Upload Photo"}
-                    </Button>
+                    {formData.profileImageUrl ? "Change Photo" : "Upload Photo"}
                   </ObjectUploader>
                 </div>
               </div>
@@ -202,10 +201,9 @@ export default function Profile() {
                   <ObjectUploader 
                     onGetUploadParameters={getUploadUrl}
                     onComplete={handleLogoUpload}
+                    buttonClassName="bg-primary text-primary-foreground hover:bg-primary/90"
                   >
-                    <Button type="button" className="bg-primary text-primary-foreground hover:bg-primary/90">
-                      {formData.logo ? "Change Logo" : "Upload Logo"}
-                    </Button>
+                    {formData.logo ? "Change Logo" : "Upload Logo"}
                   </ObjectUploader>
                   <p className="text-xs text-muted-foreground mt-2">This logo will appear on all your property sites</p>
                 </div>
