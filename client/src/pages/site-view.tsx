@@ -320,7 +320,6 @@ function ShoalwoodNavigation({ site, theme, hasPhotos, hasVideo, effectiveLogo }
           {currentSection}
         </div>
       </div>
-
       {/* Slide-out menu panel */}
       {isMobileMenuOpen && (
         <div className="fixed inset-0 z-[100]" data-testid="mobile-menu-overlay">
@@ -390,7 +389,6 @@ function ShoalwoodNavigation({ site, theme, hasPhotos, hasVideo, effectiveLogo }
           </div>
         </div>
       )}
-
       <style>{`
         @keyframes slideIn {
           from { transform: translateX(-100%); }
@@ -2250,7 +2248,7 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
                 {hasDocuments && (
                   <a
                     href="#documents"
-                    className="inline-flex items-center gap-2 text-base hover:opacity-70 transition-opacity"
+                    className="inline-flex items-center gap-2 text-base hover:opacity-70 transition-opacity text-[#000000]"
                     style={{ fontFamily: '"stevie-sans", sans-serif', color: '#666' }}
                     onClick={(e) => {
                       e.preventDefault();
@@ -2356,7 +2354,6 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
           </div>
         </div>
       </div>
-
       {/* Features Section */}
       {hasFeatures && (
         <div className="mt-16 pt-16 border-t">
@@ -2385,7 +2382,6 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
           </div>
         </div>
       )}
-      
       {/* Description Modal */}
       {showDescriptionModal && (
         <div 
@@ -2420,7 +2416,6 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
           </div>
         </div>
       )}
-      
       {/* Open House Modal */}
       {showOpenHouseModal && hasOpenHouses && (
         <div 
