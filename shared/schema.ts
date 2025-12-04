@@ -154,6 +154,7 @@ export const sites = pgTable("sites", {
   brochureUrl: text("brochure_url"),
   contentGridImage1: text("content_grid_image_1"), // Image for grid position 2 (top right)
   contentGridImage2: text("content_grid_image_2"), // Image for grid position 3 (bottom left)
+  features: text("features").array().default([]), // Feature tags like "Pool", "Ocean Views", etc.
   layoutId: text("layout_id"),
   templateId: text("template_id"),
   themeId: text("theme_id").notNull(),
@@ -206,6 +207,7 @@ export const insertSiteSchema = createInsertSchema(sites).omit({ id: true, creat
   buyerAgentComp: z.string().nullable().optional(),
   openHouses: z.array(openHouseSchema).optional().default([]),
   brochureUrl: z.string().nullable().optional(),
+  features: z.array(z.string()).optional().default([]),
 });
 export type InsertSite = z.infer<typeof insertSiteSchema>;
 export type Site = typeof sites.$inferSelect;

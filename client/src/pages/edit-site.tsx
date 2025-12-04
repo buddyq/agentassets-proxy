@@ -19,6 +19,28 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import type { CustomDetail, HeroSlide, SiteDocument, OpenHouseEvent } from "@shared/schema";
 import { FileText, Download, Trash2 } from "lucide-react";
 
+const FEATURE_SUGGESTIONS = [
+  'Community Clubhouse',
+  'City Lights Views',
+  'Beach Access',
+  'Gated Community',
+  'Great Schools',
+  'Hardwood Floors',
+  'Community Pool',
+  'Frameless Glass Showers',
+  'Heated Floors',
+  'Heated Pool',
+  'Ocean Views',
+  'New Construction',
+  'Large Lot',
+  'Large Kitchen',
+  'Oversized Windows',
+  'Pool',
+  'Shopping Nearby',
+  'Walk-In Closets',
+  'Stainless Steel Appliances',
+];
+
 const ALL_STEPS = [
   { id: 1, name: "Property Details", icon: Layout },
   { id: 2, name: "Photos", icon: Image },
@@ -546,6 +568,38 @@ export default function EditSite() {
                       onChange={e => setFormData({...formData, videoUrl: e.target.value})}
                       data-testid="input-video-url"
                     />
+                  </div>
+
+                  <div className="grid gap-2 border-t pt-4 mt-4">
+                    <Label htmlFor="edit-features">Features & Amenities</Label>
+                    <p className="text-sm text-muted-foreground">Enter features separated by commas. Choose from suggestions or add your own.</p>
+                    <Input 
+                      id="edit-features" 
+                      placeholder="e.g., Pool, Ocean Views, Hardwood Floors" 
+                      value={typeof formData.features === 'string' ? formData.features : (formData.features as any)?.join(', ') || ''}
+                      onChange={e => setFormData({...formData, features: e.target.value})}
+                      data-testid="input-features-edit"
+                    />
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {FEATURE_SUGGESTIONS.map((feature) => (
+                        <button
+                          key={feature}
+                          type="button"
+                          onClick={() => {
+                            const currentFeaturesStr = typeof formData.features === 'string' ? formData.features : (formData.features as any)?.join(', ') || '';
+                            const features = currentFeaturesStr ? currentFeaturesStr.split(',').map(f => f.trim()) : [];
+                            if (!features.includes(feature)) {
+                              features.push(feature);
+                              setFormData({...formData, features: features.join(', ')});
+                            }
+                          }}
+                          className="px-3 py-1 bg-muted hover:bg-primary hover:text-white rounded-full text-xs transition-colors cursor-pointer"
+                          data-testid={`button-feature-suggestion-edit-${feature}`}
+                        >
+                          + {feature}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </CardContent>
               </Card>

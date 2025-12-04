@@ -1759,9 +1759,13 @@ function MagazineNavigation({ site, theme, effectiveLogo }: { site: Site; theme?
   const hasPhotos = site.photos && site.photos.length > 0;
   const hasDocuments = site.documents && site.documents.length > 0;
 
+  const features = (site as any).features as string[] | undefined;
+  const hasFeatures = features && features.length > 0;
+
   const navItems = [
     { label: 'Home', href: '#home' },
     { label: 'Gallery', href: '#gallery', show: hasPhotos },
+    { label: 'Features', href: '#features', show: hasFeatures },
     { label: 'About', href: '#about', show: !!site.description },
     { label: 'Documents', href: '#documents', show: hasDocuments },
     { label: 'Contact', href: '#contact' },
@@ -2084,6 +2088,37 @@ function MagazineMarqueeGallery({ photos }: { photos: string[] }) {
           100% { transform: translateX(0); }
         }
       `}</style>
+
+      {/* Features Section */}
+      {hasFeatures && (
+        <section id="features" className="py-20 px-6 bg-gray-50">
+          <div className="container mx-auto max-w-5xl">
+            <h2 
+              className="text-3xl md:text-4xl mb-12 text-center"
+              style={{ fontFamily: 'var(--font-heading)' }}
+            >
+              Features & Amenities
+            </h2>
+            <div className="flex flex-wrap justify-center gap-4">
+              {features?.map((feature, index) => (
+                <div
+                  key={index}
+                  className="px-6 py-3 rounded-full border-2"
+                  style={{ 
+                    borderColor: primaryColor,
+                    color: primaryColor
+                  }}
+                  data-testid={`tag-feature-${index}`}
+                >
+                  <span style={{ fontFamily: 'var(--font-body)' }}>
+                    {feature}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {selectedIndex !== null && (
         <div 
