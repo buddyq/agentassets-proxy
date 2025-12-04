@@ -69,6 +69,17 @@ Preferred communication style: Simple, everyday language.
 - Lighter gradient overlay on hero for better image visibility
 - "Have a look" CTA button scrolls to property details
 
+**Magazine Layout Features**:
+- Full-screen hero with gradient overlay displaying price, address, and buyer agent compensation
+- Typography uses Playfair Display (serif) for headings and Source Sans Pro (sans-serif) for body
+- Transparent navigation that becomes solid white on scroll
+- Facts bar below hero with property stats (bedrooms, bathrooms, sqft, year built, lot size) in primary theme color
+- Two-row infinite marquee photo gallery (top row scrolls left, bottom row scrolls right)
+- Tabbed content section for Brochure and Documents downloads
+- Open Houses section with formatted date/time display
+- Contact section with agent info and lead capture form
+- Supports Magazine-specific fields: buyerAgentComp, openHouses array, brochureUrl
+
 **Migration Strategy**: Drizzle Kit handles schema migrations with `npm run db:push` command.
 
 ### Data Flow Architecture

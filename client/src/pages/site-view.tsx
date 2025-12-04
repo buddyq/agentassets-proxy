@@ -58,6 +58,16 @@ function getLayoutTypography(layout?: Layout) {
     } as React.CSSProperties;
   }
   
+  // Magazine layout uses Playfair Display for headings and Source Sans Pro for body
+  if (layout?.id === 'layout-magazine') {
+    return {
+      '--font-heading': '"Playfair Display", Georgia, serif',
+      '--font-body': '"Source Sans Pro", -apple-system, BlinkMacSystemFont, sans-serif',
+      '--heading-weight': '400',
+      '--font-nav': '"Source Sans Pro", -apple-system, BlinkMacSystemFont, sans-serif',
+    } as React.CSSProperties;
+  }
+  
   return {
     '--font-heading': `"${headingFont}", serif`,
     '--font-body': `"${bodyFont}", sans-serif`,
@@ -1733,6 +1743,736 @@ function ModernDocuments({ site, theme }: { site: Site; theme?: Theme }) {
   );
 }
 
+// ===================== MAGAZINE LAYOUT COMPONENTS =====================
+
+function MagazineNavigation({ site, theme, effectiveLogo }: { site: Site; theme?: Theme; effectiveLogo?: string | null }) {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  return (
+    <nav 
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        scrolled ? 'bg-white shadow-md py-3' : 'bg-transparent py-6'
+      }`}
+    >
+      <div className="container mx-auto px-6 flex justify-between items-center">
+        {(effectiveLogo || theme?.logoUrl) && (
+          <img 
+            src={effectiveLogo ?? theme?.logoUrl ?? ''} 
+            alt="Logo" 
+            className={`h-10 w-auto object-contain transition-all duration-300 ${
+              scrolled ? '' : 'brightness-0 invert'
+            }`}
+            data-testid="img-magazine-logo"
+          />
+        )}
+        {!effectiveLogo && !theme?.logoUrl && <div />}
+        <Button
+          className={`transition-all duration-300 px-6 ${
+            scrolled 
+              ? 'text-white' 
+              : 'bg-white/20 text-white hover:bg-white/30 border border-white/50'
+          }`}
+          style={scrolled ? { backgroundColor: theme?.colors?.primary || '#558B73' } : undefined}
+          data-testid="button-magazine-contact"
+          onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
+        >
+          Schedule a Showing
+        </Button>
+      </div>
+    </nav>
+  );
+}
+
+function MagazineHero({ site, theme, heroImage }: { site: Site; theme?: Theme; heroImage: string }) {
+  const backgroundImage = site.heroPhotos && site.heroPhotos.length > 0 
+    ? site.heroPhotos[0] 
+    : site.imageUrl || (site.photos && site.photos.length > 0 ? site.photos[0] : heroImage);
+
+  return (
+    <section id="home" className="relative h-screen w-full overflow-hidden">
+      <div 
+        className="absolute inset-0 bg-cover bg-center"
+        style={{ backgroundImage: `url(${backgroundImage})` }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/30" />
+      
+      <div className="absolute inset-0 flex flex-col justify-end text-white pb-24 px-8">
+        <div className="container mx-auto max-w-6xl">
+          <p 
+            className="text-lg tracking-widest uppercase mb-4 opacity-90"
+            style={{ fontFamily: 'var(--font-body)', letterSpacing: '0.2em' }}
+          >
+            {site.buyerAgentComp || 'Offered At'}
+          </p>
+          <h1 
+            className="text-5xl md:text-7xl mb-6"
+            style={{ 
+              fontFamily: 'var(--font-heading)', 
+              fontWeight: '400',
+              letterSpacing: '-0.02em'
+            }}
+          >
+            {site.price}
+          </h1>
+          <h2 
+            className="text-3xl md:text-4xl mb-8"
+            style={{ 
+              fontFamily: 'var(--font-heading)', 
+              fontWeight: '400',
+              opacity: 0.95
+            }}
+          >
+            {site.title || site.address}
+          </h2>
+          
+          <Button
+            size="lg"
+            className="text-lg px-10 py-6 rounded-none bg-transparent border-2 border-white text-white hover:bg-white hover:text-black transition-all"
+            onClick={() => document.getElementById('facts')?.scrollIntoView({ behavior: 'smooth' })}
+            data-testid="button-magazine-explore"
+          >
+            Explore Property
+          </Button>
+        </div>
+      </div>
+      
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+        <ChevronLeft className="h-8 w-8 text-white rotate-[-90deg] opacity-70" />
+      </div>
+    </section>
+  );
+}
+
+function MagazineFactsBar({ site, theme }: { site: Site; theme?: Theme }) {
+  const facts = [
+    { label: 'Bedrooms', value: site.bedrooms?.toString() || '—' },
+    { label: 'Bathrooms', value: site.bathrooms?.toString() || '—' },
+    { label: 'Square Feet', value: site.sqft?.toLocaleString() || '—' },
+    { label: 'Year Built', value: site.yearBuilt?.toString() || '—' },
+    { label: 'Lot Size', value: site.lotSize || '—' },
+  ].filter(f => f.value !== '—');
+
+  return (
+    <section 
+      id="facts" 
+      className="py-12 border-b"
+      style={{ backgroundColor: theme?.colors?.primary || '#558B73' }}
+    >
+      <div className="container mx-auto px-6">
+        <div className="flex flex-wrap justify-center gap-8 md:gap-16">
+          {facts.map((fact, index) => (
+            <div key={index} className="text-center text-white">
+              <p 
+                className="text-3xl md:text-4xl mb-2"
+                style={{ fontFamily: 'var(--font-heading)', fontWeight: '400' }}
+              >
+                {fact.value}
+              </p>
+              <p 
+                className="text-sm uppercase tracking-widest opacity-80"
+                style={{ fontFamily: 'var(--font-body)' }}
+              >
+                {fact.label}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function MagazineMarqueeGallery({ photos }: { photos: string[] }) {
+  if (!photos || photos.length === 0) return null;
+  
+  const topRowPhotos = photos.slice(0, Math.ceil(photos.length / 2));
+  const bottomRowPhotos = photos.slice(Math.ceil(photos.length / 2));
+  
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, startIndex: selectedIndex || 0 });
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
+  const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    const onSelect = () => setCurrentSlide(emblaApi.selectedScrollSnap());
+    emblaApi.on('select', onSelect);
+    onSelect();
+    return () => { emblaApi.off('select', onSelect); };
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (selectedIndex !== null && emblaApi) {
+      emblaApi.scrollTo(selectedIndex);
+    }
+  }, [selectedIndex, emblaApi]);
+
+  return (
+    <>
+      <section id="photos" className="py-16 overflow-hidden bg-gray-50">
+        <div className="mb-12 text-center">
+          <h2 
+            className="text-3xl md:text-4xl"
+            style={{ fontFamily: 'var(--font-heading)', fontWeight: '400' }}
+          >
+            Photo Gallery
+          </h2>
+        </div>
+        
+        <div className="space-y-4">
+          <div 
+            className="flex"
+            style={{ 
+              width: `${topRowPhotos.length * 320 * 2}px`,
+              animation: 'marquee-scroll-left 60s linear infinite'
+            }}
+          >
+            {[...topRowPhotos, ...topRowPhotos].map((photo, index) => (
+              <div 
+                key={index}
+                className="flex-shrink-0 w-80 h-56 mx-2 overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
+                onClick={() => setSelectedIndex(index % topRowPhotos.length)}
+              >
+                <img 
+                  src={photo} 
+                  alt={`Property ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ))}
+          </div>
+          
+          <div 
+            className="flex"
+            style={{ 
+              width: `${bottomRowPhotos.length * 320 * 2}px`,
+              animation: 'marquee-scroll-right 60s linear infinite'
+            }}
+          >
+            {[...bottomRowPhotos, ...bottomRowPhotos].map((photo, index) => (
+              <div 
+                key={index}
+                className="flex-shrink-0 w-80 h-56 mx-2 overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
+                onClick={() => setSelectedIndex((index % bottomRowPhotos.length) + topRowPhotos.length)}
+              >
+                <img 
+                  src={photo} 
+                  alt={`Property ${topRowPhotos.length + index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+      
+      <style>{`
+        @keyframes marquee-scroll-left {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        @keyframes marquee-scroll-right {
+          0% { transform: translateX(-50%); }
+          100% { transform: translateX(0); }
+        }
+      `}</style>
+
+      {selectedIndex !== null && (
+        <div 
+          className="fixed inset-0 bg-black/95 z-50 flex flex-col"
+          onClick={() => setSelectedIndex(null)}
+        >
+          <div className="flex items-center justify-between p-4">
+            <div className="text-white/70 text-sm font-medium">
+              {currentSlide + 1} / {photos.length}
+            </div>
+            <button 
+              className="text-white/70 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10"
+              onClick={() => setSelectedIndex(null)}
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+
+          <div className="flex-1 flex items-center justify-center relative px-4">
+            <button
+              className="absolute left-4 z-10 p-3 rounded-full bg-black/50 text-white hover:bg-black/70 transition-all"
+              onClick={(e) => { e.stopPropagation(); scrollPrev(); }}
+            >
+              <ChevronLeft className="h-8 w-8" />
+            </button>
+
+            <div className="overflow-hidden w-full max-w-5xl" ref={emblaRef} onClick={(e) => e.stopPropagation()}>
+              <div className="flex">
+                {photos.map((photo, index) => (
+                  <div key={index} className="flex-[0_0_100%] min-w-0 flex items-center justify-center px-4">
+                    <img 
+                      src={photo} 
+                      alt={`Property photo ${index + 1}`}
+                      className="max-w-full max-h-[75vh] object-contain rounded-lg shadow-2xl"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <button
+              className="absolute right-4 z-10 p-3 rounded-full bg-black/50 text-white hover:bg-black/70 transition-all"
+              onClick={(e) => { e.stopPropagation(); scrollNext(); }}
+            >
+              <ChevronRight className="h-8 w-8" />
+            </button>
+          </div>
+
+          <div className="p-4 flex justify-center gap-2">
+            {photos.map((_, index) => (
+              <button
+                key={index}
+                className={`w-2 h-2 rounded-full transition-all ${
+                  currentSlide === index ? 'bg-white w-6' : 'bg-white/40 hover:bg-white/60'
+                }`}
+                onClick={(e) => { e.stopPropagation(); emblaApi?.scrollTo(index); }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+function MagazineTabs({ site, theme }: { site: Site; theme?: Theme }) {
+  const [activeTab, setActiveTab] = useState('brochure');
+  const hasDocuments = site.documents && site.documents.length > 0;
+  const hasBrochure = site.brochureUrl;
+  
+  if (!hasDocuments && !hasBrochure) return null;
+  
+  const primaryColor = theme?.colors?.primary || '#558B73';
+
+  return (
+    <section className="py-16 px-6">
+      <div className="container mx-auto max-w-4xl">
+        <div className="flex justify-center gap-8 mb-12 border-b">
+          {hasBrochure && (
+            <button
+              className={`pb-4 text-lg transition-all border-b-2 -mb-px ${
+                activeTab === 'brochure' 
+                  ? 'border-current' 
+                  : 'border-transparent opacity-60 hover:opacity-100'
+              }`}
+              style={{ 
+                fontFamily: 'var(--font-body)',
+                color: activeTab === 'brochure' ? primaryColor : undefined
+              }}
+              onClick={() => setActiveTab('brochure')}
+              data-testid="tab-brochure"
+            >
+              Brochure
+            </button>
+          )}
+          {hasDocuments && (
+            <button
+              className={`pb-4 text-lg transition-all border-b-2 -mb-px ${
+                activeTab === 'documents' 
+                  ? 'border-current' 
+                  : 'border-transparent opacity-60 hover:opacity-100'
+              }`}
+              style={{ 
+                fontFamily: 'var(--font-body)',
+                color: activeTab === 'documents' ? primaryColor : undefined
+              }}
+              onClick={() => setActiveTab('documents')}
+              data-testid="tab-documents"
+            >
+              Documents
+            </button>
+          )}
+        </div>
+        
+        {activeTab === 'brochure' && hasBrochure && (
+          <div className="text-center">
+            <a
+              href={site.brochureUrl!}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-3 px-8 py-4 text-lg text-white rounded-none transition-all hover:opacity-90"
+              style={{ backgroundColor: primaryColor, fontFamily: 'var(--font-body)' }}
+              data-testid="button-download-brochure"
+            >
+              <Download className="h-5 w-5" />
+              Download Brochure
+            </a>
+          </div>
+        )}
+        
+        {activeTab === 'documents' && hasDocuments && (
+          <div className="space-y-4">
+            {site.documents?.map((doc, index) => (
+              <a
+                key={index}
+                href={doc.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors group"
+                data-testid={`document-${index}`}
+              >
+                <FileText className="h-6 w-6" style={{ color: primaryColor }} />
+                <span 
+                  className="flex-1"
+                  style={{ fontFamily: 'var(--font-body)' }}
+                >
+                  {doc.name}
+                </span>
+                <Download className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: primaryColor }} />
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function MagazineAbout({ site, theme }: { site: Site; theme?: Theme }) {
+  if (!site.description) return null;
+
+  return (
+    <section className="py-16 px-6 bg-white">
+      <div className="container mx-auto max-w-3xl">
+        <h2 
+          className="text-3xl md:text-4xl mb-8 text-center"
+          style={{ fontFamily: 'var(--font-heading)', fontWeight: '400' }}
+        >
+          About This Property
+        </h2>
+        <p 
+          className="text-lg leading-relaxed text-gray-700 text-center"
+          style={{ fontFamily: 'var(--font-body)', lineHeight: '1.8' }}
+        >
+          {site.description}
+        </p>
+      </div>
+    </section>
+  );
+}
+
+type OpenHouseEventType = {
+  label?: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+};
+
+function MagazineOpenHouses({ site, theme }: { site: Site; theme?: Theme }) {
+  const openHouses = (site as any).openHouses as OpenHouseEventType[] | undefined;
+  if (!openHouses || openHouses.length === 0) return null;
+
+  const primaryColor = theme?.colors?.primary || '#558B73';
+
+  const formatDate = (dateStr: string): string => {
+    if (!dateStr) return 'TBD';
+    try {
+      const date = new Date(dateStr + 'T00:00:00');
+      if (isNaN(date.getTime())) return dateStr;
+      return date.toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        month: 'long', 
+        day: 'numeric', 
+        year: 'numeric' 
+      });
+    } catch {
+      return dateStr;
+    }
+  };
+
+  const formatTime = (timeStr: string): string => {
+    if (!timeStr) return 'TBD';
+    try {
+      const [hours, minutes] = timeStr.split(':');
+      const h = parseInt(hours, 10);
+      const m = minutes || '00';
+      if (isNaN(h)) return timeStr;
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      const hour12 = h % 12 || 12;
+      return `${hour12}:${m} ${ampm}`;
+    } catch {
+      return timeStr;
+    }
+  };
+
+  return (
+    <section className="py-16 px-6 bg-gray-50">
+      <div className="container mx-auto max-w-4xl">
+        <h2 
+          className="text-3xl md:text-4xl mb-12 text-center"
+          style={{ fontFamily: 'var(--font-heading)', fontWeight: '400' }}
+        >
+          Open House Schedule
+        </h2>
+        
+        <div className="space-y-4">
+          {openHouses.map((event, index) => (
+            <div 
+              key={index}
+              className="flex flex-col md:flex-row md:items-center justify-between p-6 bg-white rounded-lg shadow-sm"
+              data-testid={`open-house-${index}`}
+            >
+              <div className="flex items-center gap-4">
+                <div 
+                  className="w-12 h-12 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: primaryColor + '20' }}
+                >
+                  <Calendar className="h-6 w-6" style={{ color: primaryColor }} />
+                </div>
+                <div>
+                  {event.label && (
+                    <span 
+                      className="text-sm uppercase tracking-wider block mb-1"
+                      style={{ color: primaryColor, fontFamily: 'var(--font-body)' }}
+                    >
+                      {event.label}
+                    </span>
+                  )}
+                  <p 
+                    className="text-lg font-medium"
+                    style={{ fontFamily: 'var(--font-body)' }}
+                  >
+                    {formatDate(event.date)}
+                  </p>
+                </div>
+              </div>
+              <p 
+                className="text-lg mt-4 md:mt-0"
+                style={{ fontFamily: 'var(--font-body)' }}
+              >
+                {formatTime(event.startTime)} - {formatTime(event.endTime)}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+type MagazineAgentInfo = {
+  name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  profileImageUrl?: string | null;
+};
+
+function MagazineContact({ site, theme, agentInfo }: { site: Site; theme?: Theme; agentInfo?: MagazineAgentInfo | null }) {
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    message: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const primaryColor = theme?.colors?.primary || '#558B73';
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          siteId: site.id,
+          ...formData
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to submit inquiry');
+      
+      setSubmitted(true);
+      setFormData({ firstName: '', lastName: '', email: '', phone: '', message: '' });
+    } catch (err) {
+      setError('Unable to submit your inquiry. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <section id="contact" className="py-20 px-6" style={{ backgroundColor: theme?.colors?.secondary || '#2C3E50' }}>
+      <div className="container mx-auto max-w-5xl">
+        <div className="grid md:grid-cols-2 gap-12">
+          <div className="text-white">
+            <h2 
+              className="text-3xl md:text-4xl mb-6"
+              style={{ fontFamily: 'var(--font-heading)', fontWeight: '400' }}
+            >
+              Schedule a Private Showing
+            </h2>
+            <p 
+              className="text-lg opacity-80 mb-8"
+              style={{ fontFamily: 'var(--font-body)', lineHeight: '1.7' }}
+            >
+              Interested in viewing this property? Fill out the form and we'll get back to you within 24 hours to arrange a private showing.
+            </p>
+            
+            {agentInfo && (
+              <div className="flex items-center gap-4 mt-8 pt-8 border-t border-white/20">
+                {agentInfo.profileImageUrl && (
+                  <img 
+                    src={agentInfo.profileImageUrl} 
+                    alt={agentInfo.name || 'Agent'} 
+                    className="w-16 h-16 rounded-full object-cover"
+                  />
+                )}
+                <div>
+                  <p className="font-medium text-lg" style={{ fontFamily: 'var(--font-body)' }}>
+                    {agentInfo.name || 'Your Agent'}
+                  </p>
+                  {agentInfo.phone && (
+                    <p className="opacity-80" style={{ fontFamily: 'var(--font-body)' }}>
+                      {agentInfo.phone}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <div className="bg-white p-8 rounded-lg shadow-xl">
+            {submitted ? (
+              <div className="text-center py-8">
+                <div 
+                  className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
+                  style={{ backgroundColor: primaryColor + '20' }}
+                >
+                  <Mail className="h-8 w-8" style={{ color: primaryColor }} />
+                </div>
+                <h3 
+                  className="text-2xl mb-2"
+                  style={{ fontFamily: 'var(--font-heading)', fontWeight: '400' }}
+                >
+                  Thank You!
+                </h3>
+                <p 
+                  className="text-gray-600"
+                  style={{ fontFamily: 'var(--font-body)' }}
+                >
+                  We've received your inquiry and will be in touch soon.
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="firstName" style={{ fontFamily: 'var(--font-body)' }}>First Name</Label>
+                    <Input
+                      id="firstName"
+                      value={formData.firstName}
+                      onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
+                      required
+                      className="mt-1"
+                      data-testid="input-first-name"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="lastName" style={{ fontFamily: 'var(--font-body)' }}>Last Name</Label>
+                    <Input
+                      id="lastName"
+                      value={formData.lastName}
+                      onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
+                      required
+                      className="mt-1"
+                      data-testid="input-last-name"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="email" style={{ fontFamily: 'var(--font-body)' }}>Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                    required
+                    className="mt-1"
+                    data-testid="input-email"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="phone" style={{ fontFamily: 'var(--font-body)' }}>Phone</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                    required
+                    className="mt-1"
+                    data-testid="input-phone"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="message" style={{ fontFamily: 'var(--font-body)' }}>Message</Label>
+                  <Textarea
+                    id="message"
+                    value={formData.message}
+                    onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
+                    required
+                    className="mt-1 min-h-[100px]"
+                    placeholder="I'm interested in scheduling a showing..."
+                    data-testid="input-message"
+                  />
+                </div>
+                
+                {error && (
+                  <p className="text-red-500 text-sm" data-testid="text-error">{error}</p>
+                )}
+                
+                <Button
+                  type="submit"
+                  className="w-full py-6 text-lg"
+                  style={{ backgroundColor: primaryColor, fontFamily: 'var(--font-body)' }}
+                  disabled={isSubmitting}
+                  data-testid="button-submit-inquiry"
+                >
+                  {isSubmitting ? 'Sending...' : 'Request Showing'}
+                </Button>
+              </form>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function MagazineFooter({ site, theme }: { site: Site; theme?: Theme }) {
+  return (
+    <footer className="py-8 px-6 bg-gray-900 text-white/60 text-center">
+      <p style={{ fontFamily: 'var(--font-body)' }}>
+        Property listing powered by AgentAssets
+      </p>
+    </footer>
+  );
+}
+
+// ===================== END MAGAZINE LAYOUT COMPONENTS =====================
+
 function HeroSection({ site, theme, heroImage }: { site: Site; theme?: Theme; heroImage: string }) {
   const hasHeroSlider = site.heroPhotos && site.heroPhotos.length > 1;
   const heroImages = site.heroPhotos && site.heroPhotos.length > 0 
@@ -2119,6 +2859,87 @@ export default function SiteView() {
             <p>Property listing powered by AgentAssets</p>
           </div>
         </footer>
+      </div>
+    );
+  }
+
+  // Magazine Layout - elegant, editorial style with marquee gallery
+  const isMagazineLayout = site.layoutId === 'layout-magazine';
+  if (isMagazineLayout) {
+    return (
+      <div 
+        className="min-h-screen flex flex-col" 
+        style={{ 
+          ...combinedStyles,
+          backgroundColor: 'var(--theme-background)',
+          color: 'var(--theme-text)',
+          fontFamily: 'var(--font-body)'
+        }}
+      >
+        <MagazineNavigation site={site} theme={theme} effectiveLogo={effectiveLogo} />
+        <MagazineHero site={site} theme={theme} heroImage={heroImage} />
+        <MagazineFactsBar site={site} theme={theme} />
+        
+        {hasPhotos && <MagazineMarqueeGallery photos={site.photos!} />}
+        
+        <MagazineAbout site={site} theme={theme} />
+        
+        <MagazineTabs site={site} theme={theme} />
+        
+        {hasVideo && (
+          <section id="video" className="py-16 px-6 bg-white">
+            <div className="container mx-auto max-w-4xl">
+              <h2 
+                className="text-3xl md:text-4xl mb-10 text-center"
+                style={{ fontFamily: 'var(--font-heading)', fontWeight: '400' }}
+              >
+                Property Video
+              </h2>
+              <div className="aspect-video rounded-lg overflow-hidden shadow-lg">
+                <iframe
+                  src={embedUrl}
+                  className="w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  title="Property Video"
+                />
+              </div>
+            </div>
+          </section>
+        )}
+        
+        <MagazineOpenHouses site={site} theme={theme} />
+        
+        <section id="map" className="py-16 px-6 bg-white">
+          <div className="container mx-auto max-w-4xl">
+            <h2 
+              className="text-3xl md:text-4xl mb-10 text-center"
+              style={{ fontFamily: 'var(--font-heading)', fontWeight: '400' }}
+            >
+              Location
+            </h2>
+            <div className="rounded-lg overflow-hidden shadow-lg">
+              <div className="bg-gray-50 px-6 py-4 border-b">
+                <div className="flex items-center gap-3">
+                  <MapPin className="h-5 w-5" style={{ color: 'var(--theme-primary)' }} />
+                  <span className="font-medium text-gray-700">{site.address}</span>
+                </div>
+              </div>
+              <div className="aspect-[16/9]">
+                <iframe
+                  src={`https://www.google.com/maps?q=${encodeURIComponent(site.address)}&output=embed`}
+                  className="w-full h-full border-0"
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="Property Location"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <MagazineContact site={site} theme={theme} agentInfo={agentInfo} />
+        <MagazineFooter site={site} theme={theme} />
       </div>
     );
   }

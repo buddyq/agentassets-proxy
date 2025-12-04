@@ -13,7 +13,7 @@ import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, CreditCard, Layo
 import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ObjectUploader } from "@/components/ObjectUploader";
-import type { CustomDetail, HeroSlide } from "@shared/schema";
+import type { CustomDetail, HeroSlide, OpenHouseEvent } from "@shared/schema";
 
 const ALL_STEPS = [
   { id: 1, name: "Property Details", icon: Layout },
@@ -24,7 +24,7 @@ const ALL_STEPS = [
   { id: 6, name: "Review", icon: CreditCard },
 ];
 
-const LAYOUTS_WITH_OPTIONS = ['layout-shoalwood', 'layout-modern'];
+const LAYOUTS_WITH_OPTIONS = ['layout-shoalwood', 'layout-modern', 'layout-magazine'];
 const ALWAYS_SHOW_STEP_4 = true; // Always show step 4 for logo branding option
 
 export default function CreateSite() {
@@ -67,6 +67,10 @@ export default function CreateSite() {
     logo: '', // Site-specific logo override
     heroLogo: '', // Hero-specific logo for Modern layout (PNG recommended)
     heroSlides: [] as HeroSlide[], // Up to 3 slides with title/subtitle for Modern layout
+    // Magazine layout fields
+    buyerAgentComp: '', // e.g., "3% Buyers Agent Compensation"
+    openHouses: [] as OpenHouseEvent[], // Open house schedule
+    brochureUrl: '', // Link to property brochure PDF
   });
   
   // Custom details state
@@ -217,7 +221,12 @@ export default function CreateSite() {
         heroSlides: formData.heroSlides,
         heroLogo: formData.heroLogo || null,
         logo: formData.logo || null,
-        stats: { views: 0, uniqueVisitors: 0, leads: 0 }
+        stats: { views: 0, uniqueVisitors: 0, leads: 0 },
+        documents: [], // Documents can be added after site creation
+        // Magazine layout fields
+        buyerAgentComp: formData.buyerAgentComp || null,
+        openHouses: formData.openHouses,
+        brochureUrl: formData.brochureUrl || null,
       },
       {
         onSuccess: () => {
@@ -1010,6 +1019,164 @@ export default function CreateSite() {
                         <p className="text-xs text-muted-foreground">
                           Each slide includes an automatic "Have a look" button that scrolls to the property details.
                         </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Magazine Layout Options */}
+                  {formData.layoutId === 'layout-magazine' && (
+                    <div className="border-t pt-6 space-y-6">
+                      {/* Buyer Agent Compensation */}
+                      <div className="grid gap-2">
+                        <Label htmlFor="buyerAgentComp">Buyer Agent Compensation (Optional)</Label>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Text displayed above the price in the hero section, e.g., "3% Buyers Agent Compensation"
+                        </p>
+                        <Input
+                          id="buyerAgentComp"
+                          placeholder="e.g., 3% Buyers Agent Compensation"
+                          value={formData.buyerAgentComp}
+                          onChange={(e) => setFormData({...formData, buyerAgentComp: e.target.value})}
+                          data-testid="input-buyer-agent-comp"
+                        />
+                      </div>
+
+                      {/* Brochure URL */}
+                      <div className="grid gap-2">
+                        <Label htmlFor="brochureUrl">Brochure URL (Optional)</Label>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Link to a downloadable brochure PDF for this property.
+                        </p>
+                        <Input
+                          id="brochureUrl"
+                          type="url"
+                          placeholder="https://example.com/brochure.pdf"
+                          value={formData.brochureUrl}
+                          onChange={(e) => setFormData({...formData, brochureUrl: e.target.value})}
+                          data-testid="input-brochure-url"
+                        />
+                      </div>
+
+                      {/* Open Houses */}
+                      <div className="grid gap-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label>Open House Schedule</Label>
+                            <p className="text-sm text-muted-foreground">
+                              Add open house events for this property.
+                            </p>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const newEvent: OpenHouseEvent = { label: '', date: '', startTime: '', endTime: '' };
+                              setFormData({...formData, openHouses: [...formData.openHouses, newEvent]});
+                            }}
+                            data-testid="button-add-open-house"
+                          >
+                            <Plus className="h-4 w-4 mr-1" />
+                            Add Open House
+                          </Button>
+                        </div>
+
+                        {formData.openHouses.length === 0 && (
+                          <div className="border-2 border-dashed border-muted rounded-lg p-6 text-center">
+                            <p className="text-muted-foreground mb-4">No open houses scheduled yet</p>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => {
+                                const newEvent: OpenHouseEvent = { label: '', date: '', startTime: '', endTime: '' };
+                                setFormData({...formData, openHouses: [newEvent]});
+                              }}
+                              data-testid="button-add-first-open-house"
+                            >
+                              <Plus className="h-4 w-4 mr-1" />
+                              Add First Open House
+                            </Button>
+                          </div>
+                        )}
+
+                        {formData.openHouses.map((event, index) => (
+                          <div key={index} className="border rounded-lg p-4 bg-muted/20">
+                            <div className="flex items-center justify-between mb-4">
+                              <span className="font-medium text-sm">Open House {index + 1}</span>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="text-destructive hover:text-destructive"
+                                onClick={() => {
+                                  const updated = formData.openHouses.filter((_, i) => i !== index);
+                                  setFormData({...formData, openHouses: updated});
+                                }}
+                                data-testid={`button-remove-open-house-${index}`}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                              <div className="grid gap-2">
+                                <Label htmlFor={`oh-label-${index}`}>Label (Optional)</Label>
+                                <Input
+                                  id={`oh-label-${index}`}
+                                  placeholder="e.g., Broker Open"
+                                  value={event.label || ''}
+                                  onChange={(e) => {
+                                    const updated = [...formData.openHouses];
+                                    updated[index] = { ...updated[index], label: e.target.value };
+                                    setFormData({...formData, openHouses: updated});
+                                  }}
+                                  data-testid={`input-oh-label-${index}`}
+                                />
+                              </div>
+                              <div className="grid gap-2">
+                                <Label htmlFor={`oh-date-${index}`}>Date</Label>
+                                <Input
+                                  id={`oh-date-${index}`}
+                                  type="date"
+                                  value={event.date}
+                                  onChange={(e) => {
+                                    const updated = [...formData.openHouses];
+                                    updated[index] = { ...updated[index], date: e.target.value };
+                                    setFormData({...formData, openHouses: updated});
+                                  }}
+                                  data-testid={`input-oh-date-${index}`}
+                                />
+                              </div>
+                              <div className="grid gap-2">
+                                <Label htmlFor={`oh-start-${index}`}>Start Time</Label>
+                                <Input
+                                  id={`oh-start-${index}`}
+                                  type="time"
+                                  value={event.startTime}
+                                  onChange={(e) => {
+                                    const updated = [...formData.openHouses];
+                                    updated[index] = { ...updated[index], startTime: e.target.value };
+                                    setFormData({...formData, openHouses: updated});
+                                  }}
+                                  data-testid={`input-oh-start-${index}`}
+                                />
+                              </div>
+                              <div className="grid gap-2">
+                                <Label htmlFor={`oh-end-${index}`}>End Time</Label>
+                                <Input
+                                  id={`oh-end-${index}`}
+                                  type="time"
+                                  value={event.endTime}
+                                  onChange={(e) => {
+                                    const updated = [...formData.openHouses];
+                                    updated[index] = { ...updated[index], endTime: e.target.value };
+                                    setFormData({...formData, openHouses: updated});
+                                  }}
+                                  data-testid={`input-oh-end-${index}`}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}
