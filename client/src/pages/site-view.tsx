@@ -3410,9 +3410,8 @@ export default function SiteView() {
         
         <section 
           id="map" 
-          className="py-16 px-6 relative overflow-hidden" 
+          className="py-16 px-6 relative overflow-hidden bg-white" 
           style={{ 
-            backgroundColor: '#eeeeee', 
             scrollMarginTop: '100px' 
           }}
         >
