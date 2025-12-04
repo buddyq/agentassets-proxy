@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { useSites, useDeleteSite, useUpdateSite, useThemes, useLeads, useLayouts } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
-import { Plus, ExternalLink, Trash2, Globe, BarChart3, Users, MousePointerClick, TrendingUp, Pencil, MessageSquare, Mail, Phone, Calendar, ChevronRight, LayoutDashboard } from "lucide-react";
+import { Plus, ExternalLink, Trash2, Globe, BarChart3, Users, MousePointerClick, TrendingUp, Pencil, MessageSquare, Mail, Phone, Calendar, ChevronRight, LayoutDashboard, UserCircle, Image, FileText, Share2, ArrowRight, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format, subDays, isPast } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -67,6 +67,33 @@ export default function Dashboard() {
   // Lead Detail Dialog State
   const [leadDetailOpen, setLeadDetailOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+
+  // Welcome Guide State
+  const [welcomeGuideDismissed, setWelcomeGuideDismissed] = useState(() => {
+    return localStorage.getItem('welcomeGuideDismissed') === 'true';
+  });
+
+  const handleDismissWelcomeGuide = () => {
+    setWelcomeGuideDismissed(true);
+    localStorage.setItem('welcomeGuideDismissed', 'true');
+  };
+
+  // Check if profile is incomplete
+  const isProfileIncomplete = user && (
+    !user.profileImageUrl || 
+    !user.logo || 
+    !user.name || 
+    !user.phone || 
+    !user.email
+  );
+
+  const profileChecklist = user ? [
+    { label: 'Profile Picture', done: !!user.profileImageUrl, icon: UserCircle },
+    { label: 'Logo', done: !!user.logo, icon: Image },
+    { label: 'Name', done: !!user.name, icon: FileText },
+    { label: 'Phone', done: !!user.phone, icon: Phone },
+    { label: 'Email', done: !!user.email, icon: Mail },
+  ] : [];
 
   const handleOpenLeadDetail = (lead: Lead) => {
     setSelectedLead(lead);
@@ -184,6 +211,55 @@ export default function Dashboard() {
             </Button>
           </Link>
         </div>
+
+        {/* Welcome Guide Banner */}
+        {isProfileIncomplete && !welcomeGuideDismissed && (
+          <Card className="mb-8 border-primary/30 bg-gradient-to-r from-primary/5 to-primary/10 relative overflow-hidden">
+            <button 
+              onClick={handleDismissWelcomeGuide}
+              className="absolute top-3 right-3 p-1 rounded-full hover:bg-white/50 transition-colors"
+              aria-label="Dismiss"
+            >
+              <X className="h-4 w-4 text-muted-foreground" />
+            </button>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xl flex items-center gap-2">
+                <span className="text-2xl">👋</span> Welcome to AgentAssets!
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-foreground">
+                Before creating your first property site, we recommend completing your profile. This information will appear on all your microsites, helping potential buyers connect with you.
+              </p>
+              
+              <div className="flex flex-wrap gap-3">
+                {profileChecklist.map((item) => (
+                  <div 
+                    key={item.label}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm ${
+                      item.done 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-white/80 text-muted-foreground border border-dashed'
+                    }`}
+                  >
+                    <item.icon className="h-4 w-4" />
+                    <span>{item.label}</span>
+                    {item.done && <span className="text-green-600">✓</span>}
+                  </div>
+                ))}
+              </div>
+
+              <div className="pt-2">
+                <Link href="/profile">
+                  <Button className="gap-2">
+                    Complete Your Profile
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Tabs defaultValue="sites" className="w-full">
           <TabsList className="mb-6">
