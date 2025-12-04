@@ -737,33 +737,43 @@ export default function EditSite() {
                         data-testid={`edit-layout-option-${layout.id}`}
                       >
                         <RadioGroupItem value={layout.id} id={`edit-layout-${layout.id}`} className="sr-only" />
-                        <div className="h-32 bg-gradient-to-br from-muted to-muted/50 p-4 flex flex-col justify-end">
-                          <div className="flex gap-1 mb-2">
-                            {layout.structure?.heroStyle === 'fullscreen' && (
-                              <div className="w-full h-6 bg-primary/20 rounded" />
-                            )}
-                            {layout.structure?.heroStyle === 'split' && (
-                              <>
-                                <div className="w-1/2 h-6 bg-primary/20 rounded" />
-                                <div className="w-1/2 h-6 bg-muted-foreground/10 rounded" />
-                              </>
-                            )}
-                            {layout.structure?.heroStyle === 'minimal' && (
-                              <div className="w-2/3 h-4 bg-primary/20 rounded mx-auto" />
-                            )}
-                            {layout.structure?.heroStyle === 'slider' && (
-                              <>
-                                <div className="w-1/4 h-6 bg-primary/30 rounded" />
-                                <div className="w-1/4 h-6 bg-primary/20 rounded" />
-                                <div className="w-1/4 h-6 bg-primary/10 rounded" />
-                                <div className="w-1/4 h-6 bg-primary/5 rounded" />
-                              </>
-                            )}
-                          </div>
-                          <div className="flex gap-1">
-                            <div className="w-1/3 h-3 bg-muted-foreground/20 rounded" />
-                            <div className="w-1/4 h-3 bg-muted-foreground/10 rounded" />
-                          </div>
+                        <div className="h-40 bg-gradient-to-br from-muted to-muted/50 overflow-hidden">
+                          {layout.thumbnailUrl ? (
+                            <img 
+                              src={layout.thumbnailUrl} 
+                              alt={`${layout.name} layout preview`}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="h-full p-4 flex flex-col justify-end">
+                              <div className="flex gap-1 mb-2">
+                                {layout.structure?.heroStyle === 'fullscreen' && (
+                                  <div className="w-full h-6 bg-primary/20 rounded" />
+                                )}
+                                {layout.structure?.heroStyle === 'split' && (
+                                  <>
+                                    <div className="w-1/2 h-6 bg-primary/20 rounded" />
+                                    <div className="w-1/2 h-6 bg-muted-foreground/10 rounded" />
+                                  </>
+                                )}
+                                {layout.structure?.heroStyle === 'minimal' && (
+                                  <div className="w-2/3 h-4 bg-primary/20 rounded mx-auto" />
+                                )}
+                                {layout.structure?.heroStyle === 'slider' && (
+                                  <>
+                                    <div className="w-1/4 h-6 bg-primary/30 rounded" />
+                                    <div className="w-1/4 h-6 bg-primary/20 rounded" />
+                                    <div className="w-1/4 h-6 bg-primary/10 rounded" />
+                                    <div className="w-1/4 h-6 bg-primary/5 rounded" />
+                                  </>
+                                )}
+                              </div>
+                              <div className="flex gap-1">
+                                <div className="w-1/3 h-3 bg-muted-foreground/20 rounded" />
+                                <div className="w-1/4 h-3 bg-muted-foreground/10 rounded" />
+                              </div>
+                            </div>
+                          )}
                         </div>
                         <div className="p-4 bg-white">
                           <h3 className="font-medium flex items-center justify-between">

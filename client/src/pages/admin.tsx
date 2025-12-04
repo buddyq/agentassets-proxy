@@ -968,6 +968,15 @@ export default function AdminDashboard() {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {layouts.map((layout) => (
                 <Card key={layout.id} className={`overflow-hidden border-2 ${layout.enabled ? 'border-secondary/20' : 'border-muted/40 opacity-60'}`} data-testid={`card-layout-${layout.id}`}>
+                  {layout.thumbnailUrl && (
+                    <div className="h-32 bg-muted overflow-hidden">
+                      <img 
+                        src={layout.thumbnailUrl} 
+                        alt={`${layout.name} preview`}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
                   <CardHeader className="pb-2 bg-secondary/5">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-base flex items-center gap-2">
