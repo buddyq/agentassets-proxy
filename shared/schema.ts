@@ -153,7 +153,7 @@ export const sites = pgTable("sites", {
   }>().default({ views: 0, uniqueVisitors: 0, leads: 0 }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  expiresAt: timestamp("expires_at").notNull().default(sql`now() + interval '4 months'`),
+  expiresAt: timestamp("expires_at").notNull().default(sql`now() + interval '3 months'`),
 });
 
 const customDetailSchema = z.object({
