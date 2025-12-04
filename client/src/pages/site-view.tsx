@@ -2529,25 +2529,25 @@ function MagazineContact({ site, theme, agentInfo }: { site: Site; theme?: Theme
   };
 
   return (
-    <section id="contact" className="py-20 px-6" style={{ backgroundColor: theme?.colors?.secondary || '#2C3E50' }}>
+    <section id="contact" className="py-20 px-6" style={{ backgroundColor: theme?.colors?.background || '#F8FAF9' }}>
       <div className="container mx-auto max-w-5xl">
         <div className="grid md:grid-cols-2 gap-12">
-          <div className="text-white">
+          <div>
             <h2 
               className="text-3xl md:text-4xl mb-6"
-              style={{ fontFamily: 'var(--font-heading)', fontWeight: '400' }}
+              style={{ fontFamily: '"Shippori Mincho B1", serif', fontWeight: '400', color: theme?.colors?.text || '#2C3E50' }}
             >
               Schedule a Private Showing
             </h2>
             <p 
-              className="text-lg opacity-80 mb-8"
-              style={{ fontFamily: 'var(--font-body)', lineHeight: '1.7' }}
+              className="text-lg mb-8"
+              style={{ fontFamily: '"stevie-sans", sans-serif', lineHeight: '1.7', color: theme?.colors?.text || '#2C3E50', opacity: 0.7 }}
             >
               Interested in viewing this property? Fill out the form and we'll get back to you within 24 hours to arrange a private showing.
             </p>
             
             {agentInfo && (
-              <div className="flex items-center gap-4 mt-8 pt-8 border-t border-white/20">
+              <div className="flex items-center gap-4 mt-8 pt-8 border-t" style={{ borderColor: (theme?.colors?.text || '#2C3E50') + '20' }}>
                 {agentInfo.profileImageUrl && (
                   <img 
                     src={agentInfo.profileImageUrl} 
@@ -2556,11 +2556,11 @@ function MagazineContact({ site, theme, agentInfo }: { site: Site; theme?: Theme
                   />
                 )}
                 <div>
-                  <p className="font-medium text-lg" style={{ fontFamily: 'var(--font-body)' }}>
+                  <p className="font-medium text-lg" style={{ fontFamily: '"stevie-sans", sans-serif', color: theme?.colors?.text || '#2C3E50' }}>
                     {agentInfo.name || 'Your Agent'}
                   </p>
                   {agentInfo.phone && (
-                    <p className="opacity-80" style={{ fontFamily: 'var(--font-body)' }}>
+                    <p style={{ fontFamily: '"stevie-sans", sans-serif', color: theme?.colors?.text || '#2C3E50', opacity: 0.7 }}>
                       {agentInfo.phone}
                     </p>
                   )}
@@ -2580,13 +2580,13 @@ function MagazineContact({ site, theme, agentInfo }: { site: Site; theme?: Theme
                 </div>
                 <h3 
                   className="text-2xl mb-2"
-                  style={{ fontFamily: 'var(--font-heading)', fontWeight: '400' }}
+                  style={{ fontFamily: '"Shippori Mincho B1", serif', fontWeight: '400' }}
                 >
                   Thank You!
                 </h3>
                 <p 
                   className="text-gray-600"
-                  style={{ fontFamily: 'var(--font-body)' }}
+                  style={{ fontFamily: '"stevie-sans", sans-serif' }}
                 >
                   We've received your inquiry and will be in touch soon.
                 </p>
@@ -2595,7 +2595,7 @@ function MagazineContact({ site, theme, agentInfo }: { site: Site; theme?: Theme
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="firstName" style={{ fontFamily: 'var(--font-body)' }}>First Name</Label>
+                    <Label htmlFor="firstName" style={{ fontFamily: '"stevie-sans", sans-serif' }}>First Name</Label>
                     <Input
                       id="firstName"
                       value={formData.firstName}
@@ -2606,7 +2606,7 @@ function MagazineContact({ site, theme, agentInfo }: { site: Site; theme?: Theme
                     />
                   </div>
                   <div>
-                    <Label htmlFor="lastName" style={{ fontFamily: 'var(--font-body)' }}>Last Name</Label>
+                    <Label htmlFor="lastName" style={{ fontFamily: '"stevie-sans", sans-serif' }}>Last Name</Label>
                     <Input
                       id="lastName"
                       value={formData.lastName}
@@ -2618,7 +2618,7 @@ function MagazineContact({ site, theme, agentInfo }: { site: Site; theme?: Theme
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="email" style={{ fontFamily: 'var(--font-body)' }}>Email</Label>
+                  <Label htmlFor="email" style={{ fontFamily: '"stevie-sans", sans-serif' }}>Email</Label>
                   <Input
                     id="email"
                     type="email"
@@ -2630,7 +2630,7 @@ function MagazineContact({ site, theme, agentInfo }: { site: Site; theme?: Theme
                   />
                 </div>
                 <div>
-                  <Label htmlFor="phone" style={{ fontFamily: 'var(--font-body)' }}>Phone</Label>
+                  <Label htmlFor="phone" style={{ fontFamily: '"stevie-sans", sans-serif' }}>Phone</Label>
                   <Input
                     id="phone"
                     type="tel"
@@ -2642,7 +2642,7 @@ function MagazineContact({ site, theme, agentInfo }: { site: Site; theme?: Theme
                   />
                 </div>
                 <div>
-                  <Label htmlFor="message" style={{ fontFamily: 'var(--font-body)' }}>Message</Label>
+                  <Label htmlFor="message" style={{ fontFamily: '"stevie-sans", sans-serif' }}>Message</Label>
                   <Textarea
                     id="message"
                     value={formData.message}
@@ -2661,7 +2661,7 @@ function MagazineContact({ site, theme, agentInfo }: { site: Site; theme?: Theme
                 <Button
                   type="submit"
                   className="w-full py-6 text-lg"
-                  style={{ backgroundColor: primaryColor, fontFamily: 'var(--font-body)' }}
+                  style={{ backgroundColor: primaryColor, fontFamily: '"stevie-sans", sans-serif' }}
                   disabled={isSubmitting}
                   data-testid="button-submit-inquiry"
                 >
