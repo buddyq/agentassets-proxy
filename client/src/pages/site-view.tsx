@@ -3407,19 +3407,19 @@ export default function SiteView() {
           <MagazineDocuments site={site} theme={theme} />
         )}
         
-        <section id="map" className="py-16 px-6 bg-white">
+        <section id="map" className="py-16 px-6" style={{ backgroundColor: theme?.colors?.background || '#F8FAF9' }}>
           <div className="container mx-auto max-w-4xl">
             <h2 
               className="text-3xl md:text-4xl mb-10 text-center"
-              style={{ fontFamily: 'var(--font-heading)', fontWeight: '400' }}
+              style={{ fontFamily: '"Shippori Mincho B1", serif', fontWeight: '400', color: theme?.colors?.text || '#2C3E50' }}
             >
               Location
             </h2>
             <div className="rounded-lg overflow-hidden shadow-lg">
-              <div className="bg-gray-50 px-6 py-4 border-b">
+              <div className="px-6 py-4 border-b bg-white">
                 <div className="flex items-center gap-3">
-                  <MapPin className="h-5 w-5" style={{ color: 'var(--theme-primary)' }} />
-                  <span className="font-medium text-gray-700">{site.address}</span>
+                  <MapPin className="h-5 w-5" style={{ color: theme?.colors?.primary || '#558B73' }} />
+                  <span className="font-medium" style={{ color: theme?.colors?.text || '#2C3E50' }}>{site.address}</span>
                 </div>
               </div>
               <div className="aspect-[16/9]">
