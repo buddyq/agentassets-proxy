@@ -116,6 +116,14 @@ export type SiteDocument = {
   url: string;
 };
 
+// Open house event type for Magazine layout
+export type OpenHouseEvent = {
+  label?: string; // e.g., "Broker Open"
+  date: string;
+  startTime: string;
+  endTime: string;
+};
+
 
 // Sites table
 export const sites = pgTable("sites", {
@@ -140,6 +148,10 @@ export const sites = pgTable("sites", {
   heroLogo: text("hero_logo"),
   videoUrl: text("video_url"),
   documents: jsonb("documents").$type<SiteDocument[]>().default([]),
+  // Magazine layout specific fields
+  buyerAgentComp: text("buyer_agent_comp"), // e.g., "3% Buyers Agent Compensation"
+  openHouses: jsonb("open_houses").$type<OpenHouseEvent[]>().default([]),
+  brochureUrl: text("brochure_url"),
   layoutId: text("layout_id"),
   templateId: text("template_id"),
   themeId: text("theme_id").notNull(),
@@ -172,6 +184,13 @@ const documentSchema = z.object({
   url: z.string().min(1),
 });
 
+const openHouseSchema = z.object({
+  label: z.string().max(50).optional(),
+  date: z.string(),
+  startTime: z.string(),
+  endTime: z.string(),
+});
+
 export const insertSiteSchema = createInsertSchema(sites).omit({ id: true, createdAt: true, updatedAt: true, expiresAt: true }).extend({
   templateId: z.string().nullable().optional(),
   customDetails: z.array(customDetailSchema).optional().default([]),
@@ -181,6 +200,10 @@ export const insertSiteSchema = createInsertSchema(sites).omit({ id: true, creat
   bedrooms: z.number().nullable().optional(),
   bathrooms: z.number().nullable().optional(),
   sqft: z.number().nullable().optional(),
+  // Magazine layout fields
+  buyerAgentComp: z.string().nullable().optional(),
+  openHouses: z.array(openHouseSchema).optional().default([]),
+  brochureUrl: z.string().nullable().optional(),
 });
 export type InsertSite = z.infer<typeof insertSiteSchema>;
 export type Site = typeof sites.$inferSelect;
