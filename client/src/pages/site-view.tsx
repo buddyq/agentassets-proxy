@@ -3412,7 +3412,7 @@ export default function SiteView() {
           id="map" 
           className="py-16 px-6 relative overflow-hidden" 
           style={{ 
-            backgroundColor: '#f5f5f5', 
+            backgroundColor: '#eeeeee', 
             scrollMarginTop: '100px' 
           }}
         >
