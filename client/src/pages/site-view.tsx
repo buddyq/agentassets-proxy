@@ -1940,7 +1940,7 @@ function MagazineFactsBar({ site, theme }: { site: Site; theme?: Theme }) {
             {site.bedrooms && (
               <div className="flex flex-col items-center">
                 <Bed style={{ height: '45px', width: '45px', marginBottom: '8px', opacity: 0.9 }} />
-                <span style={{ fontFamily: '"Dynalight", cursive', fontSize: '18px' }}>
+                <span style={{ fontFamily: '"Dynalight", cursive', fontSize: '32px' }}>
                   {site.bedrooms} Beds
                 </span>
               </div>
@@ -1948,7 +1948,7 @@ function MagazineFactsBar({ site, theme }: { site: Site; theme?: Theme }) {
             {site.bathrooms && (
               <div className="flex flex-col items-center">
                 <Bath style={{ height: '45px', width: '45px', marginBottom: '8px', opacity: 0.9 }} />
-                <span style={{ fontFamily: '"Dynalight", cursive', fontSize: '18px' }}>
+                <span style={{ fontFamily: '"Dynalight", cursive', fontSize: '32px' }}>
                   {site.bathrooms} Baths
                 </span>
               </div>
