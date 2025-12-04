@@ -1,9 +1,8 @@
 import { useRoute } from "wouter";
 import { useMemo } from "react";
-import { previewSite, previewTheme, previewAgentInfo, getSiteForLayout } from "@/lib/preview-fixtures";
-import type { Site, Theme, Layout } from "@shared/schema";
+import { previewSite, previewTheme, previewAgentInfo, getSiteForLayout, type PreviewSite, type PreviewTheme } from "@/lib/preview-fixtures";
 
-function getThemeStyles(theme?: Theme) {
+function getThemeStyles(theme?: PreviewTheme) {
   const primary = theme?.colors?.primary || '#558B73';
   const secondary = theme?.colors?.secondary || '#2C3E50';
   const background = theme?.colors?.background || '#ffffff';
@@ -54,7 +53,7 @@ function getLayoutTypography(layoutId: string) {
   } as React.CSSProperties;
 }
 
-function MinimalHero({ site, theme }: { site: Site; theme: Theme }) {
+function MinimalHero({ site, theme }: { site: PreviewSite; theme: PreviewTheme }) {
   const heroImage = site.heroPhotos?.[0] || site.photos?.[0] || '';
   
   return (
@@ -98,7 +97,7 @@ function MinimalHero({ site, theme }: { site: Site; theme: Theme }) {
   );
 }
 
-function ClassicHero({ site, theme }: { site: Site; theme: Theme }) {
+function ClassicHero({ site, theme }: { site: PreviewSite; theme: PreviewTheme }) {
   const heroImage = site.heroPhotos?.[0] || site.photos?.[0] || '';
   
   return (
@@ -161,7 +160,7 @@ function ClassicHero({ site, theme }: { site: Site; theme: Theme }) {
   );
 }
 
-function ShoalwoodHero({ site, theme }: { site: Site; theme: Theme }) {
+function ShoalwoodHero({ site, theme }: { site: PreviewSite; theme: PreviewTheme }) {
   const heroImage = site.heroPhotos?.[0] || site.photos?.[0] || '';
   
   return (
@@ -210,7 +209,7 @@ function ShoalwoodHero({ site, theme }: { site: Site; theme: Theme }) {
   );
 }
 
-function ModernHero({ site, theme }: { site: Site; theme: Theme }) {
+function ModernHero({ site, theme }: { site: PreviewSite; theme: PreviewTheme }) {
   const currentSlide = site.heroSlides?.[0] || {
     title: site.title || "Modern Estate Living",
     subtitle: "Luxury Redefined",
@@ -280,7 +279,7 @@ function ModernHero({ site, theme }: { site: Site; theme: Theme }) {
   );
 }
 
-function MagazineHero({ site, theme }: { site: Site; theme: Theme }) {
+function MagazineHero({ site, theme }: { site: PreviewSite; theme: PreviewTheme }) {
   const heroImage = site.heroPhotos?.[0] || site.photos?.[0] || '';
   
   return (

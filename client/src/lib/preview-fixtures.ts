@@ -1,6 +1,67 @@
-import type { Site, Theme } from "@shared/schema";
+interface HeroSlide {
+  title: string;
+  subtitle: string;
+  backgroundImage: string;
+}
 
-export const previewSite: Site = {
+interface OpenHouseEvent {
+  date: string;
+  startTime: string;
+  endTime: string;
+}
+
+interface PreviewSite {
+  id: string;
+  userId: string;
+  title: string;
+  address: string;
+  price: string;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  sqft: number | null;
+  yearBuilt: string | null;
+  lotSize: string | null;
+  stories: string | null;
+  description: string | null;
+  descriptionImage: string | null;
+  imageUrl: string | null;
+  logo: string | null;
+  heroLogo: string | null;
+  photos: string[] | null;
+  heroPhotos: string[] | null;
+  heroSlides: HeroSlide[];
+  themeId: string;
+  layoutId: string;
+  features: string[];
+  documents: unknown[];
+  videoUrl: string | null;
+  customDomain: string | null;
+  stats: { views: number; uniqueVisitors: number; leads: number };
+  buyerAgentComp: string | null;
+  openHouses: OpenHouseEvent[];
+  brochureUrl: string | null;
+  contentGridImage1: string | null;
+  contentGridImage2: string | null;
+  templateId: string | null;
+  customDetails: unknown[];
+  status: string;
+}
+
+interface PreviewTheme {
+  id: string;
+  userId: string | null;
+  name: string;
+  colors: {
+    primary: string;
+    secondary: string;
+    background: string;
+    text: string;
+  };
+  type: string;
+  logoUrl: string | null;
+}
+
+export const previewSite: PreviewSite = {
   id: "preview-site",
   userId: "preview-user",
   title: "Modern Estate Living",
@@ -49,13 +110,10 @@ export const previewSite: Site = {
   contentGridImage2: null,
   templateId: null,
   customDetails: [],
-  status: "active",
-  createdAt: new Date(),
-  updatedAt: new Date(),
-  expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
+  status: "active"
 };
 
-export const previewTheme: Theme = {
+export const previewTheme: PreviewTheme = {
   id: "preview-theme",
   userId: null,
   name: "Modern Sage",
@@ -66,8 +124,7 @@ export const previewTheme: Theme = {
     text: "#1a1a1a"
   },
   type: "preset",
-  logoUrl: null,
-  createdAt: new Date()
+  logoUrl: null
 };
 
 export const previewAgentInfo = {
@@ -76,9 +133,11 @@ export const previewAgentInfo = {
   phone: "(512) 555-0123"
 };
 
-export function getSiteForLayout(layoutId: string): Site {
+export function getSiteForLayout(layoutId: string): PreviewSite {
   return {
     ...previewSite,
     layoutId
   };
 }
+
+export type { PreviewSite, PreviewTheme };
