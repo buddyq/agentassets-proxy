@@ -130,12 +130,14 @@ Currently uses a demo user system with hardcoded `DEMO_USER_ID`. Authentication 
 
 ### External Integrations
 
-**Email Sending (TODO)**: Contact form submissions are currently stored in the `leads` table but email notifications to site owners are not yet implemented. To enable email notifications:
-1. Set up Resend or SendGrid integration via Replit's integration panel
-2. Update the `/api/leads` endpoint in `server/routes.ts` to send email notifications
-3. The email should be sent to the site owner's email address (found via `site.userId` → `users.email`)
+**Email Sending**: When a lead submits an inquiry via the contact form, an email notification is automatically sent to the site owner (found via `site.userId` → `users.email`). Email is sent using Nodemailer with custom SMTP configuration:
+- SMTP settings stored in environment variables: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_FROM`
+- SMTP password stored securely as `SMTP_PASSWORD` secret
+- Email service located in `server/email.ts` with HTML and text templates
+- User input is HTML-escaped to prevent injection attacks
+- Email failures are logged but don't block lead submission (graceful degradation)
 
-Payment processing (Stripe), email services (Nodemailer), and session storage (connect-pg-simple) dependencies are installed but not actively used - suggesting future planned features for production deployment.
+Payment processing (Stripe) and session storage (connect-pg-simple) dependencies are installed but not actively used - suggesting future planned features for production deployment.
 
 ### Leads/Inquiries System
 

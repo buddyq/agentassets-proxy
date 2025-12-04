@@ -6,6 +6,7 @@ import { insertSiteSchema, insertThemeSchema, insertLayoutSchema, insertLeadSche
 import { z } from "zod";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import archiver from "archiver";
+import { sendLeadNotificationEmail } from "./email";
 
 function getExtensionFromMime(mimeType: string): string {
   const mimeToExt: Record<string, string> = {
@@ -335,6 +336,26 @@ export async function registerRoutes(
           ...site.stats,
           leads: (site.stats.leads || 0) + 1
         });
+      }
+      
+      // Send email notification to site owner
+      if (site && site.userId) {
+        const siteOwner = await storage.getUser(site.userId);
+        if (siteOwner && siteOwner.email) {
+          sendLeadNotificationEmail({
+            recipientEmail: siteOwner.email,
+            recipientName: siteOwner.name || 'Agent',
+            propertyAddress: site.address,
+            propertyTitle: site.title || '',
+            leadFirstName: validated.firstName,
+            leadLastName: validated.lastName,
+            leadEmail: validated.email,
+            leadPhone: validated.phone,
+            leadMessage: validated.message,
+          }).catch(err => {
+            console.error('Failed to send lead email notification:', err);
+          });
+        }
       }
       
       res.status(201).json({ success: true, lead });
