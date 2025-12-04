@@ -2210,7 +2210,7 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
       <link href="https://fonts.googleapis.com/css2?family=Gilda+Display&display=swap" rel="stylesheet" />
       <div className="container mx-auto max-w-6xl">
         <div className="grid md:grid-cols-2 gap-12">
-          {/* Left Column */}
+          {/* Grid 1 - Top Left: Property Name, Links, Description */}
           <div className="space-y-8">
             {/* Property Name */}
             <h2 
@@ -2279,26 +2279,10 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
                 )}
               </div>
             )}
-            
-            {/* Bottom Left Image with Offset */}
-            {bottomLeftImage && (
-              <div className="relative mt-8">
-                <div 
-                  className="absolute -bottom-4 -left-4 w-full h-full"
-                  style={{ backgroundColor: primaryColor, opacity: 0.3 }}
-                />
-                <img 
-                  src={bottomLeftImage} 
-                  alt="Property" 
-                  className="relative w-full h-64 object-cover"
-                />
-              </div>
-            )}
           </div>
           
-          {/* Right Column */}
-          <div className="space-y-8">
-            {/* Top Right Image with Offset */}
+          {/* Grid 2 - Top Right: Image with Offset */}
+          <div>
             {rightImage && (
               <div className="relative">
                 <div 
@@ -2312,8 +2296,27 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
                 />
               </div>
             )}
-            
-            {/* Open House Card */}
+          </div>
+          
+          {/* Grid 3 - Bottom Left: Image with Offset */}
+          <div>
+            {bottomLeftImage && (
+              <div className="relative">
+                <div 
+                  className="absolute -bottom-4 -left-4 w-full h-full"
+                  style={{ backgroundColor: primaryColor, opacity: 0.3 }}
+                />
+                <img 
+                  src={bottomLeftImage} 
+                  alt="Property" 
+                  className="relative w-full h-64 object-cover"
+                />
+              </div>
+            )}
+          </div>
+          
+          {/* Grid 4 - Bottom Right: Open House Card */}
+          <div>
             {hasOpenHouses && (
               <button
                 onClick={() => setShowOpenHouseModal(true)}
