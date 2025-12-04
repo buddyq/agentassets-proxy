@@ -3410,20 +3410,20 @@ export default function SiteView() {
         
         <section 
           id="map" 
-          className="py-16 px-6 relative overflow-hidden bg-white" 
+          className="py-16 px-6 relative overflow-hidden" 
           style={{ 
+            backgroundColor: '#cecece',
             scrollMarginTop: '100px' 
           }}
         >
           {/* Subtle gradient pattern */}
           <svg 
             className="absolute inset-0 w-full h-full pointer-events-none"
-            style={{ opacity: 0.4 }}
             preserveAspectRatio="none"
           >
             <defs>
               <linearGradient id="mapGradient" x1="0%" y1="100%" x2="100%" y2="0%">
-                <stop offset="0%" style={{ stopColor: theme?.colors?.primary || '#558B73', stopOpacity: 0.08 }} />
+                <stop offset="0%" style={{ stopColor: theme?.colors?.primary || '#558B73', stopOpacity: 0.25 }} />
                 <stop offset="100%" style={{ stopColor: theme?.colors?.primary || '#558B73', stopOpacity: 0 }} />
               </linearGradient>
             </defs>
