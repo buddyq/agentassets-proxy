@@ -133,10 +133,54 @@ export const previewAgentInfo = {
   phone: "(512) 555-0123"
 };
 
+const layoutImages: Record<string, { hero: string; photos: string[] }> = {
+  'layout-minimal': {
+    hero: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1920&h=1080&fit=crop',
+    photos: [
+      'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&h=800&fit=crop'
+    ]
+  },
+  'layout-modern': {
+    hero: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1920&h=1080&fit=crop',
+    photos: [
+      'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1200&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1200&h=800&fit=crop'
+    ]
+  },
+  'layout-shoalwood': {
+    hero: 'https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=1920&h=1080&fit=crop',
+    photos: [
+      'https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=1200&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=1200&h=800&fit=crop'
+    ]
+  },
+  'layout-magazine': {
+    hero: 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=1920&h=1080&fit=crop',
+    photos: [
+      'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=1200&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=1200&h=800&fit=crop'
+    ]
+  },
+  'layout-classic': {
+    hero: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1920&h=1080&fit=crop',
+    photos: [
+      'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=1200&h=800&fit=crop'
+    ]
+  }
+};
+
 export function getSiteForLayout(layoutId: string): PreviewSite {
+  const images = layoutImages[layoutId] || layoutImages['layout-minimal'];
   return {
     ...previewSite,
-    layoutId
+    layoutId,
+    heroPhotos: [images.hero],
+    photos: images.photos,
+    heroSlides: [
+      { title: "Modern Estate Living", subtitle: "Luxury Redefined", backgroundImage: images.hero }
+    ]
   };
 }
 
