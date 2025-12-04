@@ -55,6 +55,7 @@ export const layouts = pgTable("layouts", {
   description: text("description"),
   thumbnailUrl: text("thumbnail_url"),
   type: text("type").notNull().default('preset'),
+  enabled: text("enabled").notNull().default('true'),
   structure: jsonb("structure").notNull().$type<{
     heroStyle: 'fullscreen' | 'split' | 'minimal' | 'slider';
     galleryStyle: 'grid' | 'masonry' | 'carousel' | 'lightbox';
