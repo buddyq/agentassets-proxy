@@ -2541,7 +2541,7 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
                       className="px-4 py-2 rounded-full border"
                       style={{ 
                         borderColor: primaryColor,
-                        color: primaryColor
+                        color: theme?.colors?.text || '#2C3E50'
                       }}
                       data-testid={`tag-feature-${index}`}
                     >
