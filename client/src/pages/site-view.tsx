@@ -1795,7 +1795,7 @@ function MagazineNavigation({ site, theme, effectiveLogo }: { site: Site; theme?
               className={`transition-colors hover:opacity-70 ${
                 scrolled ? 'text-gray-800' : 'text-white'
               }`}
-              style={{ fontFamily: '"stevie-sans", sans-serif', fontSize: '16px', textTransform: 'capitalize' }}
+              style={{ fontFamily: '"stevie-sans", sans-serif', fontSize: '16px', textTransform: 'capitalize', letterSpacing: '0.02em', fontWeight: '400' }}
               onClick={(e) => {
                 e.preventDefault();
                 document.querySelector(item.href)?.scrollIntoView({ behavior: 'smooth' });
