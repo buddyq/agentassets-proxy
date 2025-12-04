@@ -2286,7 +2286,7 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
             {rightImage && (
               <div className="relative">
                 <div 
-                  className="absolute -top-4 -right-4 w-full h-full"
+                  className="absolute top-4 left-4 w-full h-full"
                   style={{ backgroundColor: primaryColor, opacity: 0.3 }}
                 />
                 <img 
@@ -2303,7 +2303,7 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
             {bottomLeftImage && (
               <div className="relative">
                 <div 
-                  className="absolute -bottom-4 -left-4 w-full h-full"
+                  className="absolute top-4 left-4 w-full h-full"
                   style={{ backgroundColor: primaryColor, opacity: 0.3 }}
                 />
                 <img 
