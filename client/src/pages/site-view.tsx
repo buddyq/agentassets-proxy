@@ -2023,7 +2023,7 @@ function MagazineMarqueeGallery({ photos }: { photos: string[] }) {
         <div className="mb-12 text-center">
           <h2 
             className="text-3xl md:text-4xl"
-            style={{ fontFamily: 'var(--font-heading)', fontWeight: '400' }}
+            style={{ fontFamily: '"Shippori Mincho B1", serif', fontWeight: '400' }}
           >
             Photo Gallery
           </h2>
