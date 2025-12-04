@@ -2366,7 +2366,7 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
             Features & Amenities
           </h2>
           <div className="container mx-auto max-w-6xl">
-            <div className="grid md:grid-cols-2 gap-12">
+            <div className="grid md:grid-cols-[1fr_auto_1fr] gap-8">
               {/* Left Column - Property Details */}
               <div>
                 <h3 
@@ -2375,7 +2375,7 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
                 >
                   Property Details
                 </h3>
-                <div className="space-y-4">
+                <div className="space-y-0">
                   {site.bedrooms && (
                     <div className="flex justify-between py-3 border-b border-gray-200">
                       <span style={{ fontFamily: '"Arimo", sans-serif', color: '#666' }}>Bedrooms</span>
@@ -2394,6 +2394,12 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
                       <span style={{ fontFamily: '"Arimo", sans-serif', fontWeight: '500' }}>{site.sqft}</span>
                     </div>
                   )}
+                  {(site as any).stories && (
+                    <div className="flex justify-between py-3 border-b border-gray-200">
+                      <span style={{ fontFamily: '"Arimo", sans-serif', color: '#666' }}>Stories</span>
+                      <span style={{ fontFamily: '"Arimo", sans-serif', fontWeight: '500' }}>{(site as any).stories}</span>
+                    </div>
+                  )}
                   {(site as any).yearBuilt && (
                     <div className="flex justify-between py-3 border-b border-gray-200">
                       <span style={{ fontFamily: '"Arimo", sans-serif', color: '#666' }}>Year Built</span>
@@ -2406,7 +2412,24 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
                       <span style={{ fontFamily: '"Arimo", sans-serif', fontWeight: '500' }}>{site.lotSize}</span>
                     </div>
                   )}
+                  {/* Custom Details */}
+                  {(site as any).customDetails?.map((detail: { label: string; value: string }, index: number) => (
+                    <div key={index} className="flex justify-between py-3 border-b border-gray-200">
+                      <span style={{ fontFamily: '"Arimo", sans-serif', color: '#666' }}>{detail.label}</span>
+                      <span style={{ fontFamily: '"Arimo", sans-serif', fontWeight: '500' }}>{detail.value}</span>
+                    </div>
+                  ))}
                 </div>
+              </div>
+              
+              {/* Middle Separator */}
+              <div className="hidden md:flex flex-col items-center">
+                <div 
+                  className="w-px h-full"
+                  style={{ 
+                    background: `linear-gradient(to bottom, transparent, ${primaryColor}, ${primaryColor}, transparent)` 
+                  }}
+                />
               </div>
               
               {/* Right Column - Features Tag Cloud */}
