@@ -2154,6 +2154,111 @@ function MagazineMarqueeGallery({ photos }: { photos: string[] }) {
   );
 }
 
+function MagazineDocuments({ site, theme }: { site: Site; theme?: Theme }) {
+  const primaryColor = theme?.colors?.primary || '#558B73';
+  const [isDownloadingAll, setIsDownloadingAll] = useState(false);
+  
+  const documents = site.documents || [];
+  
+  if (documents.length === 0) {
+    return null;
+  }
+  
+  const handleDownloadAll = async () => {
+    setIsDownloadingAll(true);
+    try {
+      const response = await fetch(`/api/sites/${site.id}/documents/download-all`);
+      if (!response.ok) throw new Error('Failed to download');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${site.address.replace(/[^a-zA-Z0-9]/g, '-')}-documents.zip`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Download failed:', error);
+    } finally {
+      setIsDownloadingAll(false);
+    }
+  };
+  
+  return (
+    <section id="documents" className="py-16 px-6 bg-white" style={{ scrollMarginTop: '100px' }}>
+      <div className="container mx-auto max-w-4xl">
+        <h2 
+          className="text-3xl md:text-4xl mb-4 text-center"
+          style={{ fontFamily: '"Shippori Mincho B1", serif', fontWeight: '400' }}
+        >
+          Documents
+        </h2>
+        <p 
+          className="text-center text-gray-500 mb-10"
+          style={{ fontFamily: '"Arimo", sans-serif' }}
+        >
+          Download important documents related to this property
+        </p>
+        
+        {/* Download All Button */}
+        {documents.length > 1 && (
+          <div className="flex justify-center mb-8">
+            <button
+              onClick={handleDownloadAll}
+              disabled={isDownloadingAll}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full border-2 transition-all hover:opacity-80 disabled:opacity-50"
+              style={{ 
+                borderColor: primaryColor, 
+                color: primaryColor,
+                fontFamily: '"Arimo", sans-serif'
+              }}
+              data-testid="button-download-all-documents"
+            >
+              <Package className="h-5 w-5" />
+              {isDownloadingAll ? 'Preparing ZIP...' : 'Download All Documents'}
+            </button>
+          </div>
+        )}
+        
+        {/* Document Grid */}
+        <div className="grid md:grid-cols-2 gap-4">
+          {documents.map((doc, index) => (
+            <a
+              key={index}
+              href={doc.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              download
+              className="flex items-center gap-4 p-5 border rounded-lg hover:shadow-md transition-all group"
+              style={{ borderColor: '#e5e7eb' }}
+              data-testid={`document-${index}`}
+            >
+              <div 
+                className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{ backgroundColor: primaryColor + '15' }}
+              >
+                <FileText className="h-6 w-6" style={{ color: primaryColor }} />
+              </div>
+              <span 
+                className="flex-1 font-medium text-gray-800 truncate"
+                style={{ fontFamily: '"Arimo", sans-serif' }}
+              >
+                {doc.name}
+              </span>
+              <Download 
+                className="h-5 w-5 flex-shrink-0 group-hover:scale-110 transition-transform" 
+                style={{ color: primaryColor }} 
+              />
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 type OpenHouseEventType = {
   label?: string;
   date: string;
@@ -3299,37 +3404,7 @@ export default function SiteView() {
         )}
         
         {site.documents && site.documents.length > 0 && (
-          <section id="documents" className="py-16 px-6 bg-white" style={{ scrollMarginTop: '100px' }}>
-            <div className="container mx-auto max-w-4xl">
-              <h2 
-                className="text-3xl md:text-4xl mb-10 text-center"
-                style={{ fontFamily: '"Shippori Mincho B1", serif', fontWeight: '400' }}
-              >
-                Documents
-              </h2>
-              <div className="space-y-4">
-                {site.documents.map((doc, index) => (
-                  <a
-                    key={index}
-                    href={doc.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors group"
-                    data-testid={`document-${index}`}
-                  >
-                    <FileText className="h-6 w-6" style={{ color: theme?.colors?.primary || '#558B73' }} />
-                    <span 
-                      className="flex-1"
-                      style={{ fontFamily: '"Arimo", sans-serif' }}
-                    >
-                      {doc.name}
-                    </span>
-                    <Download className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: theme?.colors?.primary || '#558B73' }} />
-                  </a>
-                ))}
-              </div>
-            </div>
-          </section>
+          <MagazineDocuments site={site} theme={theme} />
         )}
         
         <section id="map" className="py-16 px-6 bg-white">
