@@ -206,6 +206,8 @@ export default function EditSite() {
           brochureUrl: formData.brochureUrl || null,
           contentGridImage1: formData.contentGridImage1 || null,
           contentGridImage2: formData.contentGridImage2 || null,
+          // Features
+          features: formData.features ? formData.features.split(',').map((f: string) => f.trim()).filter(Boolean) : [],
         }
       },
       {
