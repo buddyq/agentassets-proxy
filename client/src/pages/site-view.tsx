@@ -1911,7 +1911,7 @@ function MagazineFactsBar({ site, theme }: { site: Site; theme?: Theme }) {
     <section 
       id="facts" 
       className="py-8 md:py-12"
-      style={{ backgroundColor: primaryColor }}
+      style={{ backgroundColor: primaryColor, scrollMarginTop: '100px' }}
     >
       <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;600&display=swap" rel="stylesheet" />
       <div className="container mx-auto px-6">
@@ -2022,7 +2022,7 @@ function MagazineMarqueeGallery({ photos }: { photos: string[] }) {
 
   return (
     <>
-      <section id="photos" className="py-16 overflow-hidden bg-gray-50">
+      <section id="photos" className="py-16 overflow-hidden bg-gray-50" style={{ scrollMarginTop: '100px' }}>
         <div className="mb-12 text-center">
           <h2 
             className="text-3xl md:text-4xl"
@@ -2215,7 +2215,7 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
   };
 
   return (
-    <section id="about" className="py-16 px-6 bg-white">
+    <section id="about" className="py-16 px-6 bg-white" style={{ scrollMarginTop: '100px' }}>
       <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;600&display=swap" rel="stylesheet" />
       <div className="container mx-auto max-w-6xl">
         <div className="grid md:grid-cols-2 gap-12">
@@ -2359,7 +2359,7 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
       </div>
       {/* Features Section */}
       {hasFeatures && (
-        <div id="features" className="mt-16 pt-16 border-t">
+        <div id="features" className="mt-16 pt-16 border-t" style={{ scrollMarginTop: '100px' }}>
           <h2 
             className="text-3xl md:text-4xl mb-12 text-center font-normal"
             style={{ fontFamily: '"Shippori Mincho B1", serif' }}
@@ -2542,7 +2542,7 @@ function MagazineContact({ site, theme, agentInfo }: { site: Site; theme?: Theme
   };
 
   return (
-    <section id="contact" className="py-20 px-6" style={{ backgroundColor: theme?.colors?.background || '#F8FAF9' }}>
+    <section id="contact" className="py-20 px-6" style={{ backgroundColor: theme?.colors?.background || '#F8FAF9', scrollMarginTop: '100px' }}>
       <div className="container mx-auto max-w-5xl">
         <div className="grid md:grid-cols-2 gap-12">
           <div>
@@ -3212,7 +3212,7 @@ export default function SiteView() {
         {hasPhotos && <MagazineMarqueeGallery photos={site.photos!} />}
         
         {hasVideo && (
-          <section id="video" className="py-16 px-6 bg-gray-50">
+          <section id="video" className="py-16 px-6 bg-gray-50" style={{ scrollMarginTop: '100px' }}>
             <div className="container mx-auto max-w-4xl">
               <h2 
                 className="text-3xl md:text-4xl mb-10 text-center"
@@ -3234,7 +3234,7 @@ export default function SiteView() {
         )}
         
         {site.documents && site.documents.length > 0 && (
-          <section id="documents" className="py-16 px-6 bg-white">
+          <section id="documents" className="py-16 px-6 bg-white" style={{ scrollMarginTop: '100px' }}>
             <div className="container mx-auto max-w-4xl">
               <h2 
                 className="text-3xl md:text-4xl mb-10 text-center"
