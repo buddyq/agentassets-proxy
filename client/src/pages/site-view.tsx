@@ -1939,7 +1939,7 @@ function MagazineFactsBar({ site, theme }: { site: Site; theme?: Theme }) {
           <div className="flex flex-wrap items-end gap-8 md:gap-10 text-white">
             {site.bedrooms && (
               <div className="flex flex-col items-center">
-                <Bed className="h-8 w-8 mb-2 opacity-90" />
+                <Bed style={{ height: '45px', width: '45px', marginBottom: '8px', opacity: 0.9 }} />
                 <span style={{ fontFamily: '"stevie-sans", sans-serif', fontWeight: '300', fontSize: '16px' }}>
                   {site.bedrooms} Beds
                 </span>
@@ -1947,7 +1947,7 @@ function MagazineFactsBar({ site, theme }: { site: Site; theme?: Theme }) {
             )}
             {site.bathrooms && (
               <div className="flex flex-col items-center">
-                <Bath className="h-8 w-8 mb-2 opacity-90" />
+                <Bath style={{ height: '45px', width: '45px', marginBottom: '8px', opacity: 0.9 }} />
                 <span style={{ fontFamily: '"stevie-sans", sans-serif', fontWeight: '300', fontSize: '16px' }}>
                   {site.bathrooms} Baths
                 </span>
@@ -1955,7 +1955,7 @@ function MagazineFactsBar({ site, theme }: { site: Site; theme?: Theme }) {
             )}
             {site.sqft && (
               <div className="flex flex-col items-center">
-                <Square className="h-8 w-8 mb-2 opacity-90" />
+                <Square style={{ height: '45px', width: '45px', marginBottom: '8px', opacity: 0.9 }} />
                 <span style={{ fontFamily: '"stevie-sans", sans-serif', fontWeight: '300', fontSize: '16px' }}>
                   {site.sqft.toLocaleString()} sqft
                 </span>
@@ -1969,7 +1969,7 @@ function MagazineFactsBar({ site, theme }: { site: Site; theme?: Theme }) {
             )}
             {site.lotSize && (
               <div className="flex flex-col items-center">
-                <Building className="h-8 w-8 mb-2 opacity-90" />
+                <Building style={{ height: '45px', width: '45px', marginBottom: '8px', opacity: 0.9 }} />
                 <span style={{ fontFamily: '"stevie-sans", sans-serif', fontWeight: '300', fontSize: '16px' }}>
                   {site.lotSize}
                 </span>
