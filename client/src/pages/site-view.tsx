@@ -2251,8 +2251,8 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
                 {hasDocuments && (
                   <a
                     href="#documents"
-                    className="inline-flex items-center gap-2 text-base hover:opacity-70 transition-opacity text-[#000000]"
-                    style={{ fontFamily: '"stevie-sans", sans-serif', color: '#666' }}
+                    className="inline-flex items-center gap-2 text-base hover:opacity-70 transition-opacity"
+                    style={{ fontFamily: '"stevie-sans", sans-serif', color: '#000000' }}
                     onClick={(e) => {
                       e.preventDefault();
                       document.getElementById('documents')?.scrollIntoView({ behavior: 'smooth' });
