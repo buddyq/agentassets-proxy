@@ -9,7 +9,7 @@ import { useCreateSite, useUpdateCredits, useThemes, useLayouts, getUploadUrl, n
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, CreditCard, LayoutGrid, Plus, X, Image, GripVertical, Star, Settings } from "lucide-react";
+import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, CreditCard, LayoutGrid, Plus, X, Image, GripVertical, Star, Settings, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ObjectUploader } from "@/components/ObjectUploader";
@@ -1041,20 +1041,52 @@ export default function CreateSite() {
                         />
                       </div>
 
-                      {/* Brochure URL */}
+                      {/* Brochure Upload */}
                       <div className="grid gap-2">
-                        <Label htmlFor="brochureUrl">Brochure URL (Optional)</Label>
+                        <Label>Brochure (Optional)</Label>
                         <p className="text-sm text-muted-foreground mb-2">
-                          Link to a downloadable brochure PDF for this property.
+                          Upload a downloadable brochure PDF for this property.
                         </p>
-                        <Input
-                          id="brochureUrl"
-                          type="url"
-                          placeholder="https://example.com/brochure.pdf"
-                          value={formData.brochureUrl}
-                          onChange={(e) => setFormData({...formData, brochureUrl: e.target.value})}
-                          data-testid="input-brochure-url"
-                        />
+                        {formData.brochureUrl ? (
+                          <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+                            <FileText className="h-8 w-8 text-primary" />
+                            <div className="flex-1">
+                              <p className="text-sm font-medium">Brochure uploaded</p>
+                              <a 
+                                href={formData.brochureUrl} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-xs text-muted-foreground hover:underline"
+                              >
+                                View brochure
+                              </a>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setFormData({...formData, brochureUrl: ''})}
+                              className="bg-destructive text-white p-1.5 rounded-full"
+                              data-testid="button-remove-brochure"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <ObjectUploader
+                            maxNumberOfFiles={1}
+                            maxFileSize={20971520}
+                            variant="dropzone"
+                            onGetUploadParameters={async () => {
+                              const { url } = await getUploadUrl();
+                              return { method: 'PUT' as const, url };
+                            }}
+                            onComplete={(result) => {
+                              if (result.successful && result.successful.length > 0) {
+                                const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
+                                setFormData({...formData, brochureUrl: normalizedUrl});
+                              }
+                            }}
+                          />
+                        )}
                       </div>
 
                       {/* Open Houses */}
