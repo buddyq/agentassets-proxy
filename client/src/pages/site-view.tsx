@@ -1836,11 +1836,12 @@ function MagazineHero({ site, theme, heroImage }: { site: Site; theme?: Theme; h
       
       <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/70" />
       
-      <div className="absolute inset-0 flex flex-col justify-end text-white pb-24 px-8">
+      <div className="absolute left-0 right-0 text-white px-8" style={{ bottom: '40px' }}>
         <div className="container mx-auto max-w-6xl">
           <h1 
-            className="text-4xl md:text-6xl lg:text-7xl mb-4 magazine-hero-text"
+            className="magazine-hero-text"
             style={{ 
+              fontSize: '24px',
               fontWeight: '300',
               letterSpacing: '-0.02em'
             }}
@@ -1852,12 +1853,13 @@ function MagazineHero({ site, theme, heroImage }: { site: Site; theme?: Theme; h
       
       <button
         onClick={() => document.getElementById('facts')?.scrollIntoView({ behavior: 'smooth' })}
-        className="absolute bottom-8 right-8 w-14 h-14 rounded-full border-2 border-white/70 flex items-center justify-center hover:bg-white/10 transition-colors cursor-pointer"
+        className="absolute bottom-8 right-8 rounded-full border-2 border-white/70 flex items-center justify-center hover:bg-white/40 transition-colors cursor-pointer"
+        style={{ width: '128px', height: '128px', backgroundColor: 'rgba(255, 255, 255, 0.3)' }}
         data-testid="button-magazine-scroll"
         aria-label="Scroll down"
       >
         <ChevronDown 
-          className="h-6 w-6 text-white" 
+          className="h-10 w-10 text-white" 
           style={{ animation: 'scroll-arrow 2s ease-in-out infinite' }}
         />
       </button>
