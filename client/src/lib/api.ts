@@ -295,14 +295,19 @@ export function useReorderPhotos() {
 }
 
 // Layouts API
-export function useLayouts(options?: { preset?: boolean; userId?: string }) {
+export function useLayouts(options?: { preset?: boolean; userId?: string; enabledOnly?: boolean }) {
   return useQuery({
-    queryKey: options?.preset ? ['layouts', 'preset'] : options?.userId ? ['layouts', 'user', options.userId] : ['layouts'],
+    queryKey: options?.preset 
+      ? ['layouts', 'preset', options.enabledOnly ? 'enabled' : 'all'] 
+      : options?.userId 
+        ? ['layouts', 'user', options.userId] 
+        : ['layouts'],
     queryFn: async () => {
       let url = `${API_BASE}/layouts`;
       const params = new URLSearchParams();
       if (options?.preset) params.append('preset', 'true');
       if (options?.userId) params.append('userId', options.userId);
+      if (options?.enabledOnly) params.append('enabledOnly', 'true');
       if (params.toString()) url += `?${params}`;
       
       const res = await fetch(url);
