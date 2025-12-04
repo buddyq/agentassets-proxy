@@ -152,6 +152,8 @@ export const sites = pgTable("sites", {
   buyerAgentComp: text("buyer_agent_comp"), // e.g., "3% Buyers Agent Compensation"
   openHouses: jsonb("open_houses").$type<OpenHouseEvent[]>().default([]),
   brochureUrl: text("brochure_url"),
+  contentGridImage1: text("content_grid_image_1"), // Image for grid position 2 (top right)
+  contentGridImage2: text("content_grid_image_2"), // Image for grid position 3 (bottom left)
   layoutId: text("layout_id"),
   templateId: text("template_id"),
   themeId: text("theme_id").notNull(),
