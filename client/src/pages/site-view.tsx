@@ -1768,6 +1768,7 @@ function MagazineNavigation({ site, theme, effectiveLogo }: { site: Site; theme?
     { label: 'Gallery', href: '#photos', show: hasPhotos },
     { label: 'Video', href: '#video', show: hasVideo },
     { label: 'Documents', href: '#documents', show: hasDocuments },
+    { label: 'Map', href: '#map' },
     { label: 'Contact', href: '#contact' },
   ].filter(item => item.show !== false);
 
@@ -2712,7 +2713,7 @@ function MagazineContact({ site, theme, agentInfo }: { site: Site; theme?: Theme
   };
 
   return (
-    <section id="contact" className="py-20 px-6" style={{ backgroundColor: theme?.colors?.background || '#F8FAF9', scrollMarginTop: '100px' }}>
+    <section id="contact" className="py-20 px-6 bg-white" style={{ scrollMarginTop: '100px' }}>
       <div className="container mx-auto max-w-5xl">
         <div className="grid md:grid-cols-2 gap-12">
           <div>
@@ -3407,13 +3408,13 @@ export default function SiteView() {
           <MagazineDocuments site={site} theme={theme} />
         )}
         
-        <section id="map" className="py-16 px-6" style={{ backgroundColor: theme?.colors?.background || '#F8FAF9' }}>
+        <section id="map" className="py-16 px-6" style={{ backgroundColor: theme?.colors?.background || '#F8FAF9', scrollMarginTop: '100px' }}>
           <div className="container mx-auto max-w-4xl">
             <h2 
               className="text-3xl md:text-4xl mb-10 text-center"
               style={{ fontFamily: '"Shippori Mincho B1", serif', fontWeight: '400', color: theme?.colors?.text || '#2C3E50' }}
             >
-              Location
+              Map
             </h2>
             <div className="rounded-lg overflow-hidden shadow-lg">
               <div className="px-6 py-4 border-b bg-white">
