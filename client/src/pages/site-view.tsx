@@ -1900,38 +1900,85 @@ function MagazineHero({ site, theme, heroImage }: { site: Site; theme?: Theme; h
 }
 
 function MagazineFactsBar({ site, theme }: { site: Site; theme?: Theme }) {
-  const facts = [
-    { label: 'Bedrooms', value: site.bedrooms?.toString() || '—' },
-    { label: 'Bathrooms', value: site.bathrooms?.toString() || '—' },
-    { label: 'Square Feet', value: site.sqft?.toLocaleString() || '—' },
-    { label: 'Year Built', value: site.yearBuilt?.toString() || '—' },
-    { label: 'Lot Size', value: site.lotSize || '—' },
-  ].filter(f => f.value !== '—');
-
+  const primaryColor = theme?.colors?.primary || '#558B73';
+  
   return (
     <section 
       id="facts" 
-      className="py-12 border-b"
-      style={{ backgroundColor: theme?.colors?.primary || '#558B73' }}
+      className="py-8 md:py-12"
+      style={{ backgroundColor: primaryColor }}
     >
       <div className="container mx-auto px-6">
-        <div className="flex flex-wrap justify-center gap-8 md:gap-16">
-          {facts.map((fact, index) => (
-            <div key={index} className="text-center text-white">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          {/* Left side - Offered At, Price, Compensation */}
+          <div className="text-white">
+            <p 
+              className="text-sm uppercase tracking-widest opacity-80 mb-1"
+              style={{ fontFamily: '"stevie-sans", sans-serif', letterSpacing: '0.1em' }}
+            >
+              Offered At
+            </p>
+            <p 
+              className="text-3xl md:text-4xl mb-1"
+              style={{ fontFamily: '"stevie-sans", sans-serif', fontWeight: '300' }}
+            >
+              {site.price || '$0'}
+            </p>
+            {(site as any).buyerAgentComp && (
               <p 
-                className="text-3xl md:text-4xl mb-2"
-                style={{ fontFamily: 'var(--font-heading)', fontWeight: '400' }}
+                className="text-sm opacity-80"
+                style={{ fontFamily: '"stevie-sans", sans-serif', fontWeight: '300' }}
               >
-                {fact.value}
+                {(site as any).buyerAgentComp}
               </p>
-              <p 
-                className="text-sm uppercase tracking-widest opacity-80"
-                style={{ fontFamily: 'var(--font-body)' }}
-              >
-                {fact.label}
-              </p>
-            </div>
-          ))}
+            )}
+          </div>
+          
+          {/* Right side - Property stats with icons */}
+          <div className="flex flex-wrap items-center gap-6 md:gap-8 text-white">
+            {site.bedrooms && (
+              <div className="flex items-center gap-2">
+                <Bed className="h-5 w-5 opacity-80" />
+                <span style={{ fontFamily: '"stevie-sans", sans-serif', fontWeight: '300', fontSize: '16px' }}>
+                  {site.bedrooms} Beds
+                </span>
+              </div>
+            )}
+            {site.bathrooms && (
+              <div className="flex items-center gap-2">
+                <Bath className="h-5 w-5 opacity-80" />
+                <span style={{ fontFamily: '"stevie-sans", sans-serif', fontWeight: '300', fontSize: '16px' }}>
+                  {site.bathrooms} Baths
+                </span>
+              </div>
+            )}
+            {site.sqft && (
+              <div className="flex flex-col">
+                <span style={{ fontFamily: '"stevie-sans", sans-serif', fontWeight: '300', fontSize: '16px' }}>
+                  {site.sqft.toLocaleString()} sqft
+                </span>
+                <span 
+                  className="text-xs opacity-70"
+                  style={{ fontFamily: '"stevie-sans", sans-serif' }}
+                >
+                  Home Size
+                </span>
+              </div>
+            )}
+            {site.lotSize && (
+              <div className="flex flex-col">
+                <span style={{ fontFamily: '"stevie-sans", sans-serif', fontWeight: '300', fontSize: '16px' }}>
+                  {site.lotSize}
+                </span>
+                <span 
+                  className="text-xs opacity-70"
+                  style={{ fontFamily: '"stevie-sans", sans-serif' }}
+                >
+                  Lot Size
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </section>
