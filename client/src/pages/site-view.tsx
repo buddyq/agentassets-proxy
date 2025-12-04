@@ -2292,7 +2292,7 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
                 <img 
                   src={rightImage} 
                   alt="Property" 
-                  className="relative w-full h-80 object-cover"
+                  className="relative w-full h-auto"
                 />
               </div>
             )}
@@ -2309,7 +2309,7 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
                 <img 
                   src={bottomLeftImage} 
                   alt="Property" 
-                  className="relative w-full h-64 object-cover"
+                  className="relative w-full h-auto"
                 />
               </div>
             )}
