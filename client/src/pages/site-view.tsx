@@ -1022,7 +1022,7 @@ function ModernHero({ site, theme, heroImage, effectiveHeroLogo }: {
             className="text-white mb-6"
             style={{ 
               fontFamily: 'var(--font-heading)',
-              fontWeight: 'var(--heading-weight)',
+              fontWeight: 'normal',
               letterSpacing: '-0.02em',
               lineHeight: '1.1',
               fontSize: '46px',
