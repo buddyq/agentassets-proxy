@@ -2172,8 +2172,8 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
   const needsReadMore = site.description && site.description.length > 700;
   
   const photos = site.photos || [];
-  const rightImage = photos[1] || photos[0];
-  const bottomLeftImage = photos[2] || photos[1] || photos[0];
+  const rightImage = (site as any).contentGridImage1 || photos[1] || photos[0];
+  const bottomLeftImage = (site as any).contentGridImage2 || photos[2] || photos[1] || photos[0];
 
   const formatDate = (dateStr: string): string => {
     if (!dateStr) return 'TBD';
