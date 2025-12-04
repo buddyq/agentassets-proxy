@@ -260,9 +260,15 @@ export async function registerRoutes(
   // Layout routes
   app.get("/api/layouts", async (req, res) => {
     try {
-      const { preset, userId } = req.query;
+      const { preset, userId, enabledOnly } = req.query;
       
       if (preset === 'true') {
+        // If enabledOnly=true, only return enabled layouts (for regular users)
+        // If enabledOnly=false or not specified, return all layouts (for admin)
+        if (enabledOnly === 'true') {
+          const layouts = await storage.getEnabledPresetLayouts();
+          return res.json(layouts);
+        }
         const layouts = await storage.getPresetLayouts();
         return res.json(layouts);
       }
