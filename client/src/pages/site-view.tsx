@@ -2149,122 +2149,6 @@ function MagazineMarqueeGallery({ photos }: { photos: string[] }) {
   );
 }
 
-function MagazineTabs({ site, theme }: { site: Site; theme?: Theme }) {
-  const [activeTab, setActiveTab] = useState('brochure');
-  const hasDocuments = site.documents && site.documents.length > 0;
-  const hasBrochure = site.brochureUrl;
-  
-  if (!hasDocuments && !hasBrochure) return null;
-  
-  const primaryColor = theme?.colors?.primary || '#558B73';
-
-  return (
-    <section className="py-16 px-6">
-      <div className="container mx-auto max-w-4xl">
-        <div className="flex justify-center gap-8 mb-12 border-b">
-          {hasBrochure && (
-            <button
-              className={`pb-4 text-lg transition-all border-b-2 -mb-px ${
-                activeTab === 'brochure' 
-                  ? 'border-current' 
-                  : 'border-transparent opacity-60 hover:opacity-100'
-              }`}
-              style={{ 
-                fontFamily: 'var(--font-body)',
-                color: activeTab === 'brochure' ? primaryColor : undefined
-              }}
-              onClick={() => setActiveTab('brochure')}
-              data-testid="tab-brochure"
-            >
-              Brochure
-            </button>
-          )}
-          {hasDocuments && (
-            <button
-              className={`pb-4 text-lg transition-all border-b-2 -mb-px ${
-                activeTab === 'documents' 
-                  ? 'border-current' 
-                  : 'border-transparent opacity-60 hover:opacity-100'
-              }`}
-              style={{ 
-                fontFamily: 'var(--font-body)',
-                color: activeTab === 'documents' ? primaryColor : undefined
-              }}
-              onClick={() => setActiveTab('documents')}
-              data-testid="tab-documents"
-            >
-              Documents
-            </button>
-          )}
-        </div>
-        
-        {activeTab === 'brochure' && hasBrochure && (
-          <div className="text-center">
-            <a
-              href={site.brochureUrl!}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-3 px-8 py-4 text-lg text-white rounded-none transition-all hover:opacity-90"
-              style={{ backgroundColor: primaryColor, fontFamily: 'var(--font-body)' }}
-              data-testid="button-download-brochure"
-            >
-              <Download className="h-5 w-5" />
-              Download Brochure
-            </a>
-          </div>
-        )}
-        
-        {activeTab === 'documents' && hasDocuments && (
-          <div className="space-y-4">
-            {site.documents?.map((doc, index) => (
-              <a
-                key={index}
-                href={doc.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors group"
-                data-testid={`document-${index}`}
-              >
-                <FileText className="h-6 w-6" style={{ color: primaryColor }} />
-                <span 
-                  className="flex-1"
-                  style={{ fontFamily: 'var(--font-body)' }}
-                >
-                  {doc.name}
-                </span>
-                <Download className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: primaryColor }} />
-              </a>
-            ))}
-          </div>
-        )}
-      </div>
-    </section>
-  );
-}
-
-function MagazineAbout({ site, theme }: { site: Site; theme?: Theme }) {
-  if (!site.description) return null;
-
-  return (
-    <section className="py-16 px-6 bg-white">
-      <div className="container mx-auto max-w-3xl">
-        <h2 
-          className="text-3xl md:text-4xl mb-8 text-center"
-          style={{ fontFamily: 'var(--font-heading)', fontWeight: '400' }}
-        >
-          About This Property
-        </h2>
-        <p 
-          className="text-lg leading-relaxed text-gray-700 text-center"
-          style={{ fontFamily: 'var(--font-body)', lineHeight: '1.8' }}
-        >
-          {site.description}
-        </p>
-      </div>
-    </section>
-  );
-}
-
 type OpenHouseEventType = {
   label?: string;
   date: string;
@@ -2272,11 +2156,24 @@ type OpenHouseEventType = {
   endTime: string;
 };
 
-function MagazineOpenHouses({ site, theme }: { site: Site; theme?: Theme }) {
-  const openHouses = (site as any).openHouses as OpenHouseEventType[] | undefined;
-  if (!openHouses || openHouses.length === 0) return null;
-
+function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) {
+  const [showDescriptionModal, setShowDescriptionModal] = useState(false);
+  const [showOpenHouseModal, setShowOpenHouseModal] = useState(false);
+  
   const primaryColor = theme?.colors?.primary || '#558B73';
+  const hasDocuments = site.documents && site.documents.length > 0;
+  const hasBrochure = site.brochureUrl;
+  const openHouses = (site as any).openHouses as OpenHouseEventType[] | undefined;
+  const hasOpenHouses = openHouses && openHouses.length > 0;
+  
+  const truncatedDescription = site.description && site.description.length > 700
+    ? site.description.slice(0, 700) + '...'
+    : site.description;
+  const needsReadMore = site.description && site.description.length > 700;
+  
+  const photos = site.photos || [];
+  const rightImage = photos[1] || photos[0];
+  const bottomLeftImage = photos[2] || photos[1] || photos[0];
 
   const formatDate = (dateStr: string): string => {
     if (!dateStr) return 'TBD';
@@ -2285,9 +2182,8 @@ function MagazineOpenHouses({ site, theme }: { site: Site; theme?: Theme }) {
       if (isNaN(date.getTime())) return dateStr;
       return date.toLocaleDateString('en-US', { 
         weekday: 'long', 
-        month: 'long', 
-        day: 'numeric', 
-        year: 'numeric' 
+        month: 'short', 
+        day: 'numeric'
       });
     } catch {
       return dateStr;
@@ -2310,56 +2206,241 @@ function MagazineOpenHouses({ site, theme }: { site: Site; theme?: Theme }) {
   };
 
   return (
-    <section className="py-16 px-6 bg-gray-50">
-      <div className="container mx-auto max-w-4xl">
-        <h2 
-          className="text-3xl md:text-4xl mb-12 text-center"
-          style={{ fontFamily: 'var(--font-heading)', fontWeight: '400' }}
-        >
-          Open House Schedule
-        </h2>
-        
-        <div className="space-y-4">
-          {openHouses.map((event, index) => (
-            <div 
-              key={index}
-              className="flex flex-col md:flex-row md:items-center justify-between p-6 bg-white rounded-lg shadow-sm"
-              data-testid={`open-house-${index}`}
+    <section id="about" className="py-16 px-6 bg-white">
+      <link href="https://fonts.googleapis.com/css2?family=Petit+Formal+Script&display=swap" rel="stylesheet" />
+      <div className="container mx-auto max-w-6xl">
+        <div className="grid md:grid-cols-2 gap-12">
+          {/* Left Column */}
+          <div className="space-y-8">
+            {/* Property Name */}
+            <h2 
+              className="text-3xl md:text-4xl"
+              style={{ fontFamily: '"Petit Formal Script", cursive', fontWeight: '400' }}
             >
-              <div className="flex items-center gap-4">
-                <div 
-                  className="w-12 h-12 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: primaryColor + '20' }}
-                >
-                  <Calendar className="h-6 w-6" style={{ color: primaryColor }} />
-                </div>
-                <div>
-                  {event.label && (
-                    <span 
-                      className="text-sm uppercase tracking-wider block mb-1"
-                      style={{ color: primaryColor, fontFamily: 'var(--font-body)' }}
-                    >
-                      {event.label}
-                    </span>
-                  )}
-                  <p 
-                    className="text-lg font-medium"
-                    style={{ fontFamily: 'var(--font-body)' }}
+              {site.title || site.address}
+            </h2>
+            
+            {/* Brochure / Documents Links */}
+            {(hasBrochure || hasDocuments) && (
+              <div className="flex gap-6 border-b pb-4">
+                {hasBrochure && (
+                  <a
+                    href={site.brochureUrl!}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-base hover:opacity-70 transition-opacity border-b-2 pb-1"
+                    style={{ 
+                      fontFamily: '"stevie-sans", sans-serif', 
+                      color: primaryColor,
+                      borderColor: primaryColor 
+                    }}
+                    data-testid="link-brochure"
                   >
-                    {formatDate(event.date)}
-                  </p>
-                </div>
+                    Brochure
+                  </a>
+                )}
+                {hasDocuments && (
+                  <a
+                    href="#documents"
+                    className="text-base hover:opacity-70 transition-opacity"
+                    style={{ fontFamily: '"stevie-sans", sans-serif', color: '#666' }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById('documents')?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    data-testid="link-documents"
+                  >
+                    Documents
+                  </a>
+                )}
               </div>
-              <p 
-                className="text-lg mt-4 md:mt-0"
-                style={{ fontFamily: 'var(--font-body)' }}
+            )}
+            
+            {/* Description */}
+            {site.description && (
+              <div>
+                <p 
+                  className="text-base leading-relaxed text-gray-600"
+                  style={{ fontFamily: '"stevie-sans", sans-serif', lineHeight: '1.8' }}
+                >
+                  {truncatedDescription}
+                </p>
+                {needsReadMore && (
+                  <button
+                    onClick={() => setShowDescriptionModal(true)}
+                    className="mt-4 inline-flex items-center gap-2 text-base hover:opacity-70 transition-opacity"
+                    style={{ fontFamily: '"stevie-sans", sans-serif', color: primaryColor }}
+                    data-testid="button-read-more"
+                  >
+                    Read more
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            )}
+            
+            {/* Bottom Left Image with Offset */}
+            {bottomLeftImage && (
+              <div className="relative mt-8">
+                <div 
+                  className="absolute -bottom-4 -left-4 w-full h-full"
+                  style={{ backgroundColor: primaryColor, opacity: 0.3 }}
+                />
+                <img 
+                  src={bottomLeftImage} 
+                  alt="Property" 
+                  className="relative w-full h-64 object-cover"
+                />
+              </div>
+            )}
+          </div>
+          
+          {/* Right Column */}
+          <div className="space-y-8">
+            {/* Top Right Image with Offset */}
+            {rightImage && (
+              <div className="relative">
+                <div 
+                  className="absolute -top-4 -right-4 w-full h-full"
+                  style={{ backgroundColor: primaryColor, opacity: 0.3 }}
+                />
+                <img 
+                  src={rightImage} 
+                  alt="Property" 
+                  className="relative w-full h-80 object-cover"
+                />
+              </div>
+            )}
+            
+            {/* Open House Card */}
+            {hasOpenHouses && (
+              <button
+                onClick={() => setShowOpenHouseModal(true)}
+                className="w-full text-left p-6 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer group"
+                data-testid="button-open-houses"
               >
-                {formatTime(event.startTime)} - {formatTime(event.endTime)}
-              </p>
-            </div>
-          ))}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p 
+                      className="text-sm uppercase tracking-widest mb-2 opacity-70"
+                      style={{ fontFamily: '"stevie-sans", sans-serif' }}
+                    >
+                      Open Houses
+                    </p>
+                    <p 
+                      className="text-xl"
+                      style={{ fontFamily: '"Petit Formal Script", cursive' }}
+                    >
+                      {openHouses.length} Scheduled
+                    </p>
+                  </div>
+                  <ChevronRight 
+                    className="h-6 w-6 opacity-50 group-hover:opacity-100 transition-opacity"
+                    style={{ color: primaryColor }}
+                  />
+                </div>
+              </button>
+            )}
+          </div>
         </div>
       </div>
+      
+      {/* Description Modal */}
+      {showDescriptionModal && (
+        <div 
+          className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+          onClick={() => setShowDescriptionModal(false)}
+        >
+          <div 
+            className="bg-white max-w-2xl max-h-[80vh] overflow-y-auto rounded-lg p-8"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-start mb-6">
+              <h3 
+                className="text-2xl"
+                style={{ fontFamily: '"Petit Formal Script", cursive' }}
+              >
+                About the Property
+              </h3>
+              <button
+                onClick={() => setShowDescriptionModal(false)}
+                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                data-testid="button-close-description-modal"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            <p 
+              className="text-base leading-relaxed text-gray-600"
+              style={{ fontFamily: '"stevie-sans", sans-serif', lineHeight: '1.8' }}
+            >
+              {site.description}
+            </p>
+          </div>
+        </div>
+      )}
+      
+      {/* Open House Modal */}
+      {showOpenHouseModal && hasOpenHouses && (
+        <div 
+          className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+          onClick={() => setShowOpenHouseModal(false)}
+        >
+          <div 
+            className="bg-white max-w-lg w-full max-h-[80vh] overflow-y-auto rounded-lg p-8"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-start mb-6">
+              <h3 
+                className="text-2xl"
+                style={{ fontFamily: '"Petit Formal Script", cursive' }}
+              >
+                Open Houses
+              </h3>
+              <button
+                onClick={() => setShowOpenHouseModal(false)}
+                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                data-testid="button-close-openhouse-modal"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              {openHouses.map((event, index) => (
+                <div 
+                  key={index}
+                  className="p-4 bg-gray-50 rounded-lg"
+                  data-testid={`open-house-modal-${index}`}
+                >
+                  <div className="flex items-center gap-3 mb-2">
+                    <Calendar className="h-5 w-5" style={{ color: primaryColor }} />
+                    <span 
+                      className="font-medium"
+                      style={{ fontFamily: '"stevie-sans", sans-serif' }}
+                    >
+                      {formatDate(event.date)}
+                    </span>
+                  </div>
+                  {event.label && (
+                    <p 
+                      className="text-sm mb-1"
+                      style={{ fontFamily: '"stevie-sans", sans-serif', color: primaryColor }}
+                    >
+                      {event.label}
+                    </p>
+                  )}
+                  <p 
+                    className="text-gray-600"
+                    style={{ fontFamily: '"stevie-sans", sans-serif' }}
+                  >
+                    {formatTime(event.startTime)} - {formatTime(event.endTime)}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
@@ -2978,11 +3059,43 @@ export default function SiteView() {
         <MagazineHero site={site} theme={theme} heroImage={heroImage} />
         <MagazineFactsBar site={site} theme={theme} />
         
+        <MagazineContentSection site={site} theme={theme} />
+        
         {hasPhotos && <MagazineMarqueeGallery photos={site.photos!} />}
         
-        <MagazineAbout site={site} theme={theme} />
-        
-        <MagazineTabs site={site} theme={theme} />
+        {site.documents && site.documents.length > 0 && (
+          <section id="documents" className="py-16 px-6 bg-gray-50">
+            <div className="container mx-auto max-w-4xl">
+              <h2 
+                className="text-3xl md:text-4xl mb-10 text-center"
+                style={{ fontFamily: '"Petit Formal Script", cursive', fontWeight: '400' }}
+              >
+                Documents
+              </h2>
+              <div className="space-y-4">
+                {site.documents.map((doc, index) => (
+                  <a
+                    key={index}
+                    href={doc.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-4 p-4 bg-white rounded-lg hover:bg-gray-100 transition-colors group"
+                    data-testid={`document-${index}`}
+                  >
+                    <FileText className="h-6 w-6" style={{ color: theme?.colors?.primary || '#558B73' }} />
+                    <span 
+                      className="flex-1"
+                      style={{ fontFamily: '"stevie-sans", sans-serif' }}
+                    >
+                      {doc.name}
+                    </span>
+                    <Download className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: theme?.colors?.primary || '#558B73' }} />
+                  </a>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
         
         {hasVideo && (
           <section id="video" className="py-16 px-6 bg-white">
@@ -3005,8 +3118,6 @@ export default function SiteView() {
             </div>
           </section>
         )}
-        
-        <MagazineOpenHouses site={site} theme={theme} />
         
         <section id="map" className="py-16 px-6 bg-white">
           <div className="container mx-auto max-w-4xl">
