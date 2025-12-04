@@ -206,7 +206,7 @@ export default function Home() {
                 
                 <ul className="space-y-4 mb-8">
                   {[
-                    '4 Month Hosting Per Site',
+                    '3 Month Hosting Per Site',
                     'Mobile Optimized',
                     'SEO Friendly',
                     'Custom Domain Support',
