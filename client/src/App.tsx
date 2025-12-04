@@ -27,6 +27,7 @@ import AdminDashboard from "@/pages/admin";
 import Credits from "@/pages/credits";
 import Profile from "@/pages/profile";
 import SiteView from "@/pages/site-view";
+import LayoutPreview from "@/pages/layout-preview";
 import HowItWorks from "@/pages/how-it-works";
 import Contact from "@/pages/contact";
 import Support from "@/pages/support";
@@ -43,6 +44,7 @@ function Router() {
       <Route path="/our-story" component={OurStory} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/site/:id" component={SiteView} />
+      <Route path="/layout-preview/:layoutId" component={LayoutPreview} />
       
       {/* Protected routes */}
       <ProtectedRoute path="/dashboard" component={Dashboard} />
