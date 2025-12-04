@@ -1764,7 +1764,6 @@ function MagazineNavigation({ site, theme, effectiveLogo }: { site: Site; theme?
   const navItems = [
     { label: 'Home', href: '#home' },
     { label: 'Overview', href: '#facts' },
-    { label: 'Details', href: '#about', show: !!site.description },
     { label: 'Features', href: '#features', show: hasFeatures },
     { label: 'Gallery', href: '#photos', show: hasPhotos },
     { label: 'Video', href: '#video', show: hasVideo },
