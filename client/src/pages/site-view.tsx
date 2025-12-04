@@ -2365,22 +2365,77 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
           >
             Features & Amenities
           </h2>
-          <div className="flex flex-wrap justify-center gap-3">
-            {features?.map((feature: string, index: number) => (
-              <div
-                key={index}
-                className="px-4 py-2 rounded-full border"
-                style={{ 
-                  borderColor: primaryColor,
-                  color: primaryColor
-                }}
-                data-testid={`tag-feature-${index}`}
-              >
-                <span className="text-sm" style={{ fontFamily: '"Arimo", sans-serif' }}>
-                  {feature}
-                </span>
+          <div className="container mx-auto max-w-6xl">
+            <div className="grid md:grid-cols-2 gap-12">
+              {/* Left Column - Property Details */}
+              <div>
+                <h3 
+                  className="text-xl mb-6 font-medium"
+                  style={{ fontFamily: '"Shippori Mincho B1", serif' }}
+                >
+                  Property Details
+                </h3>
+                <div className="space-y-4">
+                  {site.bedrooms && (
+                    <div className="flex justify-between py-3 border-b border-gray-200">
+                      <span style={{ fontFamily: '"Arimo", sans-serif', color: '#666' }}>Bedrooms</span>
+                      <span style={{ fontFamily: '"Arimo", sans-serif', fontWeight: '500' }}>{site.bedrooms}</span>
+                    </div>
+                  )}
+                  {site.bathrooms && (
+                    <div className="flex justify-between py-3 border-b border-gray-200">
+                      <span style={{ fontFamily: '"Arimo", sans-serif', color: '#666' }}>Bathrooms</span>
+                      <span style={{ fontFamily: '"Arimo", sans-serif', fontWeight: '500' }}>{site.bathrooms}</span>
+                    </div>
+                  )}
+                  {site.sqft && (
+                    <div className="flex justify-between py-3 border-b border-gray-200">
+                      <span style={{ fontFamily: '"Arimo", sans-serif', color: '#666' }}>Square Feet</span>
+                      <span style={{ fontFamily: '"Arimo", sans-serif', fontWeight: '500' }}>{site.sqft}</span>
+                    </div>
+                  )}
+                  {(site as any).yearBuilt && (
+                    <div className="flex justify-between py-3 border-b border-gray-200">
+                      <span style={{ fontFamily: '"Arimo", sans-serif', color: '#666' }}>Year Built</span>
+                      <span style={{ fontFamily: '"Arimo", sans-serif', fontWeight: '500' }}>{(site as any).yearBuilt}</span>
+                    </div>
+                  )}
+                  {site.lotSize && (
+                    <div className="flex justify-between py-3 border-b border-gray-200">
+                      <span style={{ fontFamily: '"Arimo", sans-serif', color: '#666' }}>Lot Size</span>
+                      <span style={{ fontFamily: '"Arimo", sans-serif', fontWeight: '500' }}>{site.lotSize}</span>
+                    </div>
+                  )}
+                </div>
               </div>
-            ))}
+              
+              {/* Right Column - Features Tag Cloud */}
+              <div>
+                <h3 
+                  className="text-xl mb-6 font-medium"
+                  style={{ fontFamily: '"Shippori Mincho B1", serif' }}
+                >
+                  Features
+                </h3>
+                <div className="flex flex-wrap gap-3">
+                  {features?.map((feature: string, index: number) => (
+                    <div
+                      key={index}
+                      className="px-4 py-2 rounded-full border"
+                      style={{ 
+                        borderColor: primaryColor,
+                        color: primaryColor
+                      }}
+                      data-testid={`tag-feature-${index}`}
+                    >
+                      <span className="text-sm" style={{ fontFamily: '"Arimo", sans-serif' }}>
+                        {feature}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
