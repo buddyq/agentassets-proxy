@@ -2358,7 +2358,7 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
       {hasFeatures && (
         <div className="mt-16 pt-16 border-t">
           <h2 
-            className="text-3xl md:text-4xl mb-12 text-center"
+            className="text-3xl md:text-4xl mb-12 text-center font-normal"
             style={{ fontFamily: '"Shippori Mincho B1", serif' }}
           >
             Features & Amenities
