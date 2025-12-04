@@ -21,7 +21,7 @@ import {
   type CouponRedemption
 } from "@shared/schema";
 import { db, pool } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 
@@ -61,6 +61,7 @@ export interface IStorage {
   getLayoutsByUser(userId: string): Promise<Layout[]>;
   getAllLayouts(): Promise<Layout[]>;
   getPresetLayouts(): Promise<Layout[]>;
+  getEnabledPresetLayouts(): Promise<Layout[]>;
   createLayout(layout: InsertLayout): Promise<Layout>;
   updateLayout(id: string, layout: Partial<InsertLayout>): Promise<Layout>;
   deleteLayout(id: string): Promise<void>;
@@ -245,6 +246,12 @@ export class DatabaseStorage implements IStorage {
 
   async getPresetLayouts(): Promise<Layout[]> {
     return await db.select().from(layouts).where(eq(layouts.type, 'preset'));
+  }
+
+  async getEnabledPresetLayouts(): Promise<Layout[]> {
+    return await db.select().from(layouts).where(
+      and(eq(layouts.type, 'preset'), eq(layouts.enabled, 'true'))
+    );
   }
 
   async createLayout(insertLayout: InsertLayout): Promise<Layout> {
