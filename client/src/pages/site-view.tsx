@@ -1812,9 +1812,28 @@ function MagazineNavigation({ site, theme, effectiveLogo }: { site: Site; theme?
 }
 
 function MagazineHero({ site, theme, heroImage }: { site: Site; theme?: Theme; heroImage: string }) {
-  const backgroundImage = site.heroPhotos && site.heroPhotos.length > 0 
-    ? site.heroPhotos[0] 
-    : site.imageUrl || (site.photos && site.photos.length > 0 ? site.photos[0] : heroImage);
+  const heroPhotos = site.heroPhotos && site.heroPhotos.length > 0 
+    ? site.heroPhotos 
+    : site.photos && site.photos.length > 0 
+      ? site.photos.slice(0, 4) 
+      : [site.imageUrl || heroImage];
+  
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  useEffect(() => {
+    if (heroPhotos.length <= 1) return;
+    
+    const interval = setInterval(() => {
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setCurrentSlide(prev => (prev + 1) % heroPhotos.length);
+        setIsTransitioning(false);
+      }, 500);
+    }, 6000);
+    
+    return () => clearInterval(interval);
+  }, [heroPhotos.length]);
 
   return (
     <section id="home" className="relative h-screen w-full overflow-hidden">
@@ -1827,16 +1846,29 @@ function MagazineHero({ site, theme, heroImage }: { site: Site; theme?: Theme; h
           0%, 100% { transform: translateY(0); opacity: 1; }
           50% { transform: translateY(8px); opacity: 0.5; }
         }
+        @keyframes magazine-zoom-out {
+          0% { transform: scale(1.1); }
+          100% { transform: scale(1); }
+        }
       `}</style>
       
-      <div 
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${backgroundImage})` }}
-      />
+      {heroPhotos.map((photo, index) => (
+        <div
+          key={index}
+          className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ${
+            index === currentSlide && !isTransitioning ? 'opacity-100' : 'opacity-0'
+          }`}
+          style={{ 
+            backgroundImage: `url(${photo})`,
+            zIndex: index === currentSlide ? 1 : 0,
+            animation: index === currentSlide ? 'magazine-zoom-out 6s ease-out forwards' : 'none'
+          }}
+        />
+      ))}
       
-      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/70" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/70 z-10" />
       
-      <div className="absolute left-0 right-0 text-white px-8" style={{ bottom: '40px' }}>
+      <div className="absolute left-0 right-0 text-white px-8 z-20" style={{ bottom: '40px' }}>
         <div className="container mx-auto max-w-6xl">
           <h1 
             className="magazine-hero-text"
@@ -1853,7 +1885,7 @@ function MagazineHero({ site, theme, heroImage }: { site: Site; theme?: Theme; h
       
       <button
         onClick={() => document.getElementById('facts')?.scrollIntoView({ behavior: 'smooth' })}
-        className="absolute bottom-8 right-8 rounded-full border-2 border-white/70 flex items-center justify-center hover:bg-white/40 transition-colors cursor-pointer"
+        className="absolute bottom-8 right-8 rounded-full border-2 border-white/70 flex items-center justify-center hover:bg-white/40 transition-colors cursor-pointer z-20"
         style={{ width: '128px', height: '128px', backgroundColor: 'rgba(255, 255, 255, 0.3)' }}
         data-testid="button-magazine-scroll"
         aria-label="Scroll down"
