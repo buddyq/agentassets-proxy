@@ -2242,7 +2242,7 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
                 {hasDocuments && (
                   <a
                     href="#documents"
-                    className="text-base hover:opacity-70 transition-opacity"
+                    className="inline-flex items-center gap-2 text-base hover:opacity-70 transition-opacity"
                     style={{ fontFamily: '"stevie-sans", sans-serif', color: '#666' }}
                     onClick={(e) => {
                       e.preventDefault();
@@ -2250,6 +2250,7 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
                     }}
                     data-testid="link-documents"
                   >
+                    <Download className="h-4 w-4" />
                     Documents
                   </a>
                 )}
