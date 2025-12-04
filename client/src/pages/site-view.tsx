@@ -2034,7 +2034,7 @@ function MagazineMarqueeGallery({ photos }: { photos: string[] }) {
             className="flex"
             style={{ 
               width: `${topRowPhotos.length * 320 * 2}px`,
-              animation: 'marquee-scroll-left 60s linear infinite'
+              animation: 'marquee-scroll-left 120s linear infinite'
             }}
           >
             {[...topRowPhotos, ...topRowPhotos].map((photo, index) => (
@@ -2056,7 +2056,7 @@ function MagazineMarqueeGallery({ photos }: { photos: string[] }) {
             className="flex"
             style={{ 
               width: `${bottomRowPhotos.length * 320 * 2}px`,
-              animation: 'marquee-scroll-right 60s linear infinite'
+              animation: 'marquee-scroll-right 120s linear infinite'
             }}
           >
             {[...bottomRowPhotos, ...bottomRowPhotos].map((photo, index) => (
