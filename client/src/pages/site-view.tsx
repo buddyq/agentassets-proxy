@@ -1912,7 +1912,7 @@ function MagazineFactsBar({ site, theme }: { site: Site; theme?: Theme }) {
       className="py-8 md:py-12"
       style={{ backgroundColor: primaryColor }}
     >
-      <link href="https://fonts.googleapis.com/css2?family=Gilda+Display&display=swap" rel="stylesheet" />
+      <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;600&display=swap" rel="stylesheet" />
       <div className="container mx-auto px-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           {/* Left side - Offered At, Price, Compensation */}
@@ -1925,7 +1925,7 @@ function MagazineFactsBar({ site, theme }: { site: Site; theme?: Theme }) {
             </p>
             <p 
               className="text-3xl md:text-4xl mb-1"
-              style={{ fontFamily: '"Gilda Display", serif', fontWeight: '400' }}
+              style={{ fontFamily: '"Shippori Mincho B1", serif', fontWeight: '400' }}
             >
               {site.price || '$0'}
             </p>
@@ -1944,7 +1944,7 @@ function MagazineFactsBar({ site, theme }: { site: Site; theme?: Theme }) {
             {site.bedrooms && (
               <div className="flex flex-col items-center">
                 <Bed style={{ height: '45px', width: '45px', marginBottom: '8px', opacity: 0.9 }} />
-                <span style={{ fontFamily: '"Gilda Display", serif', fontSize: '32px' }}>
+                <span style={{ fontFamily: '"Shippori Mincho B1", serif', fontSize: '32px' }}>
                   {site.bedrooms} Beds
                 </span>
               </div>
@@ -1952,7 +1952,7 @@ function MagazineFactsBar({ site, theme }: { site: Site; theme?: Theme }) {
             {site.bathrooms && (
               <div className="flex flex-col items-center">
                 <Bath style={{ height: '45px', width: '45px', marginBottom: '8px', opacity: 0.9 }} />
-                <span style={{ fontFamily: '"Gilda Display", serif', fontSize: '32px' }}>
+                <span style={{ fontFamily: '"Shippori Mincho B1", serif', fontSize: '32px' }}>
                   {site.bathrooms} Baths
                 </span>
               </div>
@@ -1960,7 +1960,7 @@ function MagazineFactsBar({ site, theme }: { site: Site; theme?: Theme }) {
             {site.sqft && (
               <div className="flex flex-col items-center">
                 <Square style={{ height: '45px', width: '45px', marginBottom: '8px', opacity: 0.9 }} />
-                <span style={{ fontFamily: '"Gilda Display", serif', fontSize: '18px' }}>
+                <span style={{ fontFamily: '"Shippori Mincho B1", serif', fontSize: '18px' }}>
                   {site.sqft.toLocaleString()} sqft
                 </span>
                 <span 
@@ -1974,7 +1974,7 @@ function MagazineFactsBar({ site, theme }: { site: Site; theme?: Theme }) {
             {site.lotSize && (
               <div className="flex flex-col items-center">
                 <Building style={{ height: '45px', width: '45px', marginBottom: '8px', opacity: 0.9 }} />
-                <span style={{ fontFamily: '"Gilda Display", serif', fontSize: '18px' }}>
+                <span style={{ fontFamily: '"Shippori Mincho B1", serif', fontSize: '18px' }}>
                   {site.lotSize}
                 </span>
                 <span 
@@ -2215,7 +2215,7 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
 
   return (
     <section id="about" className="py-16 px-6 bg-white">
-      <link href="https://fonts.googleapis.com/css2?family=Gilda+Display&display=swap" rel="stylesheet" />
+      <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;600&display=swap" rel="stylesheet" />
       <div className="container mx-auto max-w-6xl">
         <div className="grid md:grid-cols-2 gap-12">
           {/* Grid 1 - Top Left: Property Name, Links, Description */}
@@ -2223,7 +2223,7 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
             {/* Property Name */}
             <h2 
               className="text-3xl md:text-4xl"
-              style={{ fontFamily: '"Gilda Display", serif', fontWeight: '400' }}
+              style={{ fontFamily: '"Shippori Mincho B1", serif', fontWeight: '400' }}
             >
               {site.title || site.address}
             </h2>
@@ -2341,7 +2341,7 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
                     </p>
                     <p 
                       className="text-xl"
-                      style={{ fontFamily: '"Gilda Display", serif' }}
+                      style={{ fontFamily: '"Shippori Mincho B1", serif' }}
                     >
                       {openHouses.length} Scheduled
                     </p>
@@ -2362,22 +2362,22 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
         <div className="mt-16 pt-16 border-t">
           <h2 
             className="text-3xl md:text-4xl mb-12 text-center"
-            style={{ fontFamily: '"Gilda Display", serif' }}
+            style={{ fontFamily: '"Shippori Mincho B1", serif' }}
           >
             Features & Amenities
           </h2>
-          <div className="flex flex-wrap justify-center gap-4">
+          <div className="flex flex-wrap justify-center gap-3">
             {features?.map((feature: string, index: number) => (
               <div
                 key={index}
-                className="px-6 py-3 rounded-full border-2"
+                className="px-4 py-2 rounded-full border"
                 style={{ 
                   borderColor: primaryColor,
                   color: primaryColor
                 }}
                 data-testid={`tag-feature-${index}`}
               >
-                <span style={{ fontFamily: '"stevie-sans", sans-serif' }}>
+                <span className="text-sm" style={{ fontFamily: '"stevie-sans", sans-serif' }}>
                   {feature}
                 </span>
               </div>
@@ -2399,7 +2399,7 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
             <div className="flex justify-between items-start mb-6">
               <h3 
                 className="text-2xl"
-                style={{ fontFamily: '"Gilda Display", serif' }}
+                style={{ fontFamily: '"Shippori Mincho B1", serif' }}
               >
                 About the Property
               </h3>
@@ -2434,7 +2434,7 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
             <div className="flex justify-between items-start mb-6">
               <h3 
                 className="text-2xl"
-                style={{ fontFamily: '"Gilda Display", serif' }}
+                style={{ fontFamily: '"Shippori Mincho B1", serif' }}
               >
                 Open Houses
               </h3>
@@ -3109,7 +3109,7 @@ export default function SiteView() {
             <div className="container mx-auto max-w-4xl">
               <h2 
                 className="text-3xl md:text-4xl mb-10 text-center"
-                style={{ fontFamily: '"Gilda Display", serif', fontWeight: '400' }}
+                style={{ fontFamily: '"Shippori Mincho B1", serif', fontWeight: '400' }}
               >
                 Documents
               </h2>
