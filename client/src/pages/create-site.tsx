@@ -71,6 +71,8 @@ export default function CreateSite() {
     buyerAgentComp: '', // e.g., "3% Buyers Agent Compensation"
     openHouses: [] as OpenHouseEvent[], // Open house schedule
     brochureUrl: '', // Link to property brochure PDF
+    contentGridImage1: '', // Image for content grid position 2 (top right)
+    contentGridImage2: '', // Image for content grid position 3 (bottom left)
   });
   
   // Custom details state
@@ -227,6 +229,8 @@ export default function CreateSite() {
         buyerAgentComp: formData.buyerAgentComp || null,
         openHouses: formData.openHouses,
         brochureUrl: formData.brochureUrl || null,
+        contentGridImage1: formData.contentGridImage1 || null,
+        contentGridImage2: formData.contentGridImage2 || null,
       },
       {
         onSuccess: () => {
@@ -1131,85 +1135,181 @@ export default function CreateSite() {
                           </div>
                         )}
 
-                        {formData.openHouses.map((event, index) => (
-                          <div key={index} className="border rounded-lg p-4 bg-muted/20">
+                        {formData.openHouses.map((oh, ohIndex) => (
+                          <div key={ohIndex} className="border rounded-lg p-4 bg-muted/20">
                             <div className="flex items-center justify-between mb-4">
-                              <span className="font-medium text-sm">Open House {index + 1}</span>
+                              <span className="font-medium text-sm">Open House {ohIndex + 1}</span>
                               <Button
                                 type="button"
                                 variant="ghost"
                                 size="sm"
                                 className="text-destructive hover:text-destructive"
                                 onClick={() => {
-                                  const updated = formData.openHouses.filter((_, i) => i !== index);
+                                  const updated = formData.openHouses.filter((_, i) => i !== ohIndex);
                                   setFormData({...formData, openHouses: updated});
                                 }}
-                                data-testid={`button-remove-open-house-${index}`}
+                                data-testid={`button-remove-open-house-${ohIndex}`}
                               >
                                 <X className="h-4 w-4" />
                               </Button>
                             </div>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                               <div className="grid gap-2">
-                                <Label htmlFor={`oh-label-${index}`}>Label (Optional)</Label>
+                                <Label htmlFor={`oh-label-${ohIndex}`}>Label (Optional)</Label>
                                 <Input
-                                  id={`oh-label-${index}`}
+                                  id={`oh-label-${ohIndex}`}
                                   placeholder="e.g., Broker Open"
-                                  value={event.label || ''}
+                                  value={oh.label || ''}
                                   onChange={(e) => {
                                     const updated = [...formData.openHouses];
-                                    updated[index] = { ...updated[index], label: e.target.value };
+                                    updated[ohIndex] = { ...updated[ohIndex], label: e.target.value };
                                     setFormData({...formData, openHouses: updated});
                                   }}
-                                  data-testid={`input-oh-label-${index}`}
+                                  data-testid={`input-oh-label-${ohIndex}`}
                                 />
                               </div>
                               <div className="grid gap-2">
-                                <Label htmlFor={`oh-date-${index}`}>Date</Label>
+                                <Label htmlFor={`oh-date-${ohIndex}`}>Date</Label>
                                 <Input
-                                  id={`oh-date-${index}`}
+                                  id={`oh-date-${ohIndex}`}
                                   type="date"
-                                  value={event.date}
+                                  value={oh.date}
                                   onChange={(e) => {
                                     const updated = [...formData.openHouses];
-                                    updated[index] = { ...updated[index], date: e.target.value };
+                                    updated[ohIndex] = { ...updated[ohIndex], date: e.target.value };
                                     setFormData({...formData, openHouses: updated});
                                   }}
-                                  data-testid={`input-oh-date-${index}`}
+                                  data-testid={`input-oh-date-${ohIndex}`}
                                 />
                               </div>
                               <div className="grid gap-2">
-                                <Label htmlFor={`oh-start-${index}`}>Start Time</Label>
+                                <Label htmlFor={`oh-start-${ohIndex}`}>Start Time</Label>
                                 <Input
-                                  id={`oh-start-${index}`}
+                                  id={`oh-start-${ohIndex}`}
                                   type="time"
-                                  value={event.startTime}
+                                  value={oh.startTime}
                                   onChange={(e) => {
                                     const updated = [...formData.openHouses];
-                                    updated[index] = { ...updated[index], startTime: e.target.value };
+                                    updated[ohIndex] = { ...updated[ohIndex], startTime: e.target.value };
                                     setFormData({...formData, openHouses: updated});
                                   }}
-                                  data-testid={`input-oh-start-${index}`}
+                                  data-testid={`input-oh-start-${ohIndex}`}
                                 />
                               </div>
                               <div className="grid gap-2">
-                                <Label htmlFor={`oh-end-${index}`}>End Time</Label>
+                                <Label htmlFor={`oh-end-${ohIndex}`}>End Time</Label>
                                 <Input
-                                  id={`oh-end-${index}`}
+                                  id={`oh-end-${ohIndex}`}
                                   type="time"
-                                  value={event.endTime}
+                                  value={oh.endTime}
                                   onChange={(e) => {
                                     const updated = [...formData.openHouses];
-                                    updated[index] = { ...updated[index], endTime: e.target.value };
+                                    updated[ohIndex] = { ...updated[ohIndex], endTime: e.target.value };
                                     setFormData({...formData, openHouses: updated});
                                   }}
-                                  data-testid={`input-oh-end-${index}`}
+                                  data-testid={`input-oh-end-${ohIndex}`}
                                 />
                               </div>
                             </div>
                           </div>
                         ))}
                       </div>
+
+                      {/* Content Grid Images */}
+                      {photos.length > 0 && (
+                        <div className="grid gap-4">
+                          <div>
+                            <Label>Content Section Images</Label>
+                            <p className="text-sm text-muted-foreground">
+                              Select images from your gallery to display in the content section grid.
+                            </p>
+                          </div>
+                          
+                          <div className="grid md:grid-cols-2 gap-6">
+                            {/* Grid Image 1 (Top Right) */}
+                            <div className="space-y-3">
+                              <Label className="text-sm font-medium">Top Right Image</Label>
+                              <div className="grid grid-cols-4 gap-2">
+                                {photos.map((photo, photoIndex) => (
+                                  <div
+                                    key={photoIndex}
+                                    className={`relative aspect-square cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
+                                      formData.contentGridImage1 === photo 
+                                        ? 'border-primary ring-2 ring-primary/20' 
+                                        : 'border-transparent hover:border-primary/50'
+                                    }`}
+                                    onClick={() => setFormData({...formData, contentGridImage1: photo})}
+                                    data-testid={`select-grid-image-1-${photoIndex}`}
+                                  >
+                                    <img
+                                      src={photo}
+                                      alt={`Photo ${photoIndex + 1}`}
+                                      className="w-full h-full object-cover"
+                                    />
+                                    {formData.contentGridImage1 === photo && (
+                                      <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                                        <Check className="h-6 w-6 text-white drop-shadow-lg" />
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                              {formData.contentGridImage1 && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setFormData({...formData, contentGridImage1: ''})}
+                                  className="text-muted-foreground"
+                                >
+                                  Clear selection
+                                </Button>
+                              )}
+                            </div>
+
+                            {/* Grid Image 2 (Bottom Left) */}
+                            <div className="space-y-3">
+                              <Label className="text-sm font-medium">Bottom Left Image</Label>
+                              <div className="grid grid-cols-4 gap-2">
+                                {photos.map((photo, photoIndex) => (
+                                  <div
+                                    key={photoIndex}
+                                    className={`relative aspect-square cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
+                                      formData.contentGridImage2 === photo 
+                                        ? 'border-primary ring-2 ring-primary/20' 
+                                        : 'border-transparent hover:border-primary/50'
+                                    }`}
+                                    onClick={() => setFormData({...formData, contentGridImage2: photo})}
+                                    data-testid={`select-grid-image-2-${photoIndex}`}
+                                  >
+                                    <img
+                                      src={photo}
+                                      alt={`Photo ${photoIndex + 1}`}
+                                      className="w-full h-full object-cover"
+                                    />
+                                    {formData.contentGridImage2 === photo && (
+                                      <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                                        <Check className="h-6 w-6 text-white drop-shadow-lg" />
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                              {formData.contentGridImage2 && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setFormData({...formData, contentGridImage2: ''})}
+                                  className="text-muted-foreground"
+                                >
+                                  Clear selection
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </CardContent>

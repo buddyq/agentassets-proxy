@@ -66,6 +66,8 @@ export default function EditSite() {
     buyerAgentComp: "",
     openHouses: [] as OpenHouseEvent[],
     brochureUrl: "",
+    contentGridImage1: "",
+    contentGridImage2: "",
   });
 
   const [customDetails, setCustomDetails] = useState<CustomDetail[]>([]);
@@ -111,6 +113,8 @@ export default function EditSite() {
         buyerAgentComp: site.buyerAgentComp || "",
         openHouses: site.openHouses || [],
         brochureUrl: site.brochureUrl || "",
+        contentGridImage1: (site as any).contentGridImage1 || "",
+        contentGridImage2: (site as any).contentGridImage2 || "",
       });
       setCustomDetails(site.customDetails || []);
       setDocuments(site.documents || []);
@@ -170,6 +174,8 @@ export default function EditSite() {
           buyerAgentComp: formData.buyerAgentComp || null,
           openHouses: formData.openHouses,
           brochureUrl: formData.brochureUrl || null,
+          contentGridImage1: formData.contentGridImage1 || null,
+          contentGridImage2: formData.contentGridImage2 || null,
         }
       },
       {
@@ -1252,6 +1258,102 @@ export default function EditSite() {
                           </div>
                         ))}
                       </div>
+
+                      {/* Content Grid Images */}
+                      {site?.photos && site.photos.length > 0 && (
+                        <div className="grid gap-4">
+                          <div>
+                            <Label>Content Section Images</Label>
+                            <p className="text-sm text-muted-foreground">
+                              Select images from your gallery to display in the content section grid.
+                            </p>
+                          </div>
+                          
+                          <div className="grid md:grid-cols-2 gap-6">
+                            {/* Grid Image 1 (Top Right) */}
+                            <div className="space-y-3">
+                              <Label className="text-sm font-medium">Top Right Image</Label>
+                              <div className="grid grid-cols-4 gap-2">
+                                {site.photos.map((photo, photoIndex) => (
+                                  <div
+                                    key={photoIndex}
+                                    className={`relative aspect-square cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
+                                      formData.contentGridImage1 === photo 
+                                        ? 'border-primary ring-2 ring-primary/20' 
+                                        : 'border-transparent hover:border-primary/50'
+                                    }`}
+                                    onClick={() => setFormData({...formData, contentGridImage1: photo})}
+                                    data-testid={`select-grid-image-1-${photoIndex}`}
+                                  >
+                                    <img
+                                      src={photo}
+                                      alt={`Photo ${photoIndex + 1}`}
+                                      className="w-full h-full object-cover"
+                                    />
+                                    {formData.contentGridImage1 === photo && (
+                                      <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                                        <Check className="h-6 w-6 text-white drop-shadow-lg" />
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                              {formData.contentGridImage1 && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setFormData({...formData, contentGridImage1: ''})}
+                                  className="text-muted-foreground"
+                                >
+                                  Clear selection
+                                </Button>
+                              )}
+                            </div>
+
+                            {/* Grid Image 2 (Bottom Left) */}
+                            <div className="space-y-3">
+                              <Label className="text-sm font-medium">Bottom Left Image</Label>
+                              <div className="grid grid-cols-4 gap-2">
+                                {site.photos.map((photo, photoIndex) => (
+                                  <div
+                                    key={photoIndex}
+                                    className={`relative aspect-square cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
+                                      formData.contentGridImage2 === photo 
+                                        ? 'border-primary ring-2 ring-primary/20' 
+                                        : 'border-transparent hover:border-primary/50'
+                                    }`}
+                                    onClick={() => setFormData({...formData, contentGridImage2: photo})}
+                                    data-testid={`select-grid-image-2-${photoIndex}`}
+                                  >
+                                    <img
+                                      src={photo}
+                                      alt={`Photo ${photoIndex + 1}`}
+                                      className="w-full h-full object-cover"
+                                    />
+                                    {formData.contentGridImage2 === photo && (
+                                      <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                                        <Check className="h-6 w-6 text-white drop-shadow-lg" />
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                              {formData.contentGridImage2 && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setFormData({...formData, contentGridImage2: ''})}
+                                  className="text-muted-foreground"
+                                >
+                                  Clear selection
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 
