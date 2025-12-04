@@ -1908,7 +1908,7 @@ function MagazineFactsBar({ site, theme }: { site: Site; theme?: Theme }) {
       className="py-8 md:py-12"
       style={{ backgroundColor: primaryColor }}
     >
-      <link href="https://fonts.googleapis.com/css2?family=Dynalight&display=swap" rel="stylesheet" />
+      <link href="https://fonts.googleapis.com/css2?family=Petit+Formal+Script&display=swap" rel="stylesheet" />
       <div className="container mx-auto px-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           {/* Left side - Offered At, Price, Compensation */}
@@ -1921,7 +1921,7 @@ function MagazineFactsBar({ site, theme }: { site: Site; theme?: Theme }) {
             </p>
             <p 
               className="text-3xl md:text-4xl mb-1"
-              style={{ fontFamily: '"Dynalight", cursive', fontWeight: '400' }}
+              style={{ fontFamily: '"Petit Formal Script", cursive', fontWeight: '400' }}
             >
               {site.price || '$0'}
             </p>
@@ -1940,7 +1940,7 @@ function MagazineFactsBar({ site, theme }: { site: Site; theme?: Theme }) {
             {site.bedrooms && (
               <div className="flex flex-col items-center">
                 <Bed style={{ height: '45px', width: '45px', marginBottom: '8px', opacity: 0.9 }} />
-                <span style={{ fontFamily: '"Dynalight", cursive', fontSize: '32px' }}>
+                <span style={{ fontFamily: '"Petit Formal Script", cursive', fontSize: '32px' }}>
                   {site.bedrooms} Beds
                 </span>
               </div>
@@ -1948,7 +1948,7 @@ function MagazineFactsBar({ site, theme }: { site: Site; theme?: Theme }) {
             {site.bathrooms && (
               <div className="flex flex-col items-center">
                 <Bath style={{ height: '45px', width: '45px', marginBottom: '8px', opacity: 0.9 }} />
-                <span style={{ fontFamily: '"Dynalight", cursive', fontSize: '32px' }}>
+                <span style={{ fontFamily: '"Petit Formal Script", cursive', fontSize: '32px' }}>
                   {site.bathrooms} Baths
                 </span>
               </div>
@@ -1956,7 +1956,7 @@ function MagazineFactsBar({ site, theme }: { site: Site; theme?: Theme }) {
             {site.sqft && (
               <div className="flex flex-col items-center">
                 <Square style={{ height: '45px', width: '45px', marginBottom: '8px', opacity: 0.9 }} />
-                <span style={{ fontFamily: '"Dynalight", cursive', fontSize: '18px' }}>
+                <span style={{ fontFamily: '"Petit Formal Script", cursive', fontSize: '18px' }}>
                   {site.sqft.toLocaleString()} sqft
                 </span>
                 <span 
@@ -1970,7 +1970,7 @@ function MagazineFactsBar({ site, theme }: { site: Site; theme?: Theme }) {
             {site.lotSize && (
               <div className="flex flex-col items-center">
                 <Building style={{ height: '45px', width: '45px', marginBottom: '8px', opacity: 0.9 }} />
-                <span style={{ fontFamily: '"Dynalight", cursive', fontSize: '18px' }}>
+                <span style={{ fontFamily: '"Petit Formal Script", cursive', fontSize: '18px' }}>
                   {site.lotSize}
                 </span>
                 <span 
