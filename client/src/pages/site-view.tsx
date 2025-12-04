@@ -1756,15 +1756,18 @@ function MagazineNavigation({ site, theme, effectiveLogo }: { site: Site; theme?
 
   const hasPhotos = site.photos && site.photos.length > 0;
   const hasDocuments = site.documents && site.documents.length > 0;
+  const hasVideo = !!site.videoUrl;
 
   const features = (site as any).features as string[] | undefined;
   const hasFeatures = features && features.length > 0;
 
   const navItems = [
     { label: 'Home', href: '#home' },
-    { label: 'Gallery', href: '#gallery', show: hasPhotos },
+    { label: 'Overview', href: '#facts' },
+    { label: 'Details', href: '#about', show: !!site.description },
     { label: 'Features', href: '#features', show: hasFeatures },
-    { label: 'About', href: '#about', show: !!site.description },
+    { label: 'Gallery', href: '#photos', show: hasPhotos },
+    { label: 'Video', href: '#video', show: hasVideo },
     { label: 'Documents', href: '#documents', show: hasDocuments },
     { label: 'Contact', href: '#contact' },
   ].filter(item => item.show !== false);
@@ -2356,7 +2359,7 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
       </div>
       {/* Features Section */}
       {hasFeatures && (
-        <div className="mt-16 pt-16 border-t">
+        <div id="features" className="mt-16 pt-16 border-t">
           <h2 
             className="text-3xl md:text-4xl mb-12 text-center font-normal"
             style={{ fontFamily: '"Shippori Mincho B1", serif' }}
@@ -3208,8 +3211,30 @@ export default function SiteView() {
         
         {hasPhotos && <MagazineMarqueeGallery photos={site.photos!} />}
         
+        {hasVideo && (
+          <section id="video" className="py-16 px-6 bg-gray-50">
+            <div className="container mx-auto max-w-4xl">
+              <h2 
+                className="text-3xl md:text-4xl mb-10 text-center"
+                style={{ fontFamily: '"Shippori Mincho B1", serif', fontWeight: '400' }}
+              >
+                Property Video
+              </h2>
+              <div className="aspect-video rounded-lg overflow-hidden shadow-lg">
+                <iframe
+                  src={embedUrl}
+                  className="w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  title="Property Video"
+                />
+              </div>
+            </div>
+          </section>
+        )}
+        
         {site.documents && site.documents.length > 0 && (
-          <section id="documents" className="py-16 px-6 bg-gray-50">
+          <section id="documents" className="py-16 px-6 bg-white">
             <div className="container mx-auto max-w-4xl">
               <h2 
                 className="text-3xl md:text-4xl mb-10 text-center"
@@ -3224,7 +3249,7 @@ export default function SiteView() {
                     href={doc.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-4 p-4 bg-white rounded-lg hover:bg-gray-100 transition-colors group"
+                    className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors group"
                     data-testid={`document-${index}`}
                   >
                     <FileText className="h-6 w-6" style={{ color: theme?.colors?.primary || '#558B73' }} />
@@ -3237,28 +3262,6 @@ export default function SiteView() {
                     <Download className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: theme?.colors?.primary || '#558B73' }} />
                   </a>
                 ))}
-              </div>
-            </div>
-          </section>
-        )}
-        
-        {hasVideo && (
-          <section id="video" className="py-16 px-6 bg-white">
-            <div className="container mx-auto max-w-4xl">
-              <h2 
-                className="text-3xl md:text-4xl mb-10 text-center"
-                style={{ fontFamily: 'var(--font-heading)', fontWeight: '400' }}
-              >
-                Property Video
-              </h2>
-              <div className="aspect-video rounded-lg overflow-hidden shadow-lg">
-                <iframe
-                  src={embedUrl}
-                  className="w-full h-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  title="Property Video"
-                />
               </div>
             </div>
           </section>
