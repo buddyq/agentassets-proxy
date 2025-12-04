@@ -2713,7 +2713,7 @@ function MagazineContact({ site, theme, agentInfo }: { site: Site; theme?: Theme
   };
 
   return (
-    <section id="contact" className="py-20 px-6" style={{ backgroundColor: theme?.colors?.background || '#F8FAF9', scrollMarginTop: '100px' }}>
+    <section id="contact" className="py-20 px-6 border-t" style={{ backgroundColor: theme?.colors?.background || '#F8FAF9', scrollMarginTop: '100px', borderColor: 'rgba(0,0,0,0.08)' }}>
       <div className="container mx-auto max-w-5xl">
         <div className="grid md:grid-cols-2 gap-12">
           <div>
