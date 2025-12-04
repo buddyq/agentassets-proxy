@@ -9,7 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useUpdateUserProfile, getUploadUrl, normalizeObjectUrl } from "@/lib/api";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { useToast } from "@/hooks/use-toast";
-import { Instagram, Youtube, Facebook, Linkedin, X, Image, Trash2 } from "lucide-react";
+import { Instagram, Youtube, Facebook, Linkedin, X, Image, Trash2, AlertCircle, CheckCircle2 } from "lucide-react";
 import { useLocation } from "wouter";
 
 export default function Profile() {
@@ -128,6 +128,59 @@ export default function Profile() {
           <h1 className="text-3xl font-bold text-secondary">Agent Profile</h1>
           <p className="text-muted-foreground">Manage your agent information and branding</p>
         </div>
+
+        {/* Setup Guide */}
+        <Card className="mb-8 border-primary/20 bg-primary/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-primary" />
+              Profile Setup Guide
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-foreground">
+              Complete your profile to ensure your information displays correctly on your property microsites. Nothing is required, but we highly recommend filling out these sections:
+            </p>
+            <div className="space-y-3">
+              <div className="flex gap-3">
+                <div className="flex-shrink-0 mt-0.5">
+                  <CheckCircle2 className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h4 className="font-medium text-sm">Profile Picture</h4>
+                  <p className="text-xs text-muted-foreground">Appears as your profile avatar on property sites and contact forms</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <div className="flex-shrink-0 mt-0.5">
+                  <CheckCircle2 className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h4 className="font-medium text-sm">Default Logo</h4>
+                  <p className="text-xs text-muted-foreground">Displays in the navigation and hero section of all your property sites</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <div className="flex-shrink-0 mt-0.5">
+                  <CheckCircle2 className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h4 className="font-medium text-sm">Basic Information</h4>
+                  <p className="text-xs text-muted-foreground">Name, phone, email, and office details shown on your property sites</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <div className="flex-shrink-0 mt-0.5">
+                  <CheckCircle2 className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h4 className="font-medium text-sm">Social Media</h4>
+                  <p className="text-xs text-muted-foreground">Links to your social profiles appear in the contact section</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Profile Picture Section */}
