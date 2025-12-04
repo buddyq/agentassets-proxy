@@ -1914,10 +1914,10 @@ function MagazineFactsBar({ site, theme }: { site: Site; theme?: Theme }) {
           {/* Left side - Offered At, Price, Compensation */}
           <div className="text-white">
             <p 
-              className="text-sm uppercase tracking-widest opacity-80 mb-1"
+              className="text-sm tracking-widest opacity-80 mb-1"
               style={{ fontFamily: '"stevie-sans", sans-serif', letterSpacing: '0.1em' }}
             >
-              Offered At
+              Offered at
             </p>
             <p 
               className="text-3xl md:text-4xl mb-1"
@@ -1940,7 +1940,7 @@ function MagazineFactsBar({ site, theme }: { site: Site; theme?: Theme }) {
             {site.bedrooms && (
               <div className="flex flex-col items-center">
                 <Bed style={{ height: '45px', width: '45px', marginBottom: '8px', opacity: 0.9 }} />
-                <span style={{ fontFamily: '"stevie-sans", sans-serif', fontWeight: '300', fontSize: '16px' }}>
+                <span style={{ fontFamily: '"Dynalight", cursive', fontSize: '18px' }}>
                   {site.bedrooms} Beds
                 </span>
               </div>
@@ -1948,7 +1948,7 @@ function MagazineFactsBar({ site, theme }: { site: Site; theme?: Theme }) {
             {site.bathrooms && (
               <div className="flex flex-col items-center">
                 <Bath style={{ height: '45px', width: '45px', marginBottom: '8px', opacity: 0.9 }} />
-                <span style={{ fontFamily: '"stevie-sans", sans-serif', fontWeight: '300', fontSize: '16px' }}>
+                <span style={{ fontFamily: '"Dynalight", cursive', fontSize: '18px' }}>
                   {site.bathrooms} Baths
                 </span>
               </div>
@@ -1956,7 +1956,7 @@ function MagazineFactsBar({ site, theme }: { site: Site; theme?: Theme }) {
             {site.sqft && (
               <div className="flex flex-col items-center">
                 <Square style={{ height: '45px', width: '45px', marginBottom: '8px', opacity: 0.9 }} />
-                <span style={{ fontFamily: '"stevie-sans", sans-serif', fontWeight: '300', fontSize: '16px' }}>
+                <span style={{ fontFamily: '"Dynalight", cursive', fontSize: '18px' }}>
                   {site.sqft.toLocaleString()} sqft
                 </span>
                 <span 
@@ -1970,7 +1970,7 @@ function MagazineFactsBar({ site, theme }: { site: Site; theme?: Theme }) {
             {site.lotSize && (
               <div className="flex flex-col items-center">
                 <Building style={{ height: '45px', width: '45px', marginBottom: '8px', opacity: 0.9 }} />
-                <span style={{ fontFamily: '"stevie-sans", sans-serif', fontWeight: '300', fontSize: '16px' }}>
+                <span style={{ fontFamily: '"Dynalight", cursive', fontSize: '18px' }}>
                   {site.lotSize}
                 </span>
                 <span 
