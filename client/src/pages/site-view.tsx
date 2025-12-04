@@ -2356,6 +2356,35 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
           </div>
         </div>
       </div>
+
+      {/* Features Section */}
+      {hasFeatures && (
+        <div className="mt-16 pt-16 border-t">
+          <h2 
+            className="text-3xl md:text-4xl mb-12 text-center"
+            style={{ fontFamily: '"Gilda Display", serif' }}
+          >
+            Features & Amenities
+          </h2>
+          <div className="flex flex-wrap justify-center gap-4">
+            {features?.map((feature: string, index: number) => (
+              <div
+                key={index}
+                className="px-6 py-3 rounded-full border-2"
+                style={{ 
+                  borderColor: primaryColor,
+                  color: primaryColor
+                }}
+                data-testid={`tag-feature-${index}`}
+              >
+                <span style={{ fontFamily: '"stevie-sans", sans-serif' }}>
+                  {feature}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       
       {/* Description Modal */}
       {showDescriptionModal && (

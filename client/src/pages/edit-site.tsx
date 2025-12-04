@@ -589,7 +589,7 @@ export default function EditSite() {
                           type="button"
                           onClick={() => {
                             const currentFeaturesStr = typeof formData.features === 'string' ? formData.features : (formData.features as any)?.join(', ') || '';
-                            const features = currentFeaturesStr ? currentFeaturesStr.split(',').map(f => f.trim()) : [];
+                            const features = currentFeaturesStr ? currentFeaturesStr.split(',').map((f: string) => f.trim()) : [];
                             if (!features.includes(feature)) {
                               features.push(feature);
                               setFormData({...formData, features: features.join(', ')});
