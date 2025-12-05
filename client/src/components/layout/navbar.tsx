@@ -11,11 +11,29 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export function Navbar() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const { user, isLoading, logoutMutation } = useAuth();
 
   const handleLogout = () => {
     logoutMutation.mutate();
+  };
+
+  const scrollToPricing = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (location === "/") {
+      const pricingSection = document.getElementById("pricing");
+      if (pricingSection) {
+        pricingSection.scrollIntoView({ behavior: "smooth" });
+      }
+    } else {
+      setLocation("/");
+      setTimeout(() => {
+        const pricingSection = document.getElementById("pricing");
+        if (pricingSection) {
+          pricingSection.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 100);
+    }
   };
 
   return (
@@ -91,9 +109,13 @@ export function Navbar() {
               <Link href="/">
                 <Button variant="ghost" className="hidden md:inline-flex">Home</Button>
               </Link>
-              <Link href="/#pricing">
-                <Button variant="ghost" className="hidden md:inline-flex">Pricing</Button>
-              </Link>
+              <Button 
+                variant="ghost" 
+                className="hidden md:inline-flex"
+                onClick={scrollToPricing}
+              >
+                Pricing
+              </Button>
               <Link href="/auth">
                 <Button>{isLoading ? "Loading..." : "Login / Sign Up"}</Button>
               </Link>
