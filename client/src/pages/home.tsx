@@ -24,9 +24,10 @@ export default function Home() {
         
         <div className="container relative z-20 px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-4 py-2 mb-8">
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 backdrop-blur-md border border-yellow-400/30 rounded-full px-5 py-2.5 mb-8 animate-pulse">
               <Sparkles className="h-4 w-4 text-yellow-400" />
-              <span className="text-sm font-medium">The #1 Property Website Builder for Agents</span>
+              <span className="text-sm font-semibold">Start Your 7-Day Free Trial</span>
+              <span className="text-xs bg-yellow-400 text-black px-2 py-0.5 rounded-full font-bold">FREE</span>
             </div>
             
             <h1 className="text-5xl md:text-7xl font-bold mb-6 font-serif leading-tight">
@@ -54,6 +55,10 @@ export default function Home() {
                 </Button>
               </Link>
             </div>
+            
+            <p className="mt-4 text-sm text-white/60">
+              No credit card required. Create your first site free.
+            </p>
 
             {/* Stats */}
             <div className="mt-16 grid grid-cols-3 gap-8 max-w-2xl mx-auto">
@@ -77,6 +82,74 @@ export default function Home() {
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20">
           <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center pt-2">
             <div className="w-1.5 h-3 bg-white/60 rounded-full animate-bounce" />
+          </div>
+        </div>
+      </section>
+
+      {/* Free Trial Section */}
+      <section className="py-20 bg-gradient-to-b from-white to-slate-50 relative overflow-hidden">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-gradient-to-br from-primary/5 via-teal-50 to-emerald-50 rounded-3xl p-8 md:p-12 border border-primary/10 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-teal-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+              
+              <div className="relative">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="h-8 w-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                    <Sparkles className="h-4 w-4 text-white" />
+                  </div>
+                  <span className="text-sm font-semibold text-primary uppercase tracking-wider">7-Day Free Trial</span>
+                </div>
+                
+                <h2 className="text-3xl md:text-4xl font-bold text-secondary mb-4">
+                  Try AgentAssets <span className="bg-gradient-to-r from-primary to-teal-600 bg-clip-text text-transparent">Risk-Free</span>
+                </h2>
+                
+                <p className="text-lg text-muted-foreground mb-8 max-w-2xl">
+                  Create your first property website completely free. No credit card needed, no strings attached.
+                </p>
+                
+                <div className="grid sm:grid-cols-3 gap-6 mb-8">
+                  <div className="flex items-start gap-3">
+                    <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Check className="h-3.5 w-3.5 text-primary" />
+                    </div>
+                    <div>
+                      <div className="font-semibold text-secondary">1 Free Site Credit</div>
+                      <div className="text-sm text-muted-foreground">Build a complete property site</div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Check className="h-3.5 w-3.5 text-primary" />
+                    </div>
+                    <div>
+                      <div className="font-semibold text-secondary">All Premium Features</div>
+                      <div className="text-sm text-muted-foreground">Analytics, lead capture & more</div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Check className="h-3.5 w-3.5 text-primary" />
+                    </div>
+                    <div>
+                      <div className="font-semibold text-secondary">No Commitment</div>
+                      <div className="text-sm text-muted-foreground">Cancel anytime, no questions</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <Link href="/auth">
+                  <Button size="lg" className="text-lg px-8 h-12 bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-600/90 text-white border-none shadow-lg shadow-primary/25 group">
+                    Start Your Free Trial
+                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </section>
