@@ -2,7 +2,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useSites, useDeleteSite, useUpdateSite, useThemes, useLeads, useLayouts, useUnpublishSite, useRepublishSite, useSitePasswords } from "@/lib/api";
+import { useSites, useDeleteSite, useUpdateSite, useThemes, useLeads, useLayouts, useUnpublishSite, useRepublishSite, useSitePasswords, useCheckSlugAvailability, useUpdateSiteSlug } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
 import { Plus, ExternalLink, Trash2, Globe, BarChart3, Users, MousePointerClick, TrendingUp, Pencil, MessageSquare, Mail, Phone, Calendar, ChevronRight, LayoutDashboard, UserCircle, Image, FileText, Share2, ArrowRight, X, EyeOff, Eye, Clock, AlertTriangle, Lock, Copy, Check, Link2 } from "lucide-react";
@@ -57,6 +57,15 @@ export default function Dashboard() {
   const [domainDialogOpen, setDomainDialogOpen] = useState(false);
   const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
   const [domainInput, setDomainInput] = useState("");
+  
+  // Slug Editor State
+  const [slugDialogOpen, setSlugDialogOpen] = useState(false);
+  const [slugSiteId, setSlugSiteId] = useState<string | null>(null);
+  const [slugInput, setSlugInput] = useState("");
+  const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
+  const [slugReason, setSlugReason] = useState<string | null>(null);
+  const checkSlugMutation = useCheckSlugAvailability();
+  const updateSlugMutation = useUpdateSiteSlug();
   
   // URL Copy State
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
@@ -175,6 +184,69 @@ export default function Dashboard() {
               description: domainInput ? `Custom domain ${domainInput} connected successfully.` : "Custom domain removed.",
             });
             setDomainDialogOpen(false);
+          }
+        }
+      );
+    }
+  };
+
+  // Format slug to be URL-safe (lowercase, dashes instead of spaces, remove special chars)
+  const formatSlug = (text: string): string => {
+    return text
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, '-')           // spaces to dashes
+      .replace(/[^a-z0-9-]/g, '')     // remove non-alphanumeric except dashes
+      .replace(/-+/g, '-')            // collapse multiple dashes
+      .replace(/^-|-$/g, '');         // trim leading/trailing dashes
+  };
+
+  const handleOpenSlugDialog = (siteId: string, currentSlug?: string) => {
+    setSlugSiteId(siteId);
+    setSlugInput(currentSlug || "");
+    setSlugAvailable(null);
+    setSlugReason(null);
+    setSlugDialogOpen(true);
+  };
+
+  const handleSlugChange = (value: string) => {
+    const formattedSlug = formatSlug(value);
+    setSlugInput(formattedSlug);
+    setSlugAvailable(null);
+    setSlugReason(null);
+    
+    // Debounced check - only check if valid length
+    if (formattedSlug.length >= 3) {
+      checkSlugMutation.mutate(
+        { slug: formattedSlug, siteId: slugSiteId || undefined },
+        {
+          onSuccess: (result) => {
+            setSlugAvailable(result.available);
+            setSlugReason(result.reason);
+          }
+        }
+      );
+    }
+  };
+
+  const handleSaveSlug = () => {
+    if (slugSiteId && slugInput && slugAvailable) {
+      updateSlugMutation.mutate(
+        { id: slugSiteId, slug: slugInput },
+        {
+          onSuccess: () => {
+            toast({
+              title: "URL Updated",
+              description: `Your site is now available at agentassets.com/p/${slugInput}`,
+            });
+            setSlugDialogOpen(false);
+          },
+          onError: (error) => {
+            toast({
+              title: "Error",
+              description: error.message,
+              variant: "destructive"
+            });
           }
         }
       );
@@ -447,6 +519,16 @@ export default function Dashboard() {
                                   <Copy className="h-3 w-3" />
                                 )}
                               </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 shrink-0"
+                                onClick={() => handleOpenSlugDialog(site.id, (site as any).subdomain)}
+                                data-testid={`button-edit-url-${site.id}`}
+                                title="Edit URL"
+                              >
+                                <Pencil className="h-3 w-3" />
+                              </Button>
                             </div>
                             {site.customDomain && (site as any).subdomain && (
                               <p className="text-[10px] text-muted-foreground">
@@ -640,6 +722,73 @@ export default function Dashboard() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setDomainDialogOpen(false)}>Cancel</Button>
             <Button onClick={handleSaveDomain}>Save Domain</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Slug Editor Dialog */}
+      <Dialog open={slugDialogOpen} onOpenChange={setSlugDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit Site URL</DialogTitle>
+            <DialogDescription>
+              Customize the URL path for your property site. This is the link you'll share with potential buyers.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="slug">URL Path</Label>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground whitespace-nowrap">agentassets.com/p/</span>
+                <div className="flex-1 relative">
+                  <Input
+                    id="slug"
+                    placeholder="your-property-name"
+                    value={slugInput}
+                    onChange={(e) => handleSlugChange(e.target.value)}
+                    data-testid="input-slug"
+                    className={
+                      slugAvailable === true ? "border-green-500 pr-10" :
+                      slugAvailable === false ? "border-red-500 pr-10" : ""
+                    }
+                  />
+                  {slugAvailable === true && (
+                    <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500" />
+                  )}
+                  {slugAvailable === false && (
+                    <X className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-red-500" />
+                  )}
+                </div>
+              </div>
+              {slugAvailable === true && (
+                <p className="text-xs text-green-600">This URL is available!</p>
+              )}
+              {slugReason && (
+                <p className="text-xs text-red-600">{slugReason}</p>
+              )}
+              {slugInput.length > 0 && slugInput.length < 3 && (
+                <p className="text-xs text-muted-foreground">URL must be at least 3 characters</p>
+              )}
+            </div>
+            
+            <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+              <h4 className="font-medium text-sm">URL Formatting Tips</h4>
+              <ul className="text-xs text-muted-foreground space-y-1">
+                <li>Use lowercase letters, numbers, and dashes only</li>
+                <li>Spaces are automatically converted to dashes</li>
+                <li>Example: <span className="font-mono text-foreground">123-main-street</span> or <span className="font-mono text-foreground">luxury-downtown-condo</span></li>
+              </ul>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSlugDialogOpen(false)}>Cancel</Button>
+            <Button 
+              onClick={handleSaveSlug} 
+              disabled={!slugAvailable || !slugInput || updateSlugMutation.isPending}
+              data-testid="button-save-slug"
+            >
+              {updateSlugMutation.isPending ? "Saving..." : "Save URL"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

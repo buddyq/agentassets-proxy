@@ -149,6 +149,7 @@ export async function registerRoutes(
   // Check if a slug is available
   app.get("/api/sites/check-slug/:slug", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.id;
       const slug = req.params.slug.toLowerCase();
       const siteId = req.query.siteId as string | undefined;
       
@@ -161,7 +162,16 @@ export async function registerRoutes(
         });
       }
       
-      const available = await storage.isSlugAvailable(slug, siteId);
+      // If siteId is provided, verify ownership before allowing it to bypass conflict check
+      let validatedSiteId: string | undefined = undefined;
+      if (siteId) {
+        const site = await storage.getSite(siteId);
+        if (site && site.userId === userId) {
+          validatedSiteId = siteId;
+        }
+      }
+      
+      const available = await storage.isSlugAvailable(slug, validatedSiteId);
       res.json({ available, reason: available ? null : "This URL is already taken" });
     } catch (error) {
       res.status(500).json({ error: "Failed to check slug availability" });

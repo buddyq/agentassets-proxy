@@ -197,6 +197,43 @@ export function useUpdateSite() {
   });
 }
 
+// Check if a slug is available
+export function useCheckSlugAvailability() {
+  return useMutation({
+    mutationFn: async ({ slug, siteId }: { slug: string; siteId?: string }) => {
+      const url = siteId 
+        ? `${API_BASE}/sites/check-slug/${encodeURIComponent(slug)}?siteId=${siteId}`
+        : `${API_BASE}/sites/check-slug/${encodeURIComponent(slug)}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Failed to check slug');
+      return res.json() as Promise<{ available: boolean; reason: string | null }>;
+    }
+  });
+}
+
+// Update site slug
+export function useUpdateSiteSlug() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, slug }: { id: string; slug: string }) => {
+      const res = await fetch(`${API_BASE}/sites/${id}/slug`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug })
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to update slug');
+      }
+      return res.json() as Promise<Site>;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['sites'] });
+      queryClient.setQueryData(['site', data.id], data);
+    }
+  });
+}
+
 export function useDeleteSite() {
   const queryClient = useQueryClient();
   return useMutation({
