@@ -132,6 +132,7 @@ export type OpenHouseEvent = {
 export const sites = pgTable("sites", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: text("user_id").notNull(),
+  subdomain: text("subdomain").unique(),
   title: text("title"),
   address: text("address").notNull(),
   price: text("price").notNull(),
