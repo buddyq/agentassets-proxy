@@ -17,30 +17,20 @@ function ScrollToTop() {
   return null;
 }
 
-// Detect if we're on a subdomain of agentassets.com
-function useSubdomainDetection() {
+// Detect if we're on a custom domain (not agentassets.com or development domains)
+function useCustomDomainDetection() {
   return useMemo(() => {
-    // Normalize: lowercase and strip port
     const hostname = window.location.hostname.toLowerCase();
     const host = window.location.host.toLowerCase().replace(/:\d+$/, '');
     
-    // Check for subdomain pattern: xxx.agentassets.com (but not www or app)
-    const subdomainMatch = hostname.match(/^([^.]+)\.agentassets\.com$/);
-    if (subdomainMatch) {
-      const subdomain = subdomainMatch[1];
-      // Exclude known app subdomains
-      if (subdomain !== 'www' && subdomain !== 'app' && subdomain !== 'api') {
-        return { isSubdomain: true, subdomain, host };
-      }
-    }
-    // Also check for custom domains (not agentassets.com and not replit dev domains)
+    // Check for custom domains (not agentassets.com and not replit dev domains)
     if (!hostname.includes('agentassets.com') && 
         !hostname.includes('replit') && 
         !hostname.includes('localhost') &&
         hostname !== '127.0.0.1') {
-      return { isSubdomain: false, customDomain: hostname, host };
+      return { isCustomDomain: true, host };
     }
-    return { isSubdomain: false, subdomain: null, host: null };
+    return { isCustomDomain: false, host: null };
   }, []);
 }
 
@@ -56,11 +46,16 @@ import Credits from "@/pages/credits";
 import Profile from "@/pages/profile";
 import SiteView from "@/pages/site-view";
 import SubdomainSiteView from "@/pages/subdomain-site-view";
+import SlugSiteView from "@/pages/slug-site-view";
 import LayoutPreview from "@/pages/layout-preview";
 import HowItWorks from "@/pages/how-it-works";
 import Contact from "@/pages/contact";
 import Support from "@/pages/support";
 import OurStory from "@/pages/our-story";
+
+function SlugRoute({ params }: { params: { slug: string } }) {
+  return <SlugSiteView slug={params.slug} />;
+}
 
 function Router() {
   return (
@@ -72,6 +67,7 @@ function Router() {
       <Route path="/support" component={Support} />
       <Route path="/our-story" component={OurStory} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/p/:slug" component={SlugRoute} />
       <Route path="/site/:id" component={SiteView} />
       <Route path="/layout-preview/:layoutId" component={LayoutPreview} />
       
@@ -90,15 +86,15 @@ function Router() {
 }
 
 function App() {
-  const hostInfo = useSubdomainDetection();
+  const customDomainInfo = useCustomDomainDetection();
   
-  // If on a subdomain or custom domain, show the site directly
-  if (hostInfo.host) {
+  // If on a custom domain (e.g., www.410brookhaven.com), show the site directly
+  if (customDomainInfo.isCustomDomain && customDomainInfo.host) {
     return (
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
-          <SubdomainSiteView host={hostInfo.host} />
+          <SubdomainSiteView host={customDomainInfo.host} />
         </TooltipProvider>
       </QueryClientProvider>
     );

@@ -111,11 +111,46 @@ export async function registerRoutes(
     }
   });
 
-  // Lookup site by host (subdomain or custom domain)
+  // Lookup site by host (subdomain or custom domain) - used for custom domain routing
   app.get("/api/sites/by-host/:host", async (req, res) => {
     try {
       const host = req.params.host.toLowerCase();
       const site = await storage.getSiteByHost(host);
+      if (!site) {
+        return res.status(404).json({ error: "Site not found" });
+      }
+      // Get user for logo fallbacks and agent info
+      const user = site.userId ? await storage.getUser(site.userId) : null;
+      
+      // Include effective logo (site logo or fallback to user's default logo)
+      const effectiveLogo = site.logo || user?.logo || null;
+      
+      // Include effective hero logo (heroLogo or fallback to site logo or user's default logo)
+      const effectiveHeroLogo = site.heroLogo || site.logo || user?.logo || null;
+      
+      // Include agent info for contact section
+      const agentInfo = user ? {
+        name: user.name || null,
+        email: user.email || null,
+        phone: user.phone || null,
+        profileImageUrl: user.profileImageUrl || null,
+        brokerage: user.brokerage || null,
+        teamName: user.teamName || null,
+        address: user.address || null,
+        socialMedia: user.socialMedia || null,
+      } : null;
+      
+      res.json({ ...site, effectiveLogo, effectiveHeroLogo, agentInfo });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch site" });
+    }
+  });
+
+  // Lookup site by slug (subdomain value) - used for path-based URLs like /p/:slug
+  app.get("/api/sites/by-slug/:slug", async (req, res) => {
+    try {
+      const slug = req.params.slug.toLowerCase();
+      const site = await storage.getSiteBySubdomain(slug);
       if (!site) {
         return res.status(404).json({ error: "Site not found" });
       }

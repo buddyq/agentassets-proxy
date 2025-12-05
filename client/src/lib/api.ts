@@ -147,6 +147,18 @@ export function useSiteByHost(host: string) {
   });
 }
 
+export function useSiteBySlug(slug: string) {
+  return useQuery({
+    queryKey: ['site-by-slug', slug],
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE}/sites/by-slug/${encodeURIComponent(slug)}`);
+      if (!res.ok) throw new Error('Failed to fetch site');
+      return res.json() as Promise<Site>;
+    },
+    enabled: !!slug
+  });
+}
+
 export function useCreateSite() {
   const queryClient = useQueryClient();
   return useMutation({
