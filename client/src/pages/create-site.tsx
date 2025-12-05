@@ -66,9 +66,13 @@ export default function CreateSite() {
   const updateCreditsMutation = useUpdateCredits();
   const { toast } = useToast();
 
-  // Redirect to credits page if user has no credits
+  // Check if user has trial credits available
+  const hasTrialCredits = user && (user.trialCredits || 0) > 0 && 
+    user.trialEndsAt && new Date(user.trialEndsAt) > new Date();
+
+  // Redirect to credits page if user has no credits (regular or trial)
   useEffect(() => {
-    if (!isLoadingUser && user && user.credits < 1) {
+    if (!isLoadingUser && user && user.credits < 1 && !hasTrialCredits) {
       toast({
         variant: "destructive",
         title: "No Credits Available",
@@ -76,7 +80,7 @@ export default function CreateSite() {
       });
       setLocation("/credits");
     }
-  }, [user, isLoadingUser, setLocation, toast]);
+  }, [user, isLoadingUser, setLocation, toast, hasTrialCredits]);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -220,7 +224,10 @@ export default function CreateSite() {
   };
 
   const handlePublish = () => {
-    if (!user || user.credits < 1) {
+    const hasCredits = user && user.credits >= 1;
+    const canUseTrial = hasTrialCredits;
+    
+    if (!user || (!hasCredits && !canUseTrial)) {
       toast({
         variant: "destructive",
         title: "Insufficient Credits",
@@ -228,6 +235,9 @@ export default function CreateSite() {
       });
       return;
     }
+
+    // Determine if we're using trial credit (use trial only if no regular credits)
+    const useTrialCredit = !hasCredits && canUseTrial;
 
     const validCustomDetails = customDetails.filter(d => d.label.trim() && d.value.trim());
     
@@ -266,21 +276,26 @@ export default function CreateSite() {
         contentGridImage1: formData.contentGridImage1 || null,
         contentGridImage2: formData.contentGridImage2 || null,
         features: formData.features ? formData.features.split(',').map(f => f.trim()).filter(f => f) : [],
-      },
+        // Trial credit flag
+        useTrialCredit,
+      } as any,
       {
         onSuccess: () => {
-          updateCreditsMutation.mutate(user.credits - 1);
+          // Credits are decremented on the backend, no need to do it here
+          const message = useTrialCredit 
+            ? "Your trial site is live! It will expire in 7 days unless you purchase a plan."
+            : "Your new property site is live.";
           toast({
             title: "Site Published!",
-            description: "Your new property site is live.",
+            description: message,
           });
           setLocation("/dashboard");
         },
-        onError: () => {
+        onError: (error: any) => {
           toast({
             variant: "destructive",
             title: "Error",
-            description: "Failed to create site. Please try again.",
+            description: error?.message || "Failed to create site. Please try again.",
           });
         }
       }
