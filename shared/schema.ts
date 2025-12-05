@@ -30,6 +30,7 @@ export const users = pgTable("users", {
   brokerage: text("brokerage"),
   teamName: text("team_name"),
   address: text("address"),
+  isAdmin: boolean("is_admin").notNull().default(false),
   socialMedia: jsonb("social_media").$type<{
     instagram?: string;
     youtube?: string;

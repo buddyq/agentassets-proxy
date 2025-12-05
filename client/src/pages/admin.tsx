@@ -13,7 +13,7 @@ import {
   useAdminCoupons, useCreateCoupon, useUpdateCoupon, useDeleteCoupon,
   useAdminUsers, useAdminUpdateUserCredits, useAdminDeleteUser
 } from "@/lib/api";
-import { Plus, Palette, Trash2, Shield, Pencil, LayoutTemplate, Ticket, Users, CreditCard, Gift, Clock, Hash, Calendar } from "lucide-react";
+import { Plus, Palette, Trash2, Shield, Pencil, LayoutTemplate, Ticket, Users, CreditCard, Gift, Clock, Hash, Calendar, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -22,12 +22,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { useAuth } from "@/hooks/useAuth";
+import { Redirect } from "wouter";
 
 export default function AdminDashboard() {
+  const { user, isLoading: authLoading } = useAuth();
   const { data: themes = [] } = useThemes();
   const { data: layouts = [] } = useLayouts({ preset: true });
-  const { data: coupons = [] } = useAdminCoupons();
-  const { data: users = [] } = useAdminUsers();
+  const { data: coupons = [], isError: couponsError } = useAdminCoupons();
+  const { data: users = [], isError: usersError } = useAdminUsers();
   const createThemeMutation = useCreateTheme();
   const updateThemeMutation = useUpdateTheme();
   const deleteThemeMutation = useDeleteTheme();
@@ -51,8 +54,7 @@ export default function AdminDashboard() {
   const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
   const [editingUser, setEditingUser] = useState<Omit<User, 'password'> | null>(null);
   const { toast } = useToast();
-
-  // Coupon form state
+  
   const [couponCode, setCouponCode] = useState("");
   const [couponDescription, setCouponDescription] = useState("");
   const [couponType, setCouponType] = useState<string>("free_credits");
@@ -60,8 +62,6 @@ export default function AdminDashboard() {
   const [couponMaxUses, setCouponMaxUses] = useState<number | null>(null);
   const [couponExpiresAt, setCouponExpiresAt] = useState<string>("");
   const [couponIsActive, setCouponIsActive] = useState(true);
-
-  // Edit coupon form state
   const [editCouponCode, setEditCouponCode] = useState("");
   const [editCouponDescription, setEditCouponDescription] = useState("");
   const [editCouponType, setEditCouponType] = useState<string>("free_credits");
@@ -69,33 +69,39 @@ export default function AdminDashboard() {
   const [editCouponMaxUses, setEditCouponMaxUses] = useState<number | null>(null);
   const [editCouponExpiresAt, setEditCouponExpiresAt] = useState<string>("");
   const [editCouponIsActive, setEditCouponIsActive] = useState(true);
-
-  // User credits form state
   const [newCreditsAmount, setNewCreditsAmount] = useState<number>(0);
-
   const [newThemeName, setNewThemeName] = useState("");
   const [primaryColor, setPrimaryColor] = useState("#000000");
   const [secondaryColor, setSecondaryColor] = useState("#ffffff");
   const [backgroundColor, setBackgroundColor] = useState("#ffffff");
   const [textColor, setTextColor] = useState("#000000");
-
   const [editName, setEditName] = useState("");
   const [editPrimaryColor, setEditPrimaryColor] = useState("#000000");
   const [editSecondaryColor, setEditSecondaryColor] = useState("#ffffff");
   const [editBackgroundColor, setEditBackgroundColor] = useState("#ffffff");
   const [editTextColor, setEditTextColor] = useState("#000000");
-
   const [newLayoutName, setNewLayoutName] = useState("");
   const [newLayoutDescription, setNewLayoutDescription] = useState("");
   const [newLayoutHeroStyle, setNewLayoutHeroStyle] = useState<"fullscreen" | "split" | "minimal" | "slider">("fullscreen");
   const [newLayoutGalleryStyle, setNewLayoutGalleryStyle] = useState<"grid" | "masonry" | "carousel" | "lightbox">("grid");
   const [newLayoutTypographyScale, setNewLayoutTypographyScale] = useState<"compact" | "normal" | "spacious">("normal");
-
   const [editLayoutName, setEditLayoutName] = useState("");
   const [editLayoutDescription, setEditLayoutDescription] = useState("");
   const [editLayoutHeroStyle, setEditLayoutHeroStyle] = useState<"fullscreen" | "split" | "minimal" | "slider">("fullscreen");
   const [editLayoutGalleryStyle, setEditLayoutGalleryStyle] = useState<"grid" | "masonry" | "carousel" | "lightbox">("grid");
   const [editLayoutTypographyScale, setEditLayoutTypographyScale] = useState<"compact" | "normal" | "spacious">("normal");
+  
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+  
+  if (!user || !user.isAdmin) {
+    return <Redirect to="/" />;
+  }
 
   const handleCreatePreset = () => {
     if (!newThemeName) return;

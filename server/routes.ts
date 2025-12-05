@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import crypto from "crypto";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./auth";
+import { setupAuth, isAuthenticated, isAdmin } from "./auth";
 import { insertSiteSchema, insertThemeSchema, insertLayoutSchema, insertLeadSchema, insertCouponSchema } from "@shared/schema";
 import { z } from "zod";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
@@ -1092,7 +1092,7 @@ export async function registerRoutes(
   // ========= ADMIN ROUTES =========
 
   // Coupon management routes (admin)
-  app.get("/api/admin/coupons", async (req, res) => {
+  app.get("/api/admin/coupons", isAdmin, async (req, res) => {
     try {
       const coupons = await storage.getAllCoupons();
       res.json(coupons);
@@ -1102,7 +1102,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/admin/coupons", async (req, res) => {
+  app.post("/api/admin/coupons", isAdmin, async (req, res) => {
     try {
       const result = insertCouponSchema.safeParse(req.body);
       if (!result.success) {
@@ -1119,7 +1119,7 @@ export async function registerRoutes(
     }
   });
 
-  app.patch("/api/admin/coupons/:id", async (req, res) => {
+  app.patch("/api/admin/coupons/:id", isAdmin, async (req, res) => {
     try {
       const coupon = await storage.updateCoupon(req.params.id, req.body);
       res.json(coupon);
@@ -1132,7 +1132,7 @@ export async function registerRoutes(
     }
   });
 
-  app.delete("/api/admin/coupons/:id", async (req, res) => {
+  app.delete("/api/admin/coupons/:id", isAdmin, async (req, res) => {
     try {
       await storage.deleteCoupon(req.params.id);
       res.json({ success: true });
@@ -1143,7 +1143,7 @@ export async function registerRoutes(
   });
 
   // User management routes (admin)
-  app.get("/api/admin/users", async (req, res) => {
+  app.get("/api/admin/users", isAdmin, async (req, res) => {
     try {
       const users = await storage.getAllUsers();
       const safeUsers = users.map(({ password: _, ...safeUser }) => safeUser);
@@ -1155,7 +1155,7 @@ export async function registerRoutes(
   });
 
   // Admin route to adjust user credits
-  app.patch("/api/admin/users/:id/credits", async (req, res) => {
+  app.patch("/api/admin/users/:id/credits", isAdmin, async (req, res) => {
     try {
       const { credits } = req.body;
       if (typeof credits !== 'number' || credits < 0) {
@@ -1171,7 +1171,7 @@ export async function registerRoutes(
   });
 
   // Admin route to delete a user
-  app.delete("/api/admin/users/:id", async (req, res) => {
+  app.delete("/api/admin/users/:id", isAdmin, async (req, res) => {
     try {
       await storage.deleteUser(req.params.id);
       res.json({ success: true });

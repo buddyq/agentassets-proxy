@@ -1,7 +1,10 @@
 import { Link } from "wouter";
 import logoUrl from "@/assets/logo.png";
+import { useAuth } from "@/hooks/useAuth";
 
 export function Footer() {
+  const { user } = useAuth();
+  
   return (
     <footer className="bg-secondary text-secondary-foreground py-12 mt-auto">
       <div className="container mx-auto px-4">
@@ -30,7 +33,9 @@ export function Footer() {
               <li><Link href="/our-story" className="hover:text-white/80 transition-colors">Our Story</Link></li>
               <li><Link href="/contact" className="hover:text-white/80 transition-colors">Contact</Link></li>
               <li><Link href="/support" className="hover:text-white/80 transition-colors">Support</Link></li>
-              <li><Link href="/admin" className="hover:text-white/80 transition-colors text-white/30 hover:text-white/50 text-xs">Admin Login</Link></li>
+              {user?.isAdmin && (
+                <li><Link href="/admin" className="hover:text-white/80 transition-colors text-white/30 hover:text-white/50 text-xs">Admin</Link></li>
+              )}
             </ul>
           </div>
         </div>

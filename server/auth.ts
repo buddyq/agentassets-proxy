@@ -135,3 +135,13 @@ export function isAuthenticated(req: any, res: any, next: any) {
   }
   next();
 }
+
+export function isAdmin(req: any, res: any, next: any) {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  if (!req.user?.isAdmin) {
+    return res.status(403).json({ message: "Forbidden - Admin access required" });
+  }
+  next();
+}
