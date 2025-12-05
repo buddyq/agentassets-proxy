@@ -5,11 +5,11 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useSite, useUpdateSite, useThemes, useLayouts, useAddPhotoToSite, useRemovePhotoFromSite, useReorderPhotos, getUploadUrl, normalizeObjectUrl } from "@/lib/api";
+import { useSite, useUpdateSite, useThemes, useLayouts, useAddPhotoToSite, useRemovePhotoFromSite, useReorderPhotos, getUploadUrl, normalizeObjectUrl, useSitePasswords, useCreateSitePassword, useDeleteSitePassword } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
 import { useLocation, useParams } from "wouter";
-import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, Save, Image, X, GripVertical, Star, LayoutGrid, Plus, Settings } from "lucide-react";
+import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, Save, Image, X, GripVertical, Star, LayoutGrid, Plus, Settings, Lock, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -68,6 +68,11 @@ export default function EditSite() {
   const removePhotoMutation = useRemovePhotoFromSite();
   const reorderPhotosMutation = useReorderPhotos();
   const { toast } = useToast();
+  
+  // Password protection hooks
+  const { data: sitePasswords = [], isLoading: isLoadingPasswords } = useSitePasswords(siteId);
+  const createPasswordMutation = useCreateSitePassword();
+  const deletePasswordMutation = useDeleteSitePassword();
 
   const [formData, setFormData] = useState({
     title: "",
@@ -104,6 +109,11 @@ export default function EditSite() {
   // Image picker sheet state
   const [imagePickerOpen, setImagePickerOpen] = useState(false);
   const [imagePickerTarget, setImagePickerTarget] = useState<'contentGridImage1' | 'contentGridImage2' | null>(null);
+
+  // Password protection state
+  const [newPassword, setNewPassword] = useState("");
+  const [newPasswordLabel, setNewPasswordLabel] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const addCustomDetail = () => {
     setCustomDetails([...customDetails, { label: '', value: '' }]);
@@ -808,14 +818,18 @@ export default function EditSite() {
                 </CardHeader>
                 <CardContent>
                   <Tabs defaultValue="branding" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 mb-6">
+                    <TabsList className="grid w-full grid-cols-3 mb-6">
                       <TabsTrigger value="branding" data-testid="tab-branding">
                         <Settings className="h-4 w-4 mr-2" />
-                        Branding & Options
+                        Branding
                       </TabsTrigger>
                       <TabsTrigger value="documents" data-testid="tab-documents">
                         <FileText className="h-4 w-4 mr-2" />
                         Documents {documents.length > 0 && `(${documents.length})`}
+                      </TabsTrigger>
+                      <TabsTrigger value="password" data-testid="tab-password">
+                        <Lock className="h-4 w-4 mr-2" />
+                        Password {sitePasswords.length > 0 && `(${sitePasswords.length})`}
                       </TabsTrigger>
                     </TabsList>
 
@@ -1641,6 +1655,155 @@ export default function EditSite() {
                       )}
                       </div>
                     </div>
+                    </TabsContent>
+
+                    <TabsContent value="password" className="space-y-6">
+                      <div className="grid gap-4">
+                        <div>
+                          <Label className="text-lg font-semibold flex items-center gap-2">
+                            <Lock className="h-5 w-5" />
+                            Password Protection
+                          </Label>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Add passwords to restrict access to your property site. Create multiple passwords with labels to track who accessed the site.
+                          </p>
+                        </div>
+
+                        {/* Add Password Form */}
+                        <div className="space-y-4 bg-muted/30 rounded-lg p-4">
+                          <div className="grid gap-3">
+                            <div className="flex gap-3">
+                              <div className="flex-1">
+                                <Label className="text-sm mb-1.5 block">Password</Label>
+                                <div className="relative">
+                                  <Input
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder="Enter password (min 4 characters)"
+                                    value={newPassword}
+                                    onChange={(e) => setNewPassword(e.target.value)}
+                                    className="pr-10"
+                                    data-testid="input-new-password"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                  >
+                                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                  </button>
+                                </div>
+                              </div>
+                              <div className="flex-1">
+                                <Label className="text-sm mb-1.5 block">Label (Optional)</Label>
+                                <Input
+                                  placeholder="e.g., For Broker, Buyer #1"
+                                  value={newPasswordLabel}
+                                  onChange={(e) => setNewPasswordLabel(e.target.value)}
+                                  data-testid="input-password-label"
+                                />
+                              </div>
+                            </div>
+                            <Button
+                              type="button"
+                              onClick={async () => {
+                                if (newPassword.length < 4) {
+                                  toast({
+                                    title: "Password Too Short",
+                                    description: "Password must be at least 4 characters.",
+                                    variant: "destructive"
+                                  });
+                                  return;
+                                }
+                                try {
+                                  await createPasswordMutation.mutateAsync({
+                                    siteId,
+                                    password: newPassword,
+                                    label: newPasswordLabel || undefined
+                                  });
+                                  setNewPassword("");
+                                  setNewPasswordLabel("");
+                                  toast({
+                                    title: "Password Added",
+                                    description: "Your site is now password protected."
+                                  });
+                                } catch (error) {
+                                  toast({
+                                    title: "Error",
+                                    description: "Failed to add password.",
+                                    variant: "destructive"
+                                  });
+                                }
+                              }}
+                              disabled={createPasswordMutation.isPending || newPassword.length < 4}
+                              className="w-fit"
+                              data-testid="button-add-password"
+                            >
+                              <Plus className="h-4 w-4 mr-2" />
+                              {createPasswordMutation.isPending ? "Adding..." : "Add Password"}
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Password List */}
+                        {sitePasswords.length > 0 && (
+                          <div className="space-y-2">
+                            <Label className="text-sm text-muted-foreground">Active Passwords ({sitePasswords.length})</Label>
+                            <div className="border rounded-lg divide-y">
+                              {sitePasswords.map((pw) => (
+                                <div key={pw.id} className="flex items-center justify-between p-3 hover:bg-muted/30" data-testid={`password-item-${pw.id}`}>
+                                  <div className="flex items-center gap-3">
+                                    <Lock className="h-5 w-5 text-primary" />
+                                    <div>
+                                      <span className="font-medium">{pw.label || "Unnamed Password"}</span>
+                                      <div className="text-sm text-muted-foreground flex items-center gap-3">
+                                        <span>Used {pw.usageCount} time{pw.usageCount !== 1 ? 's' : ''}</span>
+                                        {pw.lastUsedAt && (
+                                          <span>Last used: {new Date(pw.lastUsedAt).toLocaleDateString()}</span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-destructive hover:text-destructive"
+                                    onClick={async () => {
+                                      try {
+                                        await deletePasswordMutation.mutateAsync({
+                                          siteId,
+                                          passwordId: pw.id
+                                        });
+                                        toast({
+                                          title: "Password Removed",
+                                          description: "The password has been deleted."
+                                        });
+                                      } catch (error) {
+                                        toast({
+                                          title: "Error",
+                                          description: "Failed to remove password.",
+                                          variant: "destructive"
+                                        });
+                                      }
+                                    }}
+                                    disabled={deletePasswordMutation.isPending}
+                                    data-testid={`button-delete-password-${pw.id}`}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {sitePasswords.length === 0 && (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <Lock className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                            <p>No passwords added yet.</p>
+                            <p className="text-sm">Add a password above to protect this site.</p>
+                          </div>
+                        )}
+                      </div>
                     </TabsContent>
                   </Tabs>
                 </CardContent>

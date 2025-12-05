@@ -574,3 +574,84 @@ export function useRedeemCoupon() {
     }
   });
 }
+
+// Site password types
+export type SitePasswordInfo = {
+  id: string;
+  label: string | null;
+  usageCount: number;
+  lastUsedAt: string | null;
+  createdAt: string;
+};
+
+// Site password management
+export function useSitePasswords(siteId: string) {
+  return useQuery({
+    queryKey: ['site-passwords', siteId],
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE}/sites/${siteId}/passwords`);
+      if (!res.ok) throw new Error('Failed to fetch passwords');
+      return res.json() as Promise<SitePasswordInfo[]>;
+    },
+    enabled: !!siteId
+  });
+}
+
+export function useCreateSitePassword() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ siteId, password, label }: { siteId: string; password: string; label?: string }) => {
+      const res = await fetch(`${API_BASE}/sites/${siteId}/passwords`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password, label })
+      });
+      if (!res.ok) throw new Error('Failed to create password');
+      return res.json() as Promise<SitePasswordInfo>;
+    },
+    onSuccess: (_, { siteId }) => {
+      queryClient.invalidateQueries({ queryKey: ['site-passwords', siteId] });
+    }
+  });
+}
+
+export function useDeleteSitePassword() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ siteId, passwordId }: { siteId: string; passwordId: string }) => {
+      const res = await fetch(`${API_BASE}/sites/${siteId}/passwords/${passwordId}`, {
+        method: 'DELETE'
+      });
+      if (!res.ok) throw new Error('Failed to delete password');
+    },
+    onSuccess: (_, { siteId }) => {
+      queryClient.invalidateQueries({ queryKey: ['site-passwords', siteId] });
+    }
+  });
+}
+
+// Check if site is password protected (public endpoint)
+export function useSiteProtectionStatus(siteId: string) {
+  return useQuery({
+    queryKey: ['site-protection', siteId],
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE}/sites/${siteId}/protected`);
+      if (!res.ok) throw new Error('Failed to check protection status');
+      return res.json() as Promise<{ isProtected: boolean }>;
+    },
+    enabled: !!siteId
+  });
+}
+
+// Verify site password (public endpoint)
+export async function verifySitePassword(siteId: string, password: string): Promise<{ success: boolean; accessToken?: string }> {
+  const res = await fetch(`${API_BASE}/sites/${siteId}/verify-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password })
+  });
+  if (!res.ok) {
+    return { success: false };
+  }
+  return res.json();
+}
