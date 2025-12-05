@@ -146,6 +146,63 @@ export async function registerRoutes(
     }
   });
 
+  // Check if a slug is available
+  app.get("/api/sites/check-slug/:slug", isAuthenticated, async (req: any, res) => {
+    try {
+      const slug = req.params.slug.toLowerCase();
+      const siteId = req.query.siteId as string | undefined;
+      
+      // Validate slug format
+      const slugRegex = /^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/;
+      if (!slugRegex.test(slug) || slug.length < 3 || slug.length > 50) {
+        return res.json({ 
+          available: false, 
+          reason: "Slug must be 3-50 characters, only lowercase letters, numbers, and dashes"
+        });
+      }
+      
+      const available = await storage.isSlugAvailable(slug, siteId);
+      res.json({ available, reason: available ? null : "This URL is already taken" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to check slug availability" });
+    }
+  });
+
+  // Update site slug
+  app.patch("/api/sites/:id/slug", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const siteId = req.params.id;
+      const { slug } = req.body;
+      
+      // Verify site ownership
+      const site = await storage.getSite(siteId);
+      if (!site || site.userId !== userId) {
+        return res.status(404).json({ error: "Site not found" });
+      }
+      
+      // Validate and normalize slug
+      const normalizedSlug = slug.toLowerCase().trim();
+      const slugRegex = /^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/;
+      if (!slugRegex.test(normalizedSlug) || normalizedSlug.length < 3 || normalizedSlug.length > 50) {
+        return res.status(400).json({ 
+          error: "Slug must be 3-50 characters, only lowercase letters, numbers, and dashes"
+        });
+      }
+      
+      // Check availability
+      const available = await storage.isSlugAvailable(normalizedSlug, siteId);
+      if (!available) {
+        return res.status(409).json({ error: "This URL is already taken" });
+      }
+      
+      const updatedSite = await storage.updateSiteSlug(siteId, normalizedSlug);
+      res.json(updatedSite);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update slug" });
+    }
+  });
+
   // Lookup site by slug (subdomain value) - used for path-based URLs like /p/:slug
   app.get("/api/sites/by-slug/:slug", async (req, res) => {
     try {

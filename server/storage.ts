@@ -216,6 +216,22 @@ export class DatabaseStorage implements IStorage {
     return site || undefined;
   }
 
+  async isSlugAvailable(slug: string, excludeSiteId?: string): Promise<boolean> {
+    const existingSite = await this.getSiteBySubdomain(slug);
+    if (!existingSite) return true;
+    if (excludeSiteId && existingSite.id === excludeSiteId) return true;
+    return false;
+  }
+
+  async updateSiteSlug(siteId: string, slug: string): Promise<Site> {
+    const [site] = await db
+      .update(sites)
+      .set({ subdomain: slug, updatedAt: new Date() })
+      .where(eq(sites.id, siteId))
+      .returning();
+    return site;
+  }
+
   async getSiteByHost(host: string): Promise<Site | undefined> {
     // Normalize host: lowercase and strip port
     const normalizedHost = host.toLowerCase().replace(/:\d+$/, '');
