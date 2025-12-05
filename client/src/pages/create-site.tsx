@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useCreateSite, useUpdateCredits, useThemes, useLayouts, getUploadUrl, normalizeObjectUrl } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, CreditCard, LayoutGrid, Plus, X, Image, GripVertical, Star, Settings, FileText, AlertTriangle, UserCircle, Phone, Mail } from "lucide-react";
 import { Link } from "wouter";
@@ -134,6 +134,41 @@ export default function CreateSite() {
   const [photos, setPhotos] = useState<string[]>([]);
   const [heroPhotos, setHeroPhotos] = useState<string[]>([]);
   const [draggedPhoto, setDraggedPhoto] = useState<number | null>(null);
+  const scrollIntervalRef = useRef<number | null>(null);
+  
+  // Auto-scroll during drag
+  const handleDragScroll = useCallback((e: React.DragEvent) => {
+    const scrollThreshold = 100;
+    const scrollSpeed = 15;
+    const viewportHeight = window.innerHeight;
+    const mouseY = e.clientY;
+    
+    if (scrollIntervalRef.current) {
+      cancelAnimationFrame(scrollIntervalRef.current);
+      scrollIntervalRef.current = null;
+    }
+    
+    if (mouseY < scrollThreshold) {
+      const scroll = () => {
+        window.scrollBy(0, -scrollSpeed);
+        scrollIntervalRef.current = requestAnimationFrame(scroll);
+      };
+      scrollIntervalRef.current = requestAnimationFrame(scroll);
+    } else if (mouseY > viewportHeight - scrollThreshold) {
+      const scroll = () => {
+        window.scrollBy(0, scrollSpeed);
+        scrollIntervalRef.current = requestAnimationFrame(scroll);
+      };
+      scrollIntervalRef.current = requestAnimationFrame(scroll);
+    }
+  }, []);
+  
+  const stopDragScroll = useCallback(() => {
+    if (scrollIntervalRef.current) {
+      cancelAnimationFrame(scrollIntervalRef.current);
+      scrollIntervalRef.current = null;
+    }
+  }, []);
   
   // Image picker sheet state
   const [imagePickerOpen, setImagePickerOpen] = useState(false);
@@ -175,6 +210,7 @@ export default function CreateSite() {
   
   const handleDragOver = (e: React.DragEvent, index: number) => {
     e.preventDefault();
+    handleDragScroll(e);
     if (draggedPhoto === null || draggedPhoto === index) return;
     
     const newPhotos = [...photos];
@@ -187,6 +223,7 @@ export default function CreateSite() {
   
   const handleDragEnd = () => {
     setDraggedPhoto(null);
+    stopDragScroll();
   };
   
   const handleToggleHeroPhoto = (photoUrl: string) => {
