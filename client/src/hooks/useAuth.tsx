@@ -75,6 +75,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return res.json();
     },
     onSuccess: (user: User) => {
+      // Clear all cached data from previous user before setting new user
+      queryClient.clear();
       queryClient.setQueryData(["/api/user"], user);
       toast({
         title: "Welcome back!",
@@ -116,6 +118,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await apiRequest("POST", "/api/logout");
     },
     onSuccess: () => {
+      // Clear all cached data to prevent data leaking between accounts
+      queryClient.clear();
       queryClient.setQueryData(["/api/user"], null);
       toast({
         title: "Logged out",
