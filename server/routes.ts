@@ -638,10 +638,16 @@ export async function registerRoutes(
         .update(payload)
         .digest("hex");
       
-      if (!signature || !crypto.timingSafeEqual(
-        Buffer.from(signature),
-        Buffer.from(expectedSignature)
-      )) {
+      // Validate signature (handle length mismatch safely)
+      if (!signature || signature.length !== expectedSignature.length) {
+        return res.status(401).json({ error: "Invalid signature" });
+      }
+      
+      try {
+        if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature))) {
+          return res.status(401).json({ error: "Invalid signature" });
+        }
+      } catch {
         return res.status(401).json({ error: "Invalid signature" });
       }
       
