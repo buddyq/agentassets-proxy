@@ -84,6 +84,18 @@ export function useUpdateUserProfile() {
   });
 }
 
+// Get partner discount for current user
+export function usePartnerDiscount() {
+  return useQuery({
+    queryKey: ['partner-discount'],
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE}/user/partner-discount`);
+      if (!res.ok) throw new Error('Failed to fetch partner discount');
+      return res.json() as Promise<{ discount: number | null }>;
+    }
+  });
+}
+
 // Sites API (uses authenticated user)
 export function useSites() {
   return useQuery({
