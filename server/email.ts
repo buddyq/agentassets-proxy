@@ -173,43 +173,74 @@ export async function sendMonthlyAnalyticsEmail(data: AnalyticsEmailData): Promi
   const totalLeads = sites.reduce((sum, site) => sum + site.leads, 0);
   const publishedSites = sites.filter(s => s.status === 'published').length;
   
-  const siteRowsHtml = sites.length > 0 
+  const siteCardsHtml = sites.length > 0 
     ? sites.map(site => {
         const siteUrl = site.customDomain 
           ? `https://${site.customDomain}` 
           : `https://agentassets.com/p/${site.slug}`;
         const safeSiteTitle = escapeHtml(site.title || site.address);
         const safeAddress = escapeHtml(site.address);
+        const statusColor = site.status === 'published' ? '#558B73' : '#9ca3af';
+        const statusBg = site.status === 'published' ? '#ecfdf5' : '#f3f4f6';
+        const statusText = site.status === 'published' ? 'Published' : 'Draft';
         
         return `
-          <tr>
-            <td style="padding: 16px; border-bottom: 1px solid #e5e7eb;">
-              <div style="font-weight: 600; color: #111827; margin-bottom: 4px;">${safeSiteTitle}</div>
-              <div style="font-size: 13px; color: #6b7280;">${safeAddress}</div>
-              <a href="${siteUrl}" style="font-size: 12px; color: #558B73; text-decoration: none;">${site.customDomain || `agentassets.com/p/${site.slug}`}</a>
-            </td>
-            <td style="padding: 16px; border-bottom: 1px solid #e5e7eb; text-align: center;">
-              <div style="font-size: 20px; font-weight: 700; color: #111827;">${site.views.toLocaleString()}</div>
-              <div style="font-size: 11px; color: #6b7280; text-transform: uppercase;">Views</div>
-            </td>
-            <td style="padding: 16px; border-bottom: 1px solid #e5e7eb; text-align: center;">
-              <div style="font-size: 20px; font-weight: 700; color: #111827;">${site.uniqueVisitors.toLocaleString()}</div>
-              <div style="font-size: 11px; color: #6b7280; text-transform: uppercase;">Visitors</div>
-            </td>
-            <td style="padding: 16px; border-bottom: 1px solid #e5e7eb; text-align: center;">
-              <div style="font-size: 20px; font-weight: 700; color: #558B73;">${site.leads.toLocaleString()}</div>
-              <div style="font-size: 11px; color: #6b7280; text-transform: uppercase;">Leads</div>
-            </td>
-          </tr>
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 16px;">
+            <tr>
+              <td style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                <!-- Property Header -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 16px;">
+                  <tr>
+                    <td>
+                      <div style="font-size: 18px; font-weight: 700; color: #111827; margin-bottom: 4px; font-family: 'Helvetica Neue', Arial, sans-serif;">${safeSiteTitle}</div>
+                      <div style="font-size: 14px; color: #6b7280; margin-bottom: 8px;">${safeAddress}</div>
+                      <span style="display: inline-block; background: ${statusBg}; color: ${statusColor}; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px;">${statusText}</span>
+                    </td>
+                  </tr>
+                </table>
+                
+                <!-- Metrics Row -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="background: #f9fafb; border-radius: 8px; margin-bottom: 16px;">
+                  <tr>
+                    <td style="width: 33.33%; padding: 16px; text-align: center; border-right: 1px solid #e5e7eb;">
+                      <div style="font-size: 28px; font-weight: 700; color: #374151; margin-bottom: 2px;">${site.views.toLocaleString()}</div>
+                      <div style="font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">Page Views</div>
+                    </td>
+                    <td style="width: 33.33%; padding: 16px; text-align: center; border-right: 1px solid #e5e7eb;">
+                      <div style="font-size: 28px; font-weight: 700; color: #3d6b57; margin-bottom: 2px;">${site.uniqueVisitors.toLocaleString()}</div>
+                      <div style="font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">Unique Visitors</div>
+                    </td>
+                    <td style="width: 33.33%; padding: 16px; text-align: center;">
+                      <div style="font-size: 28px; font-weight: 700; color: #b8860b; margin-bottom: 2px;">${site.leads.toLocaleString()}</div>
+                      <div style="font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">Leads</div>
+                    </td>
+                  </tr>
+                </table>
+                
+                <!-- View Site Button -->
+                <table width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="text-align: center;">
+                      <a href="${siteUrl}" style="display: inline-block; background: transparent; color: #558B73; font-size: 14px; font-weight: 600; padding: 10px 20px; text-decoration: none; border: 2px solid #558B73; border-radius: 8px;">View Site →</a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
         `;
       }).join('')
     : `
-      <tr>
-        <td colspan="4" style="padding: 40px; text-align: center; color: #6b7280;">
-          <div style="font-size: 16px; margin-bottom: 8px;">No property sites yet</div>
-          <div style="font-size: 14px;">Create your first property site to start tracking analytics!</div>
-        </td>
-      </tr>
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 16px;">
+        <tr>
+          <td style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 48px; text-align: center;">
+            <div style="font-size: 48px; margin-bottom: 16px;">🏠</div>
+            <div style="font-size: 18px; font-weight: 600; color: #374151; margin-bottom: 8px;">No Property Sites Yet</div>
+            <div style="font-size: 14px; color: #6b7280; margin-bottom: 20px;">Create your first property site to start tracking analytics!</div>
+            <a href="https://agentassets.com/create" style="display: inline-block; background: #558B73; color: white; font-size: 14px; font-weight: 600; padding: 12px 24px; text-decoration: none; border-radius: 8px;">Create Your First Site</a>
+          </td>
+        </tr>
+      </table>
     `;
 
   const htmlContent = `
@@ -218,86 +249,101 @@ export async function sendMonthlyAnalyticsEmail(data: AnalyticsEmailData): Promi
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <style>
-        body { font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background: #f3f4f6; }
-        .container { max-width: 640px; margin: 0 auto; background: white; }
-        .header { background: linear-gradient(135deg, #558B73 0%, #3d6b57 100%); color: white; padding: 40px 30px; text-align: center; }
-        .header h1 { margin: 0 0 8px 0; font-size: 26px; font-weight: 600; }
-        .header p { margin: 0; opacity: 0.9; font-size: 15px; }
-        .stats-row { display: flex; background: #f9fafb; border-bottom: 1px solid #e5e7eb; }
-        .stat-box { flex: 1; padding: 24px 16px; text-align: center; border-right: 1px solid #e5e7eb; }
-        .stat-box:last-child { border-right: none; }
-        .stat-value { font-size: 32px; font-weight: 700; color: #111827; margin-bottom: 4px; }
-        .stat-label { font-size: 12px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; }
-        .content { padding: 30px; }
-        .section-title { font-size: 14px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px; }
-        .sites-table { width: 100%; border-collapse: collapse; }
-        .footer { text-align: center; padding: 30px; background: #f9fafb; border-top: 1px solid #e5e7eb; }
-        .footer p { margin: 0; color: #6b7280; font-size: 13px; }
-        .cta { display: inline-block; background: #558B73; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; margin-top: 20px; }
-      </style>
     </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <h1>Your Monthly Analytics Report</h1>
-          <p>${monthName} ${year}</p>
-        </div>
-        
-        <table width="100%" cellpadding="0" cellspacing="0" style="background: #f9fafb; border-bottom: 1px solid #e5e7eb;">
-          <tr>
-            <td style="width: 25%; padding: 24px 16px; text-align: center; border-right: 1px solid #e5e7eb;">
-              <div style="font-size: 32px; font-weight: 700; color: #111827; margin-bottom: 4px;">${publishedSites}</div>
-              <div style="font-size: 12px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">Active Sites</div>
-            </td>
-            <td style="width: 25%; padding: 24px 16px; text-align: center; border-right: 1px solid #e5e7eb;">
-              <div style="font-size: 32px; font-weight: 700; color: #111827; margin-bottom: 4px;">${totalViews.toLocaleString()}</div>
-              <div style="font-size: 12px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">Total Views</div>
-            </td>
-            <td style="width: 25%; padding: 24px 16px; text-align: center; border-right: 1px solid #e5e7eb;">
-              <div style="font-size: 32px; font-weight: 700; color: #111827; margin-bottom: 4px;">${totalVisitors.toLocaleString()}</div>
-              <div style="font-size: 12px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">Visitors</div>
-            </td>
-            <td style="width: 25%; padding: 24px 16px; text-align: center;">
-              <div style="font-size: 32px; font-weight: 700; color: #558B73; margin-bottom: 4px;">${totalLeads.toLocaleString()}</div>
-              <div style="font-size: 12px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">Total Leads</div>
-            </td>
-          </tr>
-        </table>
-        
-        <div class="content">
-          <div style="margin-bottom: 8px;">
-            <span style="font-size: 15px; color: #374151;">Hi ${safeName},</span>
-          </div>
-          <p style="color: #6b7280; margin-bottom: 24px; font-size: 15px;">
-            Here's how your property sites performed this month. Keep up the great work!
-          </p>
-          
-          <div class="section-title">Site Performance</div>
-          <table class="sites-table">
-            <thead>
-              <tr style="background: #f9fafb;">
-                <th style="padding: 12px 16px; text-align: left; font-size: 12px; color: #6b7280; text-transform: uppercase; border-bottom: 1px solid #e5e7eb;">Property</th>
-                <th style="padding: 12px 16px; text-align: center; font-size: 12px; color: #6b7280; text-transform: uppercase; border-bottom: 1px solid #e5e7eb;">Views</th>
-                <th style="padding: 12px 16px; text-align: center; font-size: 12px; color: #6b7280; text-transform: uppercase; border-bottom: 1px solid #e5e7eb;">Visitors</th>
-                <th style="padding: 12px 16px; text-align: center; font-size: 12px; color: #6b7280; text-transform: uppercase; border-bottom: 1px solid #e5e7eb;">Leads</th>
+    <body style="margin: 0; padding: 0; background-color: #f3f4f6; font-family: 'Helvetica Neue', Arial, sans-serif;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f3f4f6; padding: 40px 20px;">
+        <tr>
+          <td align="center">
+            <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+              
+              <!-- Logo Header -->
+              <tr>
+                <td style="background: linear-gradient(135deg, #2d4a3e 0%, #1a2e26 100%); padding: 32px 40px; text-align: center;">
+                  <img src="https://agentassets.com/logo-white.png" alt="AgentAssets" style="height: 36px; margin-bottom: 0;" onerror="this.style.display='none'"/>
+                  <div style="color: #ffffff; font-size: 24px; font-weight: 700; letter-spacing: -0.5px; font-family: 'Helvetica Neue', Arial, sans-serif;">AgentAssets</div>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              ${siteRowsHtml}
-            </tbody>
-          </table>
-          
-          <div style="text-align: center; margin-top: 30px;">
-            <a href="https://agentassets.com/dashboard" class="cta">View Full Dashboard</a>
-          </div>
-        </div>
-        
-        <div class="footer">
-          <p>You're receiving this because you have property sites on AgentAssets.</p>
-          <p style="margin-top: 8px;">Questions? Reply to this email or visit agentassets.com</p>
-        </div>
-      </div>
+              
+              <!-- Report Title -->
+              <tr>
+                <td style="background: linear-gradient(135deg, #558B73 0%, #3d6b57 100%); padding: 40px; text-align: center;">
+                  <div style="color: rgba(255,255,255,0.8); font-size: 13px; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;">Monthly Analytics Report</div>
+                  <div style="color: #ffffff; font-size: 32px; font-weight: 700; font-family: 'Helvetica Neue', Arial, sans-serif;">${monthName} ${year}</div>
+                </td>
+              </tr>
+              
+              <!-- Summary Stats -->
+              <tr>
+                <td style="padding: 0;">
+                  <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom: 1px solid #e5e7eb;">
+                    <tr>
+                      <td style="width: 25%; padding: 28px 16px; text-align: center; border-right: 1px solid #e5e7eb; background: #fafafa;">
+                        <div style="font-size: 36px; font-weight: 800; color: #111827; margin-bottom: 4px; font-family: 'Helvetica Neue', Arial, sans-serif;">${publishedSites}</div>
+                        <div style="font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Active Sites</div>
+                      </td>
+                      <td style="width: 25%; padding: 28px 16px; text-align: center; border-right: 1px solid #e5e7eb; background: #fafafa;">
+                        <div style="font-size: 36px; font-weight: 800; color: #111827; margin-bottom: 4px; font-family: 'Helvetica Neue', Arial, sans-serif;">${totalViews.toLocaleString()}</div>
+                        <div style="font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Total Views</div>
+                      </td>
+                      <td style="width: 25%; padding: 28px 16px; text-align: center; border-right: 1px solid #e5e7eb; background: #fafafa;">
+                        <div style="font-size: 36px; font-weight: 800; color: #3d6b57; margin-bottom: 4px; font-family: 'Helvetica Neue', Arial, sans-serif;">${totalVisitors.toLocaleString()}</div>
+                        <div style="font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Visitors</div>
+                      </td>
+                      <td style="width: 25%; padding: 28px 16px; text-align: center; background: #fafafa;">
+                        <div style="font-size: 36px; font-weight: 800; color: #b8860b; margin-bottom: 4px; font-family: 'Helvetica Neue', Arial, sans-serif;">${totalLeads.toLocaleString()}</div>
+                        <div style="font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Total Leads</div>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              
+              <!-- Greeting & Sites -->
+              <tr>
+                <td style="padding: 40px;">
+                  <div style="margin-bottom: 24px;">
+                    <div style="font-size: 18px; color: #111827; font-weight: 600; margin-bottom: 8px;">Hi ${safeName} 👋</div>
+                    <div style="font-size: 15px; color: #6b7280; line-height: 1.6;">Here's how your property sites performed this month. ${totalLeads > 0 ? `Great job generating ${totalLeads} lead${totalLeads > 1 ? 's' : ''}!` : 'Keep up the great work!'}</div>
+                  </div>
+                  
+                  <!-- Section Title -->
+                  <div style="display: flex; align-items: center; margin-bottom: 20px;">
+                    <div style="font-size: 13px; font-weight: 700; color: #374151; text-transform: uppercase; letter-spacing: 1px;">Your Property Sites</div>
+                    <div style="flex: 1; height: 1px; background: #e5e7eb; margin-left: 16px;"></div>
+                  </div>
+                  
+                  <!-- Site Cards -->
+                  ${siteCardsHtml}
+                  
+                  <!-- CTA Button -->
+                  <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 32px;">
+                    <tr>
+                      <td style="text-align: center;">
+                        <a href="https://agentassets.com/dashboard" style="display: inline-block; background: linear-gradient(135deg, #558B73 0%, #3d6b57 100%); color: #ffffff; font-size: 16px; font-weight: 600; padding: 16px 40px; text-decoration: none; border-radius: 10px; box-shadow: 0 4px 14px rgba(85,139,115,0.4);">View Full Dashboard</a>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              
+              <!-- Footer -->
+              <tr>
+                <td style="background: #f9fafb; padding: 32px 40px; text-align: center; border-top: 1px solid #e5e7eb;">
+                  <div style="margin-bottom: 16px;">
+                    <span style="color: #558B73; font-size: 20px; font-weight: 700; font-family: 'Helvetica Neue', Arial, sans-serif;">AgentAssets</span>
+                  </div>
+                  <div style="font-size: 13px; color: #6b7280; margin-bottom: 8px;">Beautiful property websites for real estate professionals</div>
+                  <div style="font-size: 12px; color: #9ca3af;">
+                    You're receiving this because you have property sites on AgentAssets.<br/>
+                    Questions? Reply to this email or visit <a href="https://agentassets.com" style="color: #558B73; text-decoration: none;">agentassets.com</a>
+                  </div>
+                </td>
+              </tr>
+              
+            </table>
+          </td>
+        </tr>
+      </table>
     </body>
     </html>
   `;
