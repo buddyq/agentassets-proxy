@@ -236,10 +236,24 @@ export class DatabaseStorage implements IStorage {
     // Normalize host: lowercase and strip port
     const normalizedHost = host.toLowerCase().replace(/:\d+$/, '');
     
-    // First check for custom domain match (exact match, case-insensitive)
+    // Helper to compare domains (handles www/non-www matching)
+    const domainsMatch = (storedDomain: string, requestHost: string): boolean => {
+      const stored = storedDomain.toLowerCase();
+      const request = requestHost.toLowerCase();
+      
+      // Exact match
+      if (stored === request) return true;
+      
+      // www/non-www matching: www.example.com should match example.com and vice versa
+      const storedWithoutWww = stored.replace(/^www\./, '');
+      const requestWithoutWww = request.replace(/^www\./, '');
+      return storedWithoutWww === requestWithoutWww;
+    };
+    
+    // First check for custom domain match (handles www/non-www)
     const allSites = await db.select().from(sites);
     const siteByDomain = allSites.find(s => 
-      s.customDomain && s.customDomain.toLowerCase() === normalizedHost
+      s.customDomain && domainsMatch(s.customDomain, normalizedHost)
     );
     if (siteByDomain) return siteByDomain;
     
