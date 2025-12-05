@@ -1226,11 +1226,14 @@ function ModernDetails({ site, theme }: { site: Site; theme?: Theme }) {
 
         {/* Description with optional image */}
         {site.description && (
-          <div className={`${site.descriptionImage ? 'flex flex-col md:flex-row gap-8 md:gap-12 items-start' : ''}`}>
+          <div 
+            className={`rounded-2xl p-8 md:p-10 ${site.descriptionImage ? 'flex flex-col md:flex-row gap-8 md:gap-12 items-start' : ''}`}
+            style={{ backgroundColor: 'var(--theme-background)' }}
+          >
             <div className={site.descriptionImage ? 'flex-1' : 'max-w-3xl'}>
               <h3 
                 className="text-2xl mb-2"
-                style={{ fontFamily: 'var(--font-heading)', fontWeight: 'var(--heading-weight)' }}
+                style={{ fontFamily: 'var(--font-heading)', fontWeight: 'var(--heading-weight)', color: 'var(--theme-text)' }}
               >
                 About This Property
               </h3>
@@ -1239,8 +1242,8 @@ function ModernDetails({ site, theme }: { site: Site; theme?: Theme }) {
                 style={{ backgroundColor: primaryColor }}
               />
               <p 
-                className="text-gray-600 leading-relaxed text-lg"
-                style={{ fontFamily: 'var(--font-body)' }}
+                className="leading-relaxed text-lg"
+                style={{ fontFamily: 'var(--font-body)', color: 'var(--theme-text)', opacity: 0.8 }}
               >
                 {site.description}
               </p>
