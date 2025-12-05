@@ -25,7 +25,7 @@ export default function Credits() {
     if (!user) return;
     
     const finalPrice = discountPercent > 0 
-      ? Number((pkg.price * (1 - discountPercent / 100)).toFixed(2))
+      ? Math.floor(pkg.price * (1 - discountPercent / 100))
       : pkg.price;
     
     console.log(`Purchase: ${pkg.credits} credits at $${finalPrice} (${discountPercent}% discount applied)`);
@@ -83,9 +83,9 @@ export default function Credits() {
           <div className="grid md:grid-cols-3 gap-6">
             {PACKAGES.map((pkg) => {
               const discountedPrice = discountPercent > 0 
-                ? Number((pkg.price * (1 - discountPercent / 100)).toFixed(2))
+                ? Math.floor(pkg.price * (1 - discountPercent / 100))
                 : pkg.price;
-              const pricePerCredit = Number((discountedPrice / pkg.credits).toFixed(2));
+              const pricePerCredit = Math.floor(discountedPrice / pkg.credits);
               
               return (
                 <Card key={pkg.id} className={`relative overflow-hidden transition-all hover:shadow-lg ${pkg.popular ? 'border-primary ring-1 ring-primary/20 shadow-md' : ''}`}>
