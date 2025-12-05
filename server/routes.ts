@@ -8,6 +8,7 @@ import { z } from "zod";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import archiver from "archiver";
 import { sendLeadNotificationEmail } from "./email";
+import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 
 function getExtensionFromMime(mimeType: string): string {
   const mimeToExt: Record<string, string> = {
@@ -690,6 +691,118 @@ export async function registerRoutes(
       res.json({ discount });
     } catch (error) {
       res.status(500).json({ error: "Failed to check partner discount" });
+    }
+  });
+
+  // Stripe routes
+  const CREDIT_PACKAGES = [
+    { id: 'starter', name: 'Starter', credits: 1, price: 29 },
+    { id: 'growth', name: 'Growth', credits: 5, price: 125 },
+    { id: 'agency', name: 'Agency', credits: 10, price: 200 },
+  ];
+
+  app.get("/api/stripe/publishable-key", async (_req, res) => {
+    try {
+      const key = await getStripePublishableKey();
+      res.json({ publishableKey: key });
+    } catch (error) {
+      console.error("Failed to get Stripe publishable key:", error);
+      res.status(500).json({ error: "Stripe not configured" });
+    }
+  });
+
+  const checkoutSchema = z.object({
+    packageId: z.enum(['starter', 'growth', 'agency']),
+  });
+
+  app.post("/api/stripe/checkout", isAuthenticated, async (req: any, res) => {
+    try {
+      const validated = checkoutSchema.parse(req.body);
+      const user = await storage.getUser(req.user.id);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const pkg = CREDIT_PACKAGES.find(p => p.id === validated.packageId);
+      if (!pkg) {
+        return res.status(400).json({ error: "Invalid package" });
+      }
+
+      const stripe = await getUncachableStripeClient();
+      
+      let finalPrice = pkg.price;
+      
+      if (user.email) {
+        const discount = await storage.getActivePartnerDiscount(user.email);
+        if (discount) {
+          finalPrice = Math.floor(pkg.price * (1 - discount / 100));
+        }
+      }
+
+      const domains = process.env.REPLIT_DOMAINS?.split(',') || [];
+      const baseUrl = domains.length > 0 ? `https://${domains[0]}` : 'http://localhost:5000';
+
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [{
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: `${pkg.name} - ${pkg.credits} Credit${pkg.credits > 1 ? 's' : ''}`,
+              description: `Purchase ${pkg.credits} credit${pkg.credits > 1 ? 's' : ''} for AgentAssets`,
+            },
+            unit_amount: finalPrice * 100,
+          },
+          quantity: 1,
+        }],
+        mode: 'payment',
+        success_url: `${baseUrl}/credits?success=true&credits=${pkg.credits}`,
+        cancel_url: `${baseUrl}/credits?canceled=true`,
+        metadata: {
+          userId: user.id,
+          credits: pkg.credits.toString(),
+          packageId: pkg.id,
+        },
+        customer_email: user.email || undefined,
+      });
+
+      res.json({ url: session.url });
+    } catch (error) {
+      console.error("Checkout error:", error);
+      res.status(500).json({ error: "Failed to create checkout session" });
+    }
+  });
+
+  app.post("/api/stripe/checkout-success", isAuthenticated, async (req: any, res) => {
+    try {
+      const { sessionId } = req.body;
+      if (!sessionId) {
+        return res.status(400).json({ error: "Session ID required" });
+      }
+
+      const stripe = await getUncachableStripeClient();
+      const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+      if (session.payment_status !== 'paid') {
+        return res.status(400).json({ error: "Payment not completed" });
+      }
+
+      const userId = session.metadata?.userId;
+      const credits = parseInt(session.metadata?.credits || '0', 10);
+
+      if (userId !== req.user.id) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (user) {
+        await storage.updateUserCredits(userId, user.credits + credits);
+      }
+
+      res.json({ success: true, credits });
+    } catch (error) {
+      console.error("Checkout success error:", error);
+      res.status(500).json({ error: "Failed to process checkout" });
     }
   });
 
