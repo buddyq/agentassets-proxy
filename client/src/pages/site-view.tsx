@@ -2375,7 +2375,7 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
             {site.description && (
               <div>
                 <p 
-                  className="text-base leading-relaxed text-gray-600"
+                  className="text-base leading-relaxed text-gray-600 whitespace-pre-line"
                   style={{ fontFamily: '"Arimo", sans-serif', lineHeight: '1.8' }}
                 >
                   {truncatedDescription}
@@ -2582,7 +2582,7 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
               </button>
             </div>
             <p 
-              className="text-base leading-relaxed text-gray-600"
+              className="text-base leading-relaxed text-gray-600 whitespace-pre-line"
               style={{ fontFamily: '"Arimo", sans-serif', lineHeight: '1.8' }}
             >
               {site.description}
