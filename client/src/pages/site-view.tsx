@@ -3285,6 +3285,24 @@ export default function SiteView({ siteId: propSiteId, params: routeParams }: Si
     }
   }, [siteId]);
 
+  // Track page view for analytics
+  useEffect(() => {
+    if (site?.id && site?.status === 'published') {
+      // Only track once per session per site
+      const trackedKey = `tracked_view_${site.id}`;
+      if (!sessionStorage.getItem(trackedKey)) {
+        fetch(`/api/sites/${site.id}/track-view`, { 
+          method: 'POST',
+          credentials: 'include'
+        }).then(() => {
+          sessionStorage.setItem(trackedKey, 'true');
+        }).catch(err => {
+          console.error('Failed to track view:', err);
+        });
+      }
+    }
+  }, [site?.id, site?.status]);
+
   if (isLoading || isLoadingProtection) {
     return (
       <div className="min-h-screen flex items-center justify-center">

@@ -248,6 +248,40 @@ export async function registerRoutes(
     }
   });
 
+  // Track page view for analytics (public endpoint)
+  app.post("/api/sites/:id/track-view", async (req: any, res) => {
+    try {
+      const site = await storage.getSite(req.params.id);
+      if (!site) {
+        return res.status(404).json({ error: "Site not found" });
+      }
+
+      // Get current stats or initialize
+      const currentStats = site.stats || { views: 0, uniqueVisitors: 0, leads: 0 };
+      
+      // Check if this is a unique visitor using session
+      const sessionKey = `viewed_site_${site.id}`;
+      const isNewVisitor = !req.session?.[sessionKey];
+      
+      // Mark this site as viewed in the session
+      if (req.session) {
+        req.session[sessionKey] = true;
+      }
+
+      // Update stats
+      await storage.updateSiteStats(site.id, {
+        views: currentStats.views + 1,
+        uniqueVisitors: isNewVisitor ? currentStats.uniqueVisitors + 1 : currentStats.uniqueVisitors,
+        leads: currentStats.leads
+      });
+
+      res.json({ success: true, isNewVisitor });
+    } catch (error) {
+      console.error("Error tracking view:", error);
+      res.status(500).json({ error: "Failed to track view" });
+    }
+  });
+
   // Public site view (for viewing published sites)
   app.get("/api/sites/:id", async (req, res) => {
     try {
