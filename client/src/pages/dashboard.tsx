@@ -552,11 +552,16 @@ export default function Dashboard() {
                             <Pencil className="h-3 w-3" /> Edit
                           </Button>
                         </Link>
-                        <Link href={`/site/${site.id}`} className="flex-1">
+                        <a 
+                          href={site.customDomain ? `https://${site.customDomain}` : `/p/${(site as any).subdomain}`} 
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1"
+                        >
                           <Button variant="outline" size="sm" className="w-full gap-1" data-testid={`button-view-${site.id}`}>
                             <ExternalLink className="h-3 w-3" /> View
                           </Button>
-                        </Link>
+                        </a>
                         <Button 
                           variant="ghost" 
                           size="icon" 
