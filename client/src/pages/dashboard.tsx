@@ -530,11 +530,11 @@ export default function Dashboard() {
 
       {/* Domain Dialog */}
       <Dialog open={domainDialogOpen} onOpenChange={setDomainDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Connect Custom Domain</DialogTitle>
             <DialogDescription>
-              Enter the domain name you want to use for this property site (e.g., www.123mainstreet.com).
+              Connect your own domain to this property site.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -542,18 +542,46 @@ export default function Dashboard() {
               <Label htmlFor="domain">Domain Name</Label>
               <Input
                 id="domain"
-                placeholder="www.example.com"
+                placeholder="410brookhaven.com"
                 value={domainInput}
                 onChange={(e) => setDomainInput(e.target.value)}
               />
+            </div>
+            
+            <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+              <h4 className="font-medium text-sm flex items-center gap-2">
+                <Globe className="h-4 w-4" />
+                DNS Setup Instructions
+              </h4>
               <p className="text-xs text-muted-foreground">
-                You will need to configure your DNS settings to point to our servers.
+                After saving, you'll need to configure your domain's DNS settings. Log in to your domain registrar (GoDaddy, Namecheap, Google Domains, etc.) and add these records:
+              </p>
+              <div className="space-y-2 text-xs">
+                <div className="bg-background rounded p-2 border">
+                  <div className="font-medium mb-1">For root domain (e.g., 410brookhaven.com):</div>
+                  <div className="font-mono text-muted-foreground">
+                    Type: <span className="text-foreground">A</span><br/>
+                    Host: <span className="text-foreground">@</span><br/>
+                    Value: <span className="text-foreground">34.111.179.128</span>
+                  </div>
+                </div>
+                <div className="bg-background rounded p-2 border">
+                  <div className="font-medium mb-1">For www subdomain (optional):</div>
+                  <div className="font-mono text-muted-foreground">
+                    Type: <span className="text-foreground">CNAME</span><br/>
+                    Host: <span className="text-foreground">www</span><br/>
+                    Value: <span className="text-foreground">agentassets.com</span>
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                DNS changes can take up to 24-48 hours to propagate. SSL certificates are automatically provisioned once DNS is configured.
               </p>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDomainDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSaveDomain}>Save</Button>
+            <Button onClick={handleSaveDomain}>Save Domain</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
