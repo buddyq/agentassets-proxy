@@ -38,6 +38,7 @@ export const users = pgTable("users", {
     linkedin?: string;
     x?: string;
   }>().default({}),
+  lastAnalyticsEmailAt: timestamp("last_analytics_email_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
