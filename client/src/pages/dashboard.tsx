@@ -2,10 +2,10 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useSites, useDeleteSite, useUpdateSite, useThemes, useLeads, useLayouts, useUnpublishSite, useRepublishSite } from "@/lib/api";
+import { useSites, useDeleteSite, useUpdateSite, useThemes, useLeads, useLayouts, useUnpublishSite, useRepublishSite, useSitePasswords } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
-import { Plus, ExternalLink, Trash2, Globe, BarChart3, Users, MousePointerClick, TrendingUp, Pencil, MessageSquare, Mail, Phone, Calendar, ChevronRight, LayoutDashboard, UserCircle, Image, FileText, Share2, ArrowRight, X, EyeOff, Eye, Clock, AlertTriangle } from "lucide-react";
+import { Plus, ExternalLink, Trash2, Globe, BarChart3, Users, MousePointerClick, TrendingUp, Pencil, MessageSquare, Mail, Phone, Calendar, ChevronRight, LayoutDashboard, UserCircle, Image, FileText, Share2, ArrowRight, X, EyeOff, Eye, Clock, AlertTriangle, Lock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format, subDays, isPast } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -65,6 +65,9 @@ export default function Dashboard() {
   // Analytics Dialog State
   const [analyticsDialogOpen, setAnalyticsDialogOpen] = useState(false);
   const [selectedSiteForAnalytics, setSelectedSiteForAnalytics] = useState<string | null>(null);
+  
+  // Password data for analytics dialog
+  const { data: sitePasswords = [] } = useSitePasswords(selectedSiteForAnalytics || '');
 
   // Lead Detail Dialog State
   const [leadDetailOpen, setLeadDetailOpen] = useState(false);
@@ -606,6 +609,34 @@ export default function Dashboard() {
                 <span className="text-2xl font-bold">{activeSite?.stats?.leads ?? 0}</span>
               </div>
             </div>
+
+            {/* Password Usage Section */}
+            {sitePasswords.length > 0 && (
+              <div className="mb-6 p-4 bg-primary/5 border border-primary/10 rounded-lg">
+                <div className="flex items-center gap-2 text-sm font-medium text-primary mb-3">
+                  <Lock className="h-4 w-4" />
+                  Password Usage
+                </div>
+                <div className="space-y-2">
+                  {sitePasswords.map((pw) => (
+                    <div key={pw.id} className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">{pw.label || "Unnamed Password"}</span>
+                      <div className="flex items-center gap-4">
+                        <span className="font-medium">{pw.usageCount} use{pw.usageCount !== 1 ? 's' : ''}</span>
+                        {pw.lastUsedAt && (
+                          <span className="text-xs text-muted-foreground">
+                            Last: {format(new Date(pw.lastUsedAt), "MMM d")}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-3 pt-3 border-t text-sm text-muted-foreground">
+                  Total password uses: {sitePasswords.reduce((sum, pw) => sum + pw.usageCount, 0)}
+                </div>
+              </div>
+            )}
 
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
