@@ -1,8 +1,30 @@
 import Stripe from 'stripe';
 
-let connectionSettings: any;
+let cachedCredentials: { publishableKey: string; secretKey: string } | null = null;
 
-async function getCredentials() {
+// Check if user has provided their own Stripe credentials
+export function hasUserProvidedCredentials(): boolean {
+  return !!(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_PUBLISHABLE_KEY);
+}
+
+// Get credentials from user-provided env vars or Replit connector
+async function getCredentials(): Promise<{ publishableKey: string; secretKey: string }> {
+  // Return cached credentials if available
+  if (cachedCredentials) {
+    return cachedCredentials;
+  }
+
+  // Check for user-provided credentials first
+  if (process.env.STRIPE_SECRET_KEY && process.env.STRIPE_PUBLISHABLE_KEY) {
+    cachedCredentials = {
+      publishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
+      secretKey: process.env.STRIPE_SECRET_KEY,
+    };
+    console.log('[stripe] Using user-provided Stripe credentials');
+    return cachedCredentials;
+  }
+
+  // Fall back to Replit connector
   const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
   const xReplitToken = process.env.REPL_IDENTITY
     ? 'repl ' + process.env.REPL_IDENTITY
@@ -10,8 +32,8 @@ async function getCredentials() {
       ? 'depl ' + process.env.WEB_REPL_RENEWAL
       : null;
 
-  if (!xReplitToken) {
-    throw new Error('X_REPLIT_TOKEN not found for repl/depl');
+  if (!xReplitToken || !hostname) {
+    throw new Error('No Stripe credentials found. Please set STRIPE_SECRET_KEY and STRIPE_PUBLISHABLE_KEY environment variables, or connect Stripe via Replit integrations.');
   }
 
   const connectorName = 'stripe';
@@ -31,17 +53,19 @@ async function getCredentials() {
   });
 
   const data = await response.json();
-  
-  connectionSettings = data.items?.[0];
+  const connectionSettings = data.items?.[0];
 
   if (!connectionSettings || (!connectionSettings.settings.publishable || !connectionSettings.settings.secret)) {
-    throw new Error(`Stripe ${targetEnvironment} connection not found`);
+    throw new Error(`Stripe ${targetEnvironment} connection not found. Please set STRIPE_SECRET_KEY and STRIPE_PUBLISHABLE_KEY environment variables, or connect Stripe via Replit integrations.`);
   }
 
-  return {
+  cachedCredentials = {
     publishableKey: connectionSettings.settings.publishable,
     secretKey: connectionSettings.settings.secret,
   };
+  
+  console.log('[stripe] Using Replit connector Stripe credentials');
+  return cachedCredentials;
 }
 
 export async function getUncachableStripeClient() {
@@ -60,6 +84,11 @@ export async function getStripePublishableKey() {
 export async function getStripeSecretKey() {
   const { secretKey } = await getCredentials();
   return secretKey;
+}
+
+// Get webhook secret - either user-provided or from managed webhook
+export function getUserWebhookSecret(): string | null {
+  return process.env.STRIPE_WEBHOOK_SECRET || null;
 }
 
 let stripeSync: any = null;

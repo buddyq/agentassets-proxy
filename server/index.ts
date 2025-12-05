@@ -4,7 +4,7 @@ import { serveStatic } from "./static";
 import { createServer } from "http";
 import path from "path";
 import { runMigrations } from 'stripe-replit-sync';
-import { getStripeSync } from "./stripeClient";
+import { getStripeSync, hasUserProvidedCredentials } from "./stripeClient";
 import { WebhookHandlers } from "./webhookHandlers";
 
 const app = express();
@@ -19,8 +19,39 @@ declare module "http" {
   }
 }
 
-// Register Stripe webhook route BEFORE express.json()
+// Register Stripe webhook routes BEFORE express.json()
 // This is critical - webhook needs raw Buffer, not parsed JSON
+
+// Route for user-provided webhook secret (no UUID)
+app.post(
+  '/api/stripe/webhook',
+  express.raw({ type: 'application/json' }),
+  async (req, res) => {
+    const signature = req.headers['stripe-signature'];
+
+    if (!signature) {
+      return res.status(400).json({ error: 'Missing stripe-signature' });
+    }
+
+    try {
+      const sig = Array.isArray(signature) ? signature[0] : signature;
+
+      if (!Buffer.isBuffer(req.body)) {
+        console.error('STRIPE WEBHOOK ERROR: req.body is not a Buffer');
+        return res.status(500).json({ error: 'Webhook processing error' });
+      }
+
+      await WebhookHandlers.processWebhookWithUserSecret(req.body as Buffer, sig);
+
+      res.status(200).json({ received: true });
+    } catch (error: any) {
+      console.error('Webhook error:', error.message);
+      res.status(400).json({ error: 'Webhook processing error' });
+    }
+  }
+);
+
+// Route for managed webhook (with UUID from stripe-replit-sync)
 app.post(
   '/api/stripe/webhook/:uuid',
   express.raw({ type: 'application/json' }),
@@ -113,18 +144,27 @@ async function initStripe() {
 
     const stripeSync = await getStripeSync();
 
-    log('Setting up managed webhook...', 'stripe');
-    const domains = process.env.REPLIT_DOMAINS?.split(',') || [];
-    if (domains.length > 0) {
-      const webhookBaseUrl = `https://${domains[0]}`;
-      const { webhook, uuid } = await stripeSync.findOrCreateManagedWebhook(
-        `${webhookBaseUrl}/api/stripe/webhook`,
-        {
-          enabled_events: ['checkout.session.completed', 'customer.subscription.created', 'customer.subscription.updated', 'customer.subscription.deleted'],
-          description: 'AgentAssets Stripe webhook',
-        }
-      );
-      log(`Webhook configured: ${webhook.url} (UUID: ${uuid})`, 'stripe');
+    // Only set up managed webhook if NOT using user-provided credentials
+    if (!hasUserProvidedCredentials()) {
+      log('Setting up managed webhook...', 'stripe');
+      const domains = process.env.REPLIT_DOMAINS?.split(',') || [];
+      if (domains.length > 0) {
+        const webhookBaseUrl = `https://${domains[0]}`;
+        const { webhook, uuid } = await stripeSync.findOrCreateManagedWebhook(
+          `${webhookBaseUrl}/api/stripe/webhook`,
+          {
+            enabled_events: ['checkout.session.completed', 'customer.subscription.created', 'customer.subscription.updated', 'customer.subscription.deleted'],
+            description: 'AgentAssets Stripe webhook',
+          }
+        );
+        log(`Webhook configured: ${webhook.url} (UUID: ${uuid})`, 'stripe');
+      }
+    } else {
+      log('Using user-provided Stripe credentials - configure webhook in your Stripe dashboard', 'stripe');
+      const domains = process.env.REPLIT_DOMAINS?.split(',') || [];
+      if (domains.length > 0) {
+        log(`Webhook URL: https://${domains[0]}/api/stripe/webhook`, 'stripe');
+      }
     }
 
     log('Syncing Stripe data...', 'stripe');
