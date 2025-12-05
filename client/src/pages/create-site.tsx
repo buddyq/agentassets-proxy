@@ -9,7 +9,8 @@ import { useCreateSite, useUpdateCredits, useThemes, useLayouts, getUploadUrl, n
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, CreditCard, LayoutGrid, Plus, X, Image, GripVertical, Star, Settings, FileText } from "lucide-react";
+import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, CreditCard, LayoutGrid, Plus, X, Image, GripVertical, Star, Settings, FileText, AlertTriangle, UserCircle, Phone, Mail } from "lucide-react";
+import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ObjectUploader } from "@/components/ObjectUploader";
@@ -69,6 +70,23 @@ export default function CreateSite() {
   // Check if user has trial credits available
   const hasTrialCredits = user && (user.trialCredits || 0) > 0 && 
     user.trialEndsAt && new Date(user.trialEndsAt) > new Date();
+
+  // Check if profile is incomplete
+  const isProfileIncomplete = user && (
+    !user.profileImageUrl || 
+    !user.logo || 
+    !user.name || 
+    !user.phone || 
+    !user.email
+  );
+
+  const profileChecklist = user ? [
+    { label: 'Profile Picture', done: !!user.profileImageUrl, icon: UserCircle },
+    { label: 'Logo', done: !!user.logo, icon: Image },
+    { label: 'Name', done: !!user.name, icon: FileText },
+    { label: 'Phone', done: !!user.phone, icon: Phone },
+    { label: 'Email', done: !!user.email, icon: Mail },
+  ] : [];
 
   // Redirect to credits page if user has no credits (regular or trial)
   useEffect(() => {
@@ -1577,7 +1595,44 @@ export default function CreateSite() {
 
             {/* Step 6: Review */}
             {step === 6 && (
-              <div className="grid md:grid-cols-3 gap-6">
+              <div className="space-y-6">
+                {/* Profile Incomplete Warning */}
+                {isProfileIncomplete && (
+                  <Card className="border-amber-200 bg-amber-50">
+                    <CardContent className="pt-6">
+                      <div className="flex items-start gap-4">
+                        <div className="p-2 rounded-full bg-amber-100">
+                          <AlertTriangle className="h-5 w-5 text-amber-600" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-amber-800 mb-1">Complete Your Profile</h3>
+                          <p className="text-sm text-amber-700 mb-3">
+                            Your contact information will appear on your property site. Complete your profile to ensure buyers can reach you.
+                          </p>
+                          <div className="flex flex-wrap gap-3 mb-3">
+                            {profileChecklist.map((item) => (
+                              <div key={item.label} className="flex items-center gap-1.5 text-sm">
+                                {item.done ? (
+                                  <Check className="h-4 w-4 text-green-600" />
+                                ) : (
+                                  <X className="h-4 w-4 text-amber-600" />
+                                )}
+                                <span className={item.done ? 'text-green-700' : 'text-amber-700'}>{item.label}</span>
+                              </div>
+                            ))}
+                          </div>
+                          <Link href="/profile">
+                            <Button variant="outline" size="sm" className="border-amber-300 hover:bg-amber-100">
+                              Complete Profile
+                            </Button>
+                          </Link>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                <div className="grid md:grid-cols-3 gap-6">
                 <div className="md:col-span-2">
                   <Card>
                     <CardHeader>
@@ -1657,6 +1712,7 @@ export default function CreateSite() {
                     </CardFooter>
                   </Card>
                 </div>
+              </div>
               </div>
             )}
 
