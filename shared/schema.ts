@@ -234,6 +234,21 @@ export const insertLeadSchema = createInsertSchema(leads).omit({ id: true, creat
 export type InsertLead = z.infer<typeof insertLeadSchema>;
 export type Lead = typeof leads.$inferSelect;
 
+// Site passwords table for password-protected sites
+export const sitePasswords = pgTable("site_passwords", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  siteId: text("site_id").notNull(),
+  passwordHash: text("password_hash").notNull(),
+  label: text("label"), // Optional label like "For Broker", "For Buyer #1"
+  usageCount: integer("usage_count").notNull().default(0),
+  lastUsedAt: timestamp("last_used_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertSitePasswordSchema = createInsertSchema(sitePasswords).omit({ id: true, createdAt: true, usageCount: true, lastUsedAt: true });
+export type InsertSitePassword = z.infer<typeof insertSitePasswordSchema>;
+export type SitePassword = typeof sitePasswords.$inferSelect;
+
 // Coupons/Promotions table
 export const coupons = pgTable("coupons", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
