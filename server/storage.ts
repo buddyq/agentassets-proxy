@@ -31,8 +31,32 @@ import { eq, and } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 
 const PostgresSessionStore = connectPg(session);
+
+// Generate a URL-friendly subdomain from the address
+function generateSubdomain(address: string): string {
+  // Extract the street address (first line, before any city/state)
+  const streetAddress = address.split(',')[0].trim();
+  
+  // Convert to lowercase, replace spaces with hyphens, remove non-alphanumeric chars
+  let slug = streetAddress
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+  
+  // Limit length to 30 characters
+  if (slug.length > 30) {
+    slug = slug.substring(0, 30).replace(/-$/, '');
+  }
+  
+  // Add a short random suffix to ensure uniqueness
+  const suffix = crypto.randomBytes(3).toString('hex');
+  return `${slug}-${suffix}`;
+}
 
 export interface IStorage {
   sessionStore: session.Store;
@@ -48,6 +72,8 @@ export interface IStorage {
   
   // Site methods
   getSite(id: string): Promise<Site | undefined>;
+  getSiteBySubdomain(subdomain: string): Promise<Site | undefined>;
+  getSiteByHost(host: string): Promise<Site | undefined>;
   getSitesByUser(userId: string): Promise<Site[]>;
   getAllSites(): Promise<Site[]>;
   createSite(site: InsertSite): Promise<Site>;
@@ -185,6 +211,27 @@ export class DatabaseStorage implements IStorage {
     return site || undefined;
   }
 
+  async getSiteBySubdomain(subdomain: string): Promise<Site | undefined> {
+    const [site] = await db.select().from(sites).where(eq(sites.subdomain, subdomain));
+    return site || undefined;
+  }
+
+  async getSiteByHost(host: string): Promise<Site | undefined> {
+    // First check for custom domain match
+    const [siteByDomain] = await db.select().from(sites).where(eq(sites.customDomain, host));
+    if (siteByDomain) return siteByDomain;
+    
+    // Then check for subdomain match (host format: subdomain.agentassets.com)
+    const subdomainMatch = host.match(/^([^.]+)\.agentassets\.com$/i);
+    if (subdomainMatch) {
+      const subdomain = subdomainMatch[1].toLowerCase();
+      const [siteBySubdomain] = await db.select().from(sites).where(eq(sites.subdomain, subdomain));
+      return siteBySubdomain || undefined;
+    }
+    
+    return undefined;
+  }
+
   async getSitesByUser(userId: string): Promise<Site[]> {
     return await db.select().from(sites).where(eq(sites.userId, userId));
   }
@@ -194,10 +241,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createSite(insertSite: InsertSite): Promise<Site> {
+    const subdomain = generateSubdomain(insertSite.address);
     const [site] = await db
       .insert(sites)
       .values({
         ...insertSite,
+        subdomain,
         stats: insertSite.stats || { views: 0, uniqueVisitors: 0, leads: 0 }
       })
       .returning();
@@ -205,10 +254,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createTrialSite(insertSite: InsertSite, trialEndsAt: Date): Promise<Site> {
+    const subdomain = generateSubdomain(insertSite.address);
     const [site] = await db
       .insert(sites)
       .values({
         ...insertSite,
+        subdomain,
         isTrial: true,
         expiresAt: trialEndsAt,
         stats: insertSite.stats || { views: 0, uniqueVisitors: 0, leads: 0 }
