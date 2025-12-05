@@ -1369,7 +1369,7 @@ function ModernContact({ site, theme, agentInfo }: { site: Site; theme?: Theme; 
   const primaryColor = theme?.colors?.primary || '#558B73';
 
   return (
-    <section id="contact" className="py-16 md:py-24 px-4 md:px-6" style={{ backgroundColor: '#fafafa' }}>
+    <section id="contact" className="py-16 md:py-24 px-4 md:px-6" style={{ backgroundColor: 'var(--theme-background)' }}>
       <div className="container mx-auto max-w-6xl">
         <h2 
           className="text-3xl md:text-4xl text-center mb-3"
@@ -1382,8 +1382,8 @@ function ModernContact({ site, theme, agentInfo }: { site: Site; theme?: Theme; 
           Get In Touch
         </h2>
         <p 
-          className="text-center text-gray-500 mb-12 md:mb-16 max-w-xl mx-auto"
-          style={{ fontFamily: 'var(--font-body)' }}
+          className="text-center mb-12 md:mb-16 max-w-xl mx-auto"
+          style={{ fontFamily: 'var(--font-body)', color: 'var(--theme-text)', opacity: 0.7 }}
         >
           Ready to schedule a viewing or have questions? We'd love to hear from you.
         </p>
