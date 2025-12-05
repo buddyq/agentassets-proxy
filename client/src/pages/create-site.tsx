@@ -137,7 +137,7 @@ export default function CreateSite() {
   
   const handlePhotoUploadComplete = (result: { successful: Array<{ uploadURL: string }> }) => {
     if (result.successful && result.successful.length > 0) {
-      const newPhotos = result.successful.map(upload => upload.uploadURL);
+      const newPhotos = result.successful.map(upload => normalizeObjectUrl(upload.uploadURL));
       setPhotos(prev => [...prev, ...newPhotos]);
       toast({
         title: "Photos Added",

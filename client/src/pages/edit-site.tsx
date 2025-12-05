@@ -234,7 +234,7 @@ export default function EditSite() {
       result.successful.forEach((upload, index) => {
         setTimeout(() => {
           addPhotoMutation.mutate(
-            { siteId, photoUrl: upload.uploadURL },
+            { siteId, photoUrl: normalizeObjectUrl(upload.uploadURL) },
             {
               onSuccess: () => {
                 if (index === result.successful.length - 1) {
