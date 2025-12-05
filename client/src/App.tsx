@@ -1,5 +1,5 @@
 import { Switch, Route, useLocation } from "wouter";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -16,6 +16,31 @@ function ScrollToTop() {
   
   return null;
 }
+
+// Detect if we're on a subdomain of agentassets.com
+function useSubdomainDetection() {
+  return useMemo(() => {
+    const hostname = window.location.hostname.toLowerCase();
+    // Check for subdomain pattern: xxx.agentassets.com (but not www or app)
+    const subdomainMatch = hostname.match(/^([^.]+)\.agentassets\.com$/);
+    if (subdomainMatch) {
+      const subdomain = subdomainMatch[1];
+      // Exclude known app subdomains
+      if (subdomain !== 'www' && subdomain !== 'app' && subdomain !== 'api') {
+        return { isSubdomain: true, subdomain, host: hostname };
+      }
+    }
+    // Also check for custom domains (not agentassets.com and not replit dev domains)
+    if (!hostname.includes('agentassets.com') && 
+        !hostname.includes('replit') && 
+        !hostname.includes('localhost') &&
+        hostname !== '127.0.0.1') {
+      return { isSubdomain: false, customDomain: hostname, host: hostname };
+    }
+    return { isSubdomain: false, subdomain: null, host: null };
+  }, []);
+}
+
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import AuthPage from "@/pages/auth-page";
@@ -27,6 +52,7 @@ import AdminDashboard from "@/pages/admin";
 import Credits from "@/pages/credits";
 import Profile from "@/pages/profile";
 import SiteView from "@/pages/site-view";
+import SubdomainSiteView from "@/pages/subdomain-site-view";
 import LayoutPreview from "@/pages/layout-preview";
 import HowItWorks from "@/pages/how-it-works";
 import Contact from "@/pages/contact";
@@ -61,6 +87,20 @@ function Router() {
 }
 
 function App() {
+  const hostInfo = useSubdomainDetection();
+  
+  // If on a subdomain or custom domain, show the site directly
+  if (hostInfo.host) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <SubdomainSiteView host={hostInfo.host} />
+        </TooltipProvider>
+      </QueryClientProvider>
+    );
+  }
+  
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>

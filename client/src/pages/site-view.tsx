@@ -3218,9 +3218,14 @@ function PasswordGate({
   );
 }
 
-export default function SiteView() {
-  const [, params] = useRoute("/site/:id");
-  const siteId = params?.id || '';
+interface SiteViewProps {
+  siteId?: string;
+  params?: { id?: string };
+}
+
+export default function SiteView({ siteId: propSiteId, params: routeParams }: SiteViewProps = {}) {
+  const [, hookParams] = useRoute("/site/:id");
+  const siteId = propSiteId || routeParams?.id || hookParams?.id || '';
   const { data: site, isLoading } = useSite(siteId);
   const { data: themes = [] } = useThemes();
   const { data: layout } = useLayout(site?.layoutId || '');
