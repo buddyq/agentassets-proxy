@@ -178,6 +178,26 @@ Sites can be protected with multiple passwords, each with optional labels and us
 - **Analytics**: Dashboard analytics dialog shows password usage stats (label, usage count, last used date) for each site
 - **Session Persistence**: Once unlocked, sites stay unlocked for the browser session
 
+### Monthly Analytics Email System
+
+Automated monthly emails summarizing site analytics for all users:
+- **Scheduler**: `server/scheduler.ts` uses node-cron to run on the 1st of each month at 9:00 AM
+- **Email Template**: Beautiful HTML email with summary stats (active sites, total views, visitors, leads) and per-site breakdown
+- **User Tracking**: `users.lastAnalyticsEmailAt` column prevents duplicate sends within the same month
+- **Storage Methods**: `getUsersForAnalyticsEmail()` finds eligible users, `markAnalyticsEmailSent()` updates timestamp
+- **Admin Trigger**: `POST /api/admin/send-analytics-emails` allows admins to manually trigger emails (optional `userId` for single user)
+- **Rate Limiting**: 500ms delay between emails to avoid SMTP rate limits
+- **Graceful Handling**: Users with no sites receive a friendly message encouraging them to create their first site
+
+### Analytics Tracking System
+
+Page view and visitor tracking for published property sites:
+- **Tracking Endpoint**: `POST /api/sites/:id/track-view` increments views and unique visitors
+- **Session-Based**: Uses server session to track unique visitors (one count per session per site)
+- **Frontend Integration**: SiteView component tracks on mount, uses sessionStorage to avoid duplicate calls
+- **Stats Storage**: Site stats stored in `sites.stats` JSONB column with views, uniqueVisitors, leads counts
+- **Published Only**: Only tracks views for sites with status = 'published'
+
 ### Partner Membership System (ATXPocket Integration)
 
 Partner organizations can sync their paying members to receive automatic discounts on credit packages:
