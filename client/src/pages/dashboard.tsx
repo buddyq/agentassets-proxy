@@ -67,7 +67,7 @@ export default function Dashboard() {
       return `https://${site.customDomain}`;
     }
     if (site.subdomain) {
-      return `https://${site.subdomain}.agentassets.com`;
+      return `https://agentassets.com/p/${site.subdomain}`;
     }
     return null;
   };
@@ -429,7 +429,7 @@ export default function Dashboard() {
                                 className="text-xs font-medium text-primary hover:underline truncate flex-1"
                                 title={getSiteUrl(site as any) || ''}
                               >
-                                {site.customDomain || `${(site as any).subdomain}.agentassets.com`}
+                                {site.customDomain || `agentassets.com/p/${(site as any).subdomain}`}
                               </a>
                               <Button
                                 variant="ghost"
@@ -450,7 +450,7 @@ export default function Dashboard() {
                             </div>
                             {site.customDomain && (site as any).subdomain && (
                               <p className="text-[10px] text-muted-foreground">
-                                Also: {(site as any).subdomain}.agentassets.com
+                                Also: agentassets.com/p/{(site as any).subdomain}
                               </p>
                             )}
                           </div>
