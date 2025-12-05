@@ -490,6 +490,125 @@ export async function registerRoutes(
     }
   });
 
+  // Site password management routes
+  app.get("/api/sites/:siteId/passwords", isAuthenticated, async (req: any, res) => {
+    try {
+      const site = await storage.getSite(req.params.siteId);
+      if (!site) {
+        return res.status(404).json({ error: "Site not found" });
+      }
+      if (site.userId !== req.user.id) {
+        return res.status(403).json({ error: "Not authorized" });
+      }
+      const passwords = await storage.getSitePasswords(req.params.siteId);
+      res.json(passwords.map(p => ({
+        id: p.id,
+        label: p.label,
+        usageCount: p.usageCount,
+        lastUsedAt: p.lastUsedAt,
+        createdAt: p.createdAt
+      })));
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch passwords" });
+    }
+  });
+
+  const createPasswordSchema = z.object({
+    password: z.string().min(4).max(50),
+    label: z.string().max(50).optional()
+  });
+
+  app.post("/api/sites/:siteId/passwords", isAuthenticated, async (req: any, res) => {
+    try {
+      const site = await storage.getSite(req.params.siteId);
+      if (!site) {
+        return res.status(404).json({ error: "Site not found" });
+      }
+      if (site.userId !== req.user.id) {
+        return res.status(403).json({ error: "Not authorized" });
+      }
+      
+      const validated = createPasswordSchema.parse(req.body);
+      const newPassword = await storage.createSitePassword({
+        siteId: req.params.siteId,
+        passwordHash: validated.password,
+        label: validated.label || null
+      });
+      
+      res.status(201).json({
+        id: newPassword.id,
+        label: newPassword.label,
+        usageCount: newPassword.usageCount,
+        lastUsedAt: newPassword.lastUsedAt,
+        createdAt: newPassword.createdAt
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: "Failed to create password" });
+    }
+  });
+
+  app.delete("/api/sites/:siteId/passwords/:passwordId", isAuthenticated, async (req: any, res) => {
+    try {
+      const site = await storage.getSite(req.params.siteId);
+      if (!site) {
+        return res.status(404).json({ error: "Site not found" });
+      }
+      if (site.userId !== req.user.id) {
+        return res.status(403).json({ error: "Not authorized" });
+      }
+      
+      await storage.deleteSitePassword(req.params.passwordId);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete password" });
+    }
+  });
+
+  // Public password verification endpoint
+  const verifyPasswordSchema = z.object({
+    password: z.string()
+  });
+
+  app.post("/api/sites/:siteId/verify-password", async (req, res) => {
+    try {
+      const site = await storage.getSite(req.params.siteId);
+      if (!site) {
+        return res.status(404).json({ error: "Site not found" });
+      }
+      
+      const validated = verifyPasswordSchema.parse(req.body);
+      const matchedPassword = await storage.verifySitePassword(req.params.siteId, validated.password);
+      
+      if (matchedPassword) {
+        await storage.incrementPasswordUsage(matchedPassword.id);
+        res.json({ 
+          success: true,
+          accessToken: Buffer.from(`${req.params.siteId}:${Date.now()}`).toString('base64')
+        });
+      } else {
+        res.status(401).json({ success: false, error: "Invalid password" });
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: "Failed to verify password" });
+    }
+  });
+
+  // Check if site is password protected (public)
+  app.get("/api/sites/:siteId/protected", async (req, res) => {
+    try {
+      const passwords = await storage.getSitePasswords(req.params.siteId);
+      res.json({ isProtected: passwords.length > 0 });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to check protection status" });
+    }
+  });
+
   // Download all documents as zip
   app.get("/api/sites/:siteId/documents/download-all", async (req, res) => {
     try {
