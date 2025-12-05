@@ -74,6 +74,7 @@ SMTP_HOST = "mail.agentassets.com"
 SMTP_PORT = "465"
 SMTP_USER = "no-reply@agentassets.com"
 SMTP_FROM = "no-reply@agentassets.com"
+BASE_URL = "https://agentassets.com"
 
 [objectStorage]
 defaultBucketID = "replit-objstore-7a44adf0-00d0-4015-8024-2d7e7bb15c05"

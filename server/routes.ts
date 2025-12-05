@@ -739,8 +739,12 @@ export async function registerRoutes(
         }
       }
 
-      const domains = process.env.REPLIT_DOMAINS?.split(',') || [];
-      const baseUrl = domains.length > 0 ? `https://${domains[0]}` : 'http://localhost:5000';
+      // Use custom BASE_URL if set, otherwise fall back to REPLIT_DOMAINS
+      let baseUrl = process.env.BASE_URL;
+      if (!baseUrl) {
+        const domains = process.env.REPLIT_DOMAINS?.split(',') || [];
+        baseUrl = domains.length > 0 ? `https://${domains[0]}` : 'http://localhost:5000';
+      }
 
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
