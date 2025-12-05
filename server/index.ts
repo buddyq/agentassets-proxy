@@ -179,6 +179,10 @@ async function initStripe() {
 (async () => {
   await initStripe();
   await registerRoutes(httpServer, app);
+  
+  // Initialize scheduled tasks (monthly analytics emails, etc.)
+  const { initScheduler } = await import('./scheduler');
+  initScheduler();
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

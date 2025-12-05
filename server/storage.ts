@@ -27,7 +27,7 @@ import {
   type InsertPartnerMembership
 } from "@shared/schema";
 import { db, pool } from "./db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, isNotNull, lt, or, isNull } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import bcrypt from "bcrypt";
@@ -135,6 +135,10 @@ export interface IStorage {
   upsertPartnerMembership(membership: InsertPartnerMembership): Promise<PartnerMembership>;
   deactivatePartnerMembership(partnerKey: string, email: string): Promise<void>;
   getActivePartnerDiscount(email: string): Promise<number | null>;
+  
+  // Analytics email methods
+  getUsersForAnalyticsEmail(): Promise<User[]>;
+  markAnalyticsEmailSent(userId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -685,6 +689,34 @@ export class DatabaseStorage implements IStorage {
     }
     
     return membership.discountPercent;
+  }
+
+  // Analytics email methods
+  async getUsersForAnalyticsEmail(): Promise<User[]> {
+    // Get the first day of the current month
+    const now = new Date();
+    const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    
+    // Get users who have email and haven't received an analytics email this month
+    const result = await db
+      .select()
+      .from(users)
+      .where(and(
+        isNotNull(users.email),
+        or(
+          isNull(users.lastAnalyticsEmailAt),
+          lt(users.lastAnalyticsEmailAt, firstOfMonth)
+        )
+      ));
+    
+    return result;
+  }
+
+  async markAnalyticsEmailSent(userId: string): Promise<void> {
+    await db
+      .update(users)
+      .set({ lastAnalyticsEmailAt: new Date() })
+      .where(eq(users.id, userId));
   }
 }
 

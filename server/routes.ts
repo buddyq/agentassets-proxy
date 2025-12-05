@@ -1215,6 +1215,32 @@ export async function registerRoutes(
     }
   });
 
+  // Admin route to trigger monthly analytics emails
+  app.post("/api/admin/send-analytics-emails", isAdmin, async (req, res) => {
+    try {
+      const { sendAllMonthlyAnalyticsEmails, sendAnalyticsEmailToUser } = await import('./scheduler');
+      
+      const { userId } = req.body;
+      
+      if (userId) {
+        // Send to a specific user
+        const success = await sendAnalyticsEmailToUser(userId);
+        if (success) {
+          res.json({ success: true, message: `Analytics email sent to user ${userId}` });
+        } else {
+          res.status(400).json({ error: "Failed to send analytics email. User may not have an email address." });
+        }
+      } else {
+        // Send to all eligible users
+        const result = await sendAllMonthlyAnalyticsEmails();
+        res.json({ success: true, ...result });
+      }
+    } catch (error) {
+      console.error("Error sending analytics emails:", error);
+      res.status(500).json({ error: "Failed to send analytics emails" });
+    }
+  });
+
   // Public coupon validation endpoint (for users to check/redeem coupons)
   app.post("/api/coupons/validate", isAuthenticated, async (req: any, res) => {
     try {
