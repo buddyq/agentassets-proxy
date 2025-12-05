@@ -921,7 +921,9 @@ export async function registerRoutes(
       }
 
       const photos = (site.photos || []).filter((p: string) => p !== photoUrl);
-      const updatedSite = await storage.updateSite(req.params.id, { photos });
+      // Also remove from heroPhotos if present
+      const heroPhotos = (site.heroPhotos || []).filter((p: string) => p !== photoUrl);
+      const updatedSite = await storage.updateSite(req.params.id, { photos, heroPhotos });
       res.json(updatedSite);
     } catch (error) {
       console.error("Error removing photo:", error);
