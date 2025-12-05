@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import crypto from "crypto";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./auth";
 import { insertSiteSchema, insertThemeSchema, insertLayoutSchema, insertLeadSchema, insertCouponSchema } from "@shared/schema";
@@ -606,6 +607,83 @@ export async function registerRoutes(
       res.json({ isProtected: passwords.length > 0 });
     } catch (error) {
       res.status(500).json({ error: "Failed to check protection status" });
+    }
+  });
+
+  // Partner webhook endpoint for ATXPocket membership sync
+  const partnerWebhookSchema = z.object({
+    action: z.enum(["activate", "deactivate", "update"]),
+    email: z.string().email(),
+    member_id: z.string().optional(),
+    discount_percent: z.number().min(0).max(100).optional().default(20),
+    expires_at: z.string().datetime().optional().nullable(),
+  });
+
+  app.post("/api/webhooks/partner/:partnerKey", async (req, res) => {
+    try {
+      const { partnerKey } = req.params;
+      
+      // Verify HMAC signature
+      const signature = req.headers["x-webhook-signature"] as string;
+      const webhookSecret = process.env[`WEBHOOK_SECRET_${partnerKey.toUpperCase()}`];
+      
+      if (!webhookSecret) {
+        console.warn(`No webhook secret configured for partner: ${partnerKey}`);
+        return res.status(401).json({ error: "Invalid partner key" });
+      }
+      
+      const payload = JSON.stringify(req.body);
+      const expectedSignature = crypto
+        .createHmac("sha256", webhookSecret)
+        .update(payload)
+        .digest("hex");
+      
+      if (!signature || !crypto.timingSafeEqual(
+        Buffer.from(signature),
+        Buffer.from(expectedSignature)
+      )) {
+        return res.status(401).json({ error: "Invalid signature" });
+      }
+      
+      const validated = partnerWebhookSchema.parse(req.body);
+      
+      if (validated.action === "deactivate") {
+        await storage.deactivatePartnerMembership(partnerKey, validated.email);
+        console.log(`Deactivated ${partnerKey} membership for ${validated.email}`);
+      } else {
+        await storage.upsertPartnerMembership({
+          partnerKey,
+          email: validated.email,
+          memberId: validated.member_id || null,
+          isActive: validated.action === "activate" || validated.action === "update",
+          discountPercent: validated.discount_percent,
+          expiresAt: validated.expires_at ? new Date(validated.expires_at) : null,
+        });
+        console.log(`${validated.action}d ${partnerKey} membership for ${validated.email} (${validated.discount_percent}% discount)`);
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      console.error("Partner webhook error:", error);
+      res.status(500).json({ error: "Webhook processing failed" });
+    }
+  });
+
+  // Get current user's partner discount (authenticated)
+  app.get("/api/user/partner-discount", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.id);
+      if (!user?.email) {
+        return res.json({ discount: null });
+      }
+      
+      const discount = await storage.getActivePartnerDiscount(user.email);
+      res.json({ discount });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to check partner discount" });
     }
   });
 
