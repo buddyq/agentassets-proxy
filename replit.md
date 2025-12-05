@@ -157,3 +157,14 @@ Contact form submissions from property sites are stored in the `leads` table:
 - Authenticated users can view their leads via `GET /api/leads`
 - Site-specific leads available at `GET /api/sites/:siteId/leads`
 - Lead count is tracked in site analytics (`site.stats.leads`)
+
+### Password Protection System
+
+Sites can be protected with multiple passwords, each with optional labels and usage tracking:
+- **Schema**: `site_passwords` table with id, siteId, passwordHash, label, usageCount, lastUsedAt, createdAt
+- **Security**: Passwords hashed with bcrypt (12 salt rounds), never stored in plaintext
+- **Management**: Site owners manage passwords in Edit Site step 4 "Password" tab
+- **Verification**: Public endpoint `POST /api/sites/:siteId/verify-password` checks password and stores unlock state in session
+- **Gating**: PasswordGate component checks protection status and shows unlock form before rendering protected content
+- **Analytics**: Dashboard analytics dialog shows password usage stats (label, usage count, last used date) for each site
+- **Session Persistence**: Once unlocked, sites stay unlocked for the browser session
