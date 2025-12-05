@@ -626,7 +626,7 @@ export default function EditSite() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <ObjectUploader
-                    maxNumberOfFiles={20}
+                    maxNumberOfFiles={40}
                     maxFileSize={10485760}
                     variant="dropzone"
                     onGetUploadParameters={async () => {
