@@ -43,7 +43,7 @@ export default function Home() {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link href="/auth">
+              <Link href="/auth?trial=true">
                 <Button size="lg" className="text-lg px-10 h-14 bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-600/90 text-white border-none shadow-xl shadow-primary/25 group">
                   Start Building Free
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
@@ -142,7 +142,7 @@ export default function Home() {
                   </div>
                 </div>
                 
-                <Link href="/auth">
+                <Link href="/auth?trial=true">
                   <Button size="lg" className="text-lg px-8 h-12 bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-600/90 text-white border-none shadow-lg shadow-primary/25 group">
                     Start Your Free Trial
                     <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />

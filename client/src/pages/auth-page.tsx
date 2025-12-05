@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useState, useEffect, useMemo } from "react";
+import { useLocation, useSearch } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,11 +8,28 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import logoUrl from "@/assets/logo.png";
 import heroImage from "@assets/generated_images/luxury_living_room_interior_for_hero_background.png";
-import { Loader2, Check } from "lucide-react";
+import { Loader2, Check, Sparkles, ArrowRight } from "lucide-react";
+import { Link } from "wouter";
 
 export default function AuthPage() {
   const [, setLocation] = useLocation();
+  const searchString = useSearch();
   const { user, loginMutation, registerMutation } = useAuth();
+
+  const isTrialFlow = useMemo(() => {
+    const params = new URLSearchParams(searchString);
+    return params.get('trial') === 'true';
+  }, [searchString]);
+
+  const [justRegistered, setJustRegistered] = useState(false);
+  const [activeTab, setActiveTab] = useState(isTrialFlow ? "register" : "login");
+
+  // Update active tab when trial param changes (e.g., navigating from another page)
+  useEffect(() => {
+    if (isTrialFlow) {
+      setActiveTab("register");
+    }
+  }, [isTrialFlow]);
 
   const [loginData, setLoginData] = useState({ username: "", password: "" });
   const [registerData, setRegisterData] = useState({ 
@@ -24,10 +41,12 @@ export default function AuthPage() {
   });
 
   useEffect(() => {
-    if (user) {
-      setLocation("/");
+    if (user && isTrialFlow && registerMutation.isSuccess) {
+      setJustRegistered(true);
+    } else if (user && !justRegistered) {
+      setLocation("/dashboard");
     }
-  }, [user, setLocation]);
+  }, [user, setLocation, isTrialFlow, registerMutation.isSuccess, justRegistered]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,7 +77,7 @@ export default function AuthPage() {
             <p className="text-muted-foreground">Create beautiful property websites in minutes</p>
           </div>
 
-          <Tabs defaultValue="login" className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="login" data-testid="tab-login">Login</TabsTrigger>
               <TabsTrigger value="register" data-testid="tab-register">Register</TabsTrigger>
@@ -114,10 +133,50 @@ export default function AuthPage() {
             </TabsContent>
 
             <TabsContent value="register">
+              {/* Trial messaging banner */}
+              {isTrialFlow && !justRegistered && (
+                <div className="mb-4 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Sparkles className="h-4 w-4 text-yellow-600" />
+                    <span className="font-semibold text-yellow-800">Start Your 7-Day Free Trial</span>
+                  </div>
+                  <p className="text-sm text-yellow-700">
+                    Create your account below to get 1 free site credit. No credit card required!
+                  </p>
+                </div>
+              )}
+
+              {/* Success message after registration */}
+              {justRegistered && (
+                <div className="p-6 bg-gradient-to-br from-primary/5 to-teal-50 border border-primary/20 rounded-xl text-center">
+                  <div className="h-12 w-12 bg-gradient-to-br from-primary to-teal-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Check className="h-6 w-6 text-white" />
+                  </div>
+                  <h3 className="text-xl font-bold text-secondary mb-2">Welcome to AgentAssets!</h3>
+                  <p className="text-muted-foreground mb-6">
+                    Your trial account is ready. You have <span className="font-semibold text-primary">1 free site credit</span> to create your first property website.
+                  </p>
+                  <Link href="/dashboard">
+                    <Button size="lg" className="bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-600/90 text-white group">
+                      Go to Dashboard
+                      <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </Link>
+                  <p className="text-sm text-muted-foreground mt-4">
+                    Click "Create New Site" to build your first property website
+                  </p>
+                </div>
+              )}
+
+              {!justRegistered && (
               <Card>
                 <CardHeader>
                   <CardTitle>Create Account</CardTitle>
-                  <CardDescription>Sign up to start creating property websites</CardDescription>
+                  <CardDescription>
+                    {isTrialFlow 
+                      ? "Fill in your details to start your free trial" 
+                      : "Sign up to start creating property websites"}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleRegister} className="space-y-4">
@@ -196,6 +255,7 @@ export default function AuthPage() {
                   </form>
                 </CardContent>
               </Card>
+              )}
             </TabsContent>
           </Tabs>
         </div>
