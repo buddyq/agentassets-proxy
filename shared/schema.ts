@@ -277,3 +277,26 @@ export const couponRedemptions = pgTable("coupon_redemptions", {
 });
 
 export type CouponRedemption = typeof couponRedemptions.$inferSelect;
+
+// Partner memberships table - tracks users from partner sites (e.g., ATXPocket)
+export const partnerMemberships = pgTable("partner_memberships", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  partnerKey: text("partner_key").notNull(), // e.g., "atxpocket"
+  email: text("email").notNull(),
+  memberId: text("member_id"), // ID from the partner system
+  isActive: boolean("is_active").notNull().default(true),
+  discountPercent: integer("discount_percent").notNull().default(20),
+  expiresAt: timestamp("expires_at"), // When the membership expires (null = no expiry)
+  syncedAt: timestamp("synced_at").notNull().defaultNow(), // Last sync from partner
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("IDX_partner_email").on(table.partnerKey, table.email),
+]);
+
+export const insertPartnerMembershipSchema = createInsertSchema(partnerMemberships).omit({ 
+  id: true, 
+  createdAt: true,
+  syncedAt: true,
+});
+export type InsertPartnerMembership = z.infer<typeof insertPartnerMembershipSchema>;
+export type PartnerMembership = typeof partnerMemberships.$inferSelect;

@@ -7,6 +7,7 @@ import {
   coupons,
   couponRedemptions,
   sitePasswords,
+  partnerMemberships,
   type User, 
   type InsertUser,
   type Site,
@@ -21,7 +22,9 @@ import {
   type InsertCoupon,
   type CouponRedemption,
   type SitePassword,
-  type InsertSitePassword
+  type InsertSitePassword,
+  type PartnerMembership,
+  type InsertPartnerMembership
 } from "@shared/schema";
 import { db, pool } from "./db";
 import { eq, and } from "drizzle-orm";
@@ -100,6 +103,12 @@ export interface IStorage {
   deleteSitePassword(id: string): Promise<void>;
   verifySitePassword(siteId: string, password: string): Promise<SitePassword | null>;
   incrementPasswordUsage(id: string): Promise<void>;
+  
+  // Partner membership methods
+  getPartnerMembership(partnerKey: string, email: string): Promise<PartnerMembership | undefined>;
+  upsertPartnerMembership(membership: InsertPartnerMembership): Promise<PartnerMembership>;
+  deactivatePartnerMembership(partnerKey: string, email: string): Promise<void>;
+  getActivePartnerDiscount(email: string): Promise<number | null>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -493,6 +502,78 @@ export class DatabaseStorage implements IStorage {
         })
         .where(eq(sitePasswords.id, id));
     }
+  }
+
+  // Partner membership methods
+  async getPartnerMembership(partnerKey: string, email: string): Promise<PartnerMembership | undefined> {
+    const [membership] = await db
+      .select()
+      .from(partnerMemberships)
+      .where(and(
+        eq(partnerMemberships.partnerKey, partnerKey),
+        eq(partnerMemberships.email, email.toLowerCase())
+      ));
+    return membership;
+  }
+
+  async upsertPartnerMembership(membership: InsertPartnerMembership): Promise<PartnerMembership> {
+    const email = membership.email.toLowerCase();
+    const existing = await this.getPartnerMembership(membership.partnerKey, email);
+    
+    if (existing) {
+      const [updated] = await db
+        .update(partnerMemberships)
+        .set({
+          isActive: membership.isActive,
+          discountPercent: membership.discountPercent,
+          expiresAt: membership.expiresAt,
+          memberId: membership.memberId,
+          syncedAt: new Date(),
+        })
+        .where(eq(partnerMemberships.id, existing.id))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db
+        .insert(partnerMemberships)
+        .values({
+          ...membership,
+          email,
+        })
+        .returning();
+      return created;
+    }
+  }
+
+  async deactivatePartnerMembership(partnerKey: string, email: string): Promise<void> {
+    await db
+      .update(partnerMemberships)
+      .set({ isActive: false, syncedAt: new Date() })
+      .where(and(
+        eq(partnerMemberships.partnerKey, partnerKey),
+        eq(partnerMemberships.email, email.toLowerCase())
+      ));
+  }
+
+  async getActivePartnerDiscount(email: string): Promise<number | null> {
+    if (!email) return null;
+    
+    const [membership] = await db
+      .select()
+      .from(partnerMemberships)
+      .where(and(
+        eq(partnerMemberships.email, email.toLowerCase()),
+        eq(partnerMemberships.isActive, true)
+      ));
+    
+    if (!membership) return null;
+    
+    // Check if membership is expired
+    if (membership.expiresAt && new Date(membership.expiresAt) < new Date()) {
+      return null;
+    }
+    
+    return membership.discountPercent;
   }
 }
 
