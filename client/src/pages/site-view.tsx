@@ -1880,7 +1880,7 @@ function MagazineHero({ site, theme, heroImage }: { site: Site; theme?: Theme; h
             style={{ 
               fontSize: '27px',
               fontWeight: '400',
-              letterSpacing: '-0.02em'
+              letterSpacing: '0'
             }}
           >
             {site.title || site.address}
