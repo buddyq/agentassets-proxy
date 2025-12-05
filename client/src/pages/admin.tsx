@@ -1345,6 +1345,39 @@ export default function AdminDashboard() {
                 <h2 className="text-xl font-bold text-secondary">User Management</h2>
                 <p className="text-muted-foreground">View all users and manage their credits.</p>
               </div>
+              <Button 
+                variant="outline" 
+                onClick={async () => {
+                  try {
+                    const res = await fetch('/api/admin/send-analytics-emails', {
+                      method: 'POST',
+                      credentials: 'include'
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                      toast({
+                        title: "Analytics Emails Sent",
+                        description: `Sent: ${data.sent}, Failed: ${data.failed}, Skipped: ${data.skipped}`,
+                      });
+                    } else {
+                      toast({
+                        title: "Error",
+                        description: data.error || "Failed to send analytics emails",
+                        variant: "destructive"
+                      });
+                    }
+                  } catch (error) {
+                    toast({
+                      title: "Error",
+                      description: "Failed to send analytics emails",
+                      variant: "destructive"
+                    });
+                  }
+                }}
+                data-testid="button-send-analytics-emails"
+              >
+                Send Monthly Analytics Emails
+              </Button>
             </div>
 
             {/* Edit User Credits Dialog */}
