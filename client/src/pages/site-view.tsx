@@ -1,10 +1,10 @@
 import { useRoute, Link } from "wouter";
-import { useSite, useThemes, useLayout } from "@/lib/api";
+import { useSite, useThemes, useLayout, useSiteProtectionStatus, verifySitePassword } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { MapPin, Play, Home, Info, Video, Image, X, ChevronLeft, ChevronRight, ChevronDown, Bed, Bath, Square, Calendar, Building, Phone, Mail, User, Instagram, Facebook, Linkedin, Youtube, Twitter, FileText, Download, Package } from "lucide-react";
+import { MapPin, Play, Home, Info, Video, Image, X, ChevronLeft, ChevronRight, ChevronDown, Bed, Bath, Square, Calendar, Building, Phone, Mail, User, Instagram, Facebook, Linkedin, Youtube, Twitter, FileText, Download, Package, Lock, Eye, EyeOff } from "lucide-react";
 import heroImage from "@assets/generated_images/luxury_living_room_interior_for_hero_background.png";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import useEmblaCarousel from "embla-carousel-react";
@@ -3109,11 +3109,123 @@ function HeroSection({ site, theme, heroImage }: { site: Site; theme?: Theme; he
   );
 }
 
+function PasswordGate({ 
+  siteId, 
+  site, 
+  onUnlock 
+}: { 
+  siteId: string; 
+  site: Site; 
+  onUnlock: () => void;
+}) {
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setIsVerifying(true);
+    
+    try {
+      const result = await verifySitePassword(siteId, password);
+      if (result.success && result.accessToken) {
+        sessionStorage.setItem(`site_access_${siteId}`, result.accessToken);
+        onUnlock();
+      } else {
+        setError("Incorrect password. Please try again.");
+      }
+    } catch (err) {
+      setError("Failed to verify password. Please try again.");
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const heroImage = site.photos && site.photos.length > 0 ? site.photos[0] : undefined;
+
+  return (
+    <div className="min-h-screen relative flex items-center justify-center">
+      {heroImage && (
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${heroImage})` }}
+        >
+          <div className="absolute inset-0 bg-black/60" />
+        </div>
+      )}
+      {!heroImage && (
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 to-slate-700" />
+      )}
+      
+      <div className="relative z-10 w-full max-w-md mx-4">
+        <div className="bg-white rounded-2xl shadow-2xl p-8">
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Lock className="h-8 w-8 text-primary" />
+            </div>
+            <h1 className="text-2xl font-bold text-slate-900">Password Protected</h1>
+            <p className="text-slate-600 mt-2">This property site requires a password to view.</p>
+          </div>
+          
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="password" className="sr-only">Password</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pr-10 h-12 text-lg"
+                  data-testid="input-site-password"
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
+            </div>
+            
+            {error && (
+              <p className="text-red-600 text-sm text-center">{error}</p>
+            )}
+            
+            <Button 
+              type="submit" 
+              className="w-full h-12 text-lg"
+              disabled={isVerifying || !password}
+              data-testid="button-verify-password"
+            >
+              {isVerifying ? "Verifying..." : "View Property"}
+            </Button>
+          </form>
+          
+          <div className="mt-6 pt-6 border-t text-center">
+            <p className="text-sm text-slate-500">
+              {site.title || site.address}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function SiteView() {
   const [, params] = useRoute("/site/:id");
-  const { data: site, isLoading } = useSite(params?.id || '');
+  const siteId = params?.id || '';
+  const { data: site, isLoading } = useSite(siteId);
   const { data: themes = [] } = useThemes();
   const { data: layout } = useLayout(site?.layoutId || '');
+  const { data: protectionStatus, isLoading: isLoadingProtection } = useSiteProtectionStatus(siteId);
+  const [isUnlocked, setIsUnlocked] = useState(false);
   const theme = themes.find(t => t.id === site?.themeId) || themes[0];
 
   const combinedStyles = useMemo(() => ({
@@ -3121,7 +3233,16 @@ export default function SiteView() {
     ...getLayoutTypography(layout),
   }), [theme, layout]);
 
-  if (isLoading) {
+  useEffect(() => {
+    if (siteId) {
+      const accessToken = sessionStorage.getItem(`site_access_${siteId}`);
+      if (accessToken) {
+        setIsUnlocked(true);
+      }
+    }
+  }, [siteId]);
+
+  if (isLoading || isLoadingProtection) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-pulse text-muted-foreground">Loading...</div>
@@ -3140,6 +3261,16 @@ export default function SiteView() {
           </Link>
         </div>
       </div>
+    );
+  }
+
+  if (protectionStatus?.isProtected && !isUnlocked) {
+    return (
+      <PasswordGate 
+        siteId={siteId} 
+        site={site} 
+        onUnlock={() => setIsUnlocked(true)} 
+      />
     );
   }
 
