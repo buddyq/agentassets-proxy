@@ -1258,6 +1258,42 @@ function ModernDetails({ site, theme }: { site: Site; theme?: Theme }) {
             )}
           </div>
         )}
+
+        {/* Features Section */}
+        {site.features && site.features.length > 0 && (
+          <div className="mt-16 pt-12 border-t" style={{ borderColor: `${primaryColor}15` }}>
+            <h3 
+              className="text-2xl mb-2"
+              style={{ fontFamily: 'var(--font-heading)', fontWeight: 'var(--heading-weight)' }}
+            >
+              Features & Amenities
+            </h3>
+            <div 
+              className="w-12 h-1 rounded-full mb-8"
+              style={{ backgroundColor: primaryColor }}
+            />
+            <div className="flex flex-wrap gap-3">
+              {site.features.map((feature: string, index: number) => (
+                <div
+                  key={index}
+                  className="px-4 py-2 rounded-full border transition-colors hover:bg-gray-50"
+                  style={{ 
+                    borderColor: `${primaryColor}40`,
+                    color: 'var(--theme-text)'
+                  }}
+                  data-testid={`tag-feature-${index}`}
+                >
+                  <span 
+                    className="text-sm"
+                    style={{ fontFamily: 'var(--font-body)' }}
+                  >
+                    {feature}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );
