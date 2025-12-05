@@ -24,6 +24,8 @@ export const users = pgTable("users", {
   profileImageUrl: text("profile_image_url"),
   logo: text("logo"),
   credits: integer("credits").notNull().default(0),
+  trialCredits: integer("trial_credits").notNull().default(1),
+  trialEndsAt: timestamp("trial_ends_at").default(sql`now() + interval '7 days'`),
   phone: text("phone"),
   brokerage: text("brokerage"),
   teamName: text("team_name"),
@@ -162,6 +164,8 @@ export const sites = pgTable("sites", {
   customDomain: text("custom_domain"),
   customDetails: jsonb("custom_details").$type<CustomDetail[]>().default([]),
   status: text("status").notNull().default('draft'),
+  isTrial: boolean("is_trial").notNull().default(false),
+  unpublishedAt: timestamp("unpublished_at"),
   stats: jsonb("stats").notNull().$type<{
     views: number;
     uniqueVisitors: number;
