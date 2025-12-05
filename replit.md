@@ -168,3 +168,15 @@ Sites can be protected with multiple passwords, each with optional labels and us
 - **Gating**: PasswordGate component checks protection status and shows unlock form before rendering protected content
 - **Analytics**: Dashboard analytics dialog shows password usage stats (label, usage count, last used date) for each site
 - **Session Persistence**: Once unlocked, sites stay unlocked for the browser session
+
+### Partner Membership System (ATXPocket Integration)
+
+Partner organizations can sync their paying members to receive automatic discounts on credit packages:
+- **Schema**: `partner_memberships` table with partnerKey, email, memberId, isActive, discountPercent, expiresAt, syncedAt
+- **Webhook Endpoint**: `POST /api/webhooks/partner/:partnerKey` receives membership status updates from partners
+- **Security**: HMAC-SHA256 signature verification using partner-specific secrets (`WEBHOOK_SECRET_ATXPOCKET`)
+- **Webhook Actions**: `activate`, `deactivate`, `update` to manage membership status
+- **Discount Application**: Credits page shows discounted prices with partner badge when discount is active
+- **API**: `GET /api/user/partner-discount` returns active discount percent for authenticated user
+- **Email Matching**: Memberships matched by email address (case-insensitive)
+- **Expiration**: Optional expiration date prevents stale memberships from applying discounts

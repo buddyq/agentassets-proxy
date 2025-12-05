@@ -23,13 +23,22 @@ export default function Credits() {
 
   const handlePurchase = (pkg: typeof PACKAGES[0]) => {
     if (!user) return;
+    
+    const finalPrice = discountPercent > 0 
+      ? Number((pkg.price * (1 - discountPercent / 100)).toFixed(2))
+      : pkg.price;
+    
+    console.log(`Purchase: ${pkg.credits} credits at $${finalPrice} (${discountPercent}% discount applied)`);
+    
     updateCreditsMutation.mutate(
       user.credits + pkg.credits,
       {
         onSuccess: () => {
           toast({
             title: "Purchase Successful",
-            description: `Added ${pkg.credits} credits to your account.`,
+            description: discountPercent > 0
+              ? `Added ${pkg.credits} credits to your account with ${discountPercent}% partner discount!`
+              : `Added ${pkg.credits} credits to your account.`,
           });
         }
       }
@@ -74,9 +83,9 @@ export default function Credits() {
           <div className="grid md:grid-cols-3 gap-6">
             {PACKAGES.map((pkg) => {
               const discountedPrice = discountPercent > 0 
-                ? Math.round(pkg.price * (1 - discountPercent / 100)) 
+                ? Number((pkg.price * (1 - discountPercent / 100)).toFixed(2))
                 : pkg.price;
-              const pricePerCredit = Math.round(discountedPrice / pkg.credits);
+              const pricePerCredit = Number((discountedPrice / pkg.credits).toFixed(2));
               
               return (
                 <Card key={pkg.id} className={`relative overflow-hidden transition-all hover:shadow-lg ${pkg.popular ? 'border-primary ring-1 ring-primary/20 shadow-md' : ''}`}>
@@ -117,7 +126,7 @@ export default function Credits() {
                       {discountPercent > 0 && (
                         <div className="flex justify-between text-amber-600">
                           <span className="text-sm">You save</span>
-                          <span className="font-medium text-sm">${pkg.price - discountedPrice}</span>
+                          <span className="font-medium text-sm">${(pkg.price - discountedPrice).toFixed(2)}</span>
                         </div>
                       )}
                     </div>
