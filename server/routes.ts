@@ -1216,13 +1216,21 @@ export async function registerRoutes(
   });
 
   // Admin route to trigger monthly analytics emails
-  app.post("/api/admin/send-analytics-emails", isAdmin, async (req, res) => {
+  app.post("/api/admin/send-analytics-emails", isAdmin, async (req: any, res) => {
     try {
-      const { sendAllMonthlyAnalyticsEmails, sendAnalyticsEmailToUser } = await import('./scheduler');
+      const { sendAnalyticsEmailToUser } = await import('./scheduler');
       
-      const { userId } = req.body;
+      const { userId, force } = req.body;
       
-      if (userId) {
+      if (force) {
+        // Force send to current admin user for testing
+        const success = await sendAnalyticsEmailToUser(req.user.id);
+        if (success) {
+          res.json({ success: true, sent: 1, failed: 0, skipped: 0, message: "Test email sent to your address" });
+        } else {
+          res.status(400).json({ error: "Failed to send test email. Check your email address." });
+        }
+      } else if (userId) {
         // Send to a specific user
         const success = await sendAnalyticsEmailToUser(userId);
         if (success) {
@@ -1231,7 +1239,8 @@ export async function registerRoutes(
           res.status(400).json({ error: "Failed to send analytics email. User may not have an email address." });
         }
       } else {
-        // Send to all eligible users
+        // Send to all eligible users (those who haven't received this month)
+        const { sendAllMonthlyAnalyticsEmails } = await import('./scheduler');
         const result = await sendAllMonthlyAnalyticsEmails();
         res.json({ success: true, ...result });
       }

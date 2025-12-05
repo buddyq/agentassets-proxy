@@ -1345,39 +1345,76 @@ export default function AdminDashboard() {
                 <h2 className="text-xl font-bold text-secondary">User Management</h2>
                 <p className="text-muted-foreground">View all users and manage their credits.</p>
               </div>
-              <Button 
-                variant="outline" 
-                onClick={async () => {
-                  try {
-                    const res = await fetch('/api/admin/send-analytics-emails', {
-                      method: 'POST',
-                      credentials: 'include'
-                    });
-                    const data = await res.json();
-                    if (res.ok) {
-                      toast({
-                        title: "Analytics Emails Sent",
-                        description: `Sent: ${data.sent}, Failed: ${data.failed}, Skipped: ${data.skipped}`,
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={async () => {
+                    try {
+                      const res = await fetch('/api/admin/send-analytics-emails', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({ force: true })
                       });
-                    } else {
+                      const data = await res.json();
+                      if (res.ok) {
+                        toast({
+                          title: "Test Email Sent",
+                          description: "Check your inbox for the analytics email!",
+                        });
+                      } else {
+                        toast({
+                          title: "Error",
+                          description: data.error || "Failed to send test email",
+                          variant: "destructive"
+                        });
+                      }
+                    } catch (error) {
                       toast({
                         title: "Error",
-                        description: data.error || "Failed to send analytics emails",
+                        description: "Failed to send test email",
                         variant: "destructive"
                       });
                     }
-                  } catch (error) {
-                    toast({
-                      title: "Error",
-                      description: "Failed to send analytics emails",
-                      variant: "destructive"
-                    });
-                  }
-                }}
-                data-testid="button-send-analytics-emails"
-              >
-                Send Monthly Analytics Emails
-              </Button>
+                  }}
+                  data-testid="button-test-analytics-email"
+                >
+                  Test Email (Send to Me)
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={async () => {
+                    try {
+                      const res = await fetch('/api/admin/send-analytics-emails', {
+                        method: 'POST',
+                        credentials: 'include'
+                      });
+                      const data = await res.json();
+                      if (res.ok) {
+                        toast({
+                          title: "Analytics Emails Sent",
+                          description: `Sent: ${data.sent}, Failed: ${data.failed}, Skipped: ${data.skipped}`,
+                        });
+                      } else {
+                        toast({
+                          title: "Error",
+                          description: data.error || "Failed to send analytics emails",
+                          variant: "destructive"
+                        });
+                      }
+                    } catch (error) {
+                      toast({
+                        title: "Error",
+                        description: "Failed to send analytics emails",
+                        variant: "destructive"
+                      });
+                    }
+                  }}
+                  data-testid="button-send-analytics-emails"
+                >
+                  Send to All Users
+                </Button>
+              </div>
             </div>
 
             {/* Edit User Credits Dialog */}
