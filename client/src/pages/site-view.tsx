@@ -1800,7 +1800,7 @@ function MagazineNavigation({ site, theme, effectiveLogo }: { site: Site; theme?
               className={`transition-colors hover:opacity-70 ${
                 scrolled ? 'text-gray-800' : 'text-white'
               }`}
-              style={{ fontFamily: '"Arimo", sans-serif', fontSize: '16px', textTransform: 'capitalize', letterSpacing: '0.02em', fontWeight: '400' }}
+              style={{ fontFamily: '"Figtree", sans-serif', fontSize: '16px', textTransform: 'capitalize', letterSpacing: '0.02em', fontWeight: '400' }}
               onClick={(e) => {
                 e.preventDefault();
                 document.querySelector(item.href)?.scrollIntoView({ behavior: 'smooth' });
@@ -1843,9 +1843,9 @@ function MagazineHero({ site, theme, heroImage }: { site: Site; theme?: Theme; h
   return (
     <section id="home" className="relative h-screen w-full overflow-hidden">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Arimo:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&display=swap');
         .magazine-hero-text {
-          font-family: "Arimo", sans-serif;
+          font-family: "Figtree", sans-serif;
         }
         @keyframes scroll-arrow {
           0%, 100% { transform: translateY(0); opacity: 1; }
@@ -1920,7 +1920,7 @@ function MagazineFactsBar({ site, theme }: { site: Site; theme?: Theme }) {
           <div className="text-white">
             <p 
               className="text-sm tracking-widest opacity-80 mb-1"
-              style={{ fontFamily: '"Arimo", sans-serif', letterSpacing: '0.1em' }}
+              style={{ fontFamily: '"Figtree", sans-serif', letterSpacing: '0.1em' }}
             >
               Offered at
             </p>
@@ -1933,7 +1933,7 @@ function MagazineFactsBar({ site, theme }: { site: Site; theme?: Theme }) {
             {(site as any).buyerAgentComp && (
               <p 
                 className="text-sm opacity-80"
-                style={{ fontFamily: '"Arimo", sans-serif', fontWeight: '300' }}
+                style={{ fontFamily: '"Figtree", sans-serif', fontWeight: '300' }}
               >
                 {(site as any).buyerAgentComp}
               </p>
@@ -1966,7 +1966,7 @@ function MagazineFactsBar({ site, theme }: { site: Site; theme?: Theme }) {
                 </span>
                 <span 
                   className="text-xs opacity-70"
-                  style={{ fontFamily: '"Arimo", sans-serif' }}
+                  style={{ fontFamily: '"Figtree", sans-serif' }}
                 >
                   Home Size
                 </span>
@@ -1980,7 +1980,7 @@ function MagazineFactsBar({ site, theme }: { site: Site; theme?: Theme }) {
                 </span>
                 <span 
                   className="text-xs opacity-70"
-                  style={{ fontFamily: '"Arimo", sans-serif' }}
+                  style={{ fontFamily: '"Figtree", sans-serif' }}
                 >
                   Lot Size
                 </span>
@@ -2198,7 +2198,7 @@ function MagazineDocuments({ site, theme }: { site: Site; theme?: Theme }) {
         </h2>
         <p 
           className="text-center text-gray-500 mb-10"
-          style={{ fontFamily: '"Arimo", sans-serif' }}
+          style={{ fontFamily: '"Figtree", sans-serif' }}
         >
           Download important documents related to this property
         </p>
@@ -2213,7 +2213,7 @@ function MagazineDocuments({ site, theme }: { site: Site; theme?: Theme }) {
               style={{ 
                 borderColor: primaryColor, 
                 color: primaryColor,
-                fontFamily: '"Arimo", sans-serif'
+                fontFamily: '"Figtree", sans-serif'
               }}
               data-testid="button-download-all-documents"
             >
@@ -2244,7 +2244,7 @@ function MagazineDocuments({ site, theme }: { site: Site; theme?: Theme }) {
               </div>
               <span 
                 className="flex-1 font-medium text-gray-800 truncate"
-                style={{ fontFamily: '"Arimo", sans-serif' }}
+                style={{ fontFamily: '"Figtree", sans-serif' }}
               >
                 {doc.name}
               </span>
@@ -2344,7 +2344,7 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
                     rel="noopener noreferrer"
                     className="text-base hover:opacity-70 transition-opacity border-b-2 pb-1"
                     style={{ 
-                      fontFamily: '"Arimo", sans-serif', 
+                      fontFamily: '"Figtree", sans-serif', 
                       color: primaryColor,
                       borderColor: primaryColor 
                     }}
@@ -2357,7 +2357,7 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
                   <a
                     href="#documents"
                     className="inline-flex items-center gap-2 text-base hover:opacity-70 transition-opacity"
-                    style={{ fontFamily: '"Arimo", sans-serif', color: '#000000' }}
+                    style={{ fontFamily: '"Figtree", sans-serif', color: '#000000' }}
                     onClick={(e) => {
                       e.preventDefault();
                       document.getElementById('documents')?.scrollIntoView({ behavior: 'smooth' });
@@ -2376,7 +2376,7 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
               <div>
                 <p 
                   className="text-base leading-relaxed text-gray-600 whitespace-pre-line"
-                  style={{ fontFamily: '"Arimo", sans-serif', lineHeight: '1.8' }}
+                  style={{ fontFamily: '"Figtree", sans-serif', lineHeight: '1.8' }}
                 >
                   {truncatedDescription}
                 </p>
@@ -2384,7 +2384,7 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
                   <button
                     onClick={() => setShowDescriptionModal(true)}
                     className="mt-4 inline-flex items-center gap-2 text-base hover:opacity-70 transition-opacity"
-                    style={{ fontFamily: '"Arimo", sans-serif', color: primaryColor }}
+                    style={{ fontFamily: '"Figtree", sans-serif', color: primaryColor }}
                     data-testid="button-read-more"
                   >
                     Read more
@@ -2441,7 +2441,7 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
                   <div>
                     <p 
                       className="text-sm uppercase tracking-widest mb-2 opacity-70"
-                      style={{ fontFamily: '"Arimo", sans-serif' }}
+                      style={{ fontFamily: '"Figtree", sans-serif' }}
                     >
                       Open Houses
                     </p>
@@ -2478,45 +2478,45 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
                 <div className="space-y-0">
                   {site.bedrooms && (
                     <div className="flex justify-between py-3 border-b border-gray-200">
-                      <span style={{ fontFamily: '"Arimo", sans-serif', color: '#666' }}>Bedrooms</span>
-                      <span style={{ fontFamily: '"Arimo", sans-serif', fontWeight: '500' }}>{site.bedrooms}</span>
+                      <span style={{ fontFamily: '"Figtree", sans-serif', color: '#666' }}>Bedrooms</span>
+                      <span style={{ fontFamily: '"Figtree", sans-serif', fontWeight: '500' }}>{site.bedrooms}</span>
                     </div>
                   )}
                   {site.bathrooms && (
                     <div className="flex justify-between py-3 border-b border-gray-200">
-                      <span style={{ fontFamily: '"Arimo", sans-serif', color: '#666' }}>Bathrooms</span>
-                      <span style={{ fontFamily: '"Arimo", sans-serif', fontWeight: '500' }}>{site.bathrooms}</span>
+                      <span style={{ fontFamily: '"Figtree", sans-serif', color: '#666' }}>Bathrooms</span>
+                      <span style={{ fontFamily: '"Figtree", sans-serif', fontWeight: '500' }}>{site.bathrooms}</span>
                     </div>
                   )}
                   {site.sqft && (
                     <div className="flex justify-between py-3 border-b border-gray-200">
-                      <span style={{ fontFamily: '"Arimo", sans-serif', color: '#666' }}>Square Feet</span>
-                      <span style={{ fontFamily: '"Arimo", sans-serif', fontWeight: '500' }}>{site.sqft}</span>
+                      <span style={{ fontFamily: '"Figtree", sans-serif', color: '#666' }}>Square Feet</span>
+                      <span style={{ fontFamily: '"Figtree", sans-serif', fontWeight: '500' }}>{site.sqft}</span>
                     </div>
                   )}
                   {(site as any).stories && (
                     <div className="flex justify-between py-3 border-b border-gray-200">
-                      <span style={{ fontFamily: '"Arimo", sans-serif', color: '#666' }}>Stories</span>
-                      <span style={{ fontFamily: '"Arimo", sans-serif', fontWeight: '500' }}>{(site as any).stories}</span>
+                      <span style={{ fontFamily: '"Figtree", sans-serif', color: '#666' }}>Stories</span>
+                      <span style={{ fontFamily: '"Figtree", sans-serif', fontWeight: '500' }}>{(site as any).stories}</span>
                     </div>
                   )}
                   {(site as any).yearBuilt && (
                     <div className="flex justify-between py-3 border-b border-gray-200">
-                      <span style={{ fontFamily: '"Arimo", sans-serif', color: '#666' }}>Year Built</span>
-                      <span style={{ fontFamily: '"Arimo", sans-serif', fontWeight: '500' }}>{(site as any).yearBuilt}</span>
+                      <span style={{ fontFamily: '"Figtree", sans-serif', color: '#666' }}>Year Built</span>
+                      <span style={{ fontFamily: '"Figtree", sans-serif', fontWeight: '500' }}>{(site as any).yearBuilt}</span>
                     </div>
                   )}
                   {site.lotSize && (
                     <div className="flex justify-between py-3 border-b border-gray-200">
-                      <span style={{ fontFamily: '"Arimo", sans-serif', color: '#666' }}>Lot Size</span>
-                      <span style={{ fontFamily: '"Arimo", sans-serif', fontWeight: '500' }}>{site.lotSize}</span>
+                      <span style={{ fontFamily: '"Figtree", sans-serif', color: '#666' }}>Lot Size</span>
+                      <span style={{ fontFamily: '"Figtree", sans-serif', fontWeight: '500' }}>{site.lotSize}</span>
                     </div>
                   )}
                   {/* Custom Details */}
                   {(site as any).customDetails?.map((detail: { label: string; value: string }, index: number) => (
                     <div key={index} className="flex justify-between py-3 border-b border-gray-200">
-                      <span style={{ fontFamily: '"Arimo", sans-serif', color: '#666' }}>{detail.label}</span>
-                      <span style={{ fontFamily: '"Arimo", sans-serif', fontWeight: '500' }}>{detail.value}</span>
+                      <span style={{ fontFamily: '"Figtree", sans-serif', color: '#666' }}>{detail.label}</span>
+                      <span style={{ fontFamily: '"Figtree", sans-serif', fontWeight: '500' }}>{detail.value}</span>
                     </div>
                   ))}
                 </div>
@@ -2545,7 +2545,7 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
                       }}
                       data-testid={`tag-feature-${index}`}
                     >
-                      <span className="text-sm" style={{ fontFamily: '"Arimo", sans-serif' }}>
+                      <span className="text-sm" style={{ fontFamily: '"Figtree", sans-serif' }}>
                         {feature}
                       </span>
                     </div>
@@ -2583,7 +2583,7 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
             </div>
             <p 
               className="text-base leading-relaxed text-gray-600 whitespace-pre-line"
-              style={{ fontFamily: '"Arimo", sans-serif', lineHeight: '1.8' }}
+              style={{ fontFamily: '"Figtree", sans-serif', lineHeight: '1.8' }}
             >
               {site.description}
             </p>
@@ -2626,7 +2626,7 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
                     <Calendar className="h-5 w-5" style={{ color: primaryColor }} />
                     <span 
                       className="font-medium"
-                      style={{ fontFamily: '"Arimo", sans-serif' }}
+                      style={{ fontFamily: '"Figtree", sans-serif' }}
                     >
                       {formatDate(event.date)}
                     </span>
@@ -2634,14 +2634,14 @@ function MagazineContentSection({ site, theme }: { site: Site; theme?: Theme }) 
                   {event.label && (
                     <p 
                       className="text-sm mb-1"
-                      style={{ fontFamily: '"Arimo", sans-serif', color: primaryColor }}
+                      style={{ fontFamily: '"Figtree", sans-serif', color: primaryColor }}
                     >
                       {event.label}
                     </p>
                   )}
                   <p 
                     className="text-gray-600"
-                    style={{ fontFamily: '"Arimo", sans-serif' }}
+                    style={{ fontFamily: '"Figtree", sans-serif' }}
                   >
                     {formatTime(event.startTime)} - {formatTime(event.endTime)}
                   </p>
@@ -2725,7 +2725,7 @@ function MagazineContact({ site, theme, agentInfo }: { site: Site; theme?: Theme
             </h2>
             <p 
               className="text-lg mb-8"
-              style={{ fontFamily: '"Arimo", sans-serif', lineHeight: '1.7', color: theme?.colors?.text || '#2C3E50', opacity: 0.7 }}
+              style={{ fontFamily: '"Figtree", sans-serif', lineHeight: '1.7', color: theme?.colors?.text || '#2C3E50', opacity: 0.7 }}
             >
               Interested in viewing this property? Fill out the form and we'll get back to you within 24 hours to arrange a private showing.
             </p>
@@ -2741,16 +2741,16 @@ function MagazineContact({ site, theme, agentInfo }: { site: Site; theme?: Theme
                     />
                   )}
                   <div className="space-y-1">
-                    <p className="font-medium text-xl" style={{ fontFamily: '"Arimo", sans-serif', color: theme?.colors?.text || '#2C3E50' }}>
+                    <p className="font-medium text-xl" style={{ fontFamily: '"Figtree", sans-serif', color: theme?.colors?.text || '#2C3E50' }}>
                       {agentInfo.name || 'Your Agent'}
                     </p>
                     {agentInfo.teamName && (
-                      <p className="text-sm" style={{ fontFamily: '"Arimo", sans-serif', color: primaryColor }}>
+                      <p className="text-sm" style={{ fontFamily: '"Figtree", sans-serif', color: primaryColor }}>
                         {agentInfo.teamName}
                       </p>
                     )}
                     {agentInfo.brokerage && (
-                      <p className="text-sm" style={{ fontFamily: '"Arimo", sans-serif', color: theme?.colors?.text || '#2C3E50', opacity: 0.7 }}>
+                      <p className="text-sm" style={{ fontFamily: '"Figtree", sans-serif', color: theme?.colors?.text || '#2C3E50', opacity: 0.7 }}>
                         {agentInfo.brokerage}
                       </p>
                     )}
@@ -2762,7 +2762,7 @@ function MagazineContact({ site, theme, agentInfo }: { site: Site; theme?: Theme
                     <a 
                       href={`tel:${agentInfo.phone}`}
                       className="flex items-center gap-3 hover:opacity-80 transition-opacity"
-                      style={{ fontFamily: '"Arimo", sans-serif', color: theme?.colors?.text || '#2C3E50' }}
+                      style={{ fontFamily: '"Figtree", sans-serif', color: theme?.colors?.text || '#2C3E50' }}
                     >
                       <Phone className="h-4 w-4" style={{ color: primaryColor }} />
                       {agentInfo.phone}
@@ -2772,7 +2772,7 @@ function MagazineContact({ site, theme, agentInfo }: { site: Site; theme?: Theme
                     <a 
                       href={`mailto:${agentInfo.email}`}
                       className="flex items-center gap-3 hover:opacity-80 transition-opacity"
-                      style={{ fontFamily: '"Arimo", sans-serif', color: theme?.colors?.text || '#2C3E50' }}
+                      style={{ fontFamily: '"Figtree", sans-serif', color: theme?.colors?.text || '#2C3E50' }}
                     >
                       <Mail className="h-4 w-4" style={{ color: primaryColor }} />
                       {agentInfo.email}
@@ -2781,7 +2781,7 @@ function MagazineContact({ site, theme, agentInfo }: { site: Site; theme?: Theme
                   {agentInfo.address && (
                     <div 
                       className="flex items-center gap-3"
-                      style={{ fontFamily: '"Arimo", sans-serif', color: theme?.colors?.text || '#2C3E50', opacity: 0.7 }}
+                      style={{ fontFamily: '"Figtree", sans-serif', color: theme?.colors?.text || '#2C3E50', opacity: 0.7 }}
                     >
                       <MapPin className="h-4 w-4" style={{ color: primaryColor }} />
                       {agentInfo.address}
@@ -2869,7 +2869,7 @@ function MagazineContact({ site, theme, agentInfo }: { site: Site; theme?: Theme
                 </h3>
                 <p 
                   className="text-gray-600"
-                  style={{ fontFamily: '"Arimo", sans-serif' }}
+                  style={{ fontFamily: '"Figtree", sans-serif' }}
                 >
                   We've received your inquiry and will be in touch soon.
                 </p>
@@ -2878,7 +2878,7 @@ function MagazineContact({ site, theme, agentInfo }: { site: Site; theme?: Theme
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="firstName" style={{ fontFamily: '"Arimo", sans-serif' }}>First Name</Label>
+                    <Label htmlFor="firstName" style={{ fontFamily: '"Figtree", sans-serif' }}>First Name</Label>
                     <Input
                       id="firstName"
                       value={formData.firstName}
@@ -2889,7 +2889,7 @@ function MagazineContact({ site, theme, agentInfo }: { site: Site; theme?: Theme
                     />
                   </div>
                   <div>
-                    <Label htmlFor="lastName" style={{ fontFamily: '"Arimo", sans-serif' }}>Last Name</Label>
+                    <Label htmlFor="lastName" style={{ fontFamily: '"Figtree", sans-serif' }}>Last Name</Label>
                     <Input
                       id="lastName"
                       value={formData.lastName}
@@ -2901,7 +2901,7 @@ function MagazineContact({ site, theme, agentInfo }: { site: Site; theme?: Theme
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="email" style={{ fontFamily: '"Arimo", sans-serif' }}>Email</Label>
+                  <Label htmlFor="email" style={{ fontFamily: '"Figtree", sans-serif' }}>Email</Label>
                   <Input
                     id="email"
                     type="email"
@@ -2913,7 +2913,7 @@ function MagazineContact({ site, theme, agentInfo }: { site: Site; theme?: Theme
                   />
                 </div>
                 <div>
-                  <Label htmlFor="phone" style={{ fontFamily: '"Arimo", sans-serif' }}>Phone</Label>
+                  <Label htmlFor="phone" style={{ fontFamily: '"Figtree", sans-serif' }}>Phone</Label>
                   <Input
                     id="phone"
                     type="tel"
@@ -2925,7 +2925,7 @@ function MagazineContact({ site, theme, agentInfo }: { site: Site; theme?: Theme
                   />
                 </div>
                 <div>
-                  <Label htmlFor="message" style={{ fontFamily: '"Arimo", sans-serif' }}>Message</Label>
+                  <Label htmlFor="message" style={{ fontFamily: '"Figtree", sans-serif' }}>Message</Label>
                   <Textarea
                     id="message"
                     value={formData.message}
@@ -2944,7 +2944,7 @@ function MagazineContact({ site, theme, agentInfo }: { site: Site; theme?: Theme
                 <Button
                   type="submit"
                   className="w-full py-6 text-lg"
-                  style={{ backgroundColor: primaryColor, fontFamily: '"Arimo", sans-serif' }}
+                  style={{ backgroundColor: primaryColor, fontFamily: '"Figtree", sans-serif' }}
                   disabled={isSubmitting}
                   data-testid="button-submit-inquiry"
                 >
