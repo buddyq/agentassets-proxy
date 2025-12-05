@@ -2,10 +2,10 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useSites, useDeleteSite, useUpdateSite, useThemes, useLeads, useLayouts } from "@/lib/api";
+import { useSites, useDeleteSite, useUpdateSite, useThemes, useLeads, useLayouts, useUnpublishSite, useRepublishSite } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
-import { Plus, ExternalLink, Trash2, Globe, BarChart3, Users, MousePointerClick, TrendingUp, Pencil, MessageSquare, Mail, Phone, Calendar, ChevronRight, LayoutDashboard, UserCircle, Image, FileText, Share2, ArrowRight, X } from "lucide-react";
+import { Plus, ExternalLink, Trash2, Globe, BarChart3, Users, MousePointerClick, TrendingUp, Pencil, MessageSquare, Mail, Phone, Calendar, ChevronRight, LayoutDashboard, UserCircle, Image, FileText, Share2, ArrowRight, X, EyeOff, Eye, Clock, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format, subDays, isPast } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -42,6 +42,8 @@ export default function Dashboard() {
   const { data: leads = [] } = useLeads();
   const deleteSiteMutation = useDeleteSite();
   const updateSiteMutation = useUpdateSite();
+  const unpublishSiteMutation = useUnpublishSite();
+  const republishSiteMutation = useRepublishSite();
   const { toast } = useToast();
 
   const getThemeName = (id: string) => themes.find(t => t.id === id)?.name || 'Unknown Theme';
@@ -177,6 +179,46 @@ export default function Dashboard() {
     setAnalyticsDialogOpen(true);
   };
 
+  const handleUnpublish = (siteId: string) => {
+    unpublishSiteMutation.mutate(siteId, {
+      onSuccess: () => {
+        toast({
+          title: "Site Unpublished",
+          description: "Your site has been taken offline. You can republish it anytime.",
+        });
+      },
+      onError: (error) => {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive"
+        });
+      }
+    });
+  };
+
+  const handleRepublish = (siteId: string) => {
+    republishSiteMutation.mutate(siteId, {
+      onSuccess: () => {
+        toast({
+          title: "Site Published",
+          description: "Your site is now live again!",
+        });
+      },
+      onError: (error) => {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive"
+        });
+      }
+    });
+  };
+
+  // Check if user has trial credits available
+  const hasTrialCredits = user && (user.trialCredits || 0) > 0 && 
+    user.trialEndsAt && new Date(user.trialEndsAt) > new Date();
+
   // Mock data generation for chart based on selected site
   const analyticsData = useMemo(() => {
     if (!selectedSiteForAnalytics) return [];
@@ -204,10 +246,15 @@ export default function Dashboard() {
             <h1 className="text-3xl font-bold text-secondary">Dashboard</h1>
             <p className="text-muted-foreground">Manage your property sites and view leads.</p>
           </div>
-          <Link href={user && user.credits > 0 ? "/create-site" : "/credits"}>
+          <Link href={user && (user.credits > 0 || hasTrialCredits) ? "/create-site" : "/credits"}>
             <Button size="lg" className="gap-2 shadow-lg shadow-primary/20">
               <Plus className="h-4 w-4" />
               Create New Site
+              {hasTrialCredits && user?.credits === 0 && (
+                <Badge variant="outline" className="ml-1 bg-amber-50 text-amber-700 border-amber-200 text-xs">
+                  Trial
+                </Badge>
+              )}
             </Button>
           </Link>
         </div>
@@ -284,8 +331,15 @@ export default function Dashboard() {
                 </div>
                 <h3 className="text-xl font-medium mb-2">No sites created yet</h3>
                 <p className="text-muted-foreground mb-6">Get started by creating your first property website.</p>
-                <Link href={user && user.credits > 0 ? "/create-site" : "/credits"}>
-                  <Button>{user && user.credits > 0 ? "Create First Site" : "Purchase Credits"}</Button>
+                <Link href={user && (user.credits > 0 || hasTrialCredits) ? "/create-site" : "/credits"}>
+                  <Button>
+                    {user && (user.credits > 0 || hasTrialCredits) ? "Create First Site" : "Purchase Credits"}
+                    {hasTrialCredits && user?.credits === 0 && (
+                      <Badge variant="outline" className="ml-2 bg-amber-50 text-amber-700 border-amber-200 text-xs">
+                        Free Trial
+                      </Badge>
+                    )}
+                  </Button>
                 </Link>
               </div>
             ) : (
@@ -304,9 +358,14 @@ export default function Dashboard() {
                           <span className="text-muted-foreground">No Image</span>
                         </div>
                       )}
-                      <div className="absolute top-3 right-3">
-                        <Badge variant={site.status === 'published' ? 'default' : 'secondary'}>
-                          {site.status === 'published' ? 'Published' : 'Draft'}
+                      <div className="absolute top-3 right-3 flex gap-1">
+                        {(site as any).isTrial && (
+                          <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                            Trial
+                          </Badge>
+                        )}
+                        <Badge variant={site.status === 'published' ? 'default' : site.status === 'unpublished' ? 'outline' : 'secondary'}>
+                          {site.status === 'published' ? 'Published' : site.status === 'unpublished' ? 'Unpublished' : 'Draft'}
                         </Badge>
                       </div>
                     </div>
@@ -385,6 +444,29 @@ export default function Dashboard() {
                           <BarChart3 className="h-3 w-3" /> Analytics
                         </Button>
                       </div>
+                      {site.status === 'published' ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full gap-2 text-xs h-8 text-muted-foreground"
+                          onClick={() => handleUnpublish(site.id)}
+                          disabled={unpublishSiteMutation.isPending}
+                          data-testid={`button-unpublish-${site.id}`}
+                        >
+                          <EyeOff className="h-3 w-3" /> Unpublish Site
+                        </Button>
+                      ) : site.status === 'unpublished' || site.status === 'draft' ? (
+                        <Button
+                          variant="default"
+                          size="sm"
+                          className="w-full gap-2 text-xs h-8"
+                          onClick={() => handleRepublish(site.id)}
+                          disabled={republishSiteMutation.isPending || (site.expiresAt && isPast(new Date(site.expiresAt)))}
+                          data-testid={`button-republish-${site.id}`}
+                        >
+                          <Eye className="h-3 w-3" /> {site.expiresAt && isPast(new Date(site.expiresAt)) ? 'Expired' : 'Publish Site'}
+                        </Button>
+                      ) : null}
                     </CardFooter>
                   </Card>
                 ))}

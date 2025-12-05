@@ -159,6 +159,42 @@ export function useDeleteSite() {
   });
 }
 
+export function useUnpublishSite() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`${API_BASE}/sites/${id}/unpublish`, { method: 'POST' });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to unpublish site');
+      }
+      return res.json() as Promise<Site>;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['sites'] });
+      queryClient.setQueryData(['site', data.id], data);
+    }
+  });
+}
+
+export function useRepublishSite() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`${API_BASE}/sites/${id}/republish`, { method: 'POST' });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to republish site');
+      }
+      return res.json() as Promise<Site>;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['sites'] });
+      queryClient.setQueryData(['site', data.id], data);
+    }
+  });
+}
+
 // Themes API
 export function useThemes(options?: { preset?: boolean; userId?: string }) {
   return useQuery({

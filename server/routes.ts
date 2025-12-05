@@ -151,26 +151,30 @@ export async function registerRoutes(
         return res.status(404).json({ error: "User not found" });
       }
       
-      // Check if user wants to use trial credit
-      const useTrialCredit = req.body.useTrialCredit === true;
+      // Extract control flag before validation
+      const { useTrialCredit, ...siteData } = req.body;
+      const wantsTrialCredit = useTrialCredit === true;
       
       // Check for available credits
       const hasRegularCredits = user.credits > 0;
-      const hasTrialCredits = (user.trialCredits || 0) > 0 && user.trialEndsAt && new Date(user.trialEndsAt) > new Date();
+      // Allow trial if user has trial credits and either trialEndsAt is in the future, or it's null (new user)
+      const trialEndsAt = user.trialEndsAt ? new Date(user.trialEndsAt) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      const isTrialValid = trialEndsAt > new Date();
+      const hasTrialCredits = (user.trialCredits || 0) > 0 && isTrialValid;
       
       if (!hasRegularCredits && !hasTrialCredits) {
         return res.status(403).json({ error: "Insufficient credits. Purchase credits to create new sites." });
       }
       
       // Determine which credit type to use
-      const shouldUseTrial = useTrialCredit && hasTrialCredits;
+      const shouldUseTrial = wantsTrialCredit && hasTrialCredits;
       
-      const validated = insertSiteSchema.parse({ ...req.body, userId });
+      // Validate site data without the control flag
+      const validated = insertSiteSchema.parse({ ...siteData, userId });
       
       let site;
       if (shouldUseTrial) {
-        // Create trial site with 7-day expiration
-        const trialEndsAt = user.trialEndsAt ? new Date(user.trialEndsAt) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+        // Create trial site with 7-day expiration (uses user's trialEndsAt or a new 7-day window)
         site = await storage.createTrialSite(validated, trialEndsAt);
         // Decrement trial credits
         await storage.updateUserTrialCredits(userId, (user.trialCredits || 1) - 1);
