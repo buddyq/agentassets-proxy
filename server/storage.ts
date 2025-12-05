@@ -6,6 +6,7 @@ import {
   leads,
   coupons,
   couponRedemptions,
+  sitePasswords,
   type User, 
   type InsertUser,
   type Site,
@@ -18,12 +19,15 @@ import {
   type InsertLead,
   type Coupon,
   type InsertCoupon,
-  type CouponRedemption
+  type CouponRedemption,
+  type SitePassword,
+  type InsertSitePassword
 } from "@shared/schema";
 import { db, pool } from "./db";
 import { eq, and } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
+import bcrypt from "bcrypt";
 
 const PostgresSessionStore = connectPg(session);
 
@@ -89,6 +93,13 @@ export interface IStorage {
   // User management methods (admin)
   getAllUsers(): Promise<User[]>;
   deleteUser(id: string): Promise<void>;
+  
+  // Site password methods
+  getSitePasswords(siteId: string): Promise<SitePassword[]>;
+  createSitePassword(password: InsertSitePassword): Promise<SitePassword>;
+  deleteSitePassword(id: string): Promise<void>;
+  verifySitePassword(siteId: string, password: string): Promise<SitePassword | null>;
+  incrementPasswordUsage(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -426,15 +437,62 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteUser(id: string): Promise<void> {
-    // First delete all related data (sites, leads, themes, coupon redemptions)
+    // First delete all related data (sites, leads, themes, coupon redemptions, site passwords)
     const userSites = await this.getSitesByUser(id);
     for (const site of userSites) {
       await db.delete(leads).where(eq(leads.siteId, site.id));
+      await db.delete(sitePasswords).where(eq(sitePasswords.siteId, site.id));
       await db.delete(sites).where(eq(sites.id, site.id));
     }
     await db.delete(themes).where(eq(themes.userId, id));
     await db.delete(couponRedemptions).where(eq(couponRedemptions.userId, id));
     await db.delete(users).where(eq(users.id, id));
+  }
+
+  // Site password methods
+  async getSitePasswords(siteId: string): Promise<SitePassword[]> {
+    return await db.select().from(sitePasswords).where(eq(sitePasswords.siteId, siteId));
+  }
+
+  async createSitePassword(password: InsertSitePassword): Promise<SitePassword> {
+    const saltRounds = 10;
+    const passwordHash = await bcrypt.hash(password.passwordHash, saltRounds);
+    const [newPassword] = await db
+      .insert(sitePasswords)
+      .values({
+        ...password,
+        passwordHash
+      })
+      .returning();
+    return newPassword;
+  }
+
+  async deleteSitePassword(id: string): Promise<void> {
+    await db.delete(sitePasswords).where(eq(sitePasswords.id, id));
+  }
+
+  async verifySitePassword(siteId: string, password: string): Promise<SitePassword | null> {
+    const passwords = await this.getSitePasswords(siteId);
+    for (const pw of passwords) {
+      const match = await bcrypt.compare(password, pw.passwordHash);
+      if (match) {
+        return pw;
+      }
+    }
+    return null;
+  }
+
+  async incrementPasswordUsage(id: string): Promise<void> {
+    const [pw] = await db.select().from(sitePasswords).where(eq(sitePasswords.id, id));
+    if (pw) {
+      await db
+        .update(sitePasswords)
+        .set({ 
+          usageCount: pw.usageCount + 1, 
+          lastUsedAt: new Date() 
+        })
+        .where(eq(sitePasswords.id, id));
+    }
   }
 }
 
