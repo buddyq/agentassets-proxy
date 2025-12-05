@@ -1640,14 +1640,19 @@ export default function CreateSite() {
                         <span className="font-bold text-primary">1 Credit</span>
                       </div>
                       
-                      <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded">
-                        Your current balance: <span className="font-bold text-foreground">{user?.credits ?? 0} Credits</span>
+                      <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded space-y-1">
+                        <div>Your current balance: <span className="font-bold text-foreground">{user?.credits ?? 0} Credits</span></div>
+                        {hasTrialCredits && (
+                          <div className="text-primary">
+                            Trial Credit Available! <span className="font-bold">1 Free Site</span>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                     <CardFooter>
-                      <Button className="w-full gap-2" size="lg" onClick={handlePublish} disabled={!user || user.credits < 1}>
+                      <Button className="w-full gap-2" size="lg" onClick={handlePublish} disabled={!user || (user.credits < 1 && !hasTrialCredits)}>
                         <CreditCard className="h-4 w-4" />
-                        {!user || user.credits < 1 ? "Insufficient Credits" : "Publish Site"}
+                        {!user || (user.credits < 1 && !hasTrialCredits) ? "Insufficient Credits" : hasTrialCredits && user.credits < 1 ? "Use Trial Credit" : "Publish Site"}
                       </Button>
                     </CardFooter>
                   </Card>
