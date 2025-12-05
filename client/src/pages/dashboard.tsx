@@ -259,24 +259,17 @@ export default function Dashboard() {
           </Link>
         </div>
 
-        {/* Welcome Guide Banner */}
-        {isProfileIncomplete && !welcomeGuideDismissed && (
-          <Card className="mb-8 border-primary/30 bg-gradient-to-r from-primary/5 to-primary/10 relative overflow-hidden">
-            <button 
-              onClick={handleDismissWelcomeGuide}
-              className="absolute top-3 right-3 p-1 rounded-full hover:bg-white/50 transition-colors"
-              aria-label="Dismiss"
-            >
-              <X className="h-4 w-4 text-muted-foreground" />
-            </button>
+        {/* Profile Incomplete Banner - Always shows when profile is incomplete */}
+        {isProfileIncomplete && (
+          <Card className="mb-8 border-amber-200 bg-amber-50 relative overflow-hidden">
             <CardHeader className="pb-2">
-              <CardTitle className="text-xl flex items-center gap-2">
-                <span className="text-2xl">👋</span> Welcome to AgentAssets!
+              <CardTitle className="text-xl flex items-center gap-2 text-amber-800">
+                <AlertTriangle className="h-5 w-5" /> Complete Your Profile
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-sm text-foreground">
-                Before creating your first property site, we recommend completing your profile. This information will appear on all your microsites, helping potential buyers connect with you.
+              <p className="text-sm text-amber-700">
+                Your contact information will appear on all your property sites. Complete your profile to ensure potential buyers can reach you.
               </p>
               
               <div className="flex flex-wrap gap-3">
@@ -286,7 +279,7 @@ export default function Dashboard() {
                     className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm ${
                       item.done 
                         ? 'bg-green-100 text-green-800' 
-                        : 'bg-white/80 text-muted-foreground border border-dashed'
+                        : 'bg-white/80 text-amber-700 border border-amber-200'
                     }`}
                   >
                     <item.icon className="h-4 w-4" />
@@ -298,7 +291,7 @@ export default function Dashboard() {
 
               <div className="pt-2">
                 <Link href="/profile">
-                  <Button className="gap-2">
+                  <Button className="gap-2 bg-amber-600 hover:bg-amber-700">
                     Complete Your Profile
                     <ArrowRight className="h-4 w-4" />
                   </Button>
