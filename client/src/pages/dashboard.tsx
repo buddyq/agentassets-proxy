@@ -191,14 +191,19 @@ export default function Dashboard() {
   };
 
   // Format slug to be URL-safe (lowercase, dashes instead of spaces, remove special chars)
+  // Keep trailing dashes while typing so user can type "hello-world" naturally
   const formatSlug = (text: string): string => {
     return text
       .toLowerCase()
-      .trim()
       .replace(/\s+/g, '-')           // spaces to dashes
       .replace(/[^a-z0-9-]/g, '')     // remove non-alphanumeric except dashes
       .replace(/-+/g, '-')            // collapse multiple dashes
-      .replace(/^-|-$/g, '');         // trim leading/trailing dashes
+      .replace(/^-/, '');             // only trim leading dashes (keep trailing while typing)
+  };
+  
+  // Final format for saving - also trims trailing dashes
+  const finalizeSlug = (text: string): string => {
+    return formatSlug(text).replace(/-$/, '');
   };
 
   const handleOpenSlugDialog = (siteId: string, currentSlug?: string) => {
@@ -230,14 +235,15 @@ export default function Dashboard() {
   };
 
   const handleSaveSlug = () => {
-    if (slugSiteId && slugInput && slugAvailable) {
+    const finalSlug = finalizeSlug(slugInput);
+    if (slugSiteId && finalSlug && slugAvailable) {
       updateSlugMutation.mutate(
-        { id: slugSiteId, slug: slugInput },
+        { id: slugSiteId, slug: finalSlug },
         {
           onSuccess: () => {
             toast({
               title: "URL Updated",
-              description: `Your site is now available at agentassets.com/p/${slugInput}`,
+              description: `Your site is now available at agentassets.com/p/${finalSlug}`,
             });
             setSlugDialogOpen(false);
           },
