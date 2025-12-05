@@ -35,6 +35,7 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUserCredits(id: string, credits: number): Promise<User>;
+  updateUserTrialCredits(id: string, trialCredits: number): Promise<User>;
   updateUserLogo(id: string, logo: string | null): Promise<User>;
   updateUserProfile(id: string, profile: Partial<User>): Promise<User>;
   
@@ -43,9 +44,12 @@ export interface IStorage {
   getSitesByUser(userId: string): Promise<Site[]>;
   getAllSites(): Promise<Site[]>;
   createSite(site: InsertSite): Promise<Site>;
+  createTrialSite(site: InsertSite, trialEndsAt: Date): Promise<Site>;
   updateSite(id: string, site: Partial<InsertSite>): Promise<Site>;
   deleteSite(id: string): Promise<void>;
   updateSiteStats(id: string, stats: { views: number; uniqueVisitors: number; leads: number }): Promise<void>;
+  unpublishSite(id: string): Promise<Site>;
+  republishSite(id: string): Promise<Site>;
   
   // Theme methods
   getTheme(id: string): Promise<Theme | undefined>;
@@ -127,6 +131,15 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async updateUserTrialCredits(id: string, trialCredits: number): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ trialCredits, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
   async updateUserLogo(id: string, logo: string | null): Promise<User> {
     const [user] = await db
       .update(users)
@@ -171,6 +184,19 @@ export class DatabaseStorage implements IStorage {
     return site;
   }
 
+  async createTrialSite(insertSite: InsertSite, trialEndsAt: Date): Promise<Site> {
+    const [site] = await db
+      .insert(sites)
+      .values({
+        ...insertSite,
+        isTrial: true,
+        expiresAt: trialEndsAt,
+        stats: insertSite.stats || { views: 0, uniqueVisitors: 0, leads: 0 }
+      })
+      .returning();
+    return site;
+  }
+
   async updateSite(id: string, siteUpdate: Partial<InsertSite>): Promise<Site> {
     const [site] = await db
       .update(sites)
@@ -189,6 +215,32 @@ export class DatabaseStorage implements IStorage {
       .update(sites)
       .set({ stats })
       .where(eq(sites.id, id));
+  }
+
+  async unpublishSite(id: string): Promise<Site> {
+    const [site] = await db
+      .update(sites)
+      .set({ 
+        status: 'unpublished', 
+        unpublishedAt: new Date(),
+        updatedAt: new Date() 
+      })
+      .where(eq(sites.id, id))
+      .returning();
+    return site;
+  }
+
+  async republishSite(id: string): Promise<Site> {
+    const [site] = await db
+      .update(sites)
+      .set({ 
+        status: 'published', 
+        unpublishedAt: null,
+        updatedAt: new Date() 
+      })
+      .where(eq(sites.id, id))
+      .returning();
+    return site;
   }
 
   // Theme methods

@@ -146,13 +146,49 @@ export async function registerRoutes(
   app.post("/api/sites", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      // Check if user wants to use trial credit
+      const useTrialCredit = req.body.useTrialCredit === true;
+      
+      // Check for available credits
+      const hasRegularCredits = user.credits > 0;
+      const hasTrialCredits = (user.trialCredits || 0) > 0 && user.trialEndsAt && new Date(user.trialEndsAt) > new Date();
+      
+      if (!hasRegularCredits && !hasTrialCredits) {
+        return res.status(403).json({ error: "Insufficient credits. Purchase credits to create new sites." });
+      }
+      
+      // Determine which credit type to use
+      const shouldUseTrial = useTrialCredit && hasTrialCredits;
+      
       const validated = insertSiteSchema.parse({ ...req.body, userId });
-      const site = await storage.createSite(validated);
+      
+      let site;
+      if (shouldUseTrial) {
+        // Create trial site with 7-day expiration
+        const trialEndsAt = user.trialEndsAt ? new Date(user.trialEndsAt) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+        site = await storage.createTrialSite(validated, trialEndsAt);
+        // Decrement trial credits
+        await storage.updateUserTrialCredits(userId, (user.trialCredits || 1) - 1);
+      } else if (hasRegularCredits) {
+        // Create regular site with 3-month expiration (default)
+        site = await storage.createSite(validated);
+        // Decrement regular credits
+        await storage.updateUserCredits(userId, user.credits - 1);
+      } else {
+        return res.status(403).json({ error: "Insufficient credits" });
+      }
+      
       res.status(201).json(site);
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ error: error.errors });
       }
+      console.error("Failed to create site:", error);
       res.status(500).json({ error: "Failed to create site" });
     }
   });
@@ -172,6 +208,63 @@ export async function registerRoutes(
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ error: "Failed to delete site" });
+    }
+  });
+
+  // Unpublish a site (protected)
+  app.post("/api/sites/:id/unpublish", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const site = await storage.getSite(req.params.id);
+      
+      if (!site) {
+        return res.status(404).json({ error: "Site not found" });
+      }
+      
+      if (site.userId !== userId) {
+        return res.status(403).json({ error: "You can only unpublish your own sites" });
+      }
+      
+      if (site.status !== 'published') {
+        return res.status(400).json({ error: "Site is not currently published" });
+      }
+      
+      const updatedSite = await storage.unpublishSite(req.params.id);
+      res.json(updatedSite);
+    } catch (error) {
+      console.error("Failed to unpublish site:", error);
+      res.status(500).json({ error: "Failed to unpublish site" });
+    }
+  });
+
+  // Republish a site (protected)
+  app.post("/api/sites/:id/republish", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const site = await storage.getSite(req.params.id);
+      
+      if (!site) {
+        return res.status(404).json({ error: "Site not found" });
+      }
+      
+      if (site.userId !== userId) {
+        return res.status(403).json({ error: "You can only republish your own sites" });
+      }
+      
+      if (site.status === 'published') {
+        return res.status(400).json({ error: "Site is already published" });
+      }
+      
+      // Check if site has expired
+      if (site.expiresAt && new Date(site.expiresAt) < new Date()) {
+        return res.status(403).json({ error: "Site has expired. Please create a new site or purchase a renewal." });
+      }
+      
+      const updatedSite = await storage.republishSite(req.params.id);
+      res.json(updatedSite);
+    } catch (error) {
+      console.error("Failed to republish site:", error);
+      res.status(500).json({ error: "Failed to republish site" });
     }
   });
 
