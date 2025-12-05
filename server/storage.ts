@@ -217,14 +217,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getSiteByHost(host: string): Promise<Site | undefined> {
-    // First check for custom domain match
-    const [siteByDomain] = await db.select().from(sites).where(eq(sites.customDomain, host));
+    // Normalize host: lowercase and strip port
+    const normalizedHost = host.toLowerCase().replace(/:\d+$/, '');
+    
+    // First check for custom domain match (exact match, case-insensitive)
+    const allSites = await db.select().from(sites);
+    const siteByDomain = allSites.find(s => 
+      s.customDomain && s.customDomain.toLowerCase() === normalizedHost
+    );
     if (siteByDomain) return siteByDomain;
     
     // Then check for subdomain match (host format: subdomain.agentassets.com)
-    const subdomainMatch = host.match(/^([^.]+)\.agentassets\.com$/i);
+    const subdomainMatch = normalizedHost.match(/^([^.]+)\.agentassets\.com$/);
     if (subdomainMatch) {
-      const subdomain = subdomainMatch[1].toLowerCase();
+      const subdomain = subdomainMatch[1];
       const [siteBySubdomain] = await db.select().from(sites).where(eq(sites.subdomain, subdomain));
       return siteBySubdomain || undefined;
     }
@@ -241,31 +247,55 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createSite(insertSite: InsertSite): Promise<Site> {
-    const subdomain = generateSubdomain(insertSite.address);
-    const [site] = await db
-      .insert(sites)
-      .values({
-        ...insertSite,
-        subdomain,
-        stats: insertSite.stats || { views: 0, uniqueVisitors: 0, leads: 0 }
-      })
-      .returning();
-    return site;
+    // Retry subdomain generation on collision (max 5 attempts)
+    for (let attempt = 0; attempt < 5; attempt++) {
+      try {
+        const subdomain = generateSubdomain(insertSite.address);
+        const [site] = await db
+          .insert(sites)
+          .values({
+            ...insertSite,
+            subdomain,
+            stats: insertSite.stats || { views: 0, uniqueVisitors: 0, leads: 0 }
+          })
+          .returning();
+        return site;
+      } catch (error: any) {
+        // Check for unique constraint violation on subdomain
+        if (error?.code === '23505' && error?.constraint?.includes('subdomain') && attempt < 4) {
+          continue; // Retry with new subdomain
+        }
+        throw error;
+      }
+    }
+    throw new Error('Failed to generate unique subdomain after multiple attempts');
   }
 
   async createTrialSite(insertSite: InsertSite, trialEndsAt: Date): Promise<Site> {
-    const subdomain = generateSubdomain(insertSite.address);
-    const [site] = await db
-      .insert(sites)
-      .values({
-        ...insertSite,
-        subdomain,
-        isTrial: true,
-        expiresAt: trialEndsAt,
-        stats: insertSite.stats || { views: 0, uniqueVisitors: 0, leads: 0 }
-      })
-      .returning();
-    return site;
+    // Retry subdomain generation on collision (max 5 attempts)
+    for (let attempt = 0; attempt < 5; attempt++) {
+      try {
+        const subdomain = generateSubdomain(insertSite.address);
+        const [site] = await db
+          .insert(sites)
+          .values({
+            ...insertSite,
+            subdomain,
+            isTrial: true,
+            expiresAt: trialEndsAt,
+            stats: insertSite.stats || { views: 0, uniqueVisitors: 0, leads: 0 }
+          })
+          .returning();
+        return site;
+      } catch (error: any) {
+        // Check for unique constraint violation on subdomain
+        if (error?.code === '23505' && error?.constraint?.includes('subdomain') && attempt < 4) {
+          continue; // Retry with new subdomain
+        }
+        throw error;
+      }
+    }
+    throw new Error('Failed to generate unique subdomain after multiple attempts');
   }
 
   async updateSite(id: string, siteUpdate: Partial<InsertSite>): Promise<Site> {

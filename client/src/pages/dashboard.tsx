@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { useSites, useDeleteSite, useUpdateSite, useThemes, useLeads, useLayouts, useUnpublishSite, useRepublishSite, useSitePasswords } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
-import { Plus, ExternalLink, Trash2, Globe, BarChart3, Users, MousePointerClick, TrendingUp, Pencil, MessageSquare, Mail, Phone, Calendar, ChevronRight, LayoutDashboard, UserCircle, Image, FileText, Share2, ArrowRight, X, EyeOff, Eye, Clock, AlertTriangle, Lock } from "lucide-react";
+import { Plus, ExternalLink, Trash2, Globe, BarChart3, Users, MousePointerClick, TrendingUp, Pencil, MessageSquare, Mail, Phone, Calendar, ChevronRight, LayoutDashboard, UserCircle, Image, FileText, Share2, ArrowRight, X, EyeOff, Eye, Clock, AlertTriangle, Lock, Copy, Check, Link2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format, subDays, isPast } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -57,6 +57,31 @@ export default function Dashboard() {
   const [domainDialogOpen, setDomainDialogOpen] = useState(false);
   const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
   const [domainInput, setDomainInput] = useState("");
+  
+  // URL Copy State
+  const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
+  
+  // Helper to get the primary URL for a site
+  const getSiteUrl = (site: { subdomain?: string | null; customDomain?: string | null }) => {
+    if (site.customDomain) {
+      return `https://${site.customDomain}`;
+    }
+    if (site.subdomain) {
+      return `https://${site.subdomain}.agentassets.com`;
+    }
+    return null;
+  };
+  
+  const handleCopyUrl = async (url: string) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedUrl(url);
+      toast({ title: "Link copied!", description: "The property site URL has been copied to your clipboard." });
+      setTimeout(() => setCopiedUrl(null), 2000);
+    } catch (error) {
+      toast({ title: "Failed to copy", description: "Please copy the URL manually.", variant: "destructive" });
+    }
+  };
 
   // Delete Dialog State
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -389,12 +414,45 @@ export default function Dashboard() {
                           <span className="text-muted-foreground">Theme:</span>
                           <span>{getThemeName(site.themeId)}</span>
                         </div>
-                        {site.customDomain && (
-                          <div className="flex justify-between items-center pt-2 border-t mt-2">
-                            <span className="text-muted-foreground flex items-center gap-1"><Globe className="h-3 w-3" /> Domain:</span>
-                            <a href={`https://${site.customDomain}`} target="_blank" className="font-medium text-primary hover:underline truncate max-w-[150px]" title={site.customDomain}>
-                              {site.customDomain}
-                            </a>
+                        {/* Site URL with copy button */}
+                        {((site as any).subdomain || site.customDomain) && (
+                          <div className="pt-2 border-t mt-2 space-y-1">
+                            <div className="flex items-center gap-1 text-muted-foreground">
+                              <Link2 className="h-3 w-3" />
+                              <span className="text-xs">Site URL:</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <a 
+                                href={getSiteUrl(site as any) || '#'} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-xs font-medium text-primary hover:underline truncate flex-1"
+                                title={getSiteUrl(site as any) || ''}
+                              >
+                                {site.customDomain || `${(site as any).subdomain}.agentassets.com`}
+                              </a>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 shrink-0"
+                                onClick={() => {
+                                  const url = getSiteUrl(site as any);
+                                  if (url) handleCopyUrl(url);
+                                }}
+                                data-testid={`button-copy-url-${site.id}`}
+                              >
+                                {copiedUrl === getSiteUrl(site as any) ? (
+                                  <Check className="h-3 w-3 text-green-600" />
+                                ) : (
+                                  <Copy className="h-3 w-3" />
+                                )}
+                              </Button>
+                            </div>
+                            {site.customDomain && (site as any).subdomain && (
+                              <p className="text-[10px] text-muted-foreground">
+                                Also: {(site as any).subdomain}.agentassets.com
+                              </p>
+                            )}
                           </div>
                         )}
                       </div>

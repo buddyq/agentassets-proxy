@@ -50,8 +50,18 @@ Preferred communication style: Simple, everyday language.
 
 **Schema Design**:
 - **Users**: ID, name, email, credits (default 0), logo (default logo URL), timestamps. New users start with 0 credits and must purchase credits to create sites.
-- **Sites**: Property details (address, price, bedrooms, etc.), associated user, theme, template, custom domain, logo (per-site override), analytics stats (views, unique visitors, leads), timestamps.
+- **Sites**: Property details (address, price, bedrooms, etc.), associated user, theme, template, subdomain, custom domain, logo (per-site override), analytics stats (views, unique visitors, leads), timestamps.
 - **Themes**: Preset and custom themes with color palettes and optional logos. Preset themes (userId null) available to all users, custom themes tied to specific users.
+
+**Subdomain System**:
+- Each site automatically gets a subdomain like `3401-toro-canyon-9fb28b69.agentassets.com`
+- Subdomain is generated from the property address slug + random hex suffix for uniqueness
+- Collision-resistant: retries up to 5 times on unique constraint violation
+- Custom domain takes priority over subdomain when set
+- Frontend detects subdomain/custom domain via host header and routes to SubdomainSiteView
+- Dashboard displays the site URL with copy button (shows custom domain if set, otherwise subdomain)
+- Host lookup normalizes case and strips ports for reliable matching
+- DNS requirement: `*.agentassets.com` wildcard DNS record pointing to the deployment IP
 
 **Logo Management**: Two-tier logo system with user defaults and site-level overrides:
 - Users upload a default logo in the dashboard (stored in `users.logo`)

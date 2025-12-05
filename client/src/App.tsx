@@ -20,14 +20,17 @@ function ScrollToTop() {
 // Detect if we're on a subdomain of agentassets.com
 function useSubdomainDetection() {
   return useMemo(() => {
+    // Normalize: lowercase and strip port
     const hostname = window.location.hostname.toLowerCase();
+    const host = window.location.host.toLowerCase().replace(/:\d+$/, '');
+    
     // Check for subdomain pattern: xxx.agentassets.com (but not www or app)
     const subdomainMatch = hostname.match(/^([^.]+)\.agentassets\.com$/);
     if (subdomainMatch) {
       const subdomain = subdomainMatch[1];
       // Exclude known app subdomains
       if (subdomain !== 'www' && subdomain !== 'app' && subdomain !== 'api') {
-        return { isSubdomain: true, subdomain, host: hostname };
+        return { isSubdomain: true, subdomain, host };
       }
     }
     // Also check for custom domains (not agentassets.com and not replit dev domains)
@@ -35,7 +38,7 @@ function useSubdomainDetection() {
         !hostname.includes('replit') && 
         !hostname.includes('localhost') &&
         hostname !== '127.0.0.1') {
-      return { isSubdomain: false, customDomain: hostname, host: hostname };
+      return { isSubdomain: false, customDomain: hostname, host };
     }
     return { isSubdomain: false, subdomain: null, host: null };
   }, []);
