@@ -105,6 +105,7 @@ export default function EditSite() {
   const [newDocName, setNewDocName] = useState("");
   const [pendingDocUrl, setPendingDocUrl] = useState<string | null>(null);
   const [draggedPhoto, setDraggedPhoto] = useState<number | null>(null);
+  const [dropTarget, setDropTarget] = useState<number | null>(null);
   const scrollIntervalRef = useRef<number | null>(null);
   
   // Auto-scroll during drag
@@ -316,28 +317,42 @@ export default function EditSite() {
     }
   };
 
-  const handleDragStart = (index: number) => {
+  const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedPhoto(index);
+    setDropTarget(index);
+    e.dataTransfer.effectAllowed = 'move';
   };
 
   const handleDragOver = (e: React.DragEvent, index: number) => {
     e.preventDefault();
     handleDragScroll(e);
-    if (draggedPhoto === null || draggedPhoto === index || !site?.photos) return;
+    if (draggedPhoto === null) return;
+    setDropTarget(index);
+  };
+
+  const handleDrop = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    stopDragScroll();
+    
+    if (draggedPhoto === null || draggedPhoto === index || !site?.photos || !siteId) {
+      setDraggedPhoto(null);
+      setDropTarget(null);
+      return;
+    }
 
     const photos = [...site.photos];
     const draggedItem = photos[draggedPhoto];
     photos.splice(draggedPhoto, 1);
     photos.splice(index, 0, draggedItem);
 
-    if (siteId) {
-      reorderPhotosMutation.mutate({ siteId, photos });
-    }
-    setDraggedPhoto(index);
+    reorderPhotosMutation.mutate({ siteId, photos });
+    setDraggedPhoto(null);
+    setDropTarget(null);
   };
 
   const handleDragEnd = () => {
     setDraggedPhoto(null);
+    setDropTarget(null);
     stopDragScroll();
   };
 
@@ -691,12 +706,13 @@ export default function EditSite() {
                             <div 
                               key={photo}
                               draggable
-                              onDragStart={() => handleDragStart(index)}
+                              onDragStart={(e) => handleDragStart(e, index)}
                               onDragOver={(e) => handleDragOver(e, index)}
+                              onDrop={(e) => handleDrop(e, index)}
                               onDragEnd={handleDragEnd}
                               className={`relative aspect-square rounded-lg overflow-hidden group cursor-grab active:cursor-grabbing ${
-                                draggedPhoto === index ? 'opacity-50 ring-2 ring-primary' : ''
-                              } ${isHero ? 'ring-2 ring-yellow-500' : ''}`}
+                                draggedPhoto === index ? 'opacity-50' : ''
+                              } ${dropTarget === index && draggedPhoto !== null && draggedPhoto !== index ? 'ring-2 ring-primary ring-offset-2' : ''} ${isHero ? 'ring-2 ring-yellow-500' : ''}`}
                             >
                               <div className="absolute top-2 left-2 bg-black/50 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10">
                                 <GripVertical className="h-4 w-4" />
