@@ -219,20 +219,19 @@ export default function Dashboard() {
   const hasTrialCredits = user && (user.trialCredits || 0) > 0 && 
     user.trialEndsAt && new Date(user.trialEndsAt) > new Date();
 
-  // Mock data generation for chart based on selected site
+  // Analytics data - currently shows empty until real tracking is implemented
   const analyticsData = useMemo(() => {
     if (!selectedSiteForAnalytics) return [];
-    const site = sites.find(s => s.id === selectedSiteForAnalytics);
-    const baseViews = site?.stats?.views || 150;
     
+    // Return empty data - daily tracking not yet implemented
     return Array.from({ length: 7 }).map((_, i) => {
       const date = subDays(new Date(), 6 - i);
       return {
         name: format(date, 'MMM dd'),
-        views: Math.floor(Math.random() * (baseViews / 2)) + 10,
+        views: 0,
       };
     });
-  }, [selectedSiteForAnalytics, sites]);
+  }, [selectedSiteForAnalytics]);
 
   const activeSite = sites.find(s => s.id === selectedSiteForAnalytics);
 
