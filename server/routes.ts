@@ -790,13 +790,13 @@ export async function registerRoutes(
       const userId = session.metadata?.userId;
       const credits = parseInt(session.metadata?.credits || '0', 10);
 
-      if (userId !== req.user.id) {
+      if (!userId || userId !== req.user.id) {
         return res.status(403).json({ error: "Unauthorized" });
       }
 
       const user = await storage.getUser(userId);
       if (user) {
-        await storage.updateUserCredits(userId, user.credits + credits);
+        await storage.updateUserCredits(user.id, user.credits + credits);
       }
 
       res.json({ success: true, credits });

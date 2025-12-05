@@ -1,49 +1,105 @@
+import { useEffect, useState } from "react";
+import { useLocation, useSearch } from "wouter";
+import { useQueryClient } from "@tanstack/react-query";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
-import { useUpdateCredits, usePartnerDiscount } from "@/lib/api";
-import { CreditCard, Sparkles } from "lucide-react";
+import { useStripeCheckout, usePartnerDiscount } from "@/lib/api";
+import { CreditCard, Sparkles, CheckCircle, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const PACKAGES = [
-  { id: 'starter', name: 'Starter', credits: 1, price: 29 },
-  { id: 'growth', name: 'Growth', credits: 5, price: 125, popular: true },
-  { id: 'agency', name: 'Agency', credits: 10, price: 200 },
+  { id: 'starter' as const, name: 'Starter', credits: 1, price: 29 },
+  { id: 'growth' as const, name: 'Growth', credits: 5, price: 125, popular: true },
+  { id: 'agency' as const, name: 'Agency', credits: 10, price: 200 },
 ];
 
 export default function Credits() {
   const { user } = useAuth();
-  const updateCreditsMutation = useUpdateCredits();
+  const queryClient = useQueryClient();
+  const checkoutMutation = useStripeCheckout();
   const { data: partnerData } = usePartnerDiscount();
   const { toast } = useToast();
+  const searchString = useSearch();
+  const [, navigate] = useLocation();
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [purchasedCredits, setPurchasedCredits] = useState(0);
   
   const discountPercent = partnerData?.discount || 0;
 
-  const handlePurchase = (pkg: typeof PACKAGES[0]) => {
+  useEffect(() => {
+    const params = new URLSearchParams(searchString);
+    const success = params.get('success');
+    const credits = params.get('credits');
+    const canceled = params.get('canceled');
+
+    if (success === 'true' && credits) {
+      setShowSuccess(true);
+      setPurchasedCredits(parseInt(credits, 10));
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+      navigate('/credits', { replace: true });
+    }
+
+    if (canceled === 'true') {
+      toast({
+        title: "Purchase Canceled",
+        description: "Your purchase was canceled. No charges were made.",
+        variant: "destructive",
+      });
+      navigate('/credits', { replace: true });
+    }
+  }, [searchString, navigate, queryClient, toast]);
+
+  const handlePurchase = async (pkg: typeof PACKAGES[0]) => {
     if (!user) return;
     
-    const finalPrice = discountPercent > 0 
-      ? Math.floor(pkg.price * (1 - discountPercent / 100))
-      : pkg.price;
-    
-    console.log(`Purchase: ${pkg.credits} credits at $${finalPrice} (${discountPercent}% discount applied)`);
-    
-    updateCreditsMutation.mutate(
-      user.credits + pkg.credits,
-      {
-        onSuccess: () => {
-          toast({
-            title: "Purchase Successful",
-            description: discountPercent > 0
-              ? `Added ${pkg.credits} credits to your account with ${discountPercent}% partner discount!`
-              : `Added ${pkg.credits} credits to your account.`,
-          });
-        }
+    try {
+      const result = await checkoutMutation.mutateAsync(pkg.id);
+      if (result.url) {
+        window.location.href = result.url;
       }
-    );
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to start checkout. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
+
+  if (showSuccess) {
+    return (
+      <div className="min-h-screen flex flex-col bg-muted/10">
+        <Navbar />
+        <main className="container mx-auto px-4 py-12 flex-1">
+          <div className="max-w-md mx-auto text-center">
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <CheckCircle className="h-12 w-12 text-green-600" />
+            </div>
+            <h1 className="text-3xl font-bold text-secondary mb-4">Payment Successful!</h1>
+            <p className="text-muted-foreground mb-6">
+              {purchasedCredits} credit{purchasedCredits > 1 ? 's have' : ' has'} been added to your account.
+            </p>
+            <div className="bg-white rounded-xl p-6 shadow-sm border mb-6">
+              <p className="text-sm text-muted-foreground mb-2">Your new balance</p>
+              <p className="text-4xl font-bold text-primary">{user?.credits ?? 0} credits</p>
+            </div>
+            <div className="flex gap-4 justify-center">
+              <Button onClick={() => setShowSuccess(false)} variant="outline">
+                Purchase More
+              </Button>
+              <Button onClick={() => navigate('/dashboard')}>
+                Go to Dashboard
+              </Button>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-muted/10">
@@ -126,7 +182,7 @@ export default function Credits() {
                       {discountPercent > 0 && (
                         <div className="flex justify-between text-amber-600">
                           <span className="text-sm">You save</span>
-                          <span className="font-medium text-sm">${(pkg.price - discountedPrice).toFixed(2)}</span>
+                          <span className="font-medium text-sm">${pkg.price - discountedPrice}</span>
                         </div>
                       )}
                     </div>
@@ -135,8 +191,15 @@ export default function Credits() {
                     <Button 
                       className={`w-full ${pkg.popular ? 'bg-primary hover:bg-primary/90' : ''}`}
                       onClick={() => handlePurchase(pkg)}
+                      disabled={checkoutMutation.isPending}
+                      data-testid={`button-purchase-${pkg.id}`}
                     >
-                      <CreditCard className="mr-2 h-4 w-4" /> Purchase
+                      {checkoutMutation.isPending ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <CreditCard className="mr-2 h-4 w-4" />
+                      )}
+                      Purchase
                     </Button>
                   </CardFooter>
                 </Card>
@@ -145,7 +208,7 @@ export default function Credits() {
           </div>
 
           <div className="mt-12 text-center text-sm text-muted-foreground max-w-2xl mx-auto">
-            <p>Secure payment processing. All major credit cards accepted. 30-day money back guarantee on unused credits.</p>
+            <p>Secure payment processing powered by Stripe. All major credit cards accepted.</p>
           </div>
         </div>
       </main>

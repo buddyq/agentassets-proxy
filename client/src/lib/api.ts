@@ -96,6 +96,21 @@ export function usePartnerDiscount() {
   });
 }
 
+// Stripe checkout
+export function useStripeCheckout() {
+  return useMutation({
+    mutationFn: async (packageId: 'starter' | 'growth' | 'agency') => {
+      const res = await fetch(`${API_BASE}/stripe/checkout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ packageId })
+      });
+      if (!res.ok) throw new Error('Failed to create checkout session');
+      return res.json() as Promise<{ url: string }>;
+    }
+  });
+}
+
 // Sites API (uses authenticated user)
 export function useSites() {
   return useQuery({
