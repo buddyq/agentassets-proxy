@@ -1099,7 +1099,6 @@ function ModernDetails({ site, theme }: { site: Site; theme?: Theme }) {
   const details = [
     { label: 'Bedrooms', value: site.bedrooms, icon: Bed },
     { label: 'Bathrooms', value: site.bathrooms, icon: Bath },
-    { label: 'Square Feet', value: site.sqft?.toLocaleString(), icon: Square },
     { label: 'Year Built', value: site.yearBuilt, icon: Calendar },
     { label: 'Stories', value: site.stories, icon: Building },
   ].filter(d => d.value);
