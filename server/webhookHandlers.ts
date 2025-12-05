@@ -1,5 +1,6 @@
-import { getStripeSync, getUncachableStripeClient } from './stripeClient';
+import { getStripeSync, getUncachableStripeClient, getStripeSecretKey } from './stripeClient';
 import { storage } from './storage';
+import Stripe from 'stripe';
 
 export class WebhookHandlers {
   static async processWebhook(payload: Buffer, signature: string, uuid: string): Promise<void> {
@@ -14,6 +15,22 @@ export class WebhookHandlers {
 
     const sync = await getStripeSync();
     await sync.processWebhook(payload, signature, uuid);
+
+    const stripe = await getUncachableStripeClient();
+    const webhookSecret = await sync.getManagedWebhookSecret(uuid);
+    
+    let event: Stripe.Event;
+    try {
+      event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
+    } catch (err: any) {
+      console.error('Failed to construct event for custom handling:', err.message);
+      return;
+    }
+
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object as Stripe.Checkout.Session;
+      await WebhookHandlers.handleCheckoutComplete(session);
+    }
   }
 
   static async handleCheckoutComplete(session: any): Promise<void> {
