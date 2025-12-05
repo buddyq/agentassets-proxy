@@ -1878,8 +1878,8 @@ function MagazineHero({ site, theme, heroImage }: { site: Site; theme?: Theme; h
           <h1 
             className="magazine-hero-text"
             style={{ 
-              fontSize: '24px',
-              fontWeight: '300',
+              fontSize: '27px',
+              fontWeight: '400',
               letterSpacing: '-0.02em'
             }}
           >
