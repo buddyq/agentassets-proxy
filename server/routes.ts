@@ -2546,9 +2546,27 @@ export async function registerRoutes(
         return res.status(404).json({ error: "User not found" });
       }
       
-      // Hash and update the password
+      // Hash and update the password using the correct method
       const hashedPassword = await bcrypt.hash(password, 10);
-      await storage.updateUserProfile(user.id, { password: hashedPassword });
+      await storage.updateUserPassword(user.id, hashedPassword);
+      
+      // Generate username from email if user doesn't have one
+      let username = user.username;
+      if (!username && user.email) {
+        // Create username from email prefix
+        const emailPrefix = user.email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+        // Check if username exists, add random suffix if needed
+        let candidateUsername = emailPrefix;
+        let existingUser = await storage.getUserByUsername(candidateUsername);
+        let attempts = 0;
+        while (existingUser && attempts < 10) {
+          candidateUsername = `${emailPrefix}${Math.floor(Math.random() * 1000)}`;
+          existingUser = await storage.getUserByUsername(candidateUsername);
+          attempts++;
+        }
+        username = candidateUsername;
+        await storage.updateUserProfile(user.id, { username });
+      }
       
       // Update member status to active
       await storage.updateBrokerageMember(member.id, { 
@@ -2559,7 +2577,7 @@ export async function registerRoutes(
       // Mark token as used
       await storage.markTokenUsed(invitationToken.id);
       
-      res.json({ success: true, username: user.username });
+      res.json({ success: true, username });
     } catch (error) {
       console.error("Error accepting invitation:", error);
       res.status(500).json({ error: "Failed to set up account" });

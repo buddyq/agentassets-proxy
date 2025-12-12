@@ -285,7 +285,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateUserProfile(id: string, profile: Partial<User>): Promise<User> {
-    const { id: _id, username: _username, password: _password, credits: _credits, createdAt: _createdAt, ...updateData } = profile;
+    const { id: _id, password: _password, credits: _credits, createdAt: _createdAt, ...updateData } = profile;
     const [user] = await db
       .update(users)
       .set({ ...updateData, updatedAt: new Date() })
