@@ -74,6 +74,7 @@ export default function Profile() {
       toast({
         title: "Profile Image Uploaded",
         description: "Your profile photo has been updated.",
+        variant: "success",
       });
     }
   };
@@ -88,6 +89,7 @@ export default function Profile() {
       toast({
         title: "Logo Uploaded",
         description: "Your default logo has been updated.",
+        variant: "success",
       });
     }
   };
@@ -113,6 +115,7 @@ export default function Profile() {
         toast({
           title: "Profile Updated",
           description: "Your agent information has been saved.",
+          variant: "success",
         });
         setLocation("/dashboard");
       },
@@ -151,6 +154,7 @@ export default function Profile() {
           toast({
             title: "Password Changed",
             description: "Your password has been updated successfully.",
+            variant: "success",
           });
           setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
         },

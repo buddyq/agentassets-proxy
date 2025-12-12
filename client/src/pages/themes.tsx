@@ -54,6 +54,7 @@ export default function Themes() {
           toast({
             title: "Theme Created",
             description: "Your new custom theme has been saved.",
+            variant: "success",
           });
         }
       }
@@ -98,6 +99,7 @@ export default function Themes() {
           toast({
             title: "Theme Updated",
             description: "Your custom theme has been updated.",
+            variant: "success",
           });
         }
       }
@@ -121,6 +123,7 @@ export default function Themes() {
     toast({
       title: "Logo Uploaded",
       description: "Logo successfully attached to this theme.",
+      variant: "success",
     });
   };
 
@@ -362,6 +365,7 @@ export default function Themes() {
                             toast({
                               title: "Theme Deleted",
                               description: `${theme.name} has been removed.`,
+                              variant: "success",
                             });
                           }
                         });

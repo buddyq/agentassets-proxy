@@ -84,7 +84,7 @@ function AddAgentDialog({ onSuccess }: { onSuccess: () => void }) {
     e.preventDefault();
     try {
       await addMember.mutateAsync({ name, email, phone: phone || undefined });
-      toast({ title: 'Agent added successfully' });
+      toast({ title: 'Agent added successfully', variant: 'success' });
       setOpen(false);
       setName('');
       setEmail('');
@@ -171,7 +171,7 @@ function CreateGroupDialog({ onSuccess }: { onSuccess: () => void }) {
     e.preventDefault();
     try {
       await createGroup.mutateAsync({ name, description: description || undefined });
-      toast({ title: 'Group created successfully' });
+      toast({ title: 'Group created successfully', variant: 'success' });
       setOpen(false);
       setName('');
       setDescription('');
@@ -456,7 +456,7 @@ export default function BrokerageDashboard() {
       setProcessingSuccess(true);
       confirmSubscription.mutateAsync(sessionId)
         .then(() => {
-          toast({ title: 'Welcome! Your brokerage has been created successfully.' });
+          toast({ title: 'Welcome! Your brokerage has been created successfully.', variant: 'success' });
           refetchBrokerage();
           window.history.replaceState({}, '', '/brokerage');
         })
@@ -562,7 +562,7 @@ export default function BrokerageDashboard() {
     if (!confirm('Are you sure you want to remove this agent?')) return;
     try {
       await removeMember.mutateAsync(memberId);
-      toast({ title: 'Agent removed' });
+      toast({ title: 'Agent removed', variant: 'success' });
       refetchMembers();
       refetchBrokerage();
     } catch (error: any) {
@@ -573,7 +573,7 @@ export default function BrokerageDashboard() {
   const handlePromoteAgent = async (memberId: string) => {
     try {
       await updateMember.mutateAsync({ memberId, updates: { role: 'admin' } });
-      toast({ title: 'Agent promoted to admin' });
+      toast({ title: 'Agent promoted to admin', variant: 'success' });
       refetchMembers();
     } catch (error) {
       toast({ title: 'Failed to promote agent', variant: 'destructive' });
@@ -583,7 +583,7 @@ export default function BrokerageDashboard() {
   const handleDeleteGroup = async (groupId: string) => {
     try {
       await deleteGroup.mutateAsync(groupId);
-      toast({ title: 'Group deleted' });
+      toast({ title: 'Group deleted', variant: 'success' });
       refetchGroups();
     } catch (error) {
       toast({ title: 'Failed to delete group', variant: 'destructive' });
@@ -594,7 +594,7 @@ export default function BrokerageDashboard() {
     if (!confirm('Are you sure you want to delete this site?')) return;
     try {
       await deleteSite.mutateAsync(siteId);
-      toast({ title: 'Site deleted' });
+      toast({ title: 'Site deleted', variant: 'success' });
     } catch (error) {
       toast({ title: 'Failed to delete site', variant: 'destructive' });
     }
@@ -1024,7 +1024,7 @@ export default function BrokerageDashboard() {
                         if (result.successful && result.successful.length > 0) {
                           const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
                           setBrokerageLogoEdit(normalizedUrl);
-                          toast({ title: 'Logo uploaded' });
+                          toast({ title: 'Logo uploaded', variant: 'success' });
                         }
                       }}
                       buttonClassName="bg-primary text-primary-foreground hover:bg-primary/90"
@@ -1046,7 +1046,7 @@ export default function BrokerageDashboard() {
                         logo: brokerageLogoEdit,
                         website: brokerageWebsiteEdit.trim() || null
                       });
-                      toast({ title: 'Brokerage settings updated' });
+                      toast({ title: 'Brokerage settings updated', variant: 'success' });
                       refetchBrokerage();
                     } catch (error: any) {
                       toast({ title: error.message || 'Failed to update brokerage', variant: 'destructive' });
@@ -1155,7 +1155,7 @@ export default function BrokerageDashboard() {
                         variant="outline"
                         onClick={async () => {
                           await removeFromGroup.mutateAsync({ groupId: selectedGroup!, userId: member.userId });
-                          toast({ title: 'Removed from group' });
+                          toast({ title: 'Removed from group', variant: 'success' });
                         }}
                       >
                         Remove
@@ -1166,7 +1166,7 @@ export default function BrokerageDashboard() {
                         onClick={async () => {
                           try {
                             await addToGroup.mutateAsync({ groupId: selectedGroup!, userId: member.userId });
-                            toast({ title: 'Added to group' });
+                            toast({ title: 'Added to group', variant: 'success' });
                           } catch (error: any) {
                             toast({ title: error.message, variant: 'destructive' });
                           }

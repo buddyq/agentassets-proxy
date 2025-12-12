@@ -40,6 +40,7 @@ export default function Contact() {
     toast({
       title: "Message Sent!",
       description: "We'll get back to you within 24 hours.",
+      variant: "success",
     });
     
     setFormData({ name: "", email: "", company: "", subject: "", message: "" });
