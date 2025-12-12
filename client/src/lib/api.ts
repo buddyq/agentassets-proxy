@@ -550,6 +550,47 @@ export function useSiteLeads(siteId: string) {
 
 // ========= Admin API Hooks =========
 
+// Admin Stats Types
+export interface AdminStats {
+  users: {
+    total: number;
+    new30d: number;
+    new7d: number;
+    brokerAccounts: number;
+    individualAccounts: number;
+    totalCreditsHeld: number;
+  };
+  sites: {
+    total: number;
+    published: number;
+    draft: number;
+    new30d: number;
+    new7d: number;
+    totalViews: number;
+    totalUniqueVisitors: number;
+  };
+  leads: {
+    total: number;
+    new30d: number;
+    new7d: number;
+  };
+  recentUsers: Omit<User, 'password'>[];
+  recentSites: Site[];
+  topSitesByViews: Site[];
+}
+
+// Admin Stats
+export function useAdminStats() {
+  return useQuery({
+    queryKey: ['admin', 'stats'],
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE}/admin/stats`);
+      if (!res.ok) throw new Error('Failed to fetch admin stats');
+      return res.json() as Promise<AdminStats>;
+    }
+  });
+}
+
 // Admin Coupons
 export function useAdminCoupons() {
   return useQuery({

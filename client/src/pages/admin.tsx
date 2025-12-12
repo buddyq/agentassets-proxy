@@ -14,9 +14,10 @@ import {
   useAdminUsers, useAdminUpdateUserCredits, useAdminDeleteUser,
   useAdminBrokerages, useAdminBrokerageTemplates, useAdminAssignTemplateToBrokerage, useAdminRemoveTemplateFromBrokerage,
   useAdminAllBrokerageTemplates,
+  useAdminStats,
   type BrokerageWithOwner, type BrokerageTemplate
 } from "@/lib/api";
-import { Plus, Palette, Trash2, Shield, Pencil, LayoutTemplate, Ticket, Users, CreditCard, Gift, Clock, Hash, Calendar, Loader2, Building2, Check, Infinity } from "lucide-react";
+import { Plus, Palette, Trash2, Shield, Pencil, LayoutTemplate, Ticket, Users, CreditCard, Gift, Clock, Hash, Calendar, Loader2, Building2, Check, Infinity, TrendingUp, Eye, FileText, ArrowUpRight, Globe } from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -34,6 +35,7 @@ export default function AdminDashboard() {
   const { data: layouts = [] } = useLayouts({ preset: true });
   const { data: coupons = [], isError: couponsError } = useAdminCoupons();
   const { data: users = [], isError: usersError } = useAdminUsers();
+  const { data: stats, isLoading: statsLoading } = useAdminStats();
   const createThemeMutation = useCreateTheme();
   const updateThemeMutation = useUpdateTheme();
   const deleteThemeMutation = useDeleteTheme();
@@ -455,19 +457,11 @@ export default function AdminDashboard() {
             </div>
         </div>
 
-        <Tabs defaultValue="themes" className="mb-8">
-          <TabsList className="mb-6">
-            <TabsTrigger value="themes" className="gap-2">
-              <Palette className="h-4 w-4" />
-              Color Themes
-            </TabsTrigger>
-            <TabsTrigger value="layouts" className="gap-2">
-              <LayoutTemplate className="h-4 w-4" />
-              Layouts
-            </TabsTrigger>
-            <TabsTrigger value="coupons" className="gap-2">
-              <Ticket className="h-4 w-4" />
-              Coupons
+        <Tabs defaultValue="overview" className="mb-8">
+          <TabsList className="mb-6 flex-wrap">
+            <TabsTrigger value="overview" className="gap-2">
+              <TrendingUp className="h-4 w-4" />
+              Overview
             </TabsTrigger>
             <TabsTrigger value="users" className="gap-2">
               <Users className="h-4 w-4" />
@@ -477,7 +471,243 @@ export default function AdminDashboard() {
               <Building2 className="h-4 w-4" />
               Brokerages
             </TabsTrigger>
+            <TabsTrigger value="themes" className="gap-2">
+              <Palette className="h-4 w-4" />
+              Themes
+            </TabsTrigger>
+            <TabsTrigger value="layouts" className="gap-2">
+              <LayoutTemplate className="h-4 w-4" />
+              Layouts
+            </TabsTrigger>
+            <TabsTrigger value="coupons" className="gap-2">
+              <Ticket className="h-4 w-4" />
+              Coupons
+            </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="overview">
+            {statsLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : stats ? (
+              <div className="space-y-6">
+                {/* Key Metrics */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardDescription>Total Users</CardDescription>
+                      <CardTitle className="text-3xl flex items-center gap-2">
+                        {stats.users.total}
+                        <Badge variant="secondary" className="text-xs font-normal">
+                          +{stats.users.new7d} this week
+                        </Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex gap-4 text-sm text-muted-foreground">
+                        <span>{stats.users.individualAccounts} individual</span>
+                        <span>{stats.users.brokerAccounts} broker</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardDescription>Total Sites</CardDescription>
+                      <CardTitle className="text-3xl flex items-center gap-2">
+                        {stats.sites.total}
+                        <Badge variant="secondary" className="text-xs font-normal">
+                          +{stats.sites.new7d} this week
+                        </Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex gap-4 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1"><Globe className="h-3 w-3" /> {stats.sites.published} published</span>
+                        <span>{stats.sites.draft} draft</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardDescription>Total Page Views</CardDescription>
+                      <CardTitle className="text-3xl flex items-center gap-2">
+                        <Eye className="h-6 w-6 text-muted-foreground" />
+                        {stats.sites.totalViews.toLocaleString()}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-sm text-muted-foreground">
+                        {stats.sites.totalUniqueVisitors.toLocaleString()} unique visitors
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardDescription>Total Leads</CardDescription>
+                      <CardTitle className="text-3xl flex items-center gap-2">
+                        <FileText className="h-6 w-6 text-muted-foreground" />
+                        {stats.leads.total}
+                        <Badge variant="secondary" className="text-xs font-normal">
+                          +{stats.leads.new7d} this week
+                        </Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-sm text-muted-foreground">
+                        {stats.leads.new30d} in last 30 days
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Credits Overview */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <CreditCard className="h-5 w-5" />
+                      Credits Overview
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold">{stats.users.totalCreditsHeld}</div>
+                    <div className="text-sm text-muted-foreground">Total credits held by all users</div>
+                  </CardContent>
+                </Card>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Recent Users */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Users className="h-5 w-5" />
+                        Recent Signups
+                      </CardTitle>
+                      <CardDescription>Latest users to join the platform</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {stats.recentUsers.slice(0, 5).map((user) => (
+                          <div key={user.id} className="flex items-center justify-between py-2 border-b last:border-0">
+                            <div>
+                              <p className="font-medium">{user.name || user.username}</p>
+                              <p className="text-sm text-muted-foreground">{user.email || 'No email'}</p>
+                            </div>
+                            <div className="text-right">
+                              <Badge variant={user.accountType === 'broker' ? 'default' : 'outline'} className="text-xs">
+                                {user.accountType}
+                              </Badge>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {user.createdAt ? format(new Date(user.createdAt), 'MMM d, yyyy') : '-'}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Top Performing Sites */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <TrendingUp className="h-5 w-5" />
+                        Top Performing Sites
+                      </CardTitle>
+                      <CardDescription>Sites with the most page views</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {stats.topSitesByViews.length === 0 ? (
+                          <p className="text-muted-foreground text-sm">No published sites yet</p>
+                        ) : (
+                          stats.topSitesByViews.map((site) => (
+                            <div key={site.id} className="flex items-center justify-between py-2 border-b last:border-0">
+                              <div>
+                                <p className="font-medium">{site.title || site.subdomain}</p>
+                                <p className="text-sm text-muted-foreground">{site.address}</p>
+                              </div>
+                              <div className="text-right">
+                                <div className="flex items-center gap-1 text-sm font-medium">
+                                  <Eye className="h-3 w-3" />
+                                  {((site.stats as any)?.views || 0).toLocaleString()}
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                  {((site.stats as any)?.leads || 0)} leads
+                                </p>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Recent Sites */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Globe className="h-5 w-5" />
+                      Recent Sites Created
+                    </CardTitle>
+                    <CardDescription>Latest property sites created on the platform</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead className="bg-muted/50">
+                          <tr>
+                            <th className="px-4 py-2 text-left text-sm font-medium text-muted-foreground">Site</th>
+                            <th className="px-4 py-2 text-left text-sm font-medium text-muted-foreground">Address</th>
+                            <th className="px-4 py-2 text-center text-sm font-medium text-muted-foreground">Status</th>
+                            <th className="px-4 py-2 text-center text-sm font-medium text-muted-foreground">Views</th>
+                            <th className="px-4 py-2 text-left text-sm font-medium text-muted-foreground">Created</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y">
+                          {stats.recentSites.slice(0, 5).map((site) => (
+                            <tr key={site.id} className="hover:bg-muted/25">
+                              <td className="px-4 py-3">
+                                <a 
+                                  href={`/p/${site.subdomain}`} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="font-medium hover:text-primary flex items-center gap-1"
+                                >
+                                  {site.title || site.subdomain}
+                                  <ArrowUpRight className="h-3 w-3" />
+                                </a>
+                              </td>
+                              <td className="px-4 py-3 text-sm text-muted-foreground">{site.address}</td>
+                              <td className="px-4 py-3 text-center">
+                                <Badge variant={site.status === 'published' ? 'default' : 'secondary'}>
+                                  {site.status}
+                                </Badge>
+                              </td>
+                              <td className="px-4 py-3 text-center text-sm">
+                                {((site.stats as any)?.views || 0).toLocaleString()}
+                              </td>
+                              <td className="px-4 py-3 text-sm text-muted-foreground">
+                                {site.createdAt ? format(new Date(site.createdAt), 'MMM d, yyyy') : '-'}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            ) : (
+              <div className="text-center py-12 text-muted-foreground">
+                Failed to load statistics
+              </div>
+            )}
+          </TabsContent>
 
           <TabsContent value="themes">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">

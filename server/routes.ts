@@ -5,7 +5,7 @@ import bcrypt from "bcrypt";
 import { storage } from "./storage";
 import { db } from "./db";
 import { setupAuth, isAuthenticated, isAdmin, isBrokerageAdmin, isBrokerageMember } from "./auth";
-import { insertSiteSchema, insertThemeSchema, insertLayoutSchema, insertLeadSchema, insertCouponSchema, brokerageMembers } from "@shared/schema";
+import { insertSiteSchema, insertThemeSchema, insertLayoutSchema, insertLeadSchema, insertCouponSchema, brokerageMembers, leads } from "@shared/schema";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
@@ -1508,6 +1508,89 @@ export async function registerRoutes(
   });
 
   // ========= ADMIN ROUTES =========
+
+  // Admin stats/overview endpoint
+  app.get("/api/admin/stats", isAdmin, async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      const sites = await storage.getAllSites();
+      const allLeads = await db.select().from(leads);
+      
+      const now = new Date();
+      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      
+      // User stats
+      const totalUsers = users.length;
+      const newUsers30d = users.filter(u => u.createdAt && new Date(u.createdAt) > thirtyDaysAgo).length;
+      const newUsers7d = users.filter(u => u.createdAt && new Date(u.createdAt) > sevenDaysAgo).length;
+      const brokerAccounts = users.filter(u => u.accountType === 'broker').length;
+      const individualAccounts = users.filter(u => u.accountType === 'individual').length;
+      const totalCreditsHeld = users.reduce((sum, u) => sum + (u.credits || 0), 0);
+      
+      // Site stats
+      const totalSites = sites.length;
+      const publishedSites = sites.filter(s => s.status === 'published').length;
+      const draftSites = sites.filter(s => s.status === 'draft').length;
+      const newSites30d = sites.filter(s => s.createdAt && new Date(s.createdAt) > thirtyDaysAgo).length;
+      const newSites7d = sites.filter(s => s.createdAt && new Date(s.createdAt) > sevenDaysAgo).length;
+      const totalViews = sites.reduce((sum, s) => sum + ((s.stats as any)?.views || 0), 0);
+      const totalUniqueVisitors = sites.reduce((sum, s) => sum + ((s.stats as any)?.uniqueVisitors || 0), 0);
+      
+      // Lead stats
+      const totalLeads = allLeads.length;
+      const newLeads30d = allLeads.filter(l => l.createdAt && new Date(l.createdAt) > thirtyDaysAgo).length;
+      const newLeads7d = allLeads.filter(l => l.createdAt && new Date(l.createdAt) > sevenDaysAgo).length;
+      
+      // Recent activity - last 10 users
+      const recentUsers = users
+        .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+        .slice(0, 10)
+        .map(({ password: _, ...u }) => u);
+      
+      // Recent sites - last 10
+      const recentSites = sites
+        .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+        .slice(0, 10);
+      
+      // Top performing sites by views
+      const topSitesByViews = sites
+        .filter(s => s.status === 'published')
+        .sort((a, b) => ((b.stats as any)?.views || 0) - ((a.stats as any)?.views || 0))
+        .slice(0, 5);
+      
+      res.json({
+        users: {
+          total: totalUsers,
+          new30d: newUsers30d,
+          new7d: newUsers7d,
+          brokerAccounts,
+          individualAccounts,
+          totalCreditsHeld
+        },
+        sites: {
+          total: totalSites,
+          published: publishedSites,
+          draft: draftSites,
+          new30d: newSites30d,
+          new7d: newSites7d,
+          totalViews,
+          totalUniqueVisitors
+        },
+        leads: {
+          total: totalLeads,
+          new30d: newLeads30d,
+          new7d: newLeads7d
+        },
+        recentUsers,
+        recentSites,
+        topSitesByViews
+      });
+    } catch (error) {
+      console.error("Error fetching admin stats:", error);
+      res.status(500).json({ error: "Failed to fetch admin stats" });
+    }
+  });
 
   // Coupon management routes (admin)
   app.get("/api/admin/coupons", isAdmin, async (req, res) => {
