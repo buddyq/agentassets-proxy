@@ -10,6 +10,12 @@ import {
   partnerMemberships,
   siteDailyStats,
   siteTrafficSources,
+  brokerages,
+  brokerageMembers,
+  brokerageGroups,
+  brokerageGroupMembers,
+  brokerageTemplates,
+  brokerageGroupTemplates,
   type User, 
   type InsertUser,
   type Site,
@@ -29,7 +35,16 @@ import {
   type InsertPartnerMembership,
   type SiteDailyStat,
   type SiteTrafficSource,
-  type TrafficSourceType
+  type TrafficSourceType,
+  type Brokerage,
+  type InsertBrokerage,
+  type BrokerageMember,
+  type InsertBrokerageMember,
+  type BrokerageGroup,
+  type InsertBrokerageGroup,
+  type BrokerageGroupMember,
+  type BrokerageTemplate,
+  type BrokerageGroupTemplate
 } from "@shared/schema";
 import { db, pool } from "./db";
 import { eq, and, isNotNull, lt, or, isNull, gte, desc, sql } from "drizzle-orm";
@@ -152,6 +167,47 @@ export interface IStorage {
   // Traffic source methods
   recordTrafficSource(siteId: string, source: TrafficSourceType, referrer?: string): Promise<void>;
   getTrafficSources(siteId: string): Promise<SiteTrafficSource[]>;
+  
+  // Brokerage methods
+  createBrokerage(brokerage: InsertBrokerage): Promise<Brokerage>;
+  getBrokerage(id: string): Promise<Brokerage | undefined>;
+  getBrokerageByOwner(ownerUserId: string): Promise<Brokerage | undefined>;
+  updateBrokerage(id: string, updates: Partial<Brokerage>): Promise<Brokerage>;
+  
+  // Brokerage member methods
+  addBrokerageMember(member: InsertBrokerageMember): Promise<BrokerageMember>;
+  getBrokerageMembers(brokerageId: string): Promise<BrokerageMember[]>;
+  getBrokerageMembership(userId: string): Promise<BrokerageMember | undefined>;
+  updateBrokerageMember(id: string, updates: Partial<BrokerageMember>): Promise<BrokerageMember>;
+  removeBrokerageMember(id: string): Promise<void>;
+  getBrokerageMemberCount(brokerageId: string): Promise<number>;
+  
+  // Brokerage group methods
+  createBrokerageGroup(group: InsertBrokerageGroup): Promise<BrokerageGroup>;
+  getBrokerageGroups(brokerageId: string): Promise<BrokerageGroup[]>;
+  getBrokerageGroup(id: string): Promise<BrokerageGroup | undefined>;
+  updateBrokerageGroup(id: string, updates: Partial<BrokerageGroup>): Promise<BrokerageGroup>;
+  deleteBrokerageGroup(id: string): Promise<void>;
+  
+  // Brokerage group member methods
+  addUserToGroup(groupId: string, userId: string): Promise<BrokerageGroupMember>;
+  removeUserFromGroup(groupId: string, userId: string): Promise<void>;
+  getGroupMembers(groupId: string): Promise<BrokerageGroupMember[]>;
+  getUserGroups(userId: string): Promise<BrokerageGroup[]>;
+  
+  // Brokerage template methods
+  assignTemplateToBrokerage(brokerageId: string, templateType: string, templateId: string, assignedBy?: string): Promise<BrokerageTemplate>;
+  getBrokerageTemplates(brokerageId: string): Promise<BrokerageTemplate[]>;
+  removeBrokerageTemplate(id: string): Promise<void>;
+  
+  // Brokerage group template methods
+  assignTemplateToGroup(brokerageTemplateId: string, groupId: string): Promise<BrokerageGroupTemplate>;
+  removeTemplateFromGroup(brokerageTemplateId: string, groupId: string): Promise<void>;
+  getGroupTemplates(groupId: string): Promise<BrokerageTemplate[]>;
+  getTemplatesForUser(userId: string): Promise<{ layouts: Layout[]; themes: Theme[] }>;
+  
+  // Brokerage site management
+  getBrokerageSites(brokerageId: string, search?: string): Promise<Site[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -799,6 +855,307 @@ export class DatabaseStorage implements IStorage {
       .from(siteTrafficSources)
       .where(eq(siteTrafficSources.siteId, siteId))
       .orderBy(desc(siteTrafficSources.count));
+  }
+
+  // ==================== BROKERAGE METHODS ====================
+  
+  async createBrokerage(brokerage: InsertBrokerage): Promise<Brokerage> {
+    const [created] = await db.insert(brokerages).values(brokerage).returning();
+    return created;
+  }
+
+  async getBrokerage(id: string): Promise<Brokerage | undefined> {
+    const [brokerage] = await db.select().from(brokerages).where(eq(brokerages.id, id));
+    return brokerage || undefined;
+  }
+
+  async getBrokerageByOwner(ownerUserId: string): Promise<Brokerage | undefined> {
+    const [brokerage] = await db.select().from(brokerages).where(eq(brokerages.ownerUserId, ownerUserId));
+    return brokerage || undefined;
+  }
+
+  async updateBrokerage(id: string, updates: Partial<Brokerage>): Promise<Brokerage> {
+    const [updated] = await db
+      .update(brokerages)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(brokerages.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Brokerage member methods
+  async addBrokerageMember(member: InsertBrokerageMember): Promise<BrokerageMember> {
+    const [created] = await db.insert(brokerageMembers).values(member).returning();
+    return created;
+  }
+
+  async getBrokerageMembers(brokerageId: string): Promise<BrokerageMember[]> {
+    return db
+      .select()
+      .from(brokerageMembers)
+      .where(eq(brokerageMembers.brokerageId, brokerageId));
+  }
+
+  async getBrokerageMembership(userId: string): Promise<BrokerageMember | undefined> {
+    const [membership] = await db
+      .select()
+      .from(brokerageMembers)
+      .where(eq(brokerageMembers.userId, userId));
+    return membership || undefined;
+  }
+
+  async updateBrokerageMember(id: string, updates: Partial<BrokerageMember>): Promise<BrokerageMember> {
+    const [updated] = await db
+      .update(brokerageMembers)
+      .set(updates)
+      .where(eq(brokerageMembers.id, id))
+      .returning();
+    return updated;
+  }
+
+  async removeBrokerageMember(id: string): Promise<void> {
+    await db.delete(brokerageMembers).where(eq(brokerageMembers.id, id));
+  }
+
+  async getBrokerageMemberCount(brokerageId: string): Promise<number> {
+    const members = await db
+      .select()
+      .from(brokerageMembers)
+      .where(and(
+        eq(brokerageMembers.brokerageId, brokerageId),
+        eq(brokerageMembers.status, 'active')
+      ));
+    return members.length;
+  }
+
+  // Brokerage group methods
+  async createBrokerageGroup(group: InsertBrokerageGroup): Promise<BrokerageGroup> {
+    const [created] = await db.insert(brokerageGroups).values(group).returning();
+    return created;
+  }
+
+  async getBrokerageGroups(brokerageId: string): Promise<BrokerageGroup[]> {
+    return db
+      .select()
+      .from(brokerageGroups)
+      .where(eq(brokerageGroups.brokerageId, brokerageId));
+  }
+
+  async getBrokerageGroup(id: string): Promise<BrokerageGroup | undefined> {
+    const [group] = await db.select().from(brokerageGroups).where(eq(brokerageGroups.id, id));
+    return group || undefined;
+  }
+
+  async updateBrokerageGroup(id: string, updates: Partial<BrokerageGroup>): Promise<BrokerageGroup> {
+    const [updated] = await db
+      .update(brokerageGroups)
+      .set(updates)
+      .where(eq(brokerageGroups.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteBrokerageGroup(id: string): Promise<void> {
+    // First remove all group members and template assignments
+    await db.delete(brokerageGroupMembers).where(eq(brokerageGroupMembers.groupId, id));
+    await db.delete(brokerageGroupTemplates).where(eq(brokerageGroupTemplates.groupId, id));
+    await db.delete(brokerageGroups).where(eq(brokerageGroups.id, id));
+  }
+
+  // Brokerage group member methods
+  async addUserToGroup(groupId: string, userId: string): Promise<BrokerageGroupMember> {
+    const [created] = await db
+      .insert(brokerageGroupMembers)
+      .values({ groupId, userId })
+      .returning();
+    return created;
+  }
+
+  async removeUserFromGroup(groupId: string, userId: string): Promise<void> {
+    await db
+      .delete(brokerageGroupMembers)
+      .where(and(
+        eq(brokerageGroupMembers.groupId, groupId),
+        eq(brokerageGroupMembers.userId, userId)
+      ));
+  }
+
+  async getGroupMembers(groupId: string): Promise<BrokerageGroupMember[]> {
+    return db
+      .select()
+      .from(brokerageGroupMembers)
+      .where(eq(brokerageGroupMembers.groupId, groupId));
+  }
+
+  async getUserGroups(userId: string): Promise<BrokerageGroup[]> {
+    const memberships = await db
+      .select()
+      .from(brokerageGroupMembers)
+      .where(eq(brokerageGroupMembers.userId, userId));
+    
+    if (memberships.length === 0) return [];
+    
+    const groupIds = memberships.map(m => m.groupId);
+    const groups = await db
+      .select()
+      .from(brokerageGroups)
+      .where(sql`${brokerageGroups.id} IN (${sql.join(groupIds.map(id => sql`${id}`), sql`, `)})`);
+    
+    return groups;
+  }
+
+  // Brokerage template methods
+  async assignTemplateToBrokerage(
+    brokerageId: string, 
+    templateType: string, 
+    templateId: string, 
+    assignedBy?: string
+  ): Promise<BrokerageTemplate> {
+    const [created] = await db
+      .insert(brokerageTemplates)
+      .values({ brokerageId, templateType, templateId, assignedBy })
+      .returning();
+    return created;
+  }
+
+  async getBrokerageTemplates(brokerageId: string): Promise<BrokerageTemplate[]> {
+    return db
+      .select()
+      .from(brokerageTemplates)
+      .where(eq(brokerageTemplates.brokerageId, brokerageId));
+  }
+
+  async removeBrokerageTemplate(id: string): Promise<void> {
+    // Remove group assignments first
+    await db.delete(brokerageGroupTemplates).where(eq(brokerageGroupTemplates.brokerageTemplateId, id));
+    await db.delete(brokerageTemplates).where(eq(brokerageTemplates.id, id));
+  }
+
+  // Brokerage group template methods
+  async assignTemplateToGroup(brokerageTemplateId: string, groupId: string): Promise<BrokerageGroupTemplate> {
+    const [created] = await db
+      .insert(brokerageGroupTemplates)
+      .values({ brokerageTemplateId, groupId })
+      .returning();
+    return created;
+  }
+
+  async removeTemplateFromGroup(brokerageTemplateId: string, groupId: string): Promise<void> {
+    await db
+      .delete(brokerageGroupTemplates)
+      .where(and(
+        eq(brokerageGroupTemplates.brokerageTemplateId, brokerageTemplateId),
+        eq(brokerageGroupTemplates.groupId, groupId)
+      ));
+  }
+
+  async getGroupTemplates(groupId: string): Promise<BrokerageTemplate[]> {
+    const assignments = await db
+      .select()
+      .from(brokerageGroupTemplates)
+      .where(eq(brokerageGroupTemplates.groupId, groupId));
+    
+    if (assignments.length === 0) return [];
+    
+    const templateIds = assignments.map(a => a.brokerageTemplateId);
+    const templates = await db
+      .select()
+      .from(brokerageTemplates)
+      .where(sql`${brokerageTemplates.id} IN (${sql.join(templateIds.map(id => sql`${id}`), sql`, `)})`);
+    
+    return templates;
+  }
+
+  async getTemplatesForUser(userId: string): Promise<{ layouts: Layout[]; themes: Theme[] }> {
+    // Get all public templates
+    const publicLayouts = await db
+      .select()
+      .from(layouts)
+      .where(and(eq(layouts.type, 'preset'), eq(layouts.enabled, true)));
+    
+    const publicThemes = await db
+      .select()
+      .from(themes)
+      .where(eq(themes.type, 'preset'));
+    
+    // Check if user is in a brokerage
+    const membership = await this.getBrokerageMembership(userId);
+    if (!membership) {
+      return { layouts: publicLayouts, themes: publicThemes };
+    }
+    
+    // Get user's groups
+    const userGroups = await this.getUserGroups(userId);
+    if (userGroups.length === 0) {
+      return { layouts: publicLayouts, themes: publicThemes };
+    }
+    
+    // Get templates assigned to user's groups
+    const groupTemplateIds: string[] = [];
+    for (const group of userGroups) {
+      const templates = await this.getGroupTemplates(group.id);
+      groupTemplateIds.push(...templates.map(t => t.templateId));
+    }
+    
+    if (groupTemplateIds.length === 0) {
+      return { layouts: publicLayouts, themes: publicThemes };
+    }
+    
+    // Get the actual layout/theme records for assigned templates
+    const assignedLayouts = await db
+      .select()
+      .from(layouts)
+      .where(sql`${layouts.id} IN (${sql.join(groupTemplateIds.map(id => sql`${id}`), sql`, `)})`);
+    
+    const assignedThemes = await db
+      .select()
+      .from(themes)
+      .where(sql`${themes.id} IN (${sql.join(groupTemplateIds.map(id => sql`${id}`), sql`, `)})`);
+    
+    // Combine public and assigned templates (deduplicated)
+    const allLayouts = [...publicLayouts];
+    for (const layout of assignedLayouts) {
+      if (!allLayouts.find(l => l.id === layout.id)) {
+        allLayouts.push(layout);
+      }
+    }
+    
+    const allThemes = [...publicThemes];
+    for (const theme of assignedThemes) {
+      if (!allThemes.find(t => t.id === theme.id)) {
+        allThemes.push(theme);
+      }
+    }
+    
+    return { layouts: allLayouts, themes: allThemes };
+  }
+
+  // Brokerage site management
+  async getBrokerageSites(brokerageId: string, search?: string): Promise<Site[]> {
+    // Get all members of the brokerage
+    const members = await this.getBrokerageMembers(brokerageId);
+    const memberIds = members.map(m => m.userId);
+    
+    if (memberIds.length === 0) return [];
+    
+    // Get all sites from brokerage members
+    let allSites = await db
+      .select()
+      .from(sites)
+      .where(sql`${sites.userId} IN (${sql.join(memberIds.map(id => sql`${id}`), sql`, `)})`);
+    
+    // Filter by search term if provided
+    if (search) {
+      const searchLower = search.toLowerCase();
+      allSites = allSites.filter(site => 
+        site.address?.toLowerCase().includes(searchLower) ||
+        site.subdomain?.toLowerCase().includes(searchLower) ||
+        site.customDomain?.toLowerCase().includes(searchLower) ||
+        site.title?.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    return allSites;
   }
 }
 

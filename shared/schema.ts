@@ -134,6 +134,7 @@ export type OpenHouseEvent = {
 export const sites = pgTable("sites", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: text("user_id").notNull(),
+  brokerageId: text("brokerage_id"), // If created under a brokerage account
   subdomain: text("subdomain").unique(),
   title: text("title"),
   address: text("address").notNull(),
@@ -332,3 +333,119 @@ export const siteTrafficSources = pgTable("site_traffic_sources", {
 ]);
 
 export type SiteTrafficSource = typeof siteTrafficSources.$inferSelect;
+
+// ==================== BROKERAGE SYSTEM ====================
+
+// Brokerages table - main brokerage entity
+export const brokerages = pgTable("brokerages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  ownerUserId: text("owner_user_id").notNull(), // The admin user who owns this brokerage
+  logo: text("logo"),
+  website: text("website"),
+  phone: text("phone"),
+  email: text("email"),
+  address: text("address"),
+  // Stripe billing
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  // Seat management: base plan includes 15, can purchase more
+  includedSeats: integer("included_seats").notNull().default(15),
+  additionalSeats: integer("additional_seats").notNull().default(0),
+  // Status
+  status: text("status").notNull().default('active'), // 'active', 'suspended', 'cancelled'
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertBrokerageSchema = createInsertSchema(brokerages).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true,
+  stripeCustomerId: true,
+  stripeSubscriptionId: true,
+});
+export type InsertBrokerage = z.infer<typeof insertBrokerageSchema>;
+export type Brokerage = typeof brokerages.$inferSelect;
+
+// Brokerage members - links users to brokerages with roles
+export const brokerageMembers = pgTable("brokerage_members", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  brokerageId: text("brokerage_id").notNull(),
+  userId: text("user_id").notNull(),
+  role: text("role").notNull().default('agent'), // 'admin', 'agent'
+  status: text("status").notNull().default('active'), // 'active', 'invited', 'deactivated'
+  invitedBy: text("invited_by"),
+  invitedAt: timestamp("invited_at"),
+  joinedAt: timestamp("joined_at"),
+  lastAccessAt: timestamp("last_access_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("IDX_brokerage_members_brokerage").on(table.brokerageId),
+  index("IDX_brokerage_members_user").on(table.userId),
+]);
+
+export const insertBrokerageMemberSchema = createInsertSchema(brokerageMembers).omit({ 
+  id: true, 
+  createdAt: true,
+});
+export type InsertBrokerageMember = z.infer<typeof insertBrokerageMemberSchema>;
+export type BrokerageMember = typeof brokerageMembers.$inferSelect;
+
+// Brokerage groups - groups within a brokerage (e.g., "The Quaid Group")
+export const brokerageGroups = pgTable("brokerage_groups", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  brokerageId: text("brokerage_id").notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("IDX_brokerage_groups_brokerage").on(table.brokerageId),
+]);
+
+export const insertBrokerageGroupSchema = createInsertSchema(brokerageGroups).omit({ 
+  id: true, 
+  createdAt: true,
+});
+export type InsertBrokerageGroup = z.infer<typeof insertBrokerageGroupSchema>;
+export type BrokerageGroup = typeof brokerageGroups.$inferSelect;
+
+// Brokerage group members - links agents to groups
+export const brokerageGroupMembers = pgTable("brokerage_group_members", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  groupId: text("group_id").notNull(),
+  userId: text("user_id").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("IDX_group_members_group").on(table.groupId),
+  index("IDX_group_members_user").on(table.userId),
+]);
+
+export type BrokerageGroupMember = typeof brokerageGroupMembers.$inferSelect;
+
+// Brokerage templates - custom layouts/themes assigned to a brokerage by AgentAssets admin
+export const brokerageTemplates = pgTable("brokerage_templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  brokerageId: text("brokerage_id").notNull(),
+  templateType: text("template_type").notNull(), // 'layout' or 'theme'
+  templateId: text("template_id").notNull(), // References layouts.id or themes.id
+  assignedBy: text("assigned_by"), // AgentAssets admin who assigned it
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("IDX_brokerage_templates_brokerage").on(table.brokerageId),
+]);
+
+export type BrokerageTemplate = typeof brokerageTemplates.$inferSelect;
+
+// Brokerage group templates - links templates to specific groups within a brokerage
+export const brokerageGroupTemplates = pgTable("brokerage_group_templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  brokerageTemplateId: text("brokerage_template_id").notNull(),
+  groupId: text("group_id").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("IDX_group_templates_template").on(table.brokerageTemplateId),
+  index("IDX_group_templates_group").on(table.groupId),
+]);
+
+export type BrokerageGroupTemplate = typeof brokerageGroupTemplates.$inferSelect;

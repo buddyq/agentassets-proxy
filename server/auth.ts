@@ -145,3 +145,44 @@ export function isAdmin(req: any, res: any, next: any) {
   }
   next();
 }
+
+// Middleware to check if user is a brokerage admin
+export async function isBrokerageAdmin(req: any, res: any, next: any) {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  
+  try {
+    const membership = await storage.getBrokerageMembership(req.user.id);
+    if (!membership || membership.role !== 'admin') {
+      return res.status(403).json({ message: "Forbidden - Brokerage admin access required" });
+    }
+    
+    // Add brokerage info to request for convenience
+    req.brokerageMembership = membership;
+    req.brokerageId = membership.brokerageId;
+    next();
+  } catch (error) {
+    return res.status(500).json({ message: "Error checking brokerage membership" });
+  }
+}
+
+// Middleware to check if user belongs to a brokerage (admin or agent)
+export async function isBrokerageMember(req: any, res: any, next: any) {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  
+  try {
+    const membership = await storage.getBrokerageMembership(req.user.id);
+    if (!membership || membership.status !== 'active') {
+      return res.status(403).json({ message: "Forbidden - Brokerage membership required" });
+    }
+    
+    req.brokerageMembership = membership;
+    req.brokerageId = membership.brokerageId;
+    next();
+  } catch (error) {
+    return res.status(500).json({ message: "Error checking brokerage membership" });
+  }
+}

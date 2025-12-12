@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import crypto from "crypto";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated, isAdmin } from "./auth";
+import { setupAuth, isAuthenticated, isAdmin, isBrokerageAdmin, isBrokerageMember } from "./auth";
 import { insertSiteSchema, insertThemeSchema, insertLayoutSchema, insertLeadSchema, insertCouponSchema } from "@shared/schema";
 import { z } from "zod";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
@@ -1437,6 +1437,692 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error redeeming coupon:", error);
       res.status(500).json({ error: "Failed to redeem coupon" });
+    }
+  });
+
+  // ==================== BROKERAGE ROUTES ====================
+  
+  // Get current user's brokerage (if they are an admin)
+  app.get("/api/brokerage", isAuthenticated, async (req: any, res) => {
+    try {
+      const membership = await storage.getBrokerageMembership(req.user.id);
+      if (!membership) {
+        return res.json({ brokerage: null, membership: null });
+      }
+      
+      const brokerage = await storage.getBrokerage(membership.brokerageId);
+      const memberCount = await storage.getBrokerageMemberCount(membership.brokerageId);
+      
+      res.json({ 
+        brokerage, 
+        membership,
+        memberCount,
+        totalSeats: (brokerage?.includedSeats || 15) + (brokerage?.additionalSeats || 0)
+      });
+    } catch (error) {
+      console.error("Error fetching brokerage:", error);
+      res.status(500).json({ error: "Failed to fetch brokerage" });
+    }
+  });
+
+  // Create a new brokerage (only for users who don't already have one)
+  app.post("/api/brokerage", isAuthenticated, async (req: any, res) => {
+    try {
+      // Check if user already has a brokerage
+      const existingMembership = await storage.getBrokerageMembership(req.user.id);
+      if (existingMembership) {
+        return res.status(400).json({ error: "You already belong to a brokerage" });
+      }
+      
+      const { name, logo, website, phone, email, address } = req.body;
+      if (!name) {
+        return res.status(400).json({ error: "Brokerage name is required" });
+      }
+      
+      // Create the brokerage
+      const brokerage = await storage.createBrokerage({
+        name,
+        ownerUserId: req.user.id,
+        logo,
+        website,
+        phone,
+        email,
+        address,
+        includedSeats: 15,
+        additionalSeats: 0,
+        status: 'active',
+      });
+      
+      // Add the owner as an admin member
+      await storage.addBrokerageMember({
+        brokerageId: brokerage.id,
+        userId: req.user.id,
+        role: 'admin',
+        status: 'active',
+        joinedAt: new Date(),
+      });
+      
+      res.status(201).json(brokerage);
+    } catch (error) {
+      console.error("Error creating brokerage:", error);
+      res.status(500).json({ error: "Failed to create brokerage" });
+    }
+  });
+
+  // Update brokerage details
+  app.patch("/api/brokerage", isBrokerageAdmin, async (req: any, res) => {
+    try {
+      const { name, logo, website, phone, email, address } = req.body;
+      const updated = await storage.updateBrokerage(req.brokerageId, {
+        name,
+        logo,
+        website,
+        phone,
+        email,
+        address,
+      });
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating brokerage:", error);
+      res.status(500).json({ error: "Failed to update brokerage" });
+    }
+  });
+
+  // ==================== BROKERAGE MEMBER (AGENT) ROUTES ====================
+  
+  // Get all members of the brokerage
+  app.get("/api/brokerage/members", isBrokerageAdmin, async (req: any, res) => {
+    try {
+      const members = await storage.getBrokerageMembers(req.brokerageId);
+      
+      // Enrich with user details
+      const enrichedMembers = await Promise.all(members.map(async (member) => {
+        const user = await storage.getUser(member.userId);
+        return {
+          ...member,
+          user: user ? {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            profileImageUrl: user.profileImageUrl,
+          } : null,
+        };
+      }));
+      
+      res.json(enrichedMembers);
+    } catch (error) {
+      console.error("Error fetching brokerage members:", error);
+      res.status(500).json({ error: "Failed to fetch members" });
+    }
+  });
+
+  // Add a new agent to the brokerage
+  app.post("/api/brokerage/members", isBrokerageAdmin, async (req: any, res) => {
+    try {
+      const { name, email, phone, professionalTitle, licenseNumber, website } = req.body;
+      
+      if (!name || !email) {
+        return res.status(400).json({ error: "Name and email are required" });
+      }
+      
+      // Check seat availability
+      const brokerage = await storage.getBrokerage(req.brokerageId);
+      const memberCount = await storage.getBrokerageMemberCount(req.brokerageId);
+      const totalSeats = (brokerage?.includedSeats || 15) + (brokerage?.additionalSeats || 0);
+      
+      if (memberCount >= totalSeats) {
+        return res.status(400).json({ error: "No available seats. Please purchase additional seats." });
+      }
+      
+      // Check if email is already in use by another user
+      const existingUsers = await storage.getAllUsers();
+      const existingUser = existingUsers.find(u => u.email?.toLowerCase() === email.toLowerCase());
+      
+      let userId: string;
+      
+      if (existingUser) {
+        // Check if this user is already in a brokerage
+        const existingMembership = await storage.getBrokerageMembership(existingUser.id);
+        if (existingMembership) {
+          return res.status(400).json({ error: "This user already belongs to a brokerage" });
+        }
+        userId = existingUser.id;
+      } else {
+        // Create a new user account
+        const tempPassword = crypto.randomBytes(16).toString('hex');
+        const newUser = await storage.createUser({
+          username: email.split('@')[0] + '-' + crypto.randomBytes(3).toString('hex'),
+          password: tempPassword, // Will need to be reset
+          email,
+          name,
+        });
+        userId = newUser.id;
+        
+        // Update additional profile fields
+        await storage.updateUserProfile(newUser.id, {
+          phone,
+          brokerage: brokerage?.name,
+        });
+      }
+      
+      // Add as brokerage member
+      const member = await storage.addBrokerageMember({
+        brokerageId: req.brokerageId,
+        userId,
+        role: 'agent',
+        status: 'active',
+        invitedBy: req.user.id,
+        invitedAt: new Date(),
+        joinedAt: new Date(),
+      });
+      
+      const user = await storage.getUser(userId);
+      
+      res.status(201).json({
+        ...member,
+        user: user ? {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          profileImageUrl: user.profileImageUrl,
+        } : null,
+      });
+    } catch (error) {
+      console.error("Error adding brokerage member:", error);
+      res.status(500).json({ error: "Failed to add member" });
+    }
+  });
+
+  // Update a brokerage member
+  app.patch("/api/brokerage/members/:memberId", isBrokerageAdmin, async (req: any, res) => {
+    try {
+      const { memberId } = req.params;
+      const { role, status } = req.body;
+      
+      // Get the member to verify they belong to this brokerage
+      const members = await storage.getBrokerageMembers(req.brokerageId);
+      const member = members.find(m => m.id === memberId);
+      
+      if (!member) {
+        return res.status(404).json({ error: "Member not found" });
+      }
+      
+      // Can't change the owner's role
+      const brokerage = await storage.getBrokerage(req.brokerageId);
+      if (member.userId === brokerage?.ownerUserId && role && role !== 'admin') {
+        return res.status(400).json({ error: "Cannot change the owner's role" });
+      }
+      
+      const updated = await storage.updateBrokerageMember(memberId, { role, status });
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating brokerage member:", error);
+      res.status(500).json({ error: "Failed to update member" });
+    }
+  });
+
+  // Remove a member from the brokerage
+  app.delete("/api/brokerage/members/:memberId", isBrokerageAdmin, async (req: any, res) => {
+    try {
+      const { memberId } = req.params;
+      
+      // Get the member to verify they belong to this brokerage
+      const members = await storage.getBrokerageMembers(req.brokerageId);
+      const member = members.find(m => m.id === memberId);
+      
+      if (!member) {
+        return res.status(404).json({ error: "Member not found" });
+      }
+      
+      // Can't remove the owner
+      const brokerage = await storage.getBrokerage(req.brokerageId);
+      if (member.userId === brokerage?.ownerUserId) {
+        return res.status(400).json({ error: "Cannot remove the brokerage owner" });
+      }
+      
+      await storage.removeBrokerageMember(memberId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error removing brokerage member:", error);
+      res.status(500).json({ error: "Failed to remove member" });
+    }
+  });
+
+  // ==================== BROKERAGE GROUP ROUTES ====================
+  
+  // Get all groups in the brokerage
+  app.get("/api/brokerage/groups", isBrokerageAdmin, async (req: any, res) => {
+    try {
+      const groups = await storage.getBrokerageGroups(req.brokerageId);
+      
+      // Enrich with member counts
+      const enrichedGroups = await Promise.all(groups.map(async (group) => {
+        const members = await storage.getGroupMembers(group.id);
+        return {
+          ...group,
+          memberCount: members.length,
+        };
+      }));
+      
+      res.json(enrichedGroups);
+    } catch (error) {
+      console.error("Error fetching brokerage groups:", error);
+      res.status(500).json({ error: "Failed to fetch groups" });
+    }
+  });
+
+  // Create a new group
+  app.post("/api/brokerage/groups", isBrokerageAdmin, async (req: any, res) => {
+    try {
+      const { name, description } = req.body;
+      if (!name) {
+        return res.status(400).json({ error: "Group name is required" });
+      }
+      
+      const group = await storage.createBrokerageGroup({
+        brokerageId: req.brokerageId,
+        name,
+        description,
+      });
+      
+      res.status(201).json({ ...group, memberCount: 0 });
+    } catch (error) {
+      console.error("Error creating brokerage group:", error);
+      res.status(500).json({ error: "Failed to create group" });
+    }
+  });
+
+  // Update a group
+  app.patch("/api/brokerage/groups/:groupId", isBrokerageAdmin, async (req: any, res) => {
+    try {
+      const { groupId } = req.params;
+      const { name, description } = req.body;
+      
+      const group = await storage.getBrokerageGroup(groupId);
+      if (!group || group.brokerageId !== req.brokerageId) {
+        return res.status(404).json({ error: "Group not found" });
+      }
+      
+      const updated = await storage.updateBrokerageGroup(groupId, { name, description });
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating brokerage group:", error);
+      res.status(500).json({ error: "Failed to update group" });
+    }
+  });
+
+  // Delete a group
+  app.delete("/api/brokerage/groups/:groupId", isBrokerageAdmin, async (req: any, res) => {
+    try {
+      const { groupId } = req.params;
+      
+      const group = await storage.getBrokerageGroup(groupId);
+      if (!group || group.brokerageId !== req.brokerageId) {
+        return res.status(404).json({ error: "Group not found" });
+      }
+      
+      await storage.deleteBrokerageGroup(groupId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting brokerage group:", error);
+      res.status(500).json({ error: "Failed to delete group" });
+    }
+  });
+
+  // Get members of a specific group
+  app.get("/api/brokerage/groups/:groupId/members", isBrokerageAdmin, async (req: any, res) => {
+    try {
+      const { groupId } = req.params;
+      
+      const group = await storage.getBrokerageGroup(groupId);
+      if (!group || group.brokerageId !== req.brokerageId) {
+        return res.status(404).json({ error: "Group not found" });
+      }
+      
+      const groupMembers = await storage.getGroupMembers(groupId);
+      
+      // Enrich with user details
+      const enrichedMembers = await Promise.all(groupMembers.map(async (gm) => {
+        const user = await storage.getUser(gm.userId);
+        return {
+          ...gm,
+          user: user ? {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            profileImageUrl: user.profileImageUrl,
+          } : null,
+        };
+      }));
+      
+      res.json(enrichedMembers);
+    } catch (error) {
+      console.error("Error fetching group members:", error);
+      res.status(500).json({ error: "Failed to fetch group members" });
+    }
+  });
+
+  // Add a user to a group
+  app.post("/api/brokerage/groups/:groupId/members", isBrokerageAdmin, async (req: any, res) => {
+    try {
+      const { groupId } = req.params;
+      const { userId } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ error: "User ID is required" });
+      }
+      
+      // Verify group belongs to this brokerage
+      const group = await storage.getBrokerageGroup(groupId);
+      if (!group || group.brokerageId !== req.brokerageId) {
+        return res.status(404).json({ error: "Group not found" });
+      }
+      
+      // Verify user is a member of this brokerage
+      const members = await storage.getBrokerageMembers(req.brokerageId);
+      const isMember = members.some(m => m.userId === userId && m.status === 'active');
+      if (!isMember) {
+        return res.status(400).json({ error: "User is not a member of this brokerage" });
+      }
+      
+      // Check if already in group
+      const groupMembers = await storage.getGroupMembers(groupId);
+      if (groupMembers.some(gm => gm.userId === userId)) {
+        return res.status(400).json({ error: "User is already in this group" });
+      }
+      
+      const groupMember = await storage.addUserToGroup(groupId, userId);
+      
+      const user = await storage.getUser(userId);
+      res.status(201).json({
+        ...groupMember,
+        user: user ? {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          profileImageUrl: user.profileImageUrl,
+        } : null,
+      });
+    } catch (error) {
+      console.error("Error adding user to group:", error);
+      res.status(500).json({ error: "Failed to add user to group" });
+    }
+  });
+
+  // Remove a user from a group
+  app.delete("/api/brokerage/groups/:groupId/members/:userId", isBrokerageAdmin, async (req: any, res) => {
+    try {
+      const { groupId, userId } = req.params;
+      
+      // Verify group belongs to this brokerage
+      const group = await storage.getBrokerageGroup(groupId);
+      if (!group || group.brokerageId !== req.brokerageId) {
+        return res.status(404).json({ error: "Group not found" });
+      }
+      
+      await storage.removeUserFromGroup(groupId, userId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error removing user from group:", error);
+      res.status(500).json({ error: "Failed to remove user from group" });
+    }
+  });
+
+  // ==================== BROKERAGE SITE MANAGEMENT ROUTES ====================
+  
+  // Get all sites from brokerage members (with search)
+  app.get("/api/brokerage/sites", isBrokerageAdmin, async (req: any, res) => {
+    try {
+      const search = req.query.search as string | undefined;
+      const sites = await storage.getBrokerageSites(req.brokerageId, search);
+      
+      // Enrich with agent info
+      const enrichedSites = await Promise.all(sites.map(async (site) => {
+        const user = await storage.getUser(site.userId);
+        return {
+          ...site,
+          agent: user ? {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+          } : null,
+        };
+      }));
+      
+      res.json(enrichedSites);
+    } catch (error) {
+      console.error("Error fetching brokerage sites:", error);
+      res.status(500).json({ error: "Failed to fetch sites" });
+    }
+  });
+
+  // Update a site (brokerage admin can edit any member's site)
+  app.patch("/api/brokerage/sites/:siteId", isBrokerageAdmin, async (req: any, res) => {
+    try {
+      const { siteId } = req.params;
+      const site = await storage.getSite(siteId);
+      
+      if (!site) {
+        return res.status(404).json({ error: "Site not found" });
+      }
+      
+      // Verify site belongs to a brokerage member
+      const members = await storage.getBrokerageMembers(req.brokerageId);
+      const isMemberSite = members.some(m => m.userId === site.userId);
+      
+      if (!isMemberSite) {
+        return res.status(403).json({ error: "Site does not belong to this brokerage" });
+      }
+      
+      const updated = await storage.updateSite(siteId, req.body);
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating brokerage site:", error);
+      res.status(500).json({ error: "Failed to update site" });
+    }
+  });
+
+  // Delete a site (brokerage admin can delete any member's site)
+  app.delete("/api/brokerage/sites/:siteId", isBrokerageAdmin, async (req: any, res) => {
+    try {
+      const { siteId } = req.params;
+      const site = await storage.getSite(siteId);
+      
+      if (!site) {
+        return res.status(404).json({ error: "Site not found" });
+      }
+      
+      // Verify site belongs to a brokerage member
+      const members = await storage.getBrokerageMembers(req.brokerageId);
+      const isMemberSite = members.some(m => m.userId === site.userId);
+      
+      if (!isMemberSite) {
+        return res.status(403).json({ error: "Site does not belong to this brokerage" });
+      }
+      
+      await storage.deleteSite(siteId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting brokerage site:", error);
+      res.status(500).json({ error: "Failed to delete site" });
+    }
+  });
+
+  // ==================== BROKERAGE TEMPLATE ROUTES ====================
+  
+  // Get templates available to the brokerage (for admin to manage)
+  app.get("/api/brokerage/templates", isBrokerageAdmin, async (req: any, res) => {
+    try {
+      const templates = await storage.getBrokerageTemplates(req.brokerageId);
+      
+      // Enrich with actual template details
+      const enrichedTemplates = await Promise.all(templates.map(async (bt) => {
+        let templateDetails = null;
+        if (bt.templateType === 'layout') {
+          templateDetails = await storage.getLayout(bt.templateId);
+        } else if (bt.templateType === 'theme') {
+          templateDetails = await storage.getTheme(bt.templateId);
+        }
+        
+        // Get group assignments
+        const groups = await storage.getBrokerageGroups(req.brokerageId);
+        const assignedGroups: string[] = [];
+        for (const group of groups) {
+          const groupTemplates = await storage.getGroupTemplates(group.id);
+          if (groupTemplates.some(gt => gt.id === bt.id)) {
+            assignedGroups.push(group.id);
+          }
+        }
+        
+        return {
+          ...bt,
+          templateDetails,
+          assignedGroups,
+        };
+      }));
+      
+      res.json(enrichedTemplates);
+    } catch (error) {
+      console.error("Error fetching brokerage templates:", error);
+      res.status(500).json({ error: "Failed to fetch templates" });
+    }
+  });
+
+  // Assign a template to a group
+  app.post("/api/brokerage/templates/:templateId/groups/:groupId", isBrokerageAdmin, async (req: any, res) => {
+    try {
+      const { templateId, groupId } = req.params;
+      
+      // Verify template belongs to this brokerage
+      const templates = await storage.getBrokerageTemplates(req.brokerageId);
+      const template = templates.find(t => t.id === templateId);
+      if (!template) {
+        return res.status(404).json({ error: "Template not found" });
+      }
+      
+      // Verify group belongs to this brokerage
+      const group = await storage.getBrokerageGroup(groupId);
+      if (!group || group.brokerageId !== req.brokerageId) {
+        return res.status(404).json({ error: "Group not found" });
+      }
+      
+      const assignment = await storage.assignTemplateToGroup(templateId, groupId);
+      res.status(201).json(assignment);
+    } catch (error) {
+      console.error("Error assigning template to group:", error);
+      res.status(500).json({ error: "Failed to assign template to group" });
+    }
+  });
+
+  // Remove a template from a group
+  app.delete("/api/brokerage/templates/:templateId/groups/:groupId", isBrokerageAdmin, async (req: any, res) => {
+    try {
+      const { templateId, groupId } = req.params;
+      
+      await storage.removeTemplateFromGroup(templateId, groupId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error removing template from group:", error);
+      res.status(500).json({ error: "Failed to remove template from group" });
+    }
+  });
+
+  // ==================== ADMIN ROUTES FOR BROKERAGE TEMPLATE ASSIGNMENT ====================
+  
+  // Get all brokerages (AgentAssets admin only)
+  app.get("/api/admin/brokerages", isAdmin, async (req, res) => {
+    try {
+      const allBrokerages: any[] = [];
+      // Get all brokerages by checking all users who are brokerage owners
+      const users = await storage.getAllUsers();
+      for (const user of users) {
+        const brokerage = await storage.getBrokerageByOwner(user.id);
+        if (brokerage) {
+          allBrokerages.push({
+            ...brokerage,
+            ownerName: user.name,
+            ownerEmail: user.email,
+          });
+        }
+      }
+      res.json(allBrokerages);
+    } catch (error) {
+      console.error("Error fetching all brokerages:", error);
+      res.status(500).json({ error: "Failed to fetch brokerages" });
+    }
+  });
+
+  // Assign a template to a brokerage (AgentAssets admin only)
+  app.post("/api/admin/brokerages/:brokerageId/templates", isAdmin, async (req: any, res) => {
+    try {
+      const { brokerageId } = req.params;
+      const { templateType, templateId } = req.body;
+      
+      if (!templateType || !templateId) {
+        return res.status(400).json({ error: "Template type and ID are required" });
+      }
+      
+      if (!['layout', 'theme'].includes(templateType)) {
+        return res.status(400).json({ error: "Invalid template type" });
+      }
+      
+      // Verify brokerage exists
+      const brokerage = await storage.getBrokerage(brokerageId);
+      if (!brokerage) {
+        return res.status(404).json({ error: "Brokerage not found" });
+      }
+      
+      // Verify template exists
+      if (templateType === 'layout') {
+        const layout = await storage.getLayout(templateId);
+        if (!layout) {
+          return res.status(404).json({ error: "Layout not found" });
+        }
+      } else {
+        const theme = await storage.getTheme(templateId);
+        if (!theme) {
+          return res.status(404).json({ error: "Theme not found" });
+        }
+      }
+      
+      const assignment = await storage.assignTemplateToBrokerage(
+        brokerageId,
+        templateType,
+        templateId,
+        req.user.id
+      );
+      
+      res.status(201).json(assignment);
+    } catch (error) {
+      console.error("Error assigning template to brokerage:", error);
+      res.status(500).json({ error: "Failed to assign template to brokerage" });
+    }
+  });
+
+  // Remove a template from a brokerage (AgentAssets admin only)
+  app.delete("/api/admin/brokerages/:brokerageId/templates/:templateId", isAdmin, async (req: any, res) => {
+    try {
+      const { templateId } = req.params;
+      
+      await storage.removeBrokerageTemplate(templateId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error removing template from brokerage:", error);
+      res.status(500).json({ error: "Failed to remove template from brokerage" });
+    }
+  });
+
+  // Get templates for a specific brokerage (AgentAssets admin only)
+  app.get("/api/admin/brokerages/:brokerageId/templates", isAdmin, async (req: any, res) => {
+    try {
+      const { brokerageId } = req.params;
+      const templates = await storage.getBrokerageTemplates(brokerageId);
+      res.json(templates);
+    } catch (error) {
+      console.error("Error fetching brokerage templates:", error);
+      res.status(500).json({ error: "Failed to fetch templates" });
     }
   });
 
