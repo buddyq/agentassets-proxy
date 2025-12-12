@@ -27,6 +27,7 @@ import {
   useLayouts,
   useUpdateBrokerage,
   normalizeObjectUrl,
+  getUploadUrl,
   type BrokerageMember,
   type BrokerageGroup,
   type BrokerageSite,
@@ -1015,7 +1016,7 @@ export default function BrokerageDashboard() {
                       </div>
                     )}
                     <ObjectUploader
-                      folder="uploads"
+                      onGetUploadParameters={getUploadUrl}
                       onComplete={(result: { successful?: { uploadURL: string }[] }) => {
                         if (result.successful && result.successful.length > 0) {
                           const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
