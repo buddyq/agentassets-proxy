@@ -268,12 +268,15 @@ export async function registerRoutes(
         req.session[sessionKey] = true;
       }
 
-      // Update stats
+      // Update total stats
       await storage.updateSiteStats(site.id, {
         views: currentStats.views + 1,
         uniqueVisitors: isNewVisitor ? currentStats.uniqueVisitors + 1 : currentStats.uniqueVisitors,
         leads: currentStats.leads
       });
+      
+      // Record daily stats for charts
+      await storage.recordDailyStats(site.id, isNewVisitor);
 
       res.json({ success: true, isNewVisitor });
     } catch (error) {
@@ -660,6 +663,28 @@ export async function registerRoutes(
       res.json(leads);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch leads" });
+    }
+  });
+
+  // Get daily stats for a site (for charts)
+  app.get("/api/sites/:siteId/daily-stats", isAuthenticated, async (req: any, res) => {
+    try {
+      const site = await storage.getSite(req.params.siteId);
+      if (!site) {
+        return res.status(404).json({ error: "Site not found" });
+      }
+      
+      // Verify ownership
+      if (site.userId !== req.user.id && !req.user.isAdmin) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
+      const days = parseInt(req.query.days as string) || 7;
+      const stats = await storage.getDailyStats(req.params.siteId, days);
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching daily stats:", error);
+      res.status(500).json({ error: "Failed to fetch daily stats" });
     }
   });
 

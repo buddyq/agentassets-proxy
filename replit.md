@@ -196,6 +196,10 @@ Page view and visitor tracking for published property sites:
 - **Session-Based**: Uses server session to track unique visitors (one count per session per site)
 - **Frontend Integration**: SiteView component tracks on mount, uses sessionStorage to avoid duplicate calls
 - **Stats Storage**: Site stats stored in `sites.stats` JSONB column with views, uniqueVisitors, leads counts
+- **Daily Stats**: `site_daily_stats` table tracks per-day views and visitors with unique constraint on (site_id, date)
+- **Daily Stats API**: `GET /api/sites/:siteId/daily-stats?days=7` retrieves daily breakdown for charts
+- **Atomic Upsert**: Daily stats use ON CONFLICT DO UPDATE for race-condition-safe increments
+- **Dashboard Chart**: Shows last 7 days of page views with bar chart visualization
 - **Published Only**: Only tracks views for sites with status = 'published'
 
 ### Partner Membership System (ATXPocket Integration)

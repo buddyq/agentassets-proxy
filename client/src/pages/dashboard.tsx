@@ -2,7 +2,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useSites, useDeleteSite, useUpdateSite, useThemes, useLeads, useLayouts, useUnpublishSite, useRepublishSite, useSitePasswords, useCheckSlugAvailability, useUpdateSiteSlug } from "@/lib/api";
+import { useSites, useDeleteSite, useUpdateSite, useThemes, useLeads, useLayouts, useUnpublishSite, useRepublishSite, useSitePasswords, useCheckSlugAvailability, useUpdateSiteSlug, useDailyStats } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
 import { Plus, ExternalLink, Trash2, Globe, BarChart3, Users, MousePointerClick, TrendingUp, Pencil, MessageSquare, Mail, Phone, Calendar, ChevronRight, LayoutDashboard, UserCircle, Image, FileText, Share2, ArrowRight, X, EyeOff, Eye, Clock, AlertTriangle, Lock, Copy, Check, Link2 } from "lucide-react";
@@ -325,21 +325,25 @@ export default function Dashboard() {
   const hasTrialCredits = user && (user.trialCredits || 0) > 0 && 
     user.trialEndsAt && new Date(user.trialEndsAt) > new Date();
 
-  // Analytics data - show comparison of views, visitors, and leads
+  // Fetch daily stats for the selected site
+  const { data: dailyStats = [] } = useDailyStats(selectedSiteForAnalytics || '', 7);
+
+  // Analytics data - show daily views for last 7 days
   const analyticsData = useMemo(() => {
-    if (!selectedSiteForAnalytics) return [];
-    
-    const site = sites.find(s => s.id === selectedSiteForAnalytics);
-    if (!site) return [];
-    
-    const stats = site.stats || { views: 0, uniqueVisitors: 0, leads: 0 };
-    
-    return [
-      { name: 'Page Views', value: stats.views || 0 },
-      { name: 'Unique Visitors', value: stats.uniqueVisitors || 0 },
-      { name: 'Leads', value: stats.leads || 0 },
-    ];
-  }, [selectedSiteForAnalytics, sites]);
+    // Generate all 7 days
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = subDays(new Date(), i);
+      const dateStr = date.toISOString().split('T')[0];
+      const stat = dailyStats.find(s => s.date === dateStr);
+      days.push({
+        name: format(date, 'MMM dd'),
+        views: stat?.views || 0,
+        visitors: stat?.uniqueVisitors || 0,
+      });
+    }
+    return days;
+  }, [dailyStats]);
 
   const activeSite = sites.find(s => s.id === selectedSiteForAnalytics);
 
@@ -893,7 +897,7 @@ export default function Dashboard() {
                   <XAxis dataKey="name" className="text-xs" />
                   <YAxis className="text-xs" allowDecimals={false} />
                   <Tooltip />
-                  <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="views" name="Page Views" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

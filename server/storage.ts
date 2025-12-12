@@ -8,6 +8,7 @@ import {
   couponRedemptions,
   sitePasswords,
   partnerMemberships,
+  siteDailyStats,
   type User, 
   type InsertUser,
   type Site,
@@ -24,10 +25,11 @@ import {
   type SitePassword,
   type InsertSitePassword,
   type PartnerMembership,
-  type InsertPartnerMembership
+  type InsertPartnerMembership,
+  type SiteDailyStat
 } from "@shared/schema";
 import { db, pool } from "./db";
-import { eq, and, isNotNull, lt, or, isNull } from "drizzle-orm";
+import { eq, and, isNotNull, lt, or, isNull, gte, desc, sql } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import bcrypt from "bcrypt";
@@ -139,6 +141,10 @@ export interface IStorage {
   // Analytics email methods
   getUsersForAnalyticsEmail(): Promise<User[]>;
   markAnalyticsEmailSent(userId: string): Promise<void>;
+  
+  // Daily stats methods
+  recordDailyStats(siteId: string, isNewVisitor: boolean): Promise<void>;
+  getDailyStats(siteId: string, days: number): Promise<SiteDailyStat[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -717,6 +723,48 @@ export class DatabaseStorage implements IStorage {
       .update(users)
       .set({ lastAnalyticsEmailAt: new Date() })
       .where(eq(users.id, userId));
+  }
+
+  // Daily stats methods
+  async recordDailyStats(siteId: string, isNewVisitor: boolean): Promise<void> {
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    
+    // Atomic upsert using ON CONFLICT
+    await db
+      .insert(siteDailyStats)
+      .values({
+        siteId,
+        date: today,
+        views: 1,
+        uniqueVisitors: isNewVisitor ? 1 : 0,
+      })
+      .onConflictDoUpdate({
+        target: [siteDailyStats.siteId, siteDailyStats.date],
+        set: {
+          views: sql`${siteDailyStats.views} + 1`,
+          uniqueVisitors: isNewVisitor 
+            ? sql`${siteDailyStats.uniqueVisitors} + 1` 
+            : siteDailyStats.uniqueVisitors,
+        },
+      });
+  }
+
+  async getDailyStats(siteId: string, days: number): Promise<SiteDailyStat[]> {
+    // Calculate the start date (days ago)
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - (days - 1));
+    const startDateStr = startDate.toISOString().split('T')[0];
+    
+    const result = await db
+      .select()
+      .from(siteDailyStats)
+      .where(and(
+        eq(siteDailyStats.siteId, siteId),
+        gte(siteDailyStats.date, startDateStr)
+      ))
+      .orderBy(siteDailyStats.date);
+    
+    return result;
   }
 }
 

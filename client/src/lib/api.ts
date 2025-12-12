@@ -743,3 +743,24 @@ export async function verifySitePassword(siteId: string, password: string): Prom
   }
   return res.json();
 }
+
+// Daily stats for analytics charts
+export type DailyStat = {
+  id: string;
+  siteId: string;
+  date: string;
+  views: number;
+  uniqueVisitors: number;
+};
+
+export function useDailyStats(siteId: string, days: number = 7) {
+  return useQuery({
+    queryKey: ['daily-stats', siteId, days],
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE}/sites/${siteId}/daily-stats?days=${days}`);
+      if (!res.ok) throw new Error('Failed to fetch daily stats');
+      return res.json() as Promise<DailyStat[]>;
+    },
+    enabled: !!siteId
+  });
+}

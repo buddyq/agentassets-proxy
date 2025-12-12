@@ -303,3 +303,16 @@ export const insertPartnerMembershipSchema = createInsertSchema(partnerMembershi
 });
 export type InsertPartnerMembership = z.infer<typeof insertPartnerMembershipSchema>;
 export type PartnerMembership = typeof partnerMemberships.$inferSelect;
+
+// Daily analytics stats table - tracks views and visitors per day per site
+export const siteDailyStats = pgTable("site_daily_stats", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  siteId: text("site_id").notNull(),
+  date: text("date").notNull(), // YYYY-MM-DD format for easy grouping
+  views: integer("views").notNull().default(0),
+  uniqueVisitors: integer("unique_visitors").notNull().default(0),
+}, (table) => [
+  index("IDX_daily_stats_site_date").on(table.siteId, table.date),
+]);
+
+export type SiteDailyStat = typeof siteDailyStats.$inferSelect;
