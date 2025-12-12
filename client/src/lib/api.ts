@@ -284,17 +284,18 @@ export function useRepublishSite() {
 }
 
 // Themes API
-export function useThemes(options?: { preset?: boolean; userId?: string }) {
+export function useThemes(options?: { preset?: boolean; userId?: string; forUser?: boolean }) {
   return useQuery({
-    queryKey: options?.preset ? ['themes', 'preset'] : options?.userId ? ['themes', 'user', options.userId] : ['themes'],
+    queryKey: options?.forUser ? ['themes', 'forUser'] : options?.preset ? ['themes', 'preset'] : options?.userId ? ['themes', 'user', options.userId] : ['themes'],
     queryFn: async () => {
       let url = `${API_BASE}/themes`;
       const params = new URLSearchParams();
+      if (options?.forUser) params.append('forUser', 'true');
       if (options?.preset) params.append('preset', 'true');
       if (options?.userId) params.append('userId', options.userId);
       if (params.toString()) url += `?${params}`;
       
-      const res = await fetch(url);
+      const res = await fetch(url, { credentials: 'include' });
       if (!res.ok) throw new Error('Failed to fetch themes');
       return res.json() as Promise<Theme[]>;
     }
@@ -419,22 +420,25 @@ export function useReorderPhotos() {
 }
 
 // Layouts API
-export function useLayouts(options?: { preset?: boolean; userId?: string; enabledOnly?: boolean }) {
+export function useLayouts(options?: { preset?: boolean; userId?: string; enabledOnly?: boolean; forUser?: boolean }) {
   return useQuery({
-    queryKey: options?.preset 
-      ? ['layouts', 'preset', options.enabledOnly ? 'enabled' : 'all'] 
-      : options?.userId 
-        ? ['layouts', 'user', options.userId] 
-        : ['layouts'],
+    queryKey: options?.forUser 
+      ? ['layouts', 'forUser'] 
+      : options?.preset 
+        ? ['layouts', 'preset', options.enabledOnly ? 'enabled' : 'all'] 
+        : options?.userId 
+          ? ['layouts', 'user', options.userId] 
+          : ['layouts'],
     queryFn: async () => {
       let url = `${API_BASE}/layouts`;
       const params = new URLSearchParams();
+      if (options?.forUser) params.append('forUser', 'true');
       if (options?.preset) params.append('preset', 'true');
       if (options?.userId) params.append('userId', options.userId);
       if (options?.enabledOnly) params.append('enabledOnly', 'true');
       if (params.toString()) url += `?${params}`;
       
-      const res = await fetch(url);
+      const res = await fetch(url, { credentials: 'include' });
       if (!res.ok) throw new Error('Failed to fetch layouts');
       return res.json() as Promise<Layout[]>;
     }

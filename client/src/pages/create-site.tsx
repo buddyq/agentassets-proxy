@@ -56,13 +56,14 @@ export default function CreateSite() {
   const [step, setStep] = useState(1);
   const [, setLocation] = useLocation();
   const { user, isLoading: isLoadingUser } = useAuth();
-  const { data: themes = [] } = useThemes();
+  const { data: themes = [] } = useThemes({ forUser: true });
   
   // Check for admin mode via URL query param (allows testing disabled layouts)
   const isAdminMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('admin') === 'true';
   
   // Only show enabled layouts to regular users, show all to admin
-  const { data: layouts = [] } = useLayouts({ preset: true, enabledOnly: !isAdminMode });
+  // Use forUser: true to include brokerage group-assigned templates
+  const { data: layouts = [] } = useLayouts({ forUser: true });
   const createSiteMutation = useCreateSite();
   const updateCreditsMutation = useUpdateCredits();
   const { toast } = useToast();

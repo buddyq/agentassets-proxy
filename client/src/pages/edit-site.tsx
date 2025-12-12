@@ -61,8 +61,8 @@ export default function EditSite() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
   const { data: site, isLoading: isLoadingSite } = useSite(siteId);
-  const { data: themes = [] } = useThemes();
-  const { data: layouts = [] } = useLayouts({ preset: true });
+  const { data: themes = [] } = useThemes({ forUser: true });
+  const { data: layouts = [] } = useLayouts({ forUser: true });
   const updateSiteMutation = useUpdateSite();
   const addPhotoMutation = useAddPhotoToSite();
   const removePhotoMutation = useRemovePhotoFromSite();

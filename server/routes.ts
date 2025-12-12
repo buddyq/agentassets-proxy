@@ -506,9 +506,22 @@ export async function registerRoutes(
   });
 
   // Theme routes
-  app.get("/api/themes", async (req, res) => {
+  app.get("/api/themes", async (req: any, res) => {
     try {
-      const { userId, preset } = req.query;
+      const { userId, preset, forUser } = req.query;
+      
+      // If forUser=true, return themes visible to the user (includes group-assigned brokerage templates)
+      // Falls back to preset themes if not authenticated
+      if (forUser === 'true') {
+        if (req.isAuthenticated && req.isAuthenticated()) {
+          const { themes } = await storage.getTemplatesForUser(req.user.id);
+          return res.json(themes);
+        } else {
+          // Not authenticated - return preset themes only
+          const themes = await storage.getPresetThemes();
+          return res.json(themes);
+        }
+      }
       
       if (preset === 'true') {
         const themes = await storage.getPresetThemes();
@@ -588,9 +601,22 @@ export async function registerRoutes(
   });
 
   // Layout routes
-  app.get("/api/layouts", async (req, res) => {
+  app.get("/api/layouts", async (req: any, res) => {
     try {
-      const { preset, userId, enabledOnly } = req.query;
+      const { preset, userId, enabledOnly, forUser } = req.query;
+      
+      // If forUser=true, return layouts visible to the user (includes group-assigned brokerage templates)
+      // Falls back to enabled preset layouts if not authenticated
+      if (forUser === 'true') {
+        if (req.isAuthenticated && req.isAuthenticated()) {
+          const { layouts } = await storage.getTemplatesForUser(req.user.id);
+          return res.json(layouts);
+        } else {
+          // Not authenticated - return enabled preset layouts only
+          const layouts = await storage.getEnabledPresetLayouts();
+          return res.json(layouts);
+        }
+      }
       
       if (preset === 'true') {
         // If enabledOnly=true, only return enabled layouts (for regular users)
