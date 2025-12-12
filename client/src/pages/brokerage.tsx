@@ -25,6 +25,7 @@ import {
   useAssignTemplateToGroup,
   useRemoveTemplateFromGroup,
   useLayouts,
+  useUpdateBrokerage,
   type BrokerageMember,
   type BrokerageGroup,
   type BrokerageSite,
@@ -58,6 +59,7 @@ import {
   Home,
   Sparkles,
   ArrowRight,
+  Settings,
   CheckCircle2,
   Clock,
   Palette,
@@ -470,6 +472,15 @@ export default function BrokerageDashboard() {
   const deleteSite = useDeleteBrokerageSite();
   const addToGroup = useAddUserToGroup();
   const removeFromGroup = useRemoveUserFromGroup();
+  const updateBrokerage = useUpdateBrokerage();
+  
+  const [brokerageNameEdit, setBrokerageNameEdit] = useState('');
+  
+  useEffect(() => {
+    if (brokerageData?.brokerage?.name) {
+      setBrokerageNameEdit(brokerageData.brokerage.name);
+    }
+  }, [brokerageData?.brokerage?.name]);
   
   const { data: brokerageTemplates = [], refetch: refetchTemplates } = useBrokerageTemplates();
   const { data: allLayouts = [] } = useLayouts({ preset: true });
@@ -747,6 +758,10 @@ export default function BrokerageDashboard() {
               <LayoutTemplate className="w-4 h-4" />
               Layouts
             </TabsTrigger>
+            <TabsTrigger value="settings" className="flex items-center gap-2" data-testid="tab-settings">
+              <Settings className="w-4 h-4" />
+              Settings
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="agents" className="space-y-4">
@@ -928,6 +943,57 @@ export default function BrokerageDashboard() {
                 })}
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="settings" className="space-y-4">
+            <div>
+              <h2 className="text-lg font-semibold">Brokerage Settings</h2>
+              <p className="text-sm text-muted-foreground">
+                Update your brokerage information
+              </p>
+            </div>
+            
+            <Separator />
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Brokerage Information</CardTitle>
+                <CardDescription>
+                  This name will appear on all property sites created by your agents
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="brokerage-name">Brokerage Name</Label>
+                  <Input
+                    id="brokerage-name"
+                    value={brokerageNameEdit}
+                    onChange={(e) => setBrokerageNameEdit(e.target.value)}
+                    placeholder="Your Brokerage Name"
+                    data-testid="input-brokerage-name-edit"
+                  />
+                </div>
+                <Button 
+                  onClick={async () => {
+                    if (!brokerageNameEdit.trim()) {
+                      toast.error('Please enter a brokerage name');
+                      return;
+                    }
+                    try {
+                      await updateBrokerage.mutateAsync({ name: brokerageNameEdit.trim() });
+                      toast.success('Brokerage name updated');
+                      refetchBrokerage();
+                    } catch (error: any) {
+                      toast.error(error.message || 'Failed to update brokerage');
+                    }
+                  }}
+                  disabled={updateBrokerage.isPending || brokerageNameEdit === brokerage?.name}
+                  data-testid="button-save-brokerage-settings"
+                >
+                  {updateBrokerage.isPending ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </main>

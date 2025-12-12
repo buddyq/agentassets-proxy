@@ -951,7 +951,8 @@ export class DatabaseStorage implements IStorage {
       .from(brokerageMembers)
       .where(and(
         eq(brokerageMembers.brokerageId, brokerageId),
-        eq(brokerageMembers.status, 'active')
+        eq(brokerageMembers.status, 'active'),
+        eq(brokerageMembers.role, 'agent')
       ));
     return members.length;
   }

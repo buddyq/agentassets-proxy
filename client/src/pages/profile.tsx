@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
-import { useUpdateUserProfile, useChangePassword, getUploadUrl, normalizeObjectUrl } from "@/lib/api";
+import { useUpdateUserProfile, useChangePassword, getUploadUrl, normalizeObjectUrl, useBrokerage } from "@/lib/api";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { useToast } from "@/hooks/use-toast";
 import { Instagram, Youtube, Facebook, Linkedin, X, Image, Trash2, AlertCircle, CheckCircle2, Lock } from "lucide-react";
@@ -18,6 +18,9 @@ export default function Profile() {
   const { toast } = useToast();
   const updateProfileMutation = useUpdateUserProfile();
   const changePasswordMutation = useChangePassword();
+  const { data: brokerageData } = useBrokerage();
+  
+  const isBrokerageAdmin = brokerageData?.membership?.role === 'admin';
 
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
@@ -350,28 +353,30 @@ export default function Profile() {
                   data-testid="input-email"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="brokerage">Brokerage</Label>
-                  <Input
-                    id="brokerage"
-                    name="brokerage"
-                    value={formData.brokerage}
-                    onChange={handleInputChange}
-                    data-testid="input-brokerage"
-                  />
+              {!isBrokerageAdmin && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="brokerage">Brokerage</Label>
+                    <Input
+                      id="brokerage"
+                      name="brokerage"
+                      value={formData.brokerage}
+                      onChange={handleInputChange}
+                      data-testid="input-brokerage"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="teamName">Team Name</Label>
+                    <Input
+                      id="teamName"
+                      name="teamName"
+                      value={formData.teamName}
+                      onChange={handleInputChange}
+                      data-testid="input-teamName"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="teamName">Team Name</Label>
-                  <Input
-                    id="teamName"
-                    name="teamName"
-                    value={formData.teamName}
-                    onChange={handleInputChange}
-                    data-testid="input-teamName"
-                  />
-                </div>
-              </div>
+              )}
               <div>
                 <Label htmlFor="address">Address</Label>
                 <Input
