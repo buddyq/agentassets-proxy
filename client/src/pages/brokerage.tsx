@@ -876,51 +876,79 @@ export default function BrokerageDashboard() {
                               <p className="text-sm text-muted-foreground">{layout?.description || 'Exclusive brokerage layout'}</p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-2">
-                              <label className="text-sm text-muted-foreground" htmlFor={`available-all-${template.id}`}>
-                                Available to all agents
-                              </label>
-                              <Button
-                                id={`available-all-${template.id}`}
-                                variant={template.availableToAll ? "default" : "outline"}
-                                size="sm"
-                                disabled={updateTemplate.isPending}
-                                onClick={() => {
-                                  updateTemplate.mutate(
-                                    { templateId: template.id, availableToAll: !template.availableToAll },
-                                    {
-                                      onSuccess: () => {
-                                        toast.success(template.availableToAll 
-                                          ? 'Layout restricted to assigned groups' 
-                                          : 'Layout now available to all agents');
-                                        refetchTemplates();
-                                      },
-                                      onError: (err) => toast.error(err.message)
+                          <div className="flex items-center gap-3">
+                            <div className="flex flex-col items-end gap-1">
+                              <div className="flex items-center gap-2">
+                                <label className="text-xs text-muted-foreground" htmlFor={`available-all-${template.id}`}>
+                                  Access:
+                                </label>
+                                <Button
+                                  id={`available-all-${template.id}`}
+                                  variant={template.availableToAll ? "default" : "outline"}
+                                  size="sm"
+                                  disabled={updateTemplate.isPending}
+                                  onClick={() => {
+                                    if (template.availableToAll) {
+                                      // Switching to Groups Only - update flag and open dialog
+                                      updateTemplate.mutate(
+                                        { templateId: template.id, availableToAll: false },
+                                        {
+                                          onSuccess: () => {
+                                            toast.success('Layout restricted to selected groups');
+                                            refetchTemplates();
+                                            // Automatically open the group selection dialog
+                                            setSelectedTemplate(template.id);
+                                          },
+                                          onError: (err) => toast.error(err.message)
+                                        }
+                                      );
+                                    } else {
+                                      // Switching to Everyone
+                                      updateTemplate.mutate(
+                                        { templateId: template.id, availableToAll: true },
+                                        {
+                                          onSuccess: () => {
+                                            toast.success('Layout now available to all agents');
+                                            refetchTemplates();
+                                          },
+                                          onError: (err) => toast.error(err.message)
+                                        }
+                                      );
                                     }
-                                  );
-                                }}
-                              >
-                                {template.availableToAll ? (
-                                  <>
-                                    <CheckCircle className="w-4 h-4 mr-1" />
-                                    Everyone
-                                  </>
-                                ) : (
-                                  <>
-                                    <Circle className="w-4 h-4 mr-1" />
-                                    Groups Only
-                                  </>
-                                )}
-                              </Button>
+                                  }}
+                                >
+                                  {template.availableToAll ? (
+                                    <>
+                                      <CheckCircle className="w-4 h-4 mr-1" />
+                                      All Agents
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Users className="w-4 h-4 mr-1" />
+                                      Groups Only
+                                    </>
+                                  )}
+                                </Button>
+                              </div>
+                              {!template.availableToAll && (
+                                <div className="text-xs text-muted-foreground">
+                                  {template.assignedGroups?.length ? (
+                                    <span>{template.assignedGroups.length} group{template.assignedGroups.length !== 1 ? 's' : ''} assigned</span>
+                                  ) : (
+                                    <span className="text-amber-600">No groups assigned yet</span>
+                                  )}
+                                </div>
+                              )}
                             </div>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setSelectedTemplate(template.id)}
-                            >
-                              Manage Groups
-                            </Button>
+                            {!template.availableToAll && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setSelectedTemplate(template.id)}
+                              >
+                                Select Groups
+                              </Button>
+                            )}
                           </div>
                         </div>
                       </CardContent>
@@ -1024,7 +1052,7 @@ export default function BrokerageDashboard() {
                       </Avatar>
                       <div>
                         <div className="text-sm font-medium">{member.user?.name}</div>
-                        <div className="text-xs text-muted-foreground">{member.user?.email || member.email}</div>
+                        <div className="text-xs text-muted-foreground">{member.user?.email || 'No email'}</div>
                       </div>
                     </div>
                     {isInGroup ? (

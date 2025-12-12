@@ -850,6 +850,7 @@ export type BrokerageTemplate = {
   assignedBy: string | null;
   availableToAll: boolean;
   createdAt: Date;
+  assignedGroups?: { id: string; groupId: string }[];
 };
 
 export type BrokerageSite = Site & {
