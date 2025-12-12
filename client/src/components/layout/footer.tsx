@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import logoUrl from "@/assets/logo.png";
+import logoUrl from "@assets/agentassets_logo_white_1765568440271.png";
 import { useAuth } from "@/hooks/useAuth";
 
 export function Footer() {
@@ -11,7 +11,7 @@ export function Footer() {
         <div className="grid md:grid-cols-4 gap-8">
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center gap-2 mb-4">
-              <img src={logoUrl} alt="AgentAssets" className="h-12 w-auto" style={{ background: 'rgba(255,255,255,0.8)' }} />
+              <img src={logoUrl} alt="AgentAssets" className="h-12 w-auto" />
             </div>
             <p className="text-secondary-foreground/80 max-w-xs">
               Single property websites that don't suck. The easiest way to showcase your listings and impress your sellers.

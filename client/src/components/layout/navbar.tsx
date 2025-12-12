@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useBrokerage } from "@/lib/api";
 import { LayoutDashboard, CreditCard, Palette, User, Settings, LogOut as LogOutIcon, Infinity } from "lucide-react";
-import logoUrl from "@/assets/logo.png";
+import logoUrl from "@assets/agentassets_logo_white_1765568440271.png";
 import {
   DropdownMenu,
   DropdownMenuContent,
