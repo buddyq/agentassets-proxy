@@ -412,7 +412,7 @@ export async function sendAgentInvitationEmail(data: AgentInvitationEmailData): 
   const safeRecipientName = escapeHtml(recipientName || 'there');
   const safeBrokerageName = escapeHtml(brokerageName);
   const setupUrl = `${baseUrl}/setup-password?token=${setupToken}`;
-  const logoUrl = 'https://agentassets.com/logo-email.png';
+  const logoUrl = 'https://atxpocket.nyc3.cdn.digitaloceanspaces.com/static/img/logos/agentassets_logo_white.png';
 
   const htmlContent = `
     <!DOCTYPE html>
@@ -446,7 +446,8 @@ export async function sendAgentInvitationEmail(data: AgentInvitationEmailData): 
           <div class="content">
             <div class="welcome-box">
               <h2>Hi ${safeRecipientName},</h2>
-              <p>You've been invited to join the ${safeBrokerageName} team on AgentAssets! Create stunning property websites in minutes.</p>
+              <p style="font-size: 18px; font-weight: 500;">You've been invited to join the ${safeBrokerageName} team on AgentAssets!</p>
+              <p style="margin-top: 8px;">Create stunning property websites in minutes.</p>
             </div>
             
             <div class="features">
