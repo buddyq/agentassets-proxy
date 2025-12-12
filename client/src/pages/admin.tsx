@@ -1557,6 +1557,7 @@ export default function AdminDashboard() {
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">User</th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Email</th>
                         <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">Credits</th>
+                        <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">Type</th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Joined</th>
                         <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Actions</th>
                       </tr>
@@ -1564,7 +1565,7 @@ export default function AdminDashboard() {
                     <tbody className="divide-y">
                       {users.length === 0 ? (
                         <tr>
-                          <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
+                          <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
                             No users found
                           </td>
                         </tr>
@@ -1591,6 +1592,15 @@ export default function AdminDashboard() {
                               <Badge variant={user.credits > 0 ? 'default' : 'secondary'} className="gap-1">
                                 <CreditCard className="h-3 w-3" />
                                 {user.credits}
+                              </Badge>
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              <Badge variant={user.accountType === 'broker' ? 'default' : 'outline'} className="capitalize">
+                                {user.accountType === 'broker' ? (
+                                  <><Building2 className="h-3 w-3 mr-1" />Broker</>
+                                ) : (
+                                  'Individual'
+                                )}
                               </Badge>
                             </td>
                             <td className="px-4 py-3 text-sm text-muted-foreground">
