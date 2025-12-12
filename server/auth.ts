@@ -2,7 +2,8 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Express } from "express";
 import session from "express-session";
-import { scrypt, randomBytes, timingSafeEqual } from "crypto";
+import bcrypt from "bcrypt";
+import { scrypt, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
@@ -14,18 +15,35 @@ declare global {
 }
 
 const scryptAsync = promisify(scrypt);
+const SALT_ROUNDS = parseInt(process.env.BCRYPT_SALT_ROUNDS || "12", 10);
 
-async function hashPassword(password: string) {
-  const salt = randomBytes(16).toString("hex");
-  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
-  return `${buf.toString("hex")}.${salt}`;
+export async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, SALT_ROUNDS);
 }
 
-async function comparePasswords(supplied: string, stored: string) {
-  const [hashed, salt] = stored.split(".");
-  const hashedBuf = Buffer.from(hashed, "hex");
-  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(hashedBuf, suppliedBuf);
+async function comparePasswords(supplied: string, stored: string, userId?: string): Promise<boolean> {
+  // Check if it's a bcrypt hash (starts with $2)
+  if (stored.startsWith("$2")) {
+    return bcrypt.compare(supplied, stored);
+  }
+  
+  // Legacy scrypt hash (format: hash.salt)
+  if (stored.includes(".")) {
+    const [hashed, salt] = stored.split(".");
+    const hashedBuf = Buffer.from(hashed, "hex");
+    const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+    const isValid = timingSafeEqual(hashedBuf, suppliedBuf);
+    
+    // Opportunistic rehash to bcrypt on successful login
+    if (isValid && userId) {
+      const newHash = await hashPassword(supplied);
+      await storage.updateUserPassword(userId, newHash);
+    }
+    
+    return isValid;
+  }
+  
+  return false;
 }
 
 export function setupAuth(app: Express) {
@@ -50,11 +68,14 @@ export function setupAuth(app: Express) {
     new LocalStrategy(async (username, password, done) => {
       try {
         const user = await storage.getUserByUsername(username);
-        if (!user || !user.password || !(await comparePasswords(password, user.password))) {
+        if (!user || !user.password) {
           return done(null, false);
-        } else {
-          return done(null, user);
         }
+        const isValid = await comparePasswords(password, user.password, user.id);
+        if (!isValid) {
+          return done(null, false);
+        }
+        return done(null, user);
       } catch (error) {
         return done(error);
       }

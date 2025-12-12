@@ -89,6 +89,7 @@ export interface IStorage {
   updateUserTrialCredits(id: string, trialCredits: number): Promise<User>;
   updateUserLogo(id: string, logo: string | null): Promise<User>;
   updateUserProfile(id: string, profile: Partial<User>): Promise<User>;
+  updateUserPassword(id: string, password: string): Promise<void>;
   
   // Site methods
   getSite(id: string): Promise<Site | undefined>;
@@ -276,6 +277,13 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return user;
+  }
+
+  async updateUserPassword(id: string, password: string): Promise<void> {
+    await db
+      .update(users)
+      .set({ password, updatedAt: new Date() })
+      .where(eq(users.id, id));
   }
 
   // Site methods
