@@ -1128,16 +1128,31 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTemplatesForUser(userId: string): Promise<{ layouts: Layout[]; themes: Theme[] }> {
-    // Get all public templates
-    const publicLayouts = await db
+    // Get all brokerage-assigned template IDs to exclude from public results
+    const allBrokerageTemplates = await db.select().from(brokerageTemplates);
+    const brokerageLayoutIds = allBrokerageTemplates
+      .filter(t => t.templateType === 'layout')
+      .map(t => t.templateId);
+    const brokerageThemeIds = allBrokerageTemplates
+      .filter(t => t.templateType === 'theme')
+      .map(t => t.templateId);
+    
+    // Get all public templates (excluding brokerage-assigned ones)
+    let publicLayouts = await db
       .select()
       .from(layouts)
       .where(and(eq(layouts.type, 'preset'), eq(layouts.enabled, true)));
     
-    const publicThemes = await db
+    // Filter out brokerage-assigned layouts from public results
+    publicLayouts = publicLayouts.filter(l => !brokerageLayoutIds.includes(l.id));
+    
+    let publicThemes = await db
       .select()
       .from(themes)
       .where(eq(themes.type, 'preset'));
+    
+    // Filter out brokerage-assigned themes from public results
+    publicThemes = publicThemes.filter(t => !brokerageThemeIds.includes(t.id));
     
     // Check if user is in a brokerage
     const membership = await this.getBrokerageMembership(userId);
