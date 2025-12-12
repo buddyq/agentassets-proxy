@@ -292,7 +292,7 @@ function GroupCard({ group, members, onDelete, onManageMembers }: {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   
   return (
-    <Card data-testid={`card-group-${group.id}`}>
+    <Card data-testid={`card-group-${group.id}`} className="transition-all hover:shadow-md hover:border-primary/30">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg">{group.name}</CardTitle>
@@ -321,9 +321,9 @@ function GroupCard({ group, members, onDelete, onManageMembers }: {
             <span>{group.memberCount || 0} members</span>
           </div>
           <Button 
-            variant="outline" 
             size="sm" 
             onClick={onManageMembers}
+            className="bg-primary hover:bg-primary/90"
             data-testid={`button-manage-group-${group.id}`}
           >
             <UserPlus className="w-4 h-4 mr-2" />
