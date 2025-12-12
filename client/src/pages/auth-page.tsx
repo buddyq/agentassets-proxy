@@ -73,7 +73,8 @@ export default function AuthPage() {
     if (user && isTrialFlow && registerMutation.isSuccess) {
       setJustRegistered(true);
     } else if (user && !justRegistered) {
-      setLocation("/dashboard");
+      // Redirect admins to /admin, others to /dashboard
+      setLocation(user.isAdmin ? "/admin" : "/dashboard");
     }
   }, [user, setLocation, isTrialFlow, registerMutation.isSuccess, justRegistered]);
 
