@@ -11,9 +11,11 @@ import {
   useThemes, useCreateTheme, useUpdateTheme, useDeleteTheme, 
   useLayouts, useCreateLayout, useUpdateLayout, useDeleteLayout,
   useAdminCoupons, useCreateCoupon, useUpdateCoupon, useDeleteCoupon,
-  useAdminUsers, useAdminUpdateUserCredits, useAdminDeleteUser
+  useAdminUsers, useAdminUpdateUserCredits, useAdminDeleteUser,
+  useAdminBrokerages, useAdminBrokerageTemplates, useAdminAssignTemplateToBrokerage, useAdminRemoveTemplateFromBrokerage,
+  type BrokerageWithOwner, type BrokerageTemplate
 } from "@/lib/api";
-import { Plus, Palette, Trash2, Shield, Pencil, LayoutTemplate, Ticket, Users, CreditCard, Gift, Clock, Hash, Calendar, Loader2 } from "lucide-react";
+import { Plus, Palette, Trash2, Shield, Pencil, LayoutTemplate, Ticket, Users, CreditCard, Gift, Clock, Hash, Calendar, Loader2, Building2, Check } from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -54,6 +56,15 @@ export default function AdminDashboard() {
   const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
   const [editingUser, setEditingUser] = useState<Omit<User, 'password'> | null>(null);
   const { toast } = useToast();
+  
+  // Brokerage template management
+  const { data: brokerages = [] } = useAdminBrokerages();
+  const [selectedBrokerageId, setSelectedBrokerageId] = useState<string>("");
+  const { data: brokerageTemplates = [], refetch: refetchBrokerageTemplates } = useAdminBrokerageTemplates(selectedBrokerageId);
+  const assignTemplateMutation = useAdminAssignTemplateToBrokerage();
+  const removeTemplateMutation = useAdminRemoveTemplateFromBrokerage();
+  const [isAssignLayoutDialogOpen, setIsAssignLayoutDialogOpen] = useState(false);
+  const [selectedLayoutToAssign, setSelectedLayoutToAssign] = useState<string>("");
   
   const [couponCode, setCouponCode] = useState("");
   const [couponDescription, setCouponDescription] = useState("");
@@ -459,6 +470,10 @@ export default function AdminDashboard() {
             <TabsTrigger value="users" className="gap-2">
               <Users className="h-4 w-4" />
               Users
+            </TabsTrigger>
+            <TabsTrigger value="brokerages" className="gap-2">
+              <Building2 className="h-4 w-4" />
+              Brokerages
             </TabsTrigger>
           </TabsList>
 
@@ -1575,6 +1590,167 @@ export default function AdminDashboard() {
                     </tbody>
                   </table>
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="brokerages">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+              <div>
+                <h2 className="text-xl font-bold text-secondary">Brokerage Layout Management</h2>
+                <p className="text-muted-foreground">Assign exclusive layouts to brokerages for their agents to use.</p>
+              </div>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Select a Brokerage</CardTitle>
+                <CardDescription>Choose a brokerage to manage its assigned layouts</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Select value={selectedBrokerageId} onValueChange={setSelectedBrokerageId}>
+                  <SelectTrigger className="w-full max-w-md">
+                    <SelectValue placeholder="Select a brokerage..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {brokerages.map((brokerage) => (
+                      <SelectItem key={brokerage.id} value={brokerage.id}>
+                        {brokerage.name} {brokerage.ownerEmail && `(${brokerage.ownerEmail})`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {selectedBrokerageId && (
+                  <div className="mt-8">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold">Assigned Layouts</h3>
+                      <Dialog open={isAssignLayoutDialogOpen} onOpenChange={setIsAssignLayoutDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button className="gap-2">
+                            <Plus className="h-4 w-4" />
+                            Assign Layout
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Assign Layout to Brokerage</DialogTitle>
+                          </DialogHeader>
+                          <div className="py-4">
+                            <Label>Select Layout</Label>
+                            <Select value={selectedLayoutToAssign} onValueChange={setSelectedLayoutToAssign}>
+                              <SelectTrigger className="mt-2">
+                                <SelectValue placeholder="Choose a layout..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {layouts.filter(l => !brokerageTemplates.some(bt => bt.templateId === l.id && bt.templateType === 'layout')).map((layout) => (
+                                  <SelectItem key={layout.id} value={layout.id}>
+                                    {layout.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <DialogFooter>
+                            <Button
+                              disabled={!selectedLayoutToAssign || assignTemplateMutation.isPending}
+                              onClick={() => {
+                                assignTemplateMutation.mutate(
+                                  { brokerageId: selectedBrokerageId, templateType: 'layout', templateId: selectedLayoutToAssign },
+                                  {
+                                    onSuccess: () => {
+                                      toast({ title: "Layout assigned", description: "The layout has been assigned to the brokerage." });
+                                      setIsAssignLayoutDialogOpen(false);
+                                      setSelectedLayoutToAssign("");
+                                      refetchBrokerageTemplates();
+                                    },
+                                    onError: (err) => {
+                                      toast({ title: "Error", description: err.message, variant: "destructive" });
+                                    }
+                                  }
+                                );
+                              }}
+                            >
+                              {assignTemplateMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Assign Layout"}
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
+
+                    {brokerageTemplates.filter(t => t.templateType === 'layout').length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground border rounded-lg">
+                        No layouts assigned to this brokerage yet.
+                      </div>
+                    ) : (
+                      <div className="border rounded-lg overflow-hidden">
+                        <table className="w-full">
+                          <thead className="bg-muted/50">
+                            <tr>
+                              <th className="text-left px-4 py-3 font-medium">Layout Name</th>
+                              <th className="text-left px-4 py-3 font-medium">Assigned</th>
+                              <th className="text-right px-4 py-3 font-medium">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {brokerageTemplates.filter(t => t.templateType === 'layout').map((template) => {
+                              const layout = layouts.find(l => l.id === template.templateId);
+                              return (
+                                <tr key={template.id} className="border-t">
+                                  <td className="px-4 py-3">
+                                    {layout?.name || 'Unknown Layout'}
+                                  </td>
+                                  <td className="px-4 py-3 text-muted-foreground text-sm">
+                                    {template.createdAt ? format(new Date(template.createdAt), 'MMM d, yyyy') : 'N/A'}
+                                  </td>
+                                  <td className="px-4 py-3 text-right">
+                                    <AlertDialog>
+                                      <AlertDialogTrigger asChild>
+                                        <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+                                          <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                      </AlertDialogTrigger>
+                                      <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                          <AlertDialogTitle>Remove Layout?</AlertDialogTitle>
+                                          <AlertDialogDescription>
+                                            This will remove the layout from this brokerage. Agents will no longer have access to it.
+                                          </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                          <AlertDialogAction
+                                            className="bg-red-600 hover:bg-red-700"
+                                            onClick={() => {
+                                              removeTemplateMutation.mutate(
+                                                { brokerageId: selectedBrokerageId, templateId: template.id },
+                                                {
+                                                  onSuccess: () => {
+                                                    toast({ title: "Layout removed", description: "The layout has been removed from the brokerage." });
+                                                    refetchBrokerageTemplates();
+                                                  },
+                                                  onError: (err) => {
+                                                    toast({ title: "Error", description: err.message, variant: "destructive" });
+                                                  }
+                                                }
+                                              );
+                                            }}
+                                          >
+                                            Remove
+                                          </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                      </AlertDialogContent>
+                                    </AlertDialog>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

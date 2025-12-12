@@ -842,6 +842,16 @@ export type BrokerageGroup = {
   memberCount?: number;
 };
 
+export type BrokerageTemplate = {
+  id: string;
+  brokerageId: string;
+  templateType: 'layout' | 'theme';
+  templateId: string;
+  assignedBy: string | null;
+  availableToAll: boolean;
+  createdAt: Date;
+};
+
 export type BrokerageSite = Site & {
   agent?: {
     id: string;
@@ -1199,6 +1209,189 @@ export function useConfirmBrokerageSubscription() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['brokerage'] });
+    }
+  });
+}
+
+// ==================== BROKERAGE TEMPLATE MANAGEMENT ====================
+
+// Get templates assigned to the brokerage
+export function useBrokerageTemplates() {
+  return useQuery({
+    queryKey: ['brokerage-templates'],
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE}/brokerage/templates`, { credentials: 'include' });
+      if (!res.ok) return [];
+      return res.json() as Promise<BrokerageTemplate[]>;
+    }
+  });
+}
+
+// Update a brokerage template (availableToAll)
+export function useUpdateBrokerageTemplate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ templateId, availableToAll }: { templateId: string; availableToAll: boolean }) => {
+      const res = await fetch(`${API_BASE}/brokerage/templates/${templateId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ availableToAll }),
+        credentials: 'include'
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to update template');
+      }
+      return res.json() as Promise<BrokerageTemplate>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['brokerage-templates'] });
+    }
+  });
+}
+
+// Get group assignments for a template
+export function useTemplateGroupAssignments(templateId: string) {
+  return useQuery({
+    queryKey: ['template-groups', templateId],
+    queryFn: async () => {
+      if (!templateId) return [];
+      const res = await fetch(`${API_BASE}/brokerage/templates/${templateId}/groups`, { credentials: 'include' });
+      if (!res.ok) return [];
+      return res.json() as Promise<{ id: string; brokerageTemplateId: string; groupId: string }[]>;
+    },
+    enabled: !!templateId
+  });
+}
+
+// Assign template to a group
+export function useAssignTemplateToGroup() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ templateId, groupId }: { templateId: string; groupId: string }) => {
+      const res = await fetch(`${API_BASE}/brokerage/templates/${templateId}/groups/${groupId}`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to assign template to group');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['template-groups'] });
+      queryClient.invalidateQueries({ queryKey: ['brokerage-templates'] });
+    }
+  });
+}
+
+// Remove template from a group
+export function useRemoveTemplateFromGroup() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ templateId, groupId }: { templateId: string; groupId: string }) => {
+      const res = await fetch(`${API_BASE}/brokerage/templates/${templateId}/groups/${groupId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to remove template from group');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['template-groups'] });
+      queryClient.invalidateQueries({ queryKey: ['brokerage-templates'] });
+    }
+  });
+}
+
+// ==================== ADMIN BROKERAGE MANAGEMENT ====================
+
+export type BrokerageWithOwner = Brokerage & { ownerName?: string; ownerEmail?: string };
+
+// Get all brokerages (admin only)
+export function useAdminBrokerages() {
+  return useQuery({
+    queryKey: ['admin-brokerages'],
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE}/admin/brokerages`, { credentials: 'include' });
+      if (!res.ok) return [];
+      return res.json() as Promise<BrokerageWithOwner[]>;
+    }
+  });
+}
+
+// Get templates for a specific brokerage (admin only)
+export function useAdminBrokerageTemplates(brokerageId: string) {
+  return useQuery({
+    queryKey: ['admin-brokerage-templates', brokerageId],
+    queryFn: async () => {
+      if (!brokerageId) return [];
+      const res = await fetch(`${API_BASE}/admin/brokerages/${brokerageId}/templates`, { credentials: 'include' });
+      if (!res.ok) return [];
+      return res.json() as Promise<BrokerageTemplate[]>;
+    },
+    enabled: !!brokerageId
+  });
+}
+
+// Get groups for a specific brokerage (admin only)
+export function useAdminBrokerageGroups(brokerageId: string) {
+  return useQuery({
+    queryKey: ['admin-brokerage-groups', brokerageId],
+    queryFn: async () => {
+      if (!brokerageId) return [];
+      const res = await fetch(`${API_BASE}/admin/brokerages/${brokerageId}/groups`, { credentials: 'include' });
+      if (!res.ok) return [];
+      return res.json() as Promise<BrokerageGroup[]>;
+    },
+    enabled: !!brokerageId
+  });
+}
+
+// Assign a template to a brokerage (admin only)
+export function useAdminAssignTemplateToBrokerage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ brokerageId, templateType, templateId }: { brokerageId: string; templateType: 'layout' | 'theme'; templateId: string }) => {
+      const res = await fetch(`${API_BASE}/admin/brokerages/${brokerageId}/templates`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ templateType, templateId }),
+        credentials: 'include'
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to assign template');
+      }
+      return res.json() as Promise<BrokerageTemplate>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-brokerage-templates'] });
+    }
+  });
+}
+
+// Remove a template from a brokerage (admin only)
+export function useAdminRemoveTemplateFromBrokerage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ brokerageId, templateId }: { brokerageId: string; templateId: string }) => {
+      const res = await fetch(`${API_BASE}/admin/brokerages/${brokerageId}/templates/${templateId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to remove template');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-brokerage-templates'] });
     }
   });
 }
