@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useCreateSite, useUpdateCredits, useThemes, useLayouts, getUploadUrl, normalizeObjectUrl } from "@/lib/api";
+import { useCreateSite, useUpdateCredits, useThemes, useLayouts, getUploadUrl, normalizeObjectUrl, useBrokerage } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
@@ -56,6 +56,7 @@ export default function CreateSite() {
   const [step, setStep] = useState(1);
   const [, setLocation] = useLocation();
   const { user, isLoading: isLoadingUser } = useAuth();
+  const { data: brokerage } = useBrokerage();
   const { data: themes = [] } = useThemes({ forUser: true });
   
   // Check for admin mode via URL query param (allows testing disabled layouts)
@@ -89,9 +90,12 @@ export default function CreateSite() {
     { label: 'Email', done: !!user.email, icon: Mail },
   ] : [];
 
-  // Redirect to credits page if user has no credits (regular or trial)
+  // Check if user is a brokerage member (has unlimited credits)
+  const isBrokerageAgent = !!brokerage;
+
+  // Redirect to credits page if user has no credits (regular or trial) and is not a brokerage agent
   useEffect(() => {
-    if (!isLoadingUser && user && user.credits < 1 && !hasTrialCredits) {
+    if (!isLoadingUser && user && user.credits < 1 && !hasTrialCredits && !isBrokerageAgent) {
       toast({
         variant: "destructive",
         title: "No Credits Available",
@@ -99,7 +103,7 @@ export default function CreateSite() {
       });
       setLocation("/credits");
     }
-  }, [user, isLoadingUser, setLocation, toast, hasTrialCredits]);
+  }, [user, isLoadingUser, setLocation, toast, hasTrialCredits, isBrokerageAgent]);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -300,7 +304,8 @@ export default function CreateSite() {
     const hasCredits = user && user.credits >= 1;
     const canUseTrial = hasTrialCredits;
     
-    if (!user || (!hasCredits && !canUseTrial)) {
+    // Brokerage agents have unlimited credits, skip credit check for them
+    if (!user || (!hasCredits && !canUseTrial && !isBrokerageAgent)) {
       toast({
         variant: "destructive",
         title: "Insufficient Credits",

@@ -417,6 +417,10 @@ export async function registerRoutes(
       const { useTrialCredit, ...siteData } = req.body;
       const wantsTrialCredit = useTrialCredit === true;
       
+      // Check if user is a brokerage agent (has unlimited credits)
+      const brokerageMembership = await storage.getBrokerageMembership(userId);
+      const isBrokerageAgent = brokerageMembership && brokerageMembership.status === 'active';
+      
       // Check for available credits
       const hasRegularCredits = user.credits > 0;
       // Allow trial if user has trial credits and either trialEndsAt is in the future, or it's null (new user)
@@ -424,7 +428,8 @@ export async function registerRoutes(
       const isTrialValid = trialEndsAt > new Date();
       const hasTrialCredits = (user.trialCredits || 0) > 0 && isTrialValid;
       
-      if (!hasRegularCredits && !hasTrialCredits) {
+      // Brokerage agents have unlimited credits
+      if (!isBrokerageAgent && !hasRegularCredits && !hasTrialCredits) {
         return res.status(403).json({ error: "Insufficient credits. Purchase credits to create new sites." });
       }
       
@@ -435,7 +440,10 @@ export async function registerRoutes(
       const validated = insertSiteSchema.parse({ ...siteData, userId });
       
       let site;
-      if (shouldUseTrial) {
+      if (isBrokerageAgent) {
+        // Brokerage agents get sites for free (no credit deduction)
+        site = await storage.createSite(validated);
+      } else if (shouldUseTrial) {
         // Create trial site with 7-day expiration (uses user's trialEndsAt or a new 7-day window)
         site = await storage.createTrialSite(validated, trialEndsAt);
         // Decrement trial credits
