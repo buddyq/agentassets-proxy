@@ -194,11 +194,15 @@ export async function registerRoutes(
       // Get user for logo fallbacks and agent info
       const user = site.userId ? await storage.getUser(site.userId) : null;
       
-      // Include effective logo (site logo or fallback to user's default logo)
-      const effectiveLogo = site.logo || user?.logo || null;
+      // Get brokerage for logo fallback
+      const brokerageMembership = user?.id ? await storage.getBrokerageMembership(user.id) : null;
+      const brokerage = brokerageMembership ? await storage.getBrokerage(brokerageMembership.brokerageId) : null;
       
-      // Include effective hero logo (heroLogo or fallback to site logo or user's default logo)
-      const effectiveHeroLogo = site.heroLogo || site.logo || user?.logo || null;
+      // Include effective logo (site logo or fallback to user's default logo or brokerage logo)
+      const effectiveLogo = site.logo || user?.logo || brokerage?.logo || null;
+      
+      // Include effective hero logo (heroLogo or fallback to site logo or user's default logo or brokerage logo)
+      const effectiveHeroLogo = site.heroLogo || site.logo || user?.logo || brokerage?.logo || null;
       
       // Include agent info for contact section
       const agentInfo = user ? {
@@ -296,11 +300,15 @@ export async function registerRoutes(
       // Get user for logo fallbacks and agent info
       const user = site.userId ? await storage.getUser(site.userId) : null;
       
-      // Include effective logo (site logo or fallback to user's default logo)
-      const effectiveLogo = site.logo || user?.logo || null;
+      // Get brokerage for logo fallback
+      const brokerageMembership = user?.id ? await storage.getBrokerageMembership(user.id) : null;
+      const brokerage = brokerageMembership ? await storage.getBrokerage(brokerageMembership.brokerageId) : null;
       
-      // Include effective hero logo (heroLogo or fallback to site logo or user's default logo)
-      const effectiveHeroLogo = site.heroLogo || site.logo || user?.logo || null;
+      // Include effective logo (site logo or fallback to user's default logo or brokerage logo)
+      const effectiveLogo = site.logo || user?.logo || brokerage?.logo || null;
+      
+      // Include effective hero logo (heroLogo or fallback to site logo or user's default logo or brokerage logo)
+      const effectiveHeroLogo = site.heroLogo || site.logo || user?.logo || brokerage?.logo || null;
       
       // Include agent info for contact section
       const agentInfo = user ? {
@@ -424,11 +432,15 @@ export async function registerRoutes(
       // Get user for logo fallbacks and agent info
       const user = site.userId ? await storage.getUser(site.userId) : null;
       
-      // Include effective logo (site logo or fallback to user's default logo)
-      const effectiveLogo = site.logo || user?.logo || null;
+      // Get brokerage for logo fallback
+      const brokerageMembership = user?.id ? await storage.getBrokerageMembership(user.id) : null;
+      const brokerage = brokerageMembership ? await storage.getBrokerage(brokerageMembership.brokerageId) : null;
       
-      // Include effective hero logo (heroLogo or fallback to site logo or user's default logo)
-      const effectiveHeroLogo = site.heroLogo || site.logo || user?.logo || null;
+      // Include effective logo (site logo or fallback to user's default logo or brokerage logo)
+      const effectiveLogo = site.logo || user?.logo || brokerage?.logo || null;
+      
+      // Include effective hero logo (heroLogo or fallback to site logo or user's default logo or brokerage logo)
+      const effectiveHeroLogo = site.heroLogo || site.logo || user?.logo || brokerage?.logo || null;
       
       // Include agent info for contact section
       const agentInfo = user ? {

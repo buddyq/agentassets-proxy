@@ -26,11 +26,13 @@ import {
   useRemoveTemplateFromGroup,
   useLayouts,
   useUpdateBrokerage,
+  normalizeObjectUrl,
   type BrokerageMember,
   type BrokerageGroup,
   type BrokerageSite,
   type BrokerageTemplate
 } from '@/lib/api';
+import { ObjectUploader } from '@/components/ObjectUploader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -475,12 +477,16 @@ export default function BrokerageDashboard() {
   const updateBrokerage = useUpdateBrokerage();
   
   const [brokerageNameEdit, setBrokerageNameEdit] = useState('');
+  const [brokerageLogoEdit, setBrokerageLogoEdit] = useState<string | null>(null);
+  const [brokerageWebsiteEdit, setBrokerageWebsiteEdit] = useState('');
   
   useEffect(() => {
-    if (brokerageData?.brokerage?.name) {
-      setBrokerageNameEdit(brokerageData.brokerage.name);
+    if (brokerageData?.brokerage) {
+      setBrokerageNameEdit(brokerageData.brokerage.name || '');
+      setBrokerageLogoEdit(brokerageData.brokerage.logo || null);
+      setBrokerageWebsiteEdit(brokerageData.brokerage.website || '');
     }
-  }, [brokerageData?.brokerage?.name]);
+  }, [brokerageData?.brokerage]);
   
   const { data: brokerageTemplates = [], refetch: refetchTemplates } = useBrokerageTemplates();
   const { data: allLayouts = [] } = useLayouts({ preset: true });
@@ -959,10 +965,10 @@ export default function BrokerageDashboard() {
               <CardHeader>
                 <CardTitle>Brokerage Information</CardTitle>
                 <CardDescription>
-                  This name will appear on all property sites created by your agents
+                  This information will appear on all property sites created by your agents
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
                 <div className="grid gap-2">
                   <Label htmlFor="brokerage-name">Brokerage Name</Label>
                   <Input
@@ -973,6 +979,57 @@ export default function BrokerageDashboard() {
                     data-testid="input-brokerage-name-edit"
                   />
                 </div>
+                
+                <div className="grid gap-2">
+                  <Label htmlFor="brokerage-website">Website</Label>
+                  <Input
+                    id="brokerage-website"
+                    value={brokerageWebsiteEdit}
+                    onChange={(e) => setBrokerageWebsiteEdit(e.target.value)}
+                    placeholder="https://www.yourbrokeragesite.com"
+                    data-testid="input-brokerage-website-edit"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label>Brokerage Logo</Label>
+                  <p className="text-sm text-muted-foreground">
+                    This logo will be used as the default for all agent sites unless they upload their own
+                  </p>
+                  <div className="flex items-center gap-4">
+                    {brokerageLogoEdit && (
+                      <div className="relative">
+                        <img 
+                          src={brokerageLogoEdit} 
+                          alt="Brokerage logo" 
+                          className="h-16 w-auto object-contain border rounded"
+                        />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          onClick={() => setBrokerageLogoEdit(null)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    )}
+                    <ObjectUploader
+                      folder="uploads"
+                      onComplete={(result: { successful?: { uploadURL: string }[] }) => {
+                        if (result.successful && result.successful.length > 0) {
+                          const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
+                          setBrokerageLogoEdit(normalizedUrl);
+                          toast.success('Logo uploaded');
+                        }
+                      }}
+                      buttonClassName="bg-primary text-primary-foreground hover:bg-primary/90"
+                    >
+                      {brokerageLogoEdit ? "Change Logo" : "Upload Logo"}
+                    </ObjectUploader>
+                  </div>
+                </div>
+
                 <Button 
                   onClick={async () => {
                     if (!brokerageNameEdit.trim()) {
@@ -980,14 +1037,18 @@ export default function BrokerageDashboard() {
                       return;
                     }
                     try {
-                      await updateBrokerage.mutateAsync({ name: brokerageNameEdit.trim() });
-                      toast.success('Brokerage name updated');
+                      await updateBrokerage.mutateAsync({ 
+                        name: brokerageNameEdit.trim(),
+                        logo: brokerageLogoEdit,
+                        website: brokerageWebsiteEdit.trim() || null
+                      });
+                      toast.success('Brokerage settings updated');
                       refetchBrokerage();
                     } catch (error: any) {
                       toast.error(error.message || 'Failed to update brokerage');
                     }
                   }}
-                  disabled={updateBrokerage.isPending || brokerageNameEdit === brokerage?.name}
+                  disabled={updateBrokerage.isPending}
                   data-testid="button-save-brokerage-settings"
                 >
                   {updateBrokerage.isPending ? 'Saving...' : 'Save Changes'}
