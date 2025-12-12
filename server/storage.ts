@@ -202,12 +202,16 @@ export interface IStorage {
   // Brokerage template methods
   assignTemplateToBrokerage(brokerageId: string, templateType: string, templateId: string, assignedBy?: string): Promise<BrokerageTemplate>;
   getBrokerageTemplates(brokerageId: string): Promise<BrokerageTemplate[]>;
+  getBrokerageTemplate(id: string): Promise<BrokerageTemplate | undefined>;
+  updateBrokerageTemplate(id: string, updates: Partial<BrokerageTemplate>): Promise<BrokerageTemplate>;
   removeBrokerageTemplate(id: string): Promise<void>;
+  getAllBrokerages(): Promise<Brokerage[]>;
   
   // Brokerage group template methods
   assignTemplateToGroup(brokerageTemplateId: string, groupId: string): Promise<BrokerageGroupTemplate>;
   removeTemplateFromGroup(brokerageTemplateId: string, groupId: string): Promise<void>;
   getGroupTemplates(groupId: string): Promise<BrokerageTemplate[]>;
+  getTemplateGroupAssignments(brokerageTemplateId: string): Promise<BrokerageGroupTemplate[]>;
   getTemplatesForUser(userId: string): Promise<{ layouts: Layout[]; themes: Theme[] }>;
   
   // Brokerage site management
@@ -1048,6 +1052,28 @@ export class DatabaseStorage implements IStorage {
       .where(eq(brokerageTemplates.brokerageId, brokerageId));
   }
 
+  async getBrokerageTemplate(id: string): Promise<BrokerageTemplate | undefined> {
+    const [template] = await db
+      .select()
+      .from(brokerageTemplates)
+      .where(eq(brokerageTemplates.id, id));
+    return template || undefined;
+  }
+
+  async updateBrokerageTemplate(id: string, updates: Partial<BrokerageTemplate>): Promise<BrokerageTemplate> {
+    const { id: _id, createdAt: _createdAt, ...updateData } = updates;
+    const [updated] = await db
+      .update(brokerageTemplates)
+      .set(updateData)
+      .where(eq(brokerageTemplates.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getAllBrokerages(): Promise<Brokerage[]> {
+    return db.select().from(brokerages);
+  }
+
   async removeBrokerageTemplate(id: string): Promise<void> {
     // Remove group assignments first
     await db.delete(brokerageGroupTemplates).where(eq(brokerageGroupTemplates.brokerageTemplateId, id));
@@ -1089,6 +1115,13 @@ export class DatabaseStorage implements IStorage {
     return templates;
   }
 
+  async getTemplateGroupAssignments(brokerageTemplateId: string): Promise<BrokerageGroupTemplate[]> {
+    return db
+      .select()
+      .from(brokerageGroupTemplates)
+      .where(eq(brokerageGroupTemplates.brokerageTemplateId, brokerageTemplateId));
+  }
+
   async getTemplatesForUser(userId: string): Promise<{ layouts: Layout[]; themes: Theme[] }> {
     // Get all public templates
     const publicLayouts = await db
@@ -1107,20 +1140,23 @@ export class DatabaseStorage implements IStorage {
       return { layouts: publicLayouts, themes: publicThemes };
     }
     
-    // Get user's groups
-    const userGroups = await this.getUserGroups(userId);
-    if (userGroups.length === 0) {
-      return { layouts: publicLayouts, themes: publicThemes };
-    }
+    // Get templates available to all in the brokerage
+    const brokerageTemplates = await this.getBrokerageTemplates(membership.brokerageId);
+    const availableToAllTemplates = brokerageTemplates.filter(t => t.availableToAll);
+    const availableToAllIds = availableToAllTemplates.map(t => t.templateId);
     
-    // Get templates assigned to user's groups
+    // Get user's groups and their templates
+    const userGroups = await this.getUserGroups(userId);
     const groupTemplateIds: string[] = [];
     for (const group of userGroups) {
       const templates = await this.getGroupTemplates(group.id);
       groupTemplateIds.push(...templates.map(t => t.templateId));
     }
     
-    if (groupTemplateIds.length === 0) {
+    // Combine availableToAll and group template IDs
+    const allAssignedIds = [...new Set([...availableToAllIds, ...groupTemplateIds])];
+    
+    if (allAssignedIds.length === 0) {
       return { layouts: publicLayouts, themes: publicThemes };
     }
     
@@ -1128,12 +1164,12 @@ export class DatabaseStorage implements IStorage {
     const assignedLayouts = await db
       .select()
       .from(layouts)
-      .where(sql`${layouts.id} IN (${sql.join(groupTemplateIds.map(id => sql`${id}`), sql`, `)})`);
+      .where(sql`${layouts.id} IN (${sql.join(allAssignedIds.map(id => sql`${id}`), sql`, `)})`);
     
     const assignedThemes = await db
       .select()
       .from(themes)
-      .where(sql`${themes.id} IN (${sql.join(groupTemplateIds.map(id => sql`${id}`), sql`, `)})`);
+      .where(sql`${themes.id} IN (${sql.join(allAssignedIds.map(id => sql`${id}`), sql`, `)})`);
     
     // Combine public and assigned templates (deduplicated)
     const allLayouts = [...publicLayouts];
