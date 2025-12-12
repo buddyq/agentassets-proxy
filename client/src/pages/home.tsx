@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,17 @@ import { Check, Zap, Palette, Heart, ArrowRight, Sparkles, Globe, BarChart3, Bui
 import heroImage from "@assets/generated_images/luxury_living_room_interior_for_hero_background.png";
 
 export default function Home() {
+  useEffect(() => {
+    if (window.location.hash === '#pricing') {
+      setTimeout(() => {
+        const pricingSection = document.getElementById('pricing');
+        if (pricingSection) {
+          pricingSection.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    }
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 to-white">
       <Navbar />
