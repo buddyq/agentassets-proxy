@@ -422,7 +422,7 @@ export async function sendAgentInvitationEmail(data: AgentInvitationEmailData): 
         body { font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background: #f5f7f5; }
         .wrapper { padding: 40px 20px; }
         .container { max-width: 560px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(13, 148, 136, 0.12); }
-        .header { background: #0f172a; padding: 32px 40px; text-align: center; }
+        .header { background: #0d9488; padding: 32px 40px; text-align: center; }
         .header img { max-width: 200px; height: auto; }
         .content { padding: 40px; }
         .welcome-box { background: linear-gradient(135deg, #f0fdfa 0%, #e6f7f5 100%); border-radius: 12px; padding: 24px; margin-bottom: 32px; border-left: 4px solid #0d9488; }
