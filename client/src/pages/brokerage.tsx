@@ -236,7 +236,7 @@ function AgentMemberCard({ member, onRemove, onPromote, userGroups }: {
   const initials = member.user?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || '??';
   
   return (
-    <div className="flex items-center justify-between p-4 border rounded-lg" data-testid={`card-agent-${member.id}`}>
+    <div className="flex items-center justify-between p-4 border rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow" data-testid={`card-agent-${member.id}`}>
       <div className="flex items-center gap-3">
         <Avatar>
           <AvatarImage src={member.user?.profileImageUrl || undefined} />
