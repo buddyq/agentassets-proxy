@@ -44,8 +44,14 @@ import {
   Trash2,
   UserPlus,
   Globe,
-  Home
+  Home,
+  Sparkles,
+  ArrowRight,
+  CheckCircle2,
+  Clock,
+  Palette
 } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 
 function AddAgentDialog({ onSuccess }: { onSuccess: () => void }) {
   const [open, setOpen] = useState(false);
@@ -509,6 +515,49 @@ export default function BrokerageDashboard() {
   const activeMembers = members.filter(m => m.status === 'active');
   const usedSeats = brokerageData?.memberCount || 0;
   const totalSeats = brokerageData?.totalSeats || 15;
+  
+  // Check if this is a new brokerage (only the owner, no other agents)
+  const isNewBrokerage = activeMembers.length <= 1 && sites.length === 0;
+  
+  // Calculate trial days remaining
+  const trialEndsAt = brokerage.trialEndsAt ? new Date(brokerage.trialEndsAt) : null;
+  const now = new Date();
+  const trialDaysRemaining = trialEndsAt ? Math.max(0, Math.ceil((trialEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : 0;
+  const isOnTrial = brokerage.status === 'trial' && trialDaysRemaining > 0;
+
+  // Onboarding steps
+  const onboardingSteps = [
+    { 
+      id: 'invite', 
+      title: 'Invite Your First Agent', 
+      description: 'Add team members to start building property sites together.',
+      icon: UserPlus,
+      completed: activeMembers.length > 1,
+      action: () => document.querySelector('[data-testid="button-add-agent"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    },
+    { 
+      id: 'group', 
+      title: 'Create a Team Group', 
+      description: 'Organize agents into groups for custom templates and permissions.',
+      icon: FolderOpen,
+      completed: groups.length > 0,
+      action: () => {
+        const groupsTab = document.querySelector('[data-testid="tab-groups"]') as HTMLElement;
+        groupsTab?.click();
+      }
+    },
+    { 
+      id: 'template', 
+      title: 'Explore Custom Templates', 
+      description: 'Browse exclusive brokerage templates for your team.',
+      icon: Palette,
+      completed: false,
+      action: () => setLocation('/themes')
+    },
+  ];
+
+  const completedSteps = onboardingSteps.filter(s => s.completed).length;
+  const progressPercent = (completedSteps / onboardingSteps.length) * 100;
 
   return (
     <div className="min-h-screen bg-background">
@@ -525,6 +574,12 @@ export default function BrokerageDashboard() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              {isOnTrial && (
+                <Badge variant="secondary" className="bg-gradient-to-r from-yellow-100 to-orange-100 text-orange-700 border-orange-200">
+                  <Clock className="w-3 h-3 mr-1" />
+                  {trialDaysRemaining} days left in trial
+                </Badge>
+              )}
               <Badge variant="outline" className="text-sm">
                 {usedSeats} / {totalSeats} seats used
               </Badge>
@@ -534,6 +589,66 @@ export default function BrokerageDashboard() {
       </header>
 
       <main className="container mx-auto px-4 py-6">
+        {isNewBrokerage && (
+          <Card className="mb-8 border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-white to-teal-50/30 overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+            <CardHeader className="pb-2 relative">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-teal-600 flex items-center justify-center">
+                  <Sparkles className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <CardTitle className="text-2xl">Welcome to Your Brokerage!</CardTitle>
+                  <CardDescription className="text-base">
+                    Let's get you set up in just a few steps
+                  </CardDescription>
+                </div>
+              </div>
+              <div className="mt-4">
+                <div className="flex items-center justify-between text-sm mb-2">
+                  <span className="text-muted-foreground">Getting started progress</span>
+                  <span className="font-medium text-primary">{completedSteps} of {onboardingSteps.length} complete</span>
+                </div>
+                <Progress value={progressPercent} className="h-2" />
+              </div>
+            </CardHeader>
+            <CardContent className="relative">
+              <div className="grid md:grid-cols-3 gap-4 mt-4">
+                {onboardingSteps.map((step, index) => (
+                  <Card 
+                    key={step.id} 
+                    className={`cursor-pointer transition-all hover:shadow-md hover:-translate-y-1 ${step.completed ? 'bg-primary/5 border-primary/30' : 'hover:border-primary/50'}`}
+                    onClick={step.action}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3">
+                        <div className={`h-10 w-10 rounded-lg flex items-center justify-center flex-shrink-0 ${step.completed ? 'bg-primary text-white' : 'bg-muted'}`}>
+                          {step.completed ? (
+                            <CheckCircle2 className="h-5 w-5" />
+                          ) : (
+                            <step.icon className="h-5 w-5" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">Step {index + 1}</span>
+                            {step.completed && <Badge variant="secondary" className="text-xs bg-primary/10 text-primary">Done</Badge>}
+                          </div>
+                          <h4 className="font-semibold mt-1">{step.title}</h4>
+                          <p className="text-sm text-muted-foreground mt-1">{step.description}</p>
+                        </div>
+                        {!step.completed && (
+                          <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-1" />
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <Tabs defaultValue="agents" className="space-y-6">
           <TabsList>
             <TabsTrigger value="agents" className="flex items-center gap-2" data-testid="tab-agents">
