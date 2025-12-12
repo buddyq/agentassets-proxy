@@ -1154,7 +1154,7 @@ export class DatabaseStorage implements IStorage {
     }
     
     // Combine availableToAll and group template IDs
-    const allAssignedIds = [...new Set([...availableToAllIds, ...groupTemplateIds])];
+    const allAssignedIds = Array.from(new Set([...availableToAllIds, ...groupTemplateIds]));
     
     if (allAssignedIds.length === 0) {
       return { layouts: publicLayouts, themes: publicThemes };

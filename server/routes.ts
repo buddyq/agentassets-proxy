@@ -2455,6 +2455,59 @@ export async function registerRoutes(
     }
   });
 
+  // Get groups for a brokerage (AgentAssets admin only) - for template assignment UI
+  app.get("/api/admin/brokerages/:brokerageId/groups", isAdmin, async (req: any, res) => {
+    try {
+      const { brokerageId } = req.params;
+      const groups = await storage.getBrokerageGroups(brokerageId);
+      res.json(groups);
+    } catch (error) {
+      console.error("Error fetching brokerage groups:", error);
+      res.status(500).json({ error: "Failed to fetch groups" });
+    }
+  });
+
+  // ==================== BROKERAGE TEMPLATE MANAGEMENT (Broker Admin) ====================
+  
+  // Update a brokerage template (availableToAll, group assignments)
+  app.patch("/api/brokerage/templates/:templateId", isBrokerageAdmin, async (req: any, res) => {
+    try {
+      const { templateId } = req.params;
+      const { availableToAll } = req.body;
+      
+      // Verify the template belongs to this brokerage
+      const template = await storage.getBrokerageTemplate(templateId);
+      if (!template || template.brokerageId !== req.brokerageId) {
+        return res.status(404).json({ error: "Template not found" });
+      }
+      
+      const updated = await storage.updateBrokerageTemplate(templateId, { availableToAll });
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating brokerage template:", error);
+      res.status(500).json({ error: "Failed to update template" });
+    }
+  });
+
+  // Get group assignments for a template
+  app.get("/api/brokerage/templates/:templateId/groups", isBrokerageAdmin, async (req: any, res) => {
+    try {
+      const { templateId } = req.params;
+      
+      // Verify the template belongs to this brokerage
+      const template = await storage.getBrokerageTemplate(templateId);
+      if (!template || template.brokerageId !== req.brokerageId) {
+        return res.status(404).json({ error: "Template not found" });
+      }
+      
+      const assignments = await storage.getTemplateGroupAssignments(templateId);
+      res.json(assignments);
+    } catch (error) {
+      console.error("Error fetching template group assignments:", error);
+      res.status(500).json({ error: "Failed to fetch group assignments" });
+    }
+  });
+
   // ==================== INVITATION / PASSWORD SETUP ====================
 
   // Verify invitation token (public endpoint)
