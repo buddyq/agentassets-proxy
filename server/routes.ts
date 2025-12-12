@@ -1089,6 +1089,131 @@ export async function registerRoutes(
     }
   });
 
+  // Brokerage subscription checkout
+  const brokerageCheckoutSchema = z.object({
+    brokerageName: z.string().min(2, "Brokerage name must be at least 2 characters"),
+  });
+
+  app.post("/api/stripe/brokerage-checkout", isAuthenticated, async (req: any, res) => {
+    try {
+      const validated = brokerageCheckoutSchema.parse(req.body);
+      const user = await storage.getUser(req.user.id);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Check if user already has a brokerage membership
+      const existingMembership = await storage.getBrokerageMembership(user.id);
+      if (existingMembership) {
+        return res.status(400).json({ error: "You are already a member of a brokerage" });
+      }
+
+      const stripe = await getUncachableStripeClient();
+      
+      // Use custom BASE_URL if set, otherwise fall back to REPLIT_DOMAINS
+      let baseUrl = process.env.BASE_URL;
+      if (!baseUrl) {
+        const domains = process.env.REPLIT_DOMAINS?.split(',') || [];
+        baseUrl = domains.length > 0 ? `https://${domains[0]}` : 'http://localhost:5000';
+      }
+
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [{
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: 'Brokerage Plan',
+              description: 'Manage up to 15 agents with your brokerage account. Additional seats available.',
+            },
+            unit_amount: 24900, // $249.00
+            recurring: {
+              interval: 'month',
+            },
+          },
+          quantity: 1,
+        }],
+        mode: 'subscription',
+        success_url: `${baseUrl}/brokerage?success=true&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${baseUrl}/brokerage/signup?canceled=true`,
+        metadata: {
+          userId: user.id,
+          brokerageName: validated.brokerageName,
+          type: 'brokerage_subscription',
+        },
+        customer_email: user.email || undefined,
+      });
+
+      res.json({ url: session.url });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors[0].message });
+      }
+      console.error("Brokerage checkout error:", error);
+      res.status(500).json({ error: "Failed to create checkout session" });
+    }
+  });
+
+  // Handle brokerage subscription success (called after Stripe redirect)
+  app.post("/api/stripe/brokerage-success", isAuthenticated, async (req: any, res) => {
+    try {
+      const { sessionId } = req.body;
+      if (!sessionId) {
+        return res.status(400).json({ error: "Session ID required" });
+      }
+
+      const stripe = await getUncachableStripeClient();
+      const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+      if (session.payment_status !== 'paid' || session.metadata?.type !== 'brokerage_subscription') {
+        return res.status(400).json({ error: "Invalid or unpaid session" });
+      }
+
+      const userId = session.metadata?.userId;
+      const brokerageName = session.metadata?.brokerageName;
+
+      if (!userId || userId !== req.user.id) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+
+      // Check if brokerage was already created (idempotency)
+      const existingMembership = await storage.getBrokerageMembership(userId);
+      if (existingMembership) {
+        return res.json({ success: true, brokerageId: existingMembership.brokerageId });
+      }
+
+      // Create the brokerage
+      const brokerage = await storage.createBrokerage({
+        name: brokerageName || 'My Brokerage',
+        ownerUserId: userId,
+        status: 'active',
+        includedSeats: 15,
+        additionalSeats: 0,
+      });
+
+      // Update brokerage with Stripe IDs
+      if (session.customer || session.subscription) {
+        await storage.updateBrokerage(brokerage.id, {
+          stripeCustomerId: session.customer as string || null,
+          stripeSubscriptionId: session.subscription as string || null,
+        });
+      }
+
+      // Add the user as brokerage admin
+      await storage.addBrokerageMember({
+        brokerageId: brokerage.id,
+        userId: userId,
+        role: 'admin',
+        status: 'active',
+      });
+
+      res.json({ success: true, brokerageId: brokerage.id });
+    } catch (error) {
+      console.error("Brokerage success error:", error);
+      res.status(500).json({ error: "Failed to process brokerage subscription" });
+    }
+  });
+
   // Download all documents as zip
   app.get("/api/sites/:siteId/documents/download-all", async (req, res) => {
     try {

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useLocation } from 'wouter';
+import { useState, useEffect } from 'react';
+import { useLocation, useSearch } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 import { 
   useBrokerage, 
@@ -15,6 +15,7 @@ import {
   useRemoveUserFromGroup,
   useGroupMembers,
   useDeleteBrokerageSite,
+  useConfirmBrokerageSubscription,
   type BrokerageMember,
   type BrokerageGroup,
   type BrokerageSite
@@ -366,10 +367,33 @@ function SiteCard({ site, onDelete }: { site: BrokerageSite; onDelete: () => voi
 export default function BrokerageDashboard() {
   const { user, isLoading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
+  const searchString = useSearch();
   const [siteSearch, setSiteSearch] = useState('');
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
+  const [processingSuccess, setProcessingSuccess] = useState(false);
   
   const { data: brokerageData, isLoading: brokerageLoading, refetch: refetchBrokerage } = useBrokerage();
+  const confirmSubscription = useConfirmBrokerageSubscription();
+
+  useEffect(() => {
+    const params = new URLSearchParams(searchString);
+    const success = params.get('success') === 'true';
+    const sessionId = params.get('session_id');
+    
+    if (success && sessionId && !processingSuccess && !brokerageData?.brokerage) {
+      setProcessingSuccess(true);
+      confirmSubscription.mutateAsync(sessionId)
+        .then(() => {
+          toast.success('Welcome! Your brokerage has been created successfully.');
+          refetchBrokerage();
+          window.history.replaceState({}, '', '/brokerage');
+        })
+        .catch((error) => {
+          toast.error(error.message || 'Failed to confirm subscription');
+          setProcessingSuccess(false);
+        });
+    }
+  }, [searchString, processingSuccess, brokerageData, confirmSubscription, refetchBrokerage]);
   const { data: members = [], refetch: refetchMembers } = useBrokerageMembers();
   const { data: groups = [], refetch: refetchGroups } = useBrokerageGroups();
   const { data: sites = [] } = useBrokerageSites(siteSearch || undefined);
@@ -382,10 +406,13 @@ export default function BrokerageDashboard() {
   const addToGroup = useAddUserToGroup();
   const removeFromGroup = useRemoveUserFromGroup();
 
-  if (authLoading || brokerageLoading) {
+  if (authLoading || brokerageLoading || processingSuccess) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-pulse">Loading...</div>
+      <div className="flex items-center justify-center min-h-screen flex-col gap-4">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="text-muted-foreground">
+          {processingSuccess ? 'Setting up your brokerage...' : 'Loading...'}
+        </div>
       </div>
     );
   }
@@ -398,15 +425,37 @@ export default function BrokerageDashboard() {
   const membership = brokerageData?.membership;
   const brokerage = brokerageData?.brokerage;
 
-  if (!membership || !brokerage || membership.role !== 'admin') {
+  if (!membership || !brokerage) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-        <Building2 className="w-16 h-16 text-muted-foreground" />
-        <h1 className="text-2xl font-bold">Brokerage Access Required</h1>
-        <p className="text-muted-foreground">
-          You need to be a brokerage admin to access this page.
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4 p-6 text-center">
+        <Building2 className="w-16 h-16 text-primary" />
+        <h1 className="text-2xl font-bold">Start Your Brokerage</h1>
+        <p className="text-muted-foreground max-w-md">
+          Create a brokerage account to manage your team's property sites, custom templates, and more.
         </p>
-        <Button onClick={() => setLocation('/dashboard')}>
+        <div className="flex gap-3">
+          <Button onClick={() => setLocation('/brokerage/signup')} data-testid="button-start-brokerage">
+            <Building2 className="w-4 h-4 mr-2" />
+            Get Started
+          </Button>
+          <Button variant="outline" onClick={() => setLocation('/dashboard')}>
+            <Home className="w-4 h-4 mr-2" />
+            Go to Dashboard
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (membership.role !== 'admin') {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4 p-6 text-center">
+        <Building2 className="w-16 h-16 text-muted-foreground" />
+        <h1 className="text-2xl font-bold">Admin Access Required</h1>
+        <p className="text-muted-foreground max-w-md">
+          You need to be a brokerage admin to access this page. Contact your brokerage administrator for access.
+        </p>
+        <Button variant="outline" onClick={() => setLocation('/dashboard')}>
           <Home className="w-4 h-4 mr-2" />
           Go to Dashboard
         </Button>

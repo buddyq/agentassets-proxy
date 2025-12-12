@@ -2,7 +2,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import { Check, Zap, Palette, Heart, ArrowRight, Sparkles, Globe, BarChart3 } from "lucide-react";
+import { Check, Zap, Palette, Heart, ArrowRight, Sparkles, Globe, BarChart3, Building2, Users } from "lucide-react";
 import heroImage from "@assets/generated_images/luxury_living_room_interior_for_hero_background.png";
 
 export default function Home() {
@@ -315,6 +315,94 @@ export default function Home() {
           <p className="text-center text-muted-foreground mt-12">
             All credits never expire. Use them whenever you have a new listing.
           </p>
+        </div>
+      </section>
+
+      {/* Brokerage Promo Section */}
+      <section className="py-24 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.1) 1px, transparent 0)', backgroundSize: '32px 32px' }} />
+        </div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-primary/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-72 h-72 bg-teal-500/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+        
+        <div className="container mx-auto px-4 relative">
+          <div className="grid lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
+            <div>
+              <div className="inline-flex items-center gap-2 bg-primary/20 backdrop-blur-sm border border-primary/30 rounded-full px-4 py-1.5 mb-6">
+                <Building2 className="h-4 w-4 text-primary" />
+                <span className="text-sm font-semibold text-primary">For Brokerages</span>
+              </div>
+              
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+                Empower Your <span className="bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">Entire Team</span>
+              </h2>
+              
+              <p className="text-lg text-white/70 mb-8">
+                Give your agents the tools they need to create stunning property sites while maintaining 
+                centralized control over branding, templates, and billing.
+              </p>
+              
+              <ul className="space-y-4 mb-8">
+                {[
+                  { icon: Users, text: 'Manage up to 15 agents included' },
+                  { icon: Palette, text: 'Custom brokerage branding & templates' },
+                  { icon: BarChart3, text: 'Centralized analytics dashboard' },
+                  { icon: Zap, text: 'Tiered pricing for growing teams' },
+                ].map((item, i) => (
+                  <li key={i} className="flex items-center gap-3 text-white/80">
+                    <div className="h-8 w-8 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
+                      <item.icon className="h-4 w-4 text-primary" />
+                    </div>
+                    {item.text}
+                  </li>
+                ))}
+              </ul>
+              
+              <Link href="/brokerage/signup">
+                <Button size="lg" className="bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-600/90 text-white shadow-xl shadow-primary/25 group" data-testid="button-brokerage-cta">
+                  Start Brokerage Plan
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
+            </div>
+            
+            <div className="relative">
+              <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md rounded-3xl p-8 border border-white/10">
+                <div className="text-center mb-6">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-teal-600 mb-4">
+                    <Building2 className="h-8 w-8 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white">Brokerage Plan</h3>
+                </div>
+                
+                <div className="text-center mb-6 pb-6 border-b border-white/10">
+                  <div className="flex items-baseline justify-center gap-1">
+                    <span className="text-5xl font-bold text-white">$249</span>
+                    <span className="text-white/60">/month</span>
+                  </div>
+                  <p className="text-white/60 mt-2">15 agent seats included</p>
+                </div>
+                
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-white/70">First 100 extra agents</span>
+                    <span className="text-white font-semibold">$10/agent/mo</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-white/70">100+ extra agents</span>
+                    <span className="text-white font-semibold">$5/agent/mo</span>
+                  </div>
+                </div>
+                
+                <div className="mt-6 pt-6 border-t border-white/10 text-center">
+                  <p className="text-sm text-white/60">
+                    Custom templates, team management, and centralized billing included.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

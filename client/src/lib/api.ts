@@ -1126,3 +1126,45 @@ export function useDeleteBrokerageSite() {
     }
   });
 }
+
+// Brokerage subscription checkout
+export function useBrokerageCheckout() {
+  return useMutation({
+    mutationFn: async (data: { brokerageName: string }) => {
+      const res = await fetch(`${API_BASE}/stripe/brokerage-checkout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+        credentials: 'include'
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to create checkout session');
+      }
+      return res.json() as Promise<{ url: string }>;
+    }
+  });
+}
+
+// Confirm brokerage subscription success
+export function useConfirmBrokerageSubscription() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (sessionId: string) => {
+      const res = await fetch(`${API_BASE}/stripe/brokerage-success`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId }),
+        credentials: 'include'
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to confirm subscription');
+      }
+      return res.json() as Promise<{ success: boolean; brokerageId: string }>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['brokerage'] });
+    }
+  });
+}

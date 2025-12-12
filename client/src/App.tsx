@@ -53,6 +53,7 @@ import Contact from "@/pages/contact";
 import Support from "@/pages/support";
 import OurStory from "@/pages/our-story";
 import BrokerageDashboard from "@/pages/brokerage";
+import BrokerageSignup from "@/pages/brokerage-signup";
 
 function SlugRoute({ params }: { params: { slug: string } }) {
   return <SlugSiteView slug={params.slug} />;
@@ -81,6 +82,7 @@ function Router() {
       <ProtectedRoute path="/profile" component={Profile} />
       <ProtectedRoute path="/admin" component={AdminDashboard} />
       <ProtectedRoute path="/brokerage" component={BrokerageDashboard} />
+      <ProtectedRoute path="/brokerage/signup" component={BrokerageSignup} />
       
       <Route component={NotFound} />
     </Switch>
