@@ -7,6 +7,73 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Building2, Lock, Eye, EyeOff, CheckCircle2, Loader2 } from 'lucide-react';
 
+function FloatingParticles() {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {[...Array(50)].map((_, i) => (
+        <div
+          key={i}
+          className="absolute rounded-full opacity-20"
+          style={{
+            width: `${Math.random() * 6 + 2}px`,
+            height: `${Math.random() * 6 + 2}px`,
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+            background: `rgba(13, 148, 136, ${Math.random() * 0.5 + 0.2})`,
+            animation: `float-${i % 5} ${Math.random() * 20 + 15}s ease-in-out infinite`,
+            animationDelay: `${Math.random() * -20}s`,
+          }}
+        />
+      ))}
+      {[...Array(20)].map((_, i) => (
+        <div
+          key={`large-${i}`}
+          className="absolute rounded-full blur-sm"
+          style={{
+            width: `${Math.random() * 80 + 40}px`,
+            height: `${Math.random() * 80 + 40}px`,
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+            background: `radial-gradient(circle, rgba(13, 148, 136, ${Math.random() * 0.08 + 0.02}) 0%, transparent 70%)`,
+            animation: `float-slow ${Math.random() * 40 + 30}s ease-in-out infinite`,
+            animationDelay: `${Math.random() * -30}s`,
+          }}
+        />
+      ))}
+      <style>{`
+        @keyframes float-0 {
+          0%, 100% { transform: translate(0, 0) rotate(0deg); }
+          25% { transform: translate(30px, -40px) rotate(90deg); }
+          50% { transform: translate(-20px, -80px) rotate(180deg); }
+          75% { transform: translate(-40px, -40px) rotate(270deg); }
+        }
+        @keyframes float-1 {
+          0%, 100% { transform: translate(0, 0); }
+          33% { transform: translate(-50px, 30px); }
+          66% { transform: translate(40px, -50px); }
+        }
+        @keyframes float-2 {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(60px, 60px) scale(1.2); }
+        }
+        @keyframes float-3 {
+          0%, 100% { transform: translate(0, 0); }
+          25% { transform: translate(-30px, -60px); }
+          75% { transform: translate(50px, 30px); }
+        }
+        @keyframes float-4 {
+          0%, 100% { transform: translate(0, 0) rotate(0deg); }
+          50% { transform: translate(-60px, 40px) rotate(180deg); }
+        }
+        @keyframes float-slow {
+          0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.5; }
+          50% { transform: translate(100px, -100px) scale(1.5); opacity: 0.8; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 export default function SetupPasswordPage() {
   const [, setLocation] = useLocation();
   const search = useSearch();
@@ -90,12 +157,19 @@ export default function SetupPasswordPage() {
     }
   };
 
+  const backgroundStyle = {
+    background: `
+      radial-gradient(ellipse at center, rgba(240, 253, 250, 1) 0%, rgba(204, 251, 241, 0.6) 30%, rgba(13, 148, 136, 0.15) 60%, rgba(15, 23, 42, 0.9) 100%)
+    `,
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Verifying your invitation...</p>
+      <div className="min-h-screen flex items-center justify-center relative" style={backgroundStyle}>
+        <FloatingParticles />
+        <div className="text-center relative z-10">
+          <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground text-lg">Verifying your invitation...</p>
         </div>
       </div>
     );
@@ -103,20 +177,21 @@ export default function SetupPasswordPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen flex items-center justify-center p-4 relative" style={backgroundStyle}>
+        <FloatingParticles />
+        <Card className="w-full max-w-md relative z-10 shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
           <CardHeader className="text-center">
-            <div className="h-16 w-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
-              <Lock className="h-8 w-8 text-red-600" />
+            <div className="h-20 w-20 rounded-full bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <Lock className="h-10 w-10 text-white" />
             </div>
-            <CardTitle className="text-2xl">Invalid Invitation</CardTitle>
+            <CardTitle className="text-3xl font-bold">Invalid Invitation</CardTitle>
             <CardDescription className="text-base mt-2">{error}</CardDescription>
           </CardHeader>
           <CardContent className="text-center">
-            <p className="text-sm text-muted-foreground mb-4">
+            <p className="text-sm text-muted-foreground mb-6">
               If you believe this is an error, please contact your brokerage administrator.
             </p>
-            <Button variant="outline" onClick={() => setLocation('/')}>
+            <Button variant="outline" size="lg" onClick={() => setLocation('/')}>
               Go to Home
             </Button>
           </CardContent>
@@ -127,23 +202,26 @@ export default function SetupPasswordPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-white to-teal-50/30 p-4">
-        <Card className="w-full max-w-md border-2 border-primary/20">
+      <div className="min-h-screen flex items-center justify-center p-4 relative" style={backgroundStyle}>
+        <FloatingParticles />
+        <Card className="w-full max-w-md relative z-10 shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
           <CardHeader className="text-center">
-            <div className="h-16 w-16 rounded-full bg-gradient-to-br from-primary to-teal-600 flex items-center justify-center mx-auto mb-4">
-              <CheckCircle2 className="h-8 w-8 text-white" />
+            <div className="h-20 w-20 rounded-full bg-gradient-to-br from-primary to-teal-500 flex items-center justify-center mx-auto mb-4 shadow-lg animate-pulse">
+              <CheckCircle2 className="h-10 w-10 text-white" />
             </div>
-            <CardTitle className="text-2xl">You're All Set!</CardTitle>
-            <CardDescription className="text-base mt-2">
-              Your account has been set up successfully. You can now log in and start creating property websites.
+            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-teal-600 bg-clip-text text-transparent">
+              You're All Set!
+            </CardTitle>
+            <CardDescription className="text-base mt-3">
+              Your account has been set up successfully. You can now log in and start creating stunning property websites.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="bg-muted/50 rounded-lg p-4 text-center">
-              <p className="text-sm text-muted-foreground mb-1">Your username</p>
-              <p className="font-mono font-medium text-lg">{username}</p>
+          <CardContent className="space-y-6">
+            <div className="bg-gradient-to-r from-primary/10 to-teal-500/10 rounded-xl p-5 text-center border border-primary/20">
+              <p className="text-sm text-muted-foreground mb-2">Your username</p>
+              <p className="font-mono font-semibold text-xl text-primary">{username}</p>
             </div>
-            <Button className="w-full" size="lg" onClick={() => setLocation('/auth')}>
+            <Button className="w-full bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-600/90 shadow-lg" size="lg" onClick={() => setLocation('/auth')}>
               Go to Login
             </Button>
           </CardContent>
@@ -153,37 +231,40 @@ export default function SetupPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-white to-teal-50/30 p-4">
-      <Card className="w-full max-w-md border-2 border-primary/20">
-        <CardHeader className="text-center pb-2">
-          <div className="h-16 w-16 rounded-full bg-gradient-to-br from-primary to-teal-600 flex items-center justify-center mx-auto mb-4">
-            <Building2 className="h-8 w-8 text-white" />
+    <div className="min-h-screen flex items-center justify-center p-4 relative" style={backgroundStyle}>
+      <FloatingParticles />
+      <Card className="w-full max-w-md relative z-10 shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
+        <CardHeader className="text-center pb-4">
+          <div className="h-20 w-20 rounded-full bg-gradient-to-br from-primary to-teal-500 flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <Building2 className="h-10 w-10 text-white" />
           </div>
-          <CardTitle className="text-2xl">Welcome to AgentAssets!</CardTitle>
-          <CardDescription className="text-base mt-2">
+          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-teal-600 bg-clip-text text-transparent">
+            Welcome to AgentAssets!
+          </CardTitle>
+          <CardDescription className="text-base mt-3">
             {inviteInfo?.brokerageName && (
-              <>You've been invited to join <span className="font-semibold text-foreground">{inviteInfo.brokerageName}</span>. </>
+              <>You've been invited to join <span className="font-semibold text-primary">{inviteInfo.brokerageName}</span>. </>
             )}
             Set up your password to get started.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="bg-muted/50 rounded-lg p-4 mb-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="bg-gradient-to-r from-primary/5 to-teal-500/5 rounded-xl p-4 border border-primary/10">
               <div className="grid gap-2">
-                <div>
-                  <span className="text-sm text-muted-foreground">Name: </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Name:</span>
                   <span className="font-medium">{inviteInfo?.name}</span>
                 </div>
-                <div>
-                  <span className="text-sm text-muted-foreground">Email: </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Email:</span>
                   <span className="font-medium">{inviteInfo?.email}</span>
                 </div>
               </div>
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="password">Create Password</Label>
+              <Label htmlFor="password" className="text-sm font-medium">Create Password</Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -193,22 +274,23 @@ export default function SetupPasswordPage() {
                   placeholder="Minimum 8 characters"
                   required
                   minLength={8}
+                  className="h-12 pr-12 border-2 focus:border-primary transition-colors"
                   data-testid="input-password"
                 />
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10 hover:bg-primary/10"
                   onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
+                  {showPassword ? <EyeOff className="h-5 w-5 text-muted-foreground" /> : <Eye className="h-5 w-5 text-muted-foreground" />}
                 </Button>
               </div>
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Label htmlFor="confirmPassword" className="text-sm font-medium">Confirm Password</Label>
               <div className="relative">
                 <Input
                   id="confirmPassword"
@@ -218,30 +300,31 @@ export default function SetupPasswordPage() {
                   placeholder="Confirm your password"
                   required
                   minLength={8}
+                  className="h-12 pr-12 border-2 focus:border-primary transition-colors"
                   data-testid="input-confirm-password"
                 />
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10 hover:bg-primary/10"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 >
-                  {showConfirmPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
+                  {showConfirmPassword ? <EyeOff className="h-5 w-5 text-muted-foreground" /> : <Eye className="h-5 w-5 text-muted-foreground" />}
                 </Button>
               </div>
             </div>
             
             <Button 
               type="submit" 
-              className="w-full" 
+              className="w-full h-12 text-base bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-600/90 shadow-lg" 
               size="lg"
               disabled={submitting}
               data-testid="button-setup-account"
             >
               {submitting ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
                   Setting up...
                 </>
               ) : (
