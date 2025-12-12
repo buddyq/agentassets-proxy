@@ -785,3 +785,340 @@ export function useTrafficSources(siteId: string) {
     enabled: !!siteId
   });
 }
+
+// ==================== BROKERAGE API ====================
+
+export type Brokerage = {
+  id: string;
+  name: string;
+  ownerUserId: string;
+  logo: string | null;
+  website: string | null;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  includedSeats: number;
+  additionalSeats: number;
+  stripeSubscriptionId: string | null;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type BrokerageMember = {
+  id: string;
+  brokerageId: string;
+  userId: string;
+  role: 'admin' | 'agent';
+  status: 'active' | 'inactive' | 'pending';
+  invitedBy: string | null;
+  invitedAt: Date | null;
+  joinedAt: Date | null;
+  user?: {
+    id: string;
+    name: string | null;
+    email: string | null;
+    phone: string | null;
+    profileImageUrl: string | null;
+  } | null;
+};
+
+export type BrokerageGroup = {
+  id: string;
+  brokerageId: string;
+  name: string;
+  description: string | null;
+  createdAt: Date;
+  memberCount?: number;
+};
+
+export type BrokerageSite = Site & {
+  agent?: {
+    id: string;
+    name: string | null;
+    email: string | null;
+  } | null;
+};
+
+export type BrokerageData = {
+  brokerage: Brokerage | null;
+  membership: BrokerageMember | null;
+  memberCount: number;
+  totalSeats: number;
+};
+
+export function useBrokerage() {
+  return useQuery({
+    queryKey: ['brokerage'],
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE}/brokerage`, { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to fetch brokerage');
+      return res.json() as Promise<BrokerageData>;
+    }
+  });
+}
+
+export function useCreateBrokerage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { name: string; logo?: string; website?: string; phone?: string; email?: string; address?: string }) => {
+      const res = await fetch(`${API_BASE}/brokerage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+        credentials: 'include'
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to create brokerage');
+      }
+      return res.json() as Promise<Brokerage>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['brokerage'] });
+    }
+  });
+}
+
+export function useUpdateBrokerage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: Partial<Brokerage>) => {
+      const res = await fetch(`${API_BASE}/brokerage`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+        credentials: 'include'
+      });
+      if (!res.ok) throw new Error('Failed to update brokerage');
+      return res.json() as Promise<Brokerage>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['brokerage'] });
+    }
+  });
+}
+
+export function useBrokerageMembers() {
+  return useQuery({
+    queryKey: ['brokerage-members'],
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE}/brokerage/members`, { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to fetch brokerage members');
+      return res.json() as Promise<BrokerageMember[]>;
+    }
+  });
+}
+
+export function useAddBrokerageMember() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { name: string; email: string; phone?: string }) => {
+      const res = await fetch(`${API_BASE}/brokerage/members`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+        credentials: 'include'
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to add member');
+      }
+      return res.json() as Promise<BrokerageMember>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['brokerage-members'] });
+      queryClient.invalidateQueries({ queryKey: ['brokerage'] });
+    }
+  });
+}
+
+export function useUpdateBrokerageMember() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ memberId, updates }: { memberId: string; updates: { role?: string; status?: string } }) => {
+      const res = await fetch(`${API_BASE}/brokerage/members/${memberId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+        credentials: 'include'
+      });
+      if (!res.ok) throw new Error('Failed to update member');
+      return res.json() as Promise<BrokerageMember>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['brokerage-members'] });
+    }
+  });
+}
+
+export function useRemoveBrokerageMember() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (memberId: string) => {
+      const res = await fetch(`${API_BASE}/brokerage/members/${memberId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to remove member');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['brokerage-members'] });
+      queryClient.invalidateQueries({ queryKey: ['brokerage'] });
+    }
+  });
+}
+
+export function useBrokerageGroups() {
+  return useQuery({
+    queryKey: ['brokerage-groups'],
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE}/brokerage/groups`, { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to fetch brokerage groups');
+      return res.json() as Promise<BrokerageGroup[]>;
+    }
+  });
+}
+
+export function useCreateBrokerageGroup() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { name: string; description?: string }) => {
+      const res = await fetch(`${API_BASE}/brokerage/groups`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+        credentials: 'include'
+      });
+      if (!res.ok) throw new Error('Failed to create group');
+      return res.json() as Promise<BrokerageGroup>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['brokerage-groups'] });
+    }
+  });
+}
+
+export function useUpdateBrokerageGroup() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ groupId, updates }: { groupId: string; updates: { name?: string; description?: string } }) => {
+      const res = await fetch(`${API_BASE}/brokerage/groups/${groupId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+        credentials: 'include'
+      });
+      if (!res.ok) throw new Error('Failed to update group');
+      return res.json() as Promise<BrokerageGroup>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['brokerage-groups'] });
+    }
+  });
+}
+
+export function useDeleteBrokerageGroup() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (groupId: string) => {
+      const res = await fetch(`${API_BASE}/brokerage/groups/${groupId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      if (!res.ok) throw new Error('Failed to delete group');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['brokerage-groups'] });
+    }
+  });
+}
+
+export function useGroupMembers(groupId: string) {
+  return useQuery({
+    queryKey: ['group-members', groupId],
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE}/brokerage/groups/${groupId}/members`, { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to fetch group members');
+      return res.json();
+    },
+    enabled: !!groupId
+  });
+}
+
+export function useAddUserToGroup() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ groupId, userId }: { groupId: string; userId: string }) => {
+      const res = await fetch(`${API_BASE}/brokerage/groups/${groupId}/members`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+        credentials: 'include'
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to add user to group');
+      }
+      return res.json();
+    },
+    onSuccess: (_, { groupId }) => {
+      queryClient.invalidateQueries({ queryKey: ['group-members', groupId] });
+      queryClient.invalidateQueries({ queryKey: ['brokerage-groups'] });
+    }
+  });
+}
+
+export function useRemoveUserFromGroup() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ groupId, userId }: { groupId: string; userId: string }) => {
+      const res = await fetch(`${API_BASE}/brokerage/groups/${groupId}/members/${userId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      if (!res.ok) throw new Error('Failed to remove user from group');
+      return res.json();
+    },
+    onSuccess: (_, { groupId }) => {
+      queryClient.invalidateQueries({ queryKey: ['group-members', groupId] });
+      queryClient.invalidateQueries({ queryKey: ['brokerage-groups'] });
+    }
+  });
+}
+
+export function useBrokerageSites(search?: string) {
+  return useQuery({
+    queryKey: ['brokerage-sites', search],
+    queryFn: async () => {
+      const url = search 
+        ? `${API_BASE}/brokerage/sites?search=${encodeURIComponent(search)}`
+        : `${API_BASE}/brokerage/sites`;
+      const res = await fetch(url, { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to fetch brokerage sites');
+      return res.json() as Promise<BrokerageSite[]>;
+    }
+  });
+}
+
+export function useDeleteBrokerageSite() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (siteId: string) => {
+      const res = await fetch(`${API_BASE}/brokerage/sites/${siteId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      if (!res.ok) throw new Error('Failed to delete site');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['brokerage-sites'] });
+    }
+  });
+}

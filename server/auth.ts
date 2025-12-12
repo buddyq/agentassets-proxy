@@ -154,8 +154,8 @@ export async function isBrokerageAdmin(req: any, res: any, next: any) {
   
   try {
     const membership = await storage.getBrokerageMembership(req.user.id);
-    if (!membership || membership.role !== 'admin') {
-      return res.status(403).json({ message: "Forbidden - Brokerage admin access required" });
+    if (!membership || membership.role !== 'admin' || membership.status !== 'active') {
+      return res.status(403).json({ message: "Forbidden - Active brokerage admin access required" });
     }
     
     // Add brokerage info to request for convenience

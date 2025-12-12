@@ -2,10 +2,10 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useSites, useDeleteSite, useUpdateSite, useThemes, useLeads, useLayouts, useUnpublishSite, useRepublishSite, useSitePasswords, useCheckSlugAvailability, useUpdateSiteSlug, useDailyStats, useTrafficSources } from "@/lib/api";
+import { useSites, useDeleteSite, useUpdateSite, useThemes, useLeads, useLayouts, useUnpublishSite, useRepublishSite, useSitePasswords, useCheckSlugAvailability, useUpdateSiteSlug, useDailyStats, useTrafficSources, useBrokerage } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
-import { Plus, ExternalLink, Trash2, Globe, BarChart3, Users, MousePointerClick, TrendingUp, Pencil, MessageSquare, Mail, Phone, Calendar, ChevronRight, LayoutDashboard, UserCircle, Image, FileText, Share2, ArrowRight, X, EyeOff, Eye, Clock, AlertTriangle, Lock, Copy, Check, Link2 } from "lucide-react";
+import { Plus, ExternalLink, Trash2, Globe, BarChart3, Users, MousePointerClick, TrendingUp, Pencil, MessageSquare, Mail, Phone, Calendar, ChevronRight, LayoutDashboard, UserCircle, Image, FileText, Share2, ArrowRight, X, EyeOff, Eye, Clock, AlertTriangle, Lock, Copy, Check, Link2, Building2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format, subDays, isPast } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -40,11 +40,14 @@ export default function Dashboard() {
   const { data: themes = [] } = useThemes();
   const { data: layouts = [] } = useLayouts();
   const { data: leads = [] } = useLeads();
+  const { data: brokerageData } = useBrokerage();
   const deleteSiteMutation = useDeleteSite();
   const updateSiteMutation = useUpdateSite();
   const unpublishSiteMutation = useUnpublishSite();
   const republishSiteMutation = useRepublishSite();
   const { toast } = useToast();
+  
+  const isBrokerageAdmin = brokerageData?.membership?.role === 'admin';
 
   const getThemeName = (id: string) => themes.find(t => t.id === id)?.name || 'Unknown Theme';
   const getLayoutName = (id: string | null) => id ? layouts.find(l => l.id === id)?.name || 'Unknown Layout' : 'N/A';
@@ -360,17 +363,27 @@ export default function Dashboard() {
             <h1 className="text-3xl font-bold text-secondary">Dashboard</h1>
             <p className="text-muted-foreground">Manage your property sites and view leads.</p>
           </div>
-          <Link href={user && (user.credits > 0 || hasTrialCredits) ? "/create-site" : "/credits"}>
-            <Button size="lg" className="gap-2 shadow-lg shadow-primary/20">
-              <Plus className="h-4 w-4" />
-              Create New Site
-              {hasTrialCredits && user?.credits === 0 && (
-                <Badge variant="outline" className="ml-1 bg-amber-50 text-amber-700 border-amber-200 text-xs">
-                  Trial
-                </Badge>
-              )}
-            </Button>
-          </Link>
+          <div className="flex items-center gap-3">
+            {isBrokerageAdmin && (
+              <Link href="/brokerage">
+                <Button size="lg" variant="outline" className="gap-2" data-testid="button-brokerage-management">
+                  <Building2 className="h-4 w-4" />
+                  Manage Brokerage
+                </Button>
+              </Link>
+            )}
+            <Link href={user && (user.credits > 0 || hasTrialCredits) ? "/create-site" : "/credits"}>
+              <Button size="lg" className="gap-2 shadow-lg shadow-primary/20">
+                <Plus className="h-4 w-4" />
+                Create New Site
+                {hasTrialCredits && user?.credits === 0 && (
+                  <Badge variant="outline" className="ml-1 bg-amber-50 text-amber-700 border-amber-200 text-xs">
+                    Trial
+                  </Badge>
+                )}
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Profile Incomplete Banner - Always shows when profile is incomplete */}

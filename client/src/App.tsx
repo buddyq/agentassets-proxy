@@ -52,6 +52,7 @@ import HowItWorks from "@/pages/how-it-works";
 import Contact from "@/pages/contact";
 import Support from "@/pages/support";
 import OurStory from "@/pages/our-story";
+import BrokerageDashboard from "@/pages/brokerage";
 
 function SlugRoute({ params }: { params: { slug: string } }) {
   return <SlugSiteView slug={params.slug} />;
@@ -79,6 +80,7 @@ function Router() {
       <ProtectedRoute path="/credits" component={Credits} />
       <ProtectedRoute path="/profile" component={Profile} />
       <ProtectedRoute path="/admin" component={AdminDashboard} />
+      <ProtectedRoute path="/brokerage" component={BrokerageDashboard} />
       
       <Route component={NotFound} />
     </Switch>
