@@ -16,6 +16,7 @@ import {
   brokerageGroupMembers,
   brokerageTemplates,
   brokerageGroupTemplates,
+  invitationTokens,
   type User, 
   type InsertUser,
   type Site,
@@ -44,7 +45,8 @@ import {
   type InsertBrokerageGroup,
   type BrokerageGroupMember,
   type BrokerageTemplate,
-  type BrokerageGroupTemplate
+  type BrokerageGroupTemplate,
+  type InvitationToken
 } from "@shared/schema";
 import { db, pool } from "./db";
 import { eq, and, isNotNull, lt, or, isNull, gte, desc, sql } from "drizzle-orm";
@@ -209,6 +211,12 @@ export interface IStorage {
   
   // Brokerage site management
   getBrokerageSites(brokerageId: string, search?: string): Promise<Site[]>;
+  
+  // Invitation token methods
+  createInvitationToken(memberId: string, tokenHash: string, expiresAt: Date): Promise<InvitationToken>;
+  getInvitationTokenByHash(tokenHash: string): Promise<InvitationToken | undefined>;
+  markTokenUsed(tokenId: string): Promise<void>;
+  deleteExpiredTokens(): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1164,6 +1172,29 @@ export class DatabaseStorage implements IStorage {
     }
     
     return allSites;
+  }
+  
+  // Invitation token methods
+  async createInvitationToken(memberId: string, tokenHash: string, expiresAt: Date): Promise<InvitationToken> {
+    const [token] = await db.insert(invitationTokens).values({
+      memberId,
+      tokenHash,
+      expiresAt,
+    }).returning();
+    return token;
+  }
+  
+  async getInvitationTokenByHash(tokenHash: string): Promise<InvitationToken | undefined> {
+    const [token] = await db.select().from(invitationTokens).where(eq(invitationTokens.tokenHash, tokenHash));
+    return token || undefined;
+  }
+  
+  async markTokenUsed(tokenId: string): Promise<void> {
+    await db.update(invitationTokens).set({ usedAt: new Date() }).where(eq(invitationTokens.id, tokenId));
+  }
+  
+  async deleteExpiredTokens(): Promise<void> {
+    await db.delete(invitationTokens).where(lt(invitationTokens.expiresAt, new Date()));
   }
 }
 

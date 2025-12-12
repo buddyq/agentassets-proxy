@@ -357,6 +357,11 @@ export const brokerages = pgTable("brokerages", {
   additionalSeats: integer("additional_seats").notNull().default(0),
   // Status
   status: text("status").notNull().default('trial'), // 'trial', 'active', 'suspended', 'cancelled'
+  // Onboarding milestones
+  onboardingCompletedAt: timestamp("onboarding_completed_at"),
+  hasAddedFirstAgent: boolean("has_added_first_agent").notNull().default(false),
+  hasCreatedFirstGroup: boolean("has_created_first_group").notNull().default(false),
+  hasExploredTemplates: boolean("has_explored_templates").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -452,3 +457,17 @@ export const brokerageGroupTemplates = pgTable("brokerage_group_templates", {
 ]);
 
 export type BrokerageGroupTemplate = typeof brokerageGroupTemplates.$inferSelect;
+
+// Invitation tokens - for agent password setup
+export const invitationTokens = pgTable("invitation_tokens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  memberId: text("member_id").notNull(), // References brokerageMembers.id
+  tokenHash: text("token_hash").notNull(), // Hashed token for security
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("IDX_invitation_tokens_member").on(table.memberId),
+]);
+
+export type InvitationToken = typeof invitationTokens.$inferSelect;

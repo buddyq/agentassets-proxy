@@ -54,6 +54,7 @@ import Support from "@/pages/support";
 import OurStory from "@/pages/our-story";
 import BrokerageDashboard from "@/pages/brokerage";
 import BrokerageSignup from "@/pages/brokerage-signup";
+import SetupPassword from "@/pages/setup-password";
 
 function SlugRoute({ params }: { params: { slug: string } }) {
   return <SlugSiteView slug={params.slug} />;
@@ -69,6 +70,7 @@ function Router() {
       <Route path="/support" component={Support} />
       <Route path="/our-story" component={OurStory} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/setup-password" component={SetupPassword} />
       <Route path="/p/:slug" component={SlugRoute} />
       <Route path="/site/:id" component={SiteView} />
       <Route path="/layout-preview/:layoutId" component={LayoutPreview} />

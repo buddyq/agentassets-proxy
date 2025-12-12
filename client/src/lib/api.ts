@@ -805,6 +805,12 @@ export type Brokerage = {
   additionalSeats: number;
   stripeSubscriptionId: string | null;
   status: string;
+  trialEndsAt: string | null;
+  plannedAgentCount: string | null;
+  onboardingCompletedAt: string | null;
+  hasAddedFirstAgent: boolean;
+  hasCreatedFirstGroup: boolean;
+  hasExploredTemplates: boolean;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -814,7 +820,7 @@ export type BrokerageMember = {
   brokerageId: string;
   userId: string;
   role: 'admin' | 'agent';
-  status: 'active' | 'inactive' | 'pending';
+  status: 'active' | 'invited' | 'inactive' | 'pending' | 'deactivated';
   invitedBy: string | null;
   invitedAt: Date | null;
   joinedAt: Date | null;

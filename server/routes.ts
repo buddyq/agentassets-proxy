@@ -1,13 +1,16 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import crypto from "crypto";
+import bcrypt from "bcrypt";
 import { storage } from "./storage";
+import { db } from "./db";
 import { setupAuth, isAuthenticated, isAdmin, isBrokerageAdmin, isBrokerageMember } from "./auth";
-import { insertSiteSchema, insertThemeSchema, insertLayoutSchema, insertLeadSchema, insertCouponSchema } from "@shared/schema";
+import { insertSiteSchema, insertThemeSchema, insertLayoutSchema, insertLeadSchema, insertCouponSchema, brokerageMembers } from "@shared/schema";
 import { z } from "zod";
+import { eq } from "drizzle-orm";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import archiver from "archiver";
-import { sendLeadNotificationEmail } from "./email";
+import { sendLeadNotificationEmail, sendAgentInvitationEmail } from "./email";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 
 function getExtensionFromMime(mimeType: string): string {
@@ -1750,6 +1753,38 @@ export async function registerRoutes(
     }
   });
 
+  // Mark templates as explored (onboarding milestone)
+  app.post("/api/brokerage/onboarding/templates-explored", isBrokerageMember, async (req: any, res) => {
+    try {
+      const membership = await storage.getBrokerageMembership(req.user.id);
+      if (!membership) {
+        return res.status(404).json({ error: "Brokerage membership not found" });
+      }
+      
+      const brokerage = await storage.getBrokerage(membership.brokerageId);
+      if (!brokerage) {
+        return res.status(404).json({ error: "Brokerage not found" });
+      }
+      
+      // Update the milestone if not already set
+      if (!brokerage.hasExploredTemplates) {
+        const updates: any = { hasExploredTemplates: true };
+        
+        // Check if all milestones are now complete
+        if (brokerage.hasAddedFirstAgent && brokerage.hasCreatedFirstGroup) {
+          updates.onboardingCompletedAt = new Date();
+        }
+        
+        await storage.updateBrokerage(membership.brokerageId, updates);
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error updating templates explored milestone:", error);
+      res.status(500).json({ error: "Failed to update onboarding milestone" });
+    }
+  });
+
   // ==================== BROKERAGE MEMBER (AGENT) ROUTES ====================
   
   // Get all members of the brokerage
@@ -1833,11 +1868,45 @@ export async function registerRoutes(
         brokerageId: req.brokerageId,
         userId,
         role: 'agent',
-        status: 'active',
+        status: 'invited',
         invitedBy: req.user.id,
         invitedAt: new Date(),
-        joinedAt: new Date(),
       });
+      
+      // Generate invitation token (72 hours expiry)
+      const rawToken = crypto.randomBytes(32).toString('hex');
+      const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+      const expiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000);
+      await storage.createInvitationToken(member.id, tokenHash, expiresAt);
+      
+      // Send invitation email
+      const inviter = await storage.getUser(req.user.id);
+      const baseUrl = process.env.REPLIT_DOMAINS 
+        ? `https://${process.env.REPLIT_DOMAINS.split(',')[0]}`
+        : 'https://agentassets.com';
+        
+      try {
+        await sendAgentInvitationEmail({
+          recipientEmail: email,
+          recipientName: name,
+          brokerageName: brokerage?.name || 'Your Brokerage',
+          inviterName: inviter?.name || 'Your administrator',
+          setupToken: rawToken,
+          baseUrl,
+        });
+      } catch (emailError) {
+        console.error("Failed to send invitation email:", emailError);
+      }
+      
+      // Update onboarding milestone
+      if (!brokerage?.hasAddedFirstAgent) {
+        const updates: any = { hasAddedFirstAgent: true };
+        // Check if all milestones are now complete
+        if (brokerage?.hasCreatedFirstGroup && brokerage?.hasExploredTemplates) {
+          updates.onboardingCompletedAt = new Date();
+        }
+        await storage.updateBrokerage(req.brokerageId, updates);
+      }
       
       const user = await storage.getUser(userId);
       
@@ -1948,6 +2017,17 @@ export async function registerRoutes(
         name,
         description,
       });
+      
+      // Update onboarding milestone
+      const brokerageForMilestone = await storage.getBrokerage(req.brokerageId);
+      if (!brokerageForMilestone?.hasCreatedFirstGroup) {
+        const updates: any = { hasCreatedFirstGroup: true };
+        // Check if all milestones are now complete
+        if (brokerageForMilestone?.hasAddedFirstAgent && brokerageForMilestone?.hasExploredTemplates) {
+          updates.onboardingCompletedAt = new Date();
+        }
+        await storage.updateBrokerage(req.brokerageId, updates);
+      }
       
       res.status(201).json({ ...group, memberCount: 0 });
     } catch (error) {
@@ -2345,6 +2425,120 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error fetching brokerage templates:", error);
       res.status(500).json({ error: "Failed to fetch templates" });
+    }
+  });
+
+  // ==================== INVITATION / PASSWORD SETUP ====================
+
+  // Verify invitation token (public endpoint)
+  app.get("/api/auth/invite/verify", async (req, res) => {
+    try {
+      const { token } = req.query;
+      
+      if (!token || typeof token !== 'string') {
+        return res.status(400).json({ error: "Token is required" });
+      }
+      
+      const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+      const invitationToken = await storage.getInvitationTokenByHash(tokenHash);
+      
+      if (!invitationToken) {
+        return res.status(404).json({ error: "Invalid or expired invitation link" });
+      }
+      
+      if (invitationToken.usedAt) {
+        return res.status(400).json({ error: "This invitation has already been used" });
+      }
+      
+      if (new Date(invitationToken.expiresAt) < new Date()) {
+        return res.status(400).json({ error: "This invitation link has expired" });
+      }
+      
+      // Get the member and user info
+      const members = await storage.getBrokerageMembers(''); // We need to look up by member ID
+      // Find the member by checking all brokerages (less efficient but works)
+      const allUsers = await storage.getAllUsers();
+      
+      // Get the brokerage member info
+      const memberInfo = await db.select().from(brokerageMembers).where(eq(brokerageMembers.id, invitationToken.memberId));
+      if (!memberInfo.length) {
+        return res.status(404).json({ error: "Member not found" });
+      }
+      
+      const member = memberInfo[0];
+      const user = await storage.getUser(member.userId);
+      const brokerage = await storage.getBrokerage(member.brokerageId);
+      
+      res.json({
+        valid: true,
+        name: user?.name || '',
+        email: user?.email || '',
+        brokerageName: brokerage?.name || '',
+      });
+    } catch (error) {
+      console.error("Error verifying invitation token:", error);
+      res.status(500).json({ error: "Failed to verify invitation" });
+    }
+  });
+
+  // Accept invitation and set password (public endpoint)
+  app.post("/api/auth/invite/accept", async (req, res) => {
+    try {
+      const { token, password } = req.body;
+      
+      if (!token || !password) {
+        return res.status(400).json({ error: "Token and password are required" });
+      }
+      
+      if (password.length < 8) {
+        return res.status(400).json({ error: "Password must be at least 8 characters" });
+      }
+      
+      const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+      const invitationToken = await storage.getInvitationTokenByHash(tokenHash);
+      
+      if (!invitationToken) {
+        return res.status(404).json({ error: "Invalid or expired invitation link" });
+      }
+      
+      if (invitationToken.usedAt) {
+        return res.status(400).json({ error: "This invitation has already been used" });
+      }
+      
+      if (new Date(invitationToken.expiresAt) < new Date()) {
+        return res.status(400).json({ error: "This invitation link has expired" });
+      }
+      
+      // Get the member
+      const memberInfo = await db.select().from(brokerageMembers).where(eq(brokerageMembers.id, invitationToken.memberId));
+      if (!memberInfo.length) {
+        return res.status(404).json({ error: "Member not found" });
+      }
+      
+      const member = memberInfo[0];
+      const user = await storage.getUser(member.userId);
+      
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      // Hash and update the password
+      const hashedPassword = await bcrypt.hash(password, 10);
+      await storage.updateUserProfile(user.id, { password: hashedPassword });
+      
+      // Update member status to active
+      await storage.updateBrokerageMember(member.id, { 
+        status: 'active',
+        joinedAt: new Date(),
+      });
+      
+      // Mark token as used
+      await storage.markTokenUsed(invitationToken.id);
+      
+      res.json({ success: true, username: user.username });
+    } catch (error) {
+      console.error("Error accepting invitation:", error);
+      res.status(500).json({ error: "Failed to set up account" });
     }
   });
 

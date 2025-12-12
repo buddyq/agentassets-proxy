@@ -512,12 +512,9 @@ export default function BrokerageDashboard() {
     }
   };
 
-  const activeMembers = members.filter(m => m.status === 'active');
+  const activeMembers = members.filter(m => m.status === 'active' || m.status === 'invited');
   const usedSeats = brokerageData?.memberCount || 0;
   const totalSeats = brokerageData?.totalSeats || 15;
-  
-  // Check if this is a new brokerage (only the owner, no other agents)
-  const isNewBrokerage = activeMembers.length <= 1 && sites.length === 0;
   
   // Calculate trial days remaining
   const trialEndsAt = brokerage.trialEndsAt ? new Date(brokerage.trialEndsAt) : null;
@@ -525,14 +522,14 @@ export default function BrokerageDashboard() {
   const trialDaysRemaining = trialEndsAt ? Math.max(0, Math.ceil((trialEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : 0;
   const isOnTrial = brokerage.status === 'trial' && trialDaysRemaining > 0;
 
-  // Onboarding steps
+  // Onboarding steps using server-side milestone tracking
   const onboardingSteps = [
     { 
       id: 'invite', 
       title: 'Invite Your First Agent', 
       description: 'Add team members to start building property sites together.',
       icon: UserPlus,
-      completed: activeMembers.length > 1,
+      completed: brokerage.hasAddedFirstAgent || activeMembers.length > 1,
       action: () => document.querySelector('[data-testid="button-add-agent"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     },
     { 
@@ -540,7 +537,7 @@ export default function BrokerageDashboard() {
       title: 'Create a Team Group', 
       description: 'Organize agents into groups for custom templates and permissions.',
       icon: FolderOpen,
-      completed: groups.length > 0,
+      completed: brokerage.hasCreatedFirstGroup || groups.length > 0,
       action: () => {
         const groupsTab = document.querySelector('[data-testid="tab-groups"]') as HTMLElement;
         groupsTab?.click();
@@ -551,13 +548,26 @@ export default function BrokerageDashboard() {
       title: 'Explore Custom Templates', 
       description: 'Browse exclusive brokerage templates for your team.',
       icon: Palette,
-      completed: false,
-      action: () => setLocation('/themes')
+      completed: brokerage.hasExploredTemplates || false,
+      action: async () => {
+        try {
+          await fetch('/api/brokerage/onboarding/templates-explored', {
+            method: 'POST',
+            credentials: 'include',
+          });
+        } catch (e) {
+          // Silently ignore - not critical
+        }
+        setLocation('/themes');
+      }
     },
   ];
 
   const completedSteps = onboardingSteps.filter(s => s.completed).length;
   const progressPercent = (completedSteps / onboardingSteps.length) * 100;
+  
+  // Show onboarding until all steps are complete or explicitly dismissed
+  const showOnboarding = completedSteps < onboardingSteps.length && !brokerage.onboardingCompletedAt;
 
   return (
     <div className="min-h-screen bg-background">
@@ -589,7 +599,7 @@ export default function BrokerageDashboard() {
       </header>
 
       <main className="container mx-auto px-4 py-6">
-        {isNewBrokerage && (
+        {showOnboarding && (
           <Card className="mb-8 border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-white to-teal-50/30 overflow-hidden relative">
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
             <CardHeader className="pb-2 relative">
