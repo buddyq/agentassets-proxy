@@ -289,6 +289,8 @@ function GroupCard({ group, members, onDelete, onManageMembers }: {
   onDelete: () => void;
   onManageMembers: () => void;
 }) {
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  
   return (
     <Card data-testid={`card-group-${group.id}`}>
       <CardHeader className="pb-2">
@@ -301,11 +303,7 @@ function GroupCard({ group, members, onDelete, onManageMembers }: {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={onManageMembers}>
-                <UserPlus className="w-4 h-4 mr-2" />
-                Manage Members
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onDelete} className="text-destructive">
+              <DropdownMenuItem onClick={() => setShowDeleteDialog(true)} className="text-destructive">
                 <Trash2 className="w-4 h-4 mr-2" />
                 Delete Group
               </DropdownMenuItem>
@@ -317,11 +315,47 @@ function GroupCard({ group, members, onDelete, onManageMembers }: {
         )}
       </CardHeader>
       <CardContent>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Users className="w-4 h-4" />
-          <span>{group.memberCount || 0} members</span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Users className="w-4 h-4" />
+            <span>{group.memberCount || 0} members</span>
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={onManageMembers}
+            data-testid={`button-manage-group-${group.id}`}
+          >
+            <UserPlus className="w-4 h-4 mr-2" />
+            Manage
+          </Button>
         </div>
       </CardContent>
+      
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Group</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete "{group.name}"? This will remove all agents from this group. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={() => {
+                onDelete();
+                setShowDeleteDialog(false);
+              }}
+            >
+              Delete Group
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
@@ -512,7 +546,6 @@ export default function BrokerageDashboard() {
   };
 
   const handleDeleteGroup = async (groupId: string) => {
-    if (!confirm('Are you sure you want to delete this group?')) return;
     try {
       await deleteGroup.mutateAsync(groupId);
       toast.success('Group deleted');
