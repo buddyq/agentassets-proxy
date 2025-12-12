@@ -54,7 +54,6 @@ export default function HowItWorks() {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 to-white">
       <Navbar />
-      
       {/* Hero Section */}
       <section className="relative py-24 overflow-hidden">
         <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-primary/5 to-transparent" />
@@ -95,7 +94,6 @@ export default function HowItWorks() {
           </div>
         </div>
       </section>
-
       {/* Step 1 */}
       <section className="py-24 bg-white relative overflow-hidden">
         <div className="container mx-auto px-4">
@@ -153,7 +151,6 @@ export default function HowItWorks() {
           </div>
         </div>
       </section>
-
       {/* Step 2 */}
       <section className="py-24 bg-gradient-to-b from-slate-50 to-white relative overflow-hidden">
         <div className="container mx-auto px-4">
@@ -211,7 +208,6 @@ export default function HowItWorks() {
           </div>
         </div>
       </section>
-
       {/* Step 3 */}
       <section className="py-24 bg-white relative overflow-hidden">
         <div className="container mx-auto px-4">
@@ -269,7 +265,6 @@ export default function HowItWorks() {
           </div>
         </div>
       </section>
-
       {/* Features Grid */}
       <section className="py-24 bg-gradient-to-b from-slate-50 to-white">
         <div className="container mx-auto px-4">
@@ -307,7 +302,6 @@ export default function HowItWorks() {
           </div>
         </div>
       </section>
-
       {/* Stats Section */}
       <section className="py-20 bg-gradient-to-r from-primary via-teal-600 to-primary relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
@@ -321,7 +315,7 @@ export default function HowItWorks() {
               <div className="text-white/70">Sites Created</div>
             </div>
             <div>
-              <div className="text-4xl md:text-5xl font-bold mb-2">15 min</div>
+              <div className="text-4xl md:text-5xl font-bold mb-2">10 min</div>
               <div className="text-white/70">Average Build Time</div>
             </div>
             <div>
@@ -335,7 +329,6 @@ export default function HowItWorks() {
           </div>
         </div>
       </section>
-
       {/* FAQ Section */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-4">
@@ -372,7 +365,6 @@ export default function HowItWorks() {
           </div>
         </div>
       </section>
-
       {/* CTA Section */}
       <section className="py-24 bg-secondary relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-secondary via-slate-800 to-secondary" />
@@ -401,7 +393,6 @@ export default function HowItWorks() {
           </div>
         </div>
       </section>
-
       <Footer />
     </div>
   );
