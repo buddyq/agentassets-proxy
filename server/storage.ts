@@ -1160,23 +1160,34 @@ export class DatabaseStorage implements IStorage {
       return { layouts: publicLayouts, themes: publicThemes };
     }
     
-    // Get templates available to all in the brokerage
+    // Get all templates for this brokerage
     const userBrokerageTemplates = await this.getBrokerageTemplates(membership.brokerageId);
-    const availableToAllTemplates = userBrokerageTemplates.filter(t => t.availableToAll);
-    const availableToAllIds = availableToAllTemplates.map(t => t.templateId);
     
-    // Get user's groups and their templates
+    // Get user's groups
     const userGroups = await this.getUserGroups(userId);
-    const groupTemplateIds: string[] = [];
-    for (const group of userGroups) {
-      const templates = await this.getGroupTemplates(group.id);
-      groupTemplateIds.push(...templates.map(t => t.templateId));
+    const userGroupIds = userGroups.map(g => g.id);
+    
+    // For each brokerage template, check if it has group assignments
+    // If NO group assignments → available to all agents
+    // If HAS group assignments → only available if user is in one of those groups
+    const accessibleTemplateIds: string[] = [];
+    
+    for (const template of userBrokerageTemplates) {
+      const groupAssignments = await this.getTemplateGroupAssignments(template.id);
+      
+      if (groupAssignments.length === 0) {
+        // No group assignments = available to all agents in brokerage
+        accessibleTemplateIds.push(template.templateId);
+      } else {
+        // Has group assignments = check if user is in any of those groups
+        const isInAssignedGroup = groupAssignments.some(ga => userGroupIds.includes(ga.groupId));
+        if (isInAssignedGroup) {
+          accessibleTemplateIds.push(template.templateId);
+        }
+      }
     }
     
-    // Combine availableToAll and group template IDs
-    const allAssignedIds = Array.from(new Set([...availableToAllIds, ...groupTemplateIds]));
-    
-    if (allAssignedIds.length === 0) {
+    if (accessibleTemplateIds.length === 0) {
       return { layouts: publicLayouts, themes: publicThemes };
     }
     
@@ -1184,12 +1195,12 @@ export class DatabaseStorage implements IStorage {
     const assignedLayouts = await db
       .select()
       .from(layouts)
-      .where(sql`${layouts.id} IN (${sql.join(allAssignedIds.map(id => sql`${id}`), sql`, `)})`);
+      .where(sql`${layouts.id} IN (${sql.join(accessibleTemplateIds.map(id => sql`${id}`), sql`, `)})`);
     
     const assignedThemes = await db
       .select()
       .from(themes)
-      .where(sql`${themes.id} IN (${sql.join(allAssignedIds.map(id => sql`${id}`), sql`, `)})`);
+      .where(sql`${themes.id} IN (${sql.join(accessibleTemplateIds.map(id => sql`${id}`), sql`, `)})`);
     
     // Combine public and assigned templates (deduplicated)
     const allLayouts = [...publicLayouts];
