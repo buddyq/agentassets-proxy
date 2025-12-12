@@ -125,6 +125,7 @@ export async function registerRoutes(
       const user = await storage.updateUserProfile(userId, result.data);
       res.json(user);
     } catch (error) {
+      console.error("Failed to update profile:", error);
       res.status(500).json({ error: "Failed to update profile" });
     }
   });
