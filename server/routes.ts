@@ -124,8 +124,11 @@ export async function registerRoutes(
       }
       const user = await storage.updateUserProfile(userId, result.data);
       res.json(user);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to update profile:", error);
+      if (error?.code === '23505' && error?.constraint === 'users_email_unique') {
+        return res.status(400).json({ error: "This email is already in use by another account" });
+      }
       res.status(500).json({ error: "Failed to update profile" });
     }
   });
