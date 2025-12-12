@@ -56,9 +56,8 @@ export default function AuthPage() {
     }
   }, [isBrokerageFlow]);
 
-  const [loginData, setLoginData] = useState({ username: "", password: "" });
+  const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [registerData, setRegisterData] = useState({ 
-    username: "", 
     password: "", 
     confirmPassword: "",
     email: "", 
@@ -101,9 +100,8 @@ export default function AuthPage() {
     }
 
     registerMutation.mutate({
-      username: registerData.username,
       password: registerData.password,
-      email: registerData.email || undefined,
+      email: registerData.email,
       name: registerData.name || undefined,
     }, {
       onSuccess: async () => {
@@ -111,7 +109,7 @@ export default function AuthPage() {
           try {
             await brokerageRegister.mutateAsync({
               brokerageName: brokerageData.brokerageName.trim(),
-              contactName: registerData.name.trim() || registerData.username,
+              contactName: registerData.name.trim() || registerData.email.split('@')[0],
               contactEmail: registerData.email.trim(),
               contactPhone: brokerageData.contactPhone.trim() || undefined,
               plannedAgentCount: brokerageData.plannedAgentCount,
@@ -152,13 +150,14 @@ export default function AuthPage() {
                 <CardContent>
                   <form onSubmit={handleLogin} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="login-username">Username</Label>
+                      <Label htmlFor="login-email">Email</Label>
                       <Input 
-                        id="login-username"
-                        data-testid="input-login-username"
-                        placeholder="Enter your username"
-                        value={loginData.username}
-                        onChange={(e) => setLoginData({ ...loginData, username: e.target.value })}
+                        id="login-email"
+                        data-testid="input-login-email"
+                        type="email"
+                        placeholder="Enter your email"
+                        value={loginData.email}
+                        onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
                         required
                       />
                     </div>
@@ -348,17 +347,6 @@ export default function AuthPage() {
                         </div>
                       </>
                     )}
-                    <div className="space-y-2">
-                      <Label htmlFor="register-username">Username</Label>
-                      <Input 
-                        id="register-username"
-                        data-testid="input-register-username"
-                        placeholder="Choose a username"
-                        value={registerData.username}
-                        onChange={(e) => setRegisterData({ ...registerData, username: e.target.value })}
-                        required
-                      />
-                    </div>
                     <div className="space-y-2">
                       <Label htmlFor="register-password">Password</Label>
                       <Input 

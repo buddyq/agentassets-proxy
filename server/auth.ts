@@ -65,26 +65,25 @@ export function setupAuth(app: Express) {
   app.use(passport.session());
 
   passport.use(
-    new LocalStrategy(async (usernameOrEmail, password, done) => {
-      try {
-        // Try to find user by username first, then by email
-        let user = await storage.getUserByUsername(usernameOrEmail);
-        if (!user) {
-          user = await storage.getUserByEmail(usernameOrEmail);
+    new LocalStrategy(
+      { usernameField: 'email', passwordField: 'password' },
+      async (email, password, done) => {
+        try {
+          const user = await storage.getUserByEmail(email);
+          
+          if (!user || !user.password) {
+            return done(null, false);
+          }
+          const isValid = await comparePasswords(password, user.password, user.id);
+          if (!isValid) {
+            return done(null, false);
+          }
+          return done(null, user);
+        } catch (error) {
+          return done(error);
         }
-        
-        if (!user || !user.password) {
-          return done(null, false);
-        }
-        const isValid = await comparePasswords(password, user.password, user.id);
-        if (!isValid) {
-          return done(null, false);
-        }
-        return done(null, user);
-      } catch (error) {
-        return done(error);
       }
-    }),
+    ),
   );
 
   passport.serializeUser((user, done) => done(null, user.id));
@@ -102,22 +101,21 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register", async (req, res, next) => {
     try {
-      const { username, password, email, name } = req.body;
+      const { password, email, name } = req.body;
       
-      if (!username || !password) {
-        return res.status(400).json({ message: "Username and password are required" });
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
       }
 
-      const existingUser = await storage.getUserByUsername(username);
+      const existingUser = await storage.getUserByEmail(email);
       if (existingUser) {
-        return res.status(400).json({ message: "Username already exists" });
+        return res.status(400).json({ message: "An account with this email already exists" });
       }
 
       const user = await storage.createUser({
-        username,
         password: await hashPassword(password),
-        email: email || null,
-        name: name || username,
+        email,
+        name: name || email.split('@')[0],
       });
 
       req.login(user, (err) => {
@@ -133,7 +131,7 @@ export function setupAuth(app: Express) {
     passport.authenticate("local", (err: any, user: Express.User | false) => {
       if (err) return next(err);
       if (!user) {
-        return res.status(401).json({ message: "Invalid username or password" });
+        return res.status(401).json({ message: "Invalid email or password" });
       }
       req.login(user, (err) => {
         if (err) return next(err);

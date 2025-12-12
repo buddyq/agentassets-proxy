@@ -17,9 +17,9 @@ export const sessions = pgTable(
 // Users table with username/password authentication
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: text("username").unique(),
+  username: text("username"),
   password: text("password"),
-  email: text("email"),
+  email: text("email").unique(),
   name: text("name"),
   profileImageUrl: text("profile_image_url"),
   logo: text("logo"),
@@ -45,7 +45,6 @@ export const users = pgTable("users", {
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
   password: true,
   email: true,
   name: true,
