@@ -1130,7 +1130,13 @@ export function useDeleteBrokerageSite() {
 // Brokerage subscription checkout
 export function useBrokerageCheckout() {
   return useMutation({
-    mutationFn: async (data: { brokerageName: string }) => {
+    mutationFn: async (data: { 
+      brokerageName: string; 
+      contactName: string;
+      contactEmail: string;
+      contactPhone?: string;
+      plannedAgentCount: string;
+    }) => {
       const res = await fetch(`${API_BASE}/stripe/brokerage-checkout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

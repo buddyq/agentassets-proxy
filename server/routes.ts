@@ -1092,6 +1092,10 @@ export async function registerRoutes(
   // Brokerage subscription checkout
   const brokerageCheckoutSchema = z.object({
     brokerageName: z.string().min(2, "Brokerage name must be at least 2 characters"),
+    contactName: z.string().min(2, "Name must be at least 2 characters"),
+    contactEmail: z.string().email("Please enter a valid email"),
+    contactPhone: z.string().optional(),
+    plannedAgentCount: z.string().min(1, "Please select agent count range"),
   });
 
   app.post("/api/stripe/brokerage-checkout", isAuthenticated, async (req: any, res) => {
@@ -1106,6 +1110,16 @@ export async function registerRoutes(
       const existingMembership = await storage.getBrokerageMembership(user.id);
       if (existingMembership) {
         return res.status(400).json({ error: "You are already a member of a brokerage" });
+      }
+
+      // Update user profile with contact info if not already set
+      const profileUpdates: Record<string, string> = {};
+      if (!user.name && validated.contactName) profileUpdates.name = validated.contactName;
+      if (!user.email && validated.contactEmail) profileUpdates.email = validated.contactEmail;
+      if (!user.phone && validated.contactPhone) profileUpdates.phone = validated.contactPhone;
+      
+      if (Object.keys(profileUpdates).length > 0) {
+        await storage.updateUserProfile(user.id, profileUpdates);
       }
 
       const stripe = await getUncachableStripeClient();
@@ -1139,9 +1153,13 @@ export async function registerRoutes(
         metadata: {
           userId: user.id,
           brokerageName: validated.brokerageName,
+          contactName: validated.contactName,
+          contactEmail: validated.contactEmail,
+          contactPhone: validated.contactPhone || '',
+          plannedAgentCount: validated.plannedAgentCount,
           type: 'brokerage_subscription',
         },
-        customer_email: user.email || undefined,
+        customer_email: validated.contactEmail,
       });
 
       res.json({ url: session.url });
