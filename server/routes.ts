@@ -1881,9 +1881,7 @@ export async function registerRoutes(
       
       // Send invitation email
       const inviter = await storage.getUser(req.user.id);
-      const baseUrl = process.env.REPLIT_DOMAINS 
-        ? `https://${process.env.REPLIT_DOMAINS.split(',')[0]}`
-        : 'https://agentassets.com';
+      const baseUrl = process.env.BASE_URL || 'https://agentassets.com';
         
       try {
         await sendAgentInvitationEmail({
