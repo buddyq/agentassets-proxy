@@ -16,7 +16,7 @@ import {
   useAdminAllBrokerageTemplates,
   type BrokerageWithOwner, type BrokerageTemplate
 } from "@/lib/api";
-import { Plus, Palette, Trash2, Shield, Pencil, LayoutTemplate, Ticket, Users, CreditCard, Gift, Clock, Hash, Calendar, Loader2, Building2, Check } from "lucide-react";
+import { Plus, Palette, Trash2, Shield, Pencil, LayoutTemplate, Ticket, Users, CreditCard, Gift, Clock, Hash, Calendar, Loader2, Building2, Check, Infinity } from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -1589,10 +1589,17 @@ export default function AdminDashboard() {
                             </td>
                             <td className="px-4 py-3 text-sm">{user.email || '-'}</td>
                             <td className="px-4 py-3 text-center">
-                              <Badge variant={user.credits > 0 ? 'default' : 'secondary'} className="gap-1">
-                                <CreditCard className="h-3 w-3" />
-                                {user.credits}
-                              </Badge>
+                              {user.accountType === 'broker' ? (
+                                <Badge variant="default" className="gap-1">
+                                  <Infinity className="h-3 w-3" />
+                                  Unlimited
+                                </Badge>
+                              ) : (
+                                <Badge variant={user.credits > 0 ? 'default' : 'secondary'} className="gap-1">
+                                  <CreditCard className="h-3 w-3" />
+                                  {user.credits}
+                                </Badge>
+                              )}
                             </td>
                             <td className="px-4 py-3 text-center">
                               <Badge variant={user.accountType === 'broker' ? 'default' : 'outline'} className="capitalize">
