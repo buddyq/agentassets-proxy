@@ -4,7 +4,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { 
-  useBrokerage, 
+  useBrokerage,
+  useAllGroupMemberships, 
   useBrokerageMembers, 
   useBrokerageGroups, 
   useBrokerageSites,
@@ -472,6 +473,7 @@ export default function BrokerageDashboard() {
   
   const { data: brokerageTemplates = [], refetch: refetchTemplates } = useBrokerageTemplates();
   const { data: allLayouts = [] } = useLayouts({ preset: true });
+  const { data: allGroupMemberships = [] } = useAllGroupMemberships();
   const updateTemplate = useUpdateBrokerageTemplate();
   const assignToGroup = useAssignTemplateToGroup();
   const removeFromGroupMutation = useRemoveTemplateFromGroup();
@@ -767,14 +769,21 @@ export default function BrokerageDashboard() {
                   <p>No agents yet. Add your first team member!</p>
                 </div>
               ) : (
-                activeMembers.map(member => (
-                  <AgentMemberCard
-                    key={member.id}
-                    member={member}
-                    onRemove={() => handleRemoveAgent(member.id)}
-                    onPromote={() => handlePromoteAgent(member.id)}
-                  />
-                ))
+                activeMembers.map(member => {
+                  const memberGroupIds = allGroupMemberships
+                    .filter(m => m.userId === member.userId)
+                    .map(m => m.groupId);
+                  const memberGroups = groups.filter(g => memberGroupIds.includes(g.id));
+                  return (
+                    <AgentMemberCard
+                      key={member.id}
+                      member={member}
+                      onRemove={() => handleRemoveAgent(member.id)}
+                      onPromote={() => handlePromoteAgent(member.id)}
+                      userGroups={memberGroups}
+                    />
+                  );
+                })
               )}
             </div>
           </TabsContent>
