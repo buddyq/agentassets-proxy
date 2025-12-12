@@ -1,0 +1,45 @@
+User Roles:
+
+Regular Customers: Users who are not affiliated with any broker.
+Agents: Users who belong to a broker.
+Brokers: Administrators who manage agents and can create groups.
+Groups: Subsets of agents created by brokers, where specific templates can be assigned.
+
+Template Types:
+
+Site Templates: General templates available to all users (regular customers and agents).
+Broker Templates: Special templates available only to agents within a specific broker (and potentially their groups).
+Group Templates: Templates assigned specifically to a broker-created group, accessible only by agents in that group.
+
+Access Rules:
+
+Regular Customers:
+Can view and select from all Site Templates to create their website.
+Do not have access to any Broker Templates or Group Templates.
+
+Agents within a Broker:
+Can view and select from all Site Templates.
+Can also access any Broker Templates associated with their broker.
+If the agent is assigned to one or more groups by the broker, they can additionally access the Group Templates assigned to those groups.
+
+Brokers:
+Can create and manage groups within their brokerage.
+Can assign specific agents to these groups.
+Can assign specific templates to these groups (these become Group Templates).
+Brokers themselves may have full access to all templates for administrative purposes, but focus on implementing the agent-side access.
+
+
+Implementation Requirements:
+
+When a user (customer or agent) is selecting a template to create a site, filter the available templates based on their role, broker affiliation, and group memberships.
+Ensure the system checks for broker and group assignments dynamically (e.g., via database queries for user affiliations).
+Handle cases where an agent might belong to multiple groups: They should have cumulative access to templates from all their groups, plus broker and site templates.
+Provide admin interfaces for brokers to:
+Create groups.
+Assign agents to groups.
+Assign templates to groups.
+
+Use secure authentication to determine user roles and affiliations.
+If needed, suggest database schema updates (e.g., tables for brokers, agents, groups, template assignments).
+
+Please implement this feature step-by-step, starting with any necessary backend models, then API endpoints for template filtering and broker admin actions, and finally frontend updates for template selection. Test with sample data for each scenario.
