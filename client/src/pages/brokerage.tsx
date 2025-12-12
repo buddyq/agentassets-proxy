@@ -45,7 +45,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Users, 
   Building2, 
@@ -78,19 +78,20 @@ function AddAgentDialog({ onSuccess }: { onSuccess: () => void }) {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const addMember = useAddBrokerageMember();
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await addMember.mutateAsync({ name, email, phone: phone || undefined });
-      toast.success('Agent added successfully');
+      toast({ title: 'Agent added successfully' });
       setOpen(false);
       setName('');
       setEmail('');
       setPhone('');
       onSuccess();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to add agent');
+      toast({ title: error.message || 'Failed to add agent', variant: 'destructive' });
     }
   };
 
@@ -164,18 +165,19 @@ function CreateGroupDialog({ onSuccess }: { onSuccess: () => void }) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const createGroup = useCreateBrokerageGroup();
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await createGroup.mutateAsync({ name, description: description || undefined });
-      toast.success('Group created successfully');
+      toast({ title: 'Group created successfully' });
       setOpen(false);
       setName('');
       setDescription('');
       onSuccess();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to create group');
+      toast({ title: error.message || 'Failed to create group', variant: 'destructive' });
     }
   };
 
@@ -454,12 +456,12 @@ export default function BrokerageDashboard() {
       setProcessingSuccess(true);
       confirmSubscription.mutateAsync(sessionId)
         .then(() => {
-          toast.success('Welcome! Your brokerage has been created successfully.');
+          toast({ title: 'Welcome! Your brokerage has been created successfully.' });
           refetchBrokerage();
           window.history.replaceState({}, '', '/brokerage');
         })
         .catch((error) => {
-          toast.error(error.message || 'Failed to confirm subscription');
+          toast({ title: error.message || 'Failed to confirm subscription', variant: 'destructive' });
           setProcessingSuccess(false);
         });
     }
@@ -476,6 +478,7 @@ export default function BrokerageDashboard() {
   const addToGroup = useAddUserToGroup();
   const removeFromGroup = useRemoveUserFromGroup();
   const updateBrokerage = useUpdateBrokerage();
+  const { toast } = useToast();
   
   const [brokerageNameEdit, setBrokerageNameEdit] = useState('');
   const [brokerageLogoEdit, setBrokerageLogoEdit] = useState<string | null>(null);
@@ -559,31 +562,31 @@ export default function BrokerageDashboard() {
     if (!confirm('Are you sure you want to remove this agent?')) return;
     try {
       await removeMember.mutateAsync(memberId);
-      toast.success('Agent removed');
+      toast({ title: 'Agent removed' });
       refetchMembers();
       refetchBrokerage();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to remove agent');
+      toast({ title: error.message || 'Failed to remove agent', variant: 'destructive' });
     }
   };
 
   const handlePromoteAgent = async (memberId: string) => {
     try {
       await updateMember.mutateAsync({ memberId, updates: { role: 'admin' } });
-      toast.success('Agent promoted to admin');
+      toast({ title: 'Agent promoted to admin' });
       refetchMembers();
     } catch (error) {
-      toast.error('Failed to promote agent');
+      toast({ title: 'Failed to promote agent', variant: 'destructive' });
     }
   };
 
   const handleDeleteGroup = async (groupId: string) => {
     try {
       await deleteGroup.mutateAsync(groupId);
-      toast.success('Group deleted');
+      toast({ title: 'Group deleted' });
       refetchGroups();
     } catch (error) {
-      toast.error('Failed to delete group');
+      toast({ title: 'Failed to delete group', variant: 'destructive' });
     }
   };
 
@@ -591,9 +594,9 @@ export default function BrokerageDashboard() {
     if (!confirm('Are you sure you want to delete this site?')) return;
     try {
       await deleteSite.mutateAsync(siteId);
-      toast.success('Site deleted');
+      toast({ title: 'Site deleted' });
     } catch (error) {
-      toast.error('Failed to delete site');
+      toast({ title: 'Failed to delete site', variant: 'destructive' });
     }
   };
 
@@ -1021,7 +1024,7 @@ export default function BrokerageDashboard() {
                         if (result.successful && result.successful.length > 0) {
                           const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
                           setBrokerageLogoEdit(normalizedUrl);
-                          toast.success('Logo uploaded');
+                          toast({ title: 'Logo uploaded' });
                         }
                       }}
                       buttonClassName="bg-primary text-primary-foreground hover:bg-primary/90"
@@ -1034,7 +1037,7 @@ export default function BrokerageDashboard() {
                 <Button 
                   onClick={async () => {
                     if (!brokerageNameEdit.trim()) {
-                      toast.error('Please enter a brokerage name');
+                      toast({ title: 'Please enter a brokerage name', variant: 'destructive' });
                       return;
                     }
                     try {
@@ -1043,10 +1046,10 @@ export default function BrokerageDashboard() {
                         logo: brokerageLogoEdit,
                         website: brokerageWebsiteEdit.trim() || null
                       });
-                      toast.success('Brokerage settings updated');
+                      toast({ title: 'Brokerage settings updated' });
                       refetchBrokerage();
                     } catch (error: any) {
-                      toast.error(error.message || 'Failed to update brokerage');
+                      toast({ title: error.message || 'Failed to update brokerage', variant: 'destructive' });
                     }
                   }}
                   disabled={updateBrokerage.isPending}
@@ -1095,7 +1098,7 @@ export default function BrokerageDashboard() {
                         }
                         refetchTemplates();
                       } catch (error: any) {
-                        toast.error(error.message);
+                        toast({ title: error.message, variant: 'destructive' });
                       }
                     }}
                   />
@@ -1152,7 +1155,7 @@ export default function BrokerageDashboard() {
                         variant="outline"
                         onClick={async () => {
                           await removeFromGroup.mutateAsync({ groupId: selectedGroup!, userId: member.userId });
-                          toast.success('Removed from group');
+                          toast({ title: 'Removed from group' });
                         }}
                       >
                         Remove
@@ -1163,9 +1166,9 @@ export default function BrokerageDashboard() {
                         onClick={async () => {
                           try {
                             await addToGroup.mutateAsync({ groupId: selectedGroup!, userId: member.userId });
-                            toast.success('Added to group');
+                            toast({ title: 'Added to group' });
                           } catch (error: any) {
-                            toast.error(error.message);
+                            toast({ title: error.message, variant: 'destructive' });
                           }
                         }}
                       >
