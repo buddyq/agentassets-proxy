@@ -1997,6 +1997,9 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Cannot remove the brokerage owner" });
       }
       
+      // Set the user's credits to zero - they'll need to buy their own credits now
+      await storage.updateUserCredits(member.userId, 0);
+      
       await storage.removeBrokerageMember(memberId);
       res.json({ success: true });
     } catch (error) {
