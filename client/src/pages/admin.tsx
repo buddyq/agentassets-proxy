@@ -13,6 +13,7 @@ import {
   useAdminCoupons, useCreateCoupon, useUpdateCoupon, useDeleteCoupon,
   useAdminUsers, useAdminUpdateUserCredits, useAdminDeleteUser,
   useAdminBrokerages, useAdminBrokerageTemplates, useAdminAssignTemplateToBrokerage, useAdminRemoveTemplateFromBrokerage,
+  useAdminAllBrokerageTemplates,
   type BrokerageWithOwner, type BrokerageTemplate
 } from "@/lib/api";
 import { Plus, Palette, Trash2, Shield, Pencil, LayoutTemplate, Ticket, Users, CreditCard, Gift, Clock, Hash, Calendar, Loader2, Building2, Check } from "lucide-react";
@@ -61,6 +62,7 @@ export default function AdminDashboard() {
   const { data: brokerages = [] } = useAdminBrokerages();
   const [selectedBrokerageId, setSelectedBrokerageId] = useState<string>("");
   const { data: brokerageTemplates = [], refetch: refetchBrokerageTemplates } = useAdminBrokerageTemplates(selectedBrokerageId);
+  const { data: allBrokerageTemplates = [], refetch: refetchAllBrokerageTemplates } = useAdminAllBrokerageTemplates();
   const assignTemplateMutation = useAdminAssignTemplateToBrokerage();
   const removeTemplateMutation = useAdminRemoveTemplateFromBrokerage();
   const [isAssignLayoutDialogOpen, setIsAssignLayoutDialogOpen] = useState(false);
@@ -1064,6 +1066,77 @@ export default function AdminDashboard() {
                           {layout.enabled ? 'Visible to users' : 'Hidden from users'}
                         </Label>
                       </div>
+                    </div>
+                    <div className="mt-3 pt-3 border-t">
+                      <Label className="text-xs text-muted-foreground mb-2 block">Assign to Brokerage</Label>
+                      <Select
+                        value={(() => {
+                          const assignment = allBrokerageTemplates.find(bt => bt.templateId === layout.id && bt.templateType === 'layout');
+                          return assignment ? assignment.brokerageId : 'all-users';
+                        })()}
+                        onValueChange={(value) => {
+                          const existingAssignment = allBrokerageTemplates.find(bt => bt.templateId === layout.id && bt.templateType === 'layout');
+                          if (value === 'all-users') {
+                            if (existingAssignment) {
+                              removeTemplateMutation.mutate(
+                                { brokerageId: existingAssignment.brokerageId, templateId: existingAssignment.id },
+                                {
+                                  onSuccess: () => {
+                                    toast({ title: "Layout unassigned", description: `${layout.name} is now available to all users.` });
+                                    refetchAllBrokerageTemplates();
+                                  },
+                                  onError: (err) => toast({ title: "Error", description: err.message, variant: "destructive" })
+                                }
+                              );
+                            }
+                          } else {
+                            if (existingAssignment) {
+                              removeTemplateMutation.mutate(
+                                { brokerageId: existingAssignment.brokerageId, templateId: existingAssignment.id },
+                                {
+                                  onSuccess: () => {
+                                    assignTemplateMutation.mutate(
+                                      { brokerageId: value, templateType: 'layout', templateId: layout.id },
+                                      {
+                                        onSuccess: () => {
+                                          const brokerage = brokerages.find(b => b.id === value);
+                                          toast({ title: "Layout assigned", description: `${layout.name} assigned to ${brokerage?.name || 'brokerage'}.` });
+                                          refetchAllBrokerageTemplates();
+                                        },
+                                        onError: (err) => toast({ title: "Error", description: err.message, variant: "destructive" })
+                                      }
+                                    );
+                                  }
+                                }
+                              );
+                            } else {
+                              assignTemplateMutation.mutate(
+                                { brokerageId: value, templateType: 'layout', templateId: layout.id },
+                                {
+                                  onSuccess: () => {
+                                    const brokerage = brokerages.find(b => b.id === value);
+                                    toast({ title: "Layout assigned", description: `${layout.name} assigned to ${brokerage?.name || 'brokerage'}.` });
+                                    refetchAllBrokerageTemplates();
+                                  },
+                                  onError: (err) => toast({ title: "Error", description: err.message, variant: "destructive" })
+                                }
+                              );
+                            }
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="w-full h-8 text-xs">
+                          <SelectValue placeholder="All Users" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all-users">All Users</SelectItem>
+                          {brokerages.map((brokerage) => (
+                            <SelectItem key={brokerage.id} value={brokerage.id}>
+                              {brokerage.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </CardContent>
                 </Card>

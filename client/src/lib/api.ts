@@ -1338,6 +1338,18 @@ export function useAdminBrokerageTemplates(brokerageId: string) {
   });
 }
 
+// Get all brokerage templates across all brokerages (admin only)
+export function useAdminAllBrokerageTemplates() {
+  return useQuery({
+    queryKey: ['admin-all-brokerage-templates'],
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE}/admin/brokerage-templates`, { credentials: 'include' });
+      if (!res.ok) return [];
+      return res.json() as Promise<BrokerageTemplate[]>;
+    }
+  });
+}
+
 // Get groups for a specific brokerage (admin only)
 export function useAdminBrokerageGroups(brokerageId: string) {
   return useQuery({

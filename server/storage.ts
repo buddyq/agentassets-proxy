@@ -206,6 +206,7 @@ export interface IStorage {
   updateBrokerageTemplate(id: string, updates: Partial<BrokerageTemplate>): Promise<BrokerageTemplate>;
   removeBrokerageTemplate(id: string): Promise<void>;
   getAllBrokerages(): Promise<Brokerage[]>;
+  getAllBrokerageTemplates(): Promise<BrokerageTemplate[]>;
   
   // Brokerage group template methods
   assignTemplateToGroup(brokerageTemplateId: string, groupId: string): Promise<BrokerageGroupTemplate>;
@@ -1072,6 +1073,10 @@ export class DatabaseStorage implements IStorage {
 
   async getAllBrokerages(): Promise<Brokerage[]> {
     return db.select().from(brokerages);
+  }
+
+  async getAllBrokerageTemplates(): Promise<BrokerageTemplate[]> {
+    return db.select().from(brokerageTemplates);
   }
 
   async removeBrokerageTemplate(id: string): Promise<void> {

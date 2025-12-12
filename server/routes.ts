@@ -2455,6 +2455,17 @@ export async function registerRoutes(
     }
   });
 
+  // Get all brokerage templates across all brokerages (AgentAssets admin only)
+  app.get("/api/admin/brokerage-templates", isAdmin, async (req: any, res) => {
+    try {
+      const templates = await storage.getAllBrokerageTemplates();
+      res.json(templates);
+    } catch (error) {
+      console.error("Error fetching all brokerage templates:", error);
+      res.status(500).json({ error: "Failed to fetch templates" });
+    }
+  });
+
   // Get groups for a brokerage (AgentAssets admin only) - for template assignment UI
   app.get("/api/admin/brokerages/:brokerageId/groups", isAdmin, async (req: any, res) => {
     try {
