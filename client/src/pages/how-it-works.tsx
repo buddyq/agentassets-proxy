@@ -85,7 +85,7 @@ export default function HowItWorks() {
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
-              <Link href="/credits">
+              <Link href="/#pricing">
                 <Button size="lg" variant="outline" className="text-lg px-10 h-14" data-testid="button-hero-pricing">
                   View Pricing
                 </Button>
@@ -385,7 +385,7 @@ export default function HowItWorks() {
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
-            <Link href="/credits">
+            <Link href="/#pricing">
               <Button size="lg" variant="outline" className="text-lg px-12 h-14 bg-white/5 hover:bg-white/15 text-white border-white/30" data-testid="button-cta-pricing">
                 View Pricing
               </Button>
