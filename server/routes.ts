@@ -1582,6 +1582,9 @@ export async function registerRoutes(
           new30d: newLeads30d,
           new7d: newLeads7d
         },
+        brokerages: {
+          total: await storage.getAllBrokerages().then(b => b.length)
+        },
         recentUsers,
         recentSites,
         topSitesByViews

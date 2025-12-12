@@ -574,6 +574,9 @@ export interface AdminStats {
     new30d: number;
     new7d: number;
   };
+  brokerages: {
+    total: number;
+  };
   recentUsers: Omit<User, 'password'>[];
   recentSites: Site[];
   topSitesByViews: Site[];

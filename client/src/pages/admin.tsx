@@ -499,7 +499,7 @@ export default function AdminDashboard() {
                       <CardDescription>Total Users</CardDescription>
                       <CardTitle className="text-3xl flex items-center gap-2">
                         {stats.users.total}
-                        <Badge variant="secondary" className="text-xs font-normal">
+                        <Badge className="text-xs font-normal bg-primary/10 text-primary hover:bg-primary/20">
                           +{stats.users.new7d} this week
                         </Badge>
                       </CardTitle>
@@ -517,7 +517,7 @@ export default function AdminDashboard() {
                       <CardDescription>Total Sites</CardDescription>
                       <CardTitle className="text-3xl flex items-center gap-2">
                         {stats.sites.total}
-                        <Badge variant="secondary" className="text-xs font-normal">
+                        <Badge className="text-xs font-normal bg-primary/10 text-primary hover:bg-primary/20">
                           +{stats.sites.new7d} this week
                         </Badge>
                       </CardTitle>
@@ -532,51 +532,33 @@ export default function AdminDashboard() {
                   
                   <Card>
                     <CardHeader className="pb-2">
-                      <CardDescription>Total Page Views</CardDescription>
+                      <CardDescription>Brokerages</CardDescription>
                       <CardTitle className="text-3xl flex items-center gap-2">
-                        <Eye className="h-6 w-6 text-muted-foreground" />
-                        {stats.sites.totalViews.toLocaleString()}
+                        <Building2 className="h-6 w-6 text-muted-foreground" />
+                        {stats.brokerages?.total || 0}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="text-sm text-muted-foreground">
-                        {stats.sites.totalUniqueVisitors.toLocaleString()} unique visitors
+                        Active brokerage accounts
                       </div>
                     </CardContent>
                   </Card>
                   
                   <Card>
                     <CardHeader className="pb-2">
-                      <CardDescription>Total Leads</CardDescription>
+                      <CardDescription>Account Breakdown</CardDescription>
                       <CardTitle className="text-3xl flex items-center gap-2">
-                        <FileText className="h-6 w-6 text-muted-foreground" />
-                        {stats.leads.total}
-                        <Badge variant="secondary" className="text-xs font-normal">
-                          +{stats.leads.new7d} this week
-                        </Badge>
+                        {stats.users.total > 0 ? Math.round((stats.users.brokerAccounts / stats.users.total) * 100) : 0}%
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="text-sm text-muted-foreground">
-                        {stats.leads.new30d} in last 30 days
+                        broker accounts ({stats.users.brokerAccounts} of {stats.users.total})
                       </div>
                     </CardContent>
                   </Card>
                 </div>
-
-                {/* Credits Overview */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <CreditCard className="h-5 w-5" />
-                      Credits Overview
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold">{stats.users.totalCreditsHeld}</div>
-                    <div className="text-sm text-muted-foreground">Total credits held by all users</div>
-                  </CardContent>
-                </Card>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Recent Users */}
