@@ -896,7 +896,8 @@ export default function BrokerageDashboard() {
                               <h3 className="font-semibold">{layout?.name || 'Unknown Layout'}</h3>
                               <p className="text-sm text-muted-foreground">{layout?.description || 'Exclusive brokerage layout'}</p>
                               {template.assignedGroups && template.assignedGroups.length > 0 ? (
-                                <div className="flex flex-wrap gap-1 mt-2">
+                                <div className="flex flex-wrap items-center gap-1 mt-2">
+                                  <span className="text-xs text-muted-foreground mr-1">Assigned to Group(s):</span>
                                   {template.assignedGroups.map(groupId => {
                                     const group = groups.find(g => g.id === groupId);
                                     return group ? (
