@@ -2018,6 +2018,30 @@ export async function registerRoutes(
 
   // ==================== BROKERAGE GROUP ROUTES ====================
   
+  // Get all group memberships for all users in the brokerage
+  app.get("/api/brokerage/group-memberships", isBrokerageAdmin, async (req: any, res) => {
+    try {
+      const groups = await storage.getBrokerageGroups(req.brokerageId);
+      const memberships: { userId: string; groupId: string; groupName: string }[] = [];
+      
+      for (const group of groups) {
+        const members = await storage.getGroupMembers(group.id);
+        for (const member of members) {
+          memberships.push({
+            userId: member.userId,
+            groupId: group.id,
+            groupName: group.name
+          });
+        }
+      }
+      
+      res.json(memberships);
+    } catch (error) {
+      console.error("Error fetching group memberships:", error);
+      res.status(500).json({ error: "Failed to fetch group memberships" });
+    }
+  });
+
   // Get all groups in the brokerage
   app.get("/api/brokerage/groups", isBrokerageAdmin, async (req: any, res) => {
     try {

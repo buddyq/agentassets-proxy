@@ -226,10 +226,11 @@ function CreateGroupDialog({ onSuccess }: { onSuccess: () => void }) {
   );
 }
 
-function AgentMemberCard({ member, onRemove, onPromote }: { 
+function AgentMemberCard({ member, onRemove, onPromote, userGroups }: { 
   member: BrokerageMember; 
   onRemove: () => void;
   onPromote: () => void;
+  userGroups: BrokerageGroup[];
 }) {
   const initials = member.user?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || '??';
   
@@ -256,6 +257,16 @@ function AgentMemberCard({ member, onRemove, onPromote }: {
             </Badge>
           </div>
           <span className="text-sm text-muted-foreground">{member.user?.email}</span>
+          {userGroups.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-1">
+              {userGroups.map(group => (
+                <span key={group.id} className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full">
+                  <FolderOpen className="w-3 h-3" />
+                  {group.name}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </div>
       

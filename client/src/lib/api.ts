@@ -1072,6 +1072,17 @@ export function useGroupMembers(groupId: string) {
   });
 }
 
+export function useAllGroupMemberships() {
+  return useQuery({
+    queryKey: ['all-group-memberships'],
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE}/brokerage/group-memberships`, { credentials: 'include' });
+      if (!res.ok) return [];
+      return res.json() as Promise<{ userId: string; groupId: string; groupName: string }[]>;
+    }
+  });
+}
+
 export function useAddUserToGroup() {
   const queryClient = useQueryClient();
   return useMutation({
