@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useSearch } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
+import { Navbar } from '@/components/layout/navbar';
+import { Footer } from '@/components/layout/footer';
 import { 
   useBrokerage, 
   useBrokerageMembers, 
@@ -570,8 +572,11 @@ export default function BrokerageDashboard() {
   const showOnboarding = completedSteps < onboardingSteps.length && !brokerage.onboardingCompletedAt;
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-white">
+    <div className="min-h-screen bg-background flex flex-col">
+      <Navbar />
+      
+      {/* Brokerage Sub-header */}
+      <div className="border-b bg-white">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -596,9 +601,9 @@ export default function BrokerageDashboard() {
             </div>
           </div>
         </div>
-      </header>
+      </div>
 
-      <main className="container mx-auto px-4 py-6">
+      <main className="container mx-auto px-4 py-6 flex-1">
         {showOnboarding && (
           <Card className="mb-8 border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-white to-teal-50/30 overflow-hidden relative">
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
@@ -844,6 +849,8 @@ export default function BrokerageDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      <Footer />
     </div>
   );
 }
