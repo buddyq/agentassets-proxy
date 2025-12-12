@@ -24,11 +24,13 @@ export default function Home() {
         
         <div className="container relative z-20 px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 backdrop-blur-md border border-yellow-400/30 rounded-full px-5 py-2.5 mb-8 animate-pulse">
-              <Sparkles className="h-4 w-4 text-yellow-400" />
-              <span className="text-sm font-semibold">Start Your 7-Day Free Trial</span>
-              <span className="text-xs bg-yellow-400 text-black px-2 py-0.5 rounded-full font-bold">FREE</span>
-            </div>
+            <Link href="/auth?trial=true">
+              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 backdrop-blur-md border border-yellow-400/30 rounded-full px-5 py-2.5 mb-8 animate-pulse cursor-pointer hover:from-yellow-500/30 hover:to-orange-500/30 transition-colors">
+                <Sparkles className="h-4 w-4 text-yellow-400" />
+                <span className="text-sm font-semibold">Start Your 7-Day Free Trial</span>
+                <span className="text-xs bg-yellow-400 text-black px-2 py-0.5 rounded-full font-bold">FREE</span>
+              </div>
+            </Link>
             
             <h1 className="text-5xl md:text-7xl font-bold mb-6 font-serif leading-tight">
               <span className="block">Single Property Sites</span>
