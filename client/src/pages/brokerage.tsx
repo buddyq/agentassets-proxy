@@ -1015,14 +1015,17 @@ export default function BrokerageDashboard() {
               {activeMembers.map(member => {
                 const isInGroup = groupMembers.some((gm: any) => gm.userId === member.userId);
                 return (
-                  <div key={member.id} className="flex items-center justify-between p-2 border rounded">
-                    <div className="flex items-center gap-2">
-                      <Avatar className="w-8 h-8">
+                  <div key={member.id} className="flex items-center justify-between p-3 border rounded">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="w-10 h-10">
                         <AvatarFallback className="text-xs">
                           {member.user?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || '??'}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="text-sm">{member.user?.name}</span>
+                      <div>
+                        <div className="text-sm font-medium">{member.user?.name}</div>
+                        <div className="text-xs text-muted-foreground">{member.user?.email || member.email}</div>
+                      </div>
                     </div>
                     {isInGroup ? (
                       <Button
