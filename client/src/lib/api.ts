@@ -1122,24 +1122,6 @@ export function useDeleteBrokerageGroup() {
   });
 }
 
-export function useRequestBrokerageGroup() {
-  return useMutation({
-    mutationFn: async ({ name, description }: { name: string; description?: string }) => {
-      const res = await fetch(`${API_BASE}/brokerage/group-requests`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, description }),
-        credentials: 'include'
-      });
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || 'Failed to request group');
-      }
-      return;
-    }
-  });
-}
-
 export function useGroupMembers(groupId: string) {
   return useQuery({
     queryKey: ['group-members', groupId],
