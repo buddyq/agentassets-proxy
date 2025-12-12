@@ -411,8 +411,8 @@ export async function sendAgentInvitationEmail(data: AgentInvitationEmailData): 
   
   const safeRecipientName = escapeHtml(recipientName || 'there');
   const safeBrokerageName = escapeHtml(brokerageName);
-  const safeInviterName = escapeHtml(inviterName || 'Your administrator');
   const setupUrl = `${baseUrl}/setup-password?token=${setupToken}`;
+  const logoUrl = 'https://agentassets.com/logo-email.png';
 
   const htmlContent = `
     <!DOCTYPE html>
@@ -421,39 +421,32 @@ export async function sendAgentInvitationEmail(data: AgentInvitationEmailData): 
       <style>
         body { font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background: #f5f7f5; }
         .wrapper { padding: 40px 20px; }
-        .container { max-width: 560px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(85, 139, 115, 0.12); }
-        .header { background: linear-gradient(135deg, #558B73 0%, #3d6b57 100%); padding: 48px 40px; text-align: center; }
-        .header h1 { margin: 0; font-size: 28px; color: white; font-weight: 600; }
-        .header p { margin: 12px 0 0; font-size: 16px; color: rgba(255,255,255,0.9); }
+        .container { max-width: 560px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(13, 148, 136, 0.12); }
+        .header { background: #0f172a; padding: 32px 40px; text-align: center; }
+        .header img { max-width: 200px; height: auto; }
         .content { padding: 40px; }
-        .welcome-box { background: linear-gradient(135deg, #f0f7f4 0%, #e8f2ec 100%); border-radius: 12px; padding: 24px; margin-bottom: 32px; border-left: 4px solid #558B73; }
+        .welcome-box { background: linear-gradient(135deg, #f0fdfa 0%, #e6f7f5 100%); border-radius: 12px; padding: 24px; margin-bottom: 32px; border-left: 4px solid #0d9488; }
         .welcome-box h2 { margin: 0 0 8px; font-size: 20px; color: #333; }
         .welcome-box p { margin: 0; color: #666; }
         .features { margin: 32px 0; }
-        .feature { display: flex; align-items: flex-start; margin-bottom: 16px; }
-        .feature-icon { width: 40px; height: 40px; background: #f0f7f4; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 16px; flex-shrink: 0; color: #558B73; font-size: 18px; }
-        .feature-text h3 { margin: 0 0 4px; font-size: 15px; color: #333; font-weight: 600; }
-        .feature-text p { margin: 0; font-size: 14px; color: #666; }
         .cta-section { text-align: center; margin: 40px 0 24px; }
-        .cta { display: inline-block; background: linear-gradient(135deg, #558B73 0%, #3d6b57 100%); color: white; padding: 16px 40px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px rgba(85, 139, 115, 0.3); }
-        .cta:hover { background: linear-gradient(135deg, #4a7a64 0%, #345a4b 100%); }
+        .cta { display: inline-block; background: #0d9488; color: white; padding: 16px 40px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3); }
         .expire-note { text-align: center; font-size: 13px; color: #888; margin-top: 16px; }
         .footer { background: #f9fafb; padding: 24px 40px; text-align: center; border-top: 1px solid #e5e7eb; }
         .footer p { margin: 0; font-size: 13px; color: #888; }
-        .footer a { color: #558B73; text-decoration: none; }
+        .footer a { color: #0d9488; text-decoration: none; }
       </style>
     </head>
     <body>
       <div class="wrapper">
         <div class="container">
           <div class="header">
-            <h1>Welcome to AgentAssets!</h1>
-            <p>You've been invited to join ${safeBrokerageName}</p>
+            <img src="${logoUrl}" alt="AgentAssets" />
           </div>
           <div class="content">
             <div class="welcome-box">
               <h2>Hi ${safeRecipientName},</h2>
-              <p>${safeInviterName} has invited you to join the ${safeBrokerageName} team on AgentAssets. Create stunning property websites in minutes!</p>
+              <p>You've been invited to join the ${safeBrokerageName} team on AgentAssets! Create stunning property websites in minutes.</p>
             </div>
             
             <div class="features">
@@ -462,7 +455,7 @@ export async function sendAgentInvitationEmail(data: AgentInvitationEmailData): 
                   <td style="padding-bottom: 16px;">
                     <table cellpadding="0" cellspacing="0">
                       <tr>
-                        <td style="width: 40px; height: 40px; background: #f0f7f4; border-radius: 10px; text-align: center; vertical-align: middle; color: #558B73; font-size: 18px;">🏠</td>
+                        <td style="width: 40px; height: 40px; background: #f0fdfa; border-radius: 10px; text-align: center; vertical-align: middle; color: #0d9488; font-size: 18px;">🏠</td>
                         <td style="padding-left: 16px;">
                           <div style="font-weight: 600; color: #333; margin-bottom: 4px;">Beautiful Property Websites</div>
                           <div style="font-size: 14px; color: #666;">Create professional single-property sites with premium templates</div>
@@ -475,7 +468,7 @@ export async function sendAgentInvitationEmail(data: AgentInvitationEmailData): 
                   <td style="padding-bottom: 16px;">
                     <table cellpadding="0" cellspacing="0">
                       <tr>
-                        <td style="width: 40px; height: 40px; background: #f0f7f4; border-radius: 10px; text-align: center; vertical-align: middle; color: #558B73; font-size: 18px;">📊</td>
+                        <td style="width: 40px; height: 40px; background: #f0fdfa; border-radius: 10px; text-align: center; vertical-align: middle; color: #0d9488; font-size: 18px;">📊</td>
                         <td style="padding-left: 16px;">
                           <div style="font-weight: 600; color: #333; margin-bottom: 4px;">Real-Time Analytics</div>
                           <div style="font-size: 14px; color: #666;">Track visitors, page views, and lead inquiries</div>
@@ -488,7 +481,7 @@ export async function sendAgentInvitationEmail(data: AgentInvitationEmailData): 
                   <td>
                     <table cellpadding="0" cellspacing="0">
                       <tr>
-                        <td style="width: 40px; height: 40px; background: #f0f7f4; border-radius: 10px; text-align: center; vertical-align: middle; color: #558B73; font-size: 18px;">✨</td>
+                        <td style="width: 40px; height: 40px; background: #f0fdfa; border-radius: 10px; text-align: center; vertical-align: middle; color: #0d9488; font-size: 18px;">✨</td>
                         <td style="padding-left: 16px;">
                           <div style="font-weight: 600; color: #333; margin-bottom: 4px;">Your Brokerage's Brand</div>
                           <div style="font-size: 14px; color: #666;">Access exclusive templates customized for ${safeBrokerageName}</div>
@@ -501,7 +494,7 @@ export async function sendAgentInvitationEmail(data: AgentInvitationEmailData): 
             </div>
             
             <div class="cta-section">
-              <a href="${setupUrl}" class="cta">Set Up Your Account</a>
+              <a href="${setupUrl}" style="display: inline-block; background: #0d9488; color: white; padding: 16px 40px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 16px;">Set Up Your Account</a>
               <p class="expire-note">This link expires in 72 hours</p>
             </div>
           </div>
@@ -516,11 +509,9 @@ export async function sendAgentInvitationEmail(data: AgentInvitationEmailData): 
   `;
 
   const textContent = `
-Welcome to AgentAssets!
-
 Hi ${recipientName || 'there'},
 
-${inviterName || 'Your administrator'} has invited you to join the ${brokerageName} team on AgentAssets.
+You've been invited to join the ${brokerageName} team on AgentAssets!
 
 AgentAssets helps you create stunning single-property websites for your listings with:
 - Beautiful, customizable property templates

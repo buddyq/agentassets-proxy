@@ -40,6 +40,32 @@ export async function registerRoutes(
   // Setup authentication (username/password)
   setupAuth(app);
 
+  // Test email endpoint (admin only)
+  app.post("/api/test/invitation-email", isAdmin, async (req: any, res) => {
+    try {
+      const { email } = req.body;
+      if (!email) {
+        return res.status(400).json({ error: "Email is required" });
+      }
+      
+      const baseUrl = process.env.BASE_URL || 'https://agentassets.com';
+      
+      await sendAgentInvitationEmail({
+        recipientEmail: email,
+        recipientName: 'Test User',
+        brokerageName: 'Buddy Realty',
+        inviterName: 'Admin',
+        setupToken: 'test-token-12345',
+        baseUrl,
+      });
+      
+      res.json({ success: true, message: `Test email sent to ${email}` });
+    } catch (error) {
+      console.error("Error sending test email:", error);
+      res.status(500).json({ error: "Failed to send test email" });
+    }
+  });
+
   // Credits route - update user credits (protected)
   app.patch("/api/user/credits", isAuthenticated, async (req: any, res) => {
     try {
