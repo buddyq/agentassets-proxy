@@ -18,9 +18,16 @@ import {
   useGroupMembers,
   useDeleteBrokerageSite,
   useConfirmBrokerageSubscription,
+  useBrokerageTemplates,
+  useUpdateBrokerageTemplate,
+  useTemplateGroupAssignments,
+  useAssignTemplateToGroup,
+  useRemoveTemplateFromGroup,
+  useLayouts,
   type BrokerageMember,
   type BrokerageGroup,
-  type BrokerageSite
+  type BrokerageSite,
+  type BrokerageTemplate
 } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -51,7 +58,10 @@ import {
   ArrowRight,
   CheckCircle2,
   Clock,
-  Palette
+  Palette,
+  LayoutTemplate,
+  CheckCircle,
+  Circle
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
@@ -413,6 +423,14 @@ export default function BrokerageDashboard() {
   const deleteSite = useDeleteBrokerageSite();
   const addToGroup = useAddUserToGroup();
   const removeFromGroup = useRemoveUserFromGroup();
+  
+  const { data: brokerageTemplates = [], refetch: refetchTemplates } = useBrokerageTemplates();
+  const { data: allLayouts = [] } = useLayouts({ preset: true });
+  const updateTemplate = useUpdateBrokerageTemplate();
+  const assignToGroup = useAssignTemplateToGroup();
+  const removeFromGroupMutation = useRemoveTemplateFromGroup();
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  const { data: templateGroupAssignments = [] } = useTemplateGroupAssignments(selectedTemplate || '');
 
   if (authLoading || brokerageLoading || processingSuccess) {
     return (
@@ -678,6 +696,10 @@ export default function BrokerageDashboard() {
               <FolderOpen className="w-4 h-4" />
               Groups
             </TabsTrigger>
+            <TabsTrigger value="layouts" className="flex items-center gap-2" data-testid="tab-layouts">
+              <LayoutTemplate className="w-4 h-4" />
+              Layouts
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="agents" className="space-y-4">
@@ -785,8 +807,166 @@ export default function BrokerageDashboard() {
               )}
             </div>
           </TabsContent>
+
+          <TabsContent value="layouts" className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold">Exclusive Layouts</h2>
+                <p className="text-sm text-muted-foreground">
+                  Manage which layouts are available to your agents
+                </p>
+              </div>
+            </div>
+            
+            <Separator />
+
+            {brokerageTemplates.filter(t => t.templateType === 'layout').length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <LayoutTemplate className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p>No exclusive layouts assigned yet.</p>
+                <p className="text-sm mt-2">Contact AgentAssets support to get custom layouts for your brokerage.</p>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {brokerageTemplates.filter(t => t.templateType === 'layout').map(template => {
+                  const layout = allLayouts.find(l => l.id === template.templateId);
+                  return (
+                    <Card key={template.id}>
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                              <LayoutTemplate className="h-6 w-6 text-primary" />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold">{layout?.name || 'Unknown Layout'}</h3>
+                              <p className="text-sm text-muted-foreground">{layout?.description || 'Exclusive brokerage layout'}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
+                              <label className="text-sm text-muted-foreground" htmlFor={`available-all-${template.id}`}>
+                                Available to all agents
+                              </label>
+                              <Button
+                                id={`available-all-${template.id}`}
+                                variant={template.availableToAll ? "default" : "outline"}
+                                size="sm"
+                                disabled={updateTemplate.isPending}
+                                onClick={() => {
+                                  updateTemplate.mutate(
+                                    { templateId: template.id, availableToAll: !template.availableToAll },
+                                    {
+                                      onSuccess: () => {
+                                        toast.success(template.availableToAll 
+                                          ? 'Layout restricted to assigned groups' 
+                                          : 'Layout now available to all agents');
+                                        refetchTemplates();
+                                      },
+                                      onError: (err) => toast.error(err.message)
+                                    }
+                                  );
+                                }}
+                              >
+                                {template.availableToAll ? (
+                                  <>
+                                    <CheckCircle className="w-4 h-4 mr-1" />
+                                    Everyone
+                                  </>
+                                ) : (
+                                  <>
+                                    <Circle className="w-4 h-4 mr-1" />
+                                    Groups Only
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setSelectedTemplate(template.id)}
+                            >
+                              Manage Groups
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
         </Tabs>
       </main>
+
+      <Dialog open={!!selectedTemplate} onOpenChange={(open) => !open && setSelectedTemplate(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Assign Layout to Groups</DialogTitle>
+            <DialogDescription>
+              Select which groups can use this layout.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <h4 className="text-sm font-medium">Available Groups</h4>
+            <div className="grid gap-2 max-h-[300px] overflow-y-auto">
+              {groups.map(group => {
+                const isAssigned = templateGroupAssignments.some(a => a.groupId === group.id);
+                return (
+                  <div key={group.id} className="flex items-center justify-between p-3 border rounded">
+                    <div className="flex items-center gap-2">
+                      <FolderOpen className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">{group.name}</span>
+                    </div>
+                    {isAssigned ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={async () => {
+                          try {
+                            await removeFromGroupMutation.mutateAsync({ 
+                              templateId: selectedTemplate!, 
+                              groupId: group.id 
+                            });
+                            toast.success('Group removed');
+                          } catch (error: any) {
+                            toast.error(error.message);
+                          }
+                        }}
+                      >
+                        Remove
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        onClick={async () => {
+                          try {
+                            await assignToGroup.mutateAsync({ 
+                              templateId: selectedTemplate!, 
+                              groupId: group.id 
+                            });
+                            toast.success('Group added');
+                          } catch (error: any) {
+                            toast.error(error.message);
+                          }
+                        }}
+                      >
+                        Add
+                      </Button>
+                    )}
+                  </div>
+                );
+              })}
+              {groups.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No groups created yet. Create groups first to assign layouts.
+                </p>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!selectedGroup} onOpenChange={(open) => !open && setSelectedGroup(null)}>
         <DialogContent className="max-w-lg">
