@@ -9,6 +9,7 @@ import {
   sitePasswords,
   partnerMemberships,
   siteDailyStats,
+  siteTrafficSources,
   type User, 
   type InsertUser,
   type Site,
@@ -26,7 +27,9 @@ import {
   type InsertSitePassword,
   type PartnerMembership,
   type InsertPartnerMembership,
-  type SiteDailyStat
+  type SiteDailyStat,
+  type SiteTrafficSource,
+  type TrafficSourceType
 } from "@shared/schema";
 import { db, pool } from "./db";
 import { eq, and, isNotNull, lt, or, isNull, gte, desc, sql } from "drizzle-orm";
@@ -145,6 +148,10 @@ export interface IStorage {
   // Daily stats methods
   recordDailyStats(siteId: string, isNewVisitor: boolean): Promise<void>;
   getDailyStats(siteId: string, days: number): Promise<SiteDailyStat[]>;
+  
+  // Traffic source methods
+  recordTrafficSource(siteId: string, source: TrafficSourceType, referrer?: string): Promise<void>;
+  getTrafficSources(siteId: string): Promise<SiteTrafficSource[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -765,6 +772,33 @@ export class DatabaseStorage implements IStorage {
       .orderBy(siteDailyStats.date);
     
     return result;
+  }
+
+  // Traffic source methods
+  async recordTrafficSource(siteId: string, source: TrafficSourceType, referrer?: string): Promise<void> {
+    // Atomic upsert - increment count if source exists, otherwise insert new record
+    await db
+      .insert(siteTrafficSources)
+      .values({
+        siteId,
+        source,
+        referrer: referrer || null,
+        count: 1,
+      })
+      .onConflictDoUpdate({
+        target: [siteTrafficSources.siteId, siteTrafficSources.source],
+        set: {
+          count: sql`${siteTrafficSources.count} + 1`,
+        },
+      });
+  }
+
+  async getTrafficSources(siteId: string): Promise<SiteTrafficSource[]> {
+    return db
+      .select()
+      .from(siteTrafficSources)
+      .where(eq(siteTrafficSources.siteId, siteId))
+      .orderBy(desc(siteTrafficSources.count));
   }
 }
 

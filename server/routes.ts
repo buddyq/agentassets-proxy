@@ -248,6 +248,35 @@ export async function registerRoutes(
     }
   });
 
+  // Helper to categorize traffic source from referrer
+  function categorizeTrafficSource(referrer: string | undefined): { source: 'direct' | 'social' | 'search' | 'referral'; referrerDomain?: string } {
+    if (!referrer) {
+      return { source: 'direct' };
+    }
+    
+    try {
+      const url = new URL(referrer);
+      const domain = url.hostname.toLowerCase();
+      
+      // Social media platforms
+      const socialDomains = ['facebook.com', 'instagram.com', 'twitter.com', 'x.com', 'linkedin.com', 'pinterest.com', 'tiktok.com', 'youtube.com', 't.co'];
+      if (socialDomains.some(s => domain.includes(s))) {
+        return { source: 'social', referrerDomain: domain };
+      }
+      
+      // Search engines
+      const searchDomains = ['google.com', 'bing.com', 'yahoo.com', 'duckduckgo.com', 'baidu.com', 'yandex.com'];
+      if (searchDomains.some(s => domain.includes(s))) {
+        return { source: 'search', referrerDomain: domain };
+      }
+      
+      // Everything else is a referral
+      return { source: 'referral', referrerDomain: domain };
+    } catch {
+      return { source: 'direct' };
+    }
+  }
+
   // Track page view for analytics (public endpoint)
   app.post("/api/sites/:id/track-view", async (req: any, res) => {
     try {
@@ -277,11 +306,39 @@ export async function registerRoutes(
       
       // Record daily stats for charts
       await storage.recordDailyStats(site.id, isNewVisitor);
+      
+      // Record traffic source (only for new visitors to avoid skewing data)
+      if (isNewVisitor) {
+        const referrer = req.get('referer') || req.body.referrer;
+        const { source, referrerDomain } = categorizeTrafficSource(referrer);
+        await storage.recordTrafficSource(site.id, source, referrerDomain);
+      }
 
       res.json({ success: true, isNewVisitor });
     } catch (error) {
       console.error("Error tracking view:", error);
       res.status(500).json({ error: "Failed to track view" });
+    }
+  });
+  
+  // Get traffic sources for a site (protected - owner only)
+  app.get("/api/sites/:siteId/traffic-sources", isAuthenticated, async (req: any, res) => {
+    try {
+      const site = await storage.getSite(req.params.siteId);
+      if (!site) {
+        return res.status(404).json({ error: "Site not found" });
+      }
+      
+      // Verify ownership
+      if (site.userId !== req.user.id) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      const sources = await storage.getTrafficSources(site.id);
+      res.json(sources);
+    } catch (error) {
+      console.error("Error fetching traffic sources:", error);
+      res.status(500).json({ error: "Failed to fetch traffic sources" });
     }
   });
 

@@ -2,7 +2,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useSites, useDeleteSite, useUpdateSite, useThemes, useLeads, useLayouts, useUnpublishSite, useRepublishSite, useSitePasswords, useCheckSlugAvailability, useUpdateSiteSlug, useDailyStats } from "@/lib/api";
+import { useSites, useDeleteSite, useUpdateSite, useThemes, useLeads, useLayouts, useUnpublishSite, useRepublishSite, useSitePasswords, useCheckSlugAvailability, useUpdateSiteSlug, useDailyStats, useTrafficSources } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
 import { Plus, ExternalLink, Trash2, Globe, BarChart3, Users, MousePointerClick, TrendingUp, Pencil, MessageSquare, Mail, Phone, Calendar, ChevronRight, LayoutDashboard, UserCircle, Image, FileText, Share2, ArrowRight, X, EyeOff, Eye, Clock, AlertTriangle, Lock, Copy, Check, Link2 } from "lucide-react";
@@ -102,6 +102,9 @@ export default function Dashboard() {
   
   // Password data for analytics dialog
   const { data: sitePasswords = [] } = useSitePasswords(selectedSiteForAnalytics || '');
+  
+  // Traffic sources for analytics dialog
+  const { data: trafficSources = [] } = useTrafficSources(selectedSiteForAnalytics || '');
 
   // Lead Detail Dialog State
   const [leadDetailOpen, setLeadDetailOpen] = useState(false);
@@ -838,18 +841,18 @@ export default function Dashboard() {
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-4 gap-4 mb-6">
               <div className="bg-muted/50 rounded-lg p-4 text-center">
                 <div className="flex items-center justify-center gap-2 text-muted-foreground mb-1">
                   <MousePointerClick className="h-4 w-4" />
-                  <span className="text-sm">Total Views</span>
+                  <span className="text-sm">Views</span>
                 </div>
                 <span className="text-2xl font-bold">{activeSite?.stats?.views ?? 0}</span>
               </div>
               <div className="bg-muted/50 rounded-lg p-4 text-center">
                 <div className="flex items-center justify-center gap-2 text-muted-foreground mb-1">
                   <Users className="h-4 w-4" />
-                  <span className="text-sm">Unique Visitors</span>
+                  <span className="text-sm">Visitors</span>
                 </div>
                 <span className="text-2xl font-bold">{activeSite?.stats?.uniqueVisitors ?? 0}</span>
               </div>
@@ -859,6 +862,17 @@ export default function Dashboard() {
                   <span className="text-sm">Leads</span>
                 </div>
                 <span className="text-2xl font-bold">{activeSite?.stats?.leads ?? 0}</span>
+              </div>
+              <div className="bg-muted/50 rounded-lg p-4 text-center">
+                <div className="flex items-center justify-center gap-2 text-muted-foreground mb-1">
+                  <BarChart3 className="h-4 w-4" />
+                  <span className="text-sm">Conversion</span>
+                </div>
+                <span className="text-2xl font-bold">
+                  {activeSite?.stats?.uniqueVisitors && activeSite.stats.uniqueVisitors > 0
+                    ? `${((activeSite.stats.leads / activeSite.stats.uniqueVisitors) * 100).toFixed(1)}%`
+                    : '0%'}
+                </span>
               </div>
             </div>
 
@@ -886,6 +900,53 @@ export default function Dashboard() {
                 </div>
                 <div className="mt-3 pt-3 border-t text-sm text-muted-foreground">
                   Total password uses: {sitePasswords.reduce((sum, pw) => sum + pw.usageCount, 0)}
+                </div>
+              </div>
+            )}
+
+            {/* Traffic Sources */}
+            {trafficSources.length > 0 && (
+              <div className="mb-6 p-4 bg-muted/30 border rounded-lg">
+                <div className="flex items-center gap-2 text-sm font-medium mb-3">
+                  <Globe className="h-4 w-4" />
+                  Traffic Sources
+                </div>
+                <div className="space-y-2">
+                  {(() => {
+                    const totalVisitors = trafficSources.reduce((sum, s) => sum + s.count, 0);
+                    const sourceLabels: Record<string, string> = {
+                      direct: 'Direct',
+                      social: 'Social Media',
+                      search: 'Search Engines',
+                      referral: 'Referrals'
+                    };
+                    const sourceColors: Record<string, string> = {
+                      direct: 'bg-blue-500',
+                      social: 'bg-pink-500',
+                      search: 'bg-green-500',
+                      referral: 'bg-purple-500'
+                    };
+                    return trafficSources.map((source) => {
+                      const percentage = totalVisitors > 0 ? (source.count / totalVisitors) * 100 : 0;
+                      return (
+                        <div key={source.id} className="flex items-center gap-3">
+                          <div className={`w-3 h-3 rounded-full ${sourceColors[source.source] || 'bg-gray-400'}`} />
+                          <div className="flex-1">
+                            <div className="flex justify-between text-sm">
+                              <span>{sourceLabels[source.source] || source.source}</span>
+                              <span className="font-medium">{source.count} ({percentage.toFixed(0)}%)</span>
+                            </div>
+                            <div className="h-1.5 bg-muted rounded-full mt-1 overflow-hidden">
+                              <div 
+                                className={`h-full ${sourceColors[source.source] || 'bg-gray-400'} rounded-full transition-all`}
+                                style={{ width: `${percentage}%` }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
                 </div>
               </div>
             )}

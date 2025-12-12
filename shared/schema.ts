@@ -316,3 +316,19 @@ export const siteDailyStats = pgTable("site_daily_stats", {
 ]);
 
 export type SiteDailyStat = typeof siteDailyStats.$inferSelect;
+
+// Traffic source type - where visitors come from
+export type TrafficSourceType = 'direct' | 'social' | 'search' | 'referral';
+
+// Traffic sources table - tracks where visitors come from per site
+export const siteTrafficSources = pgTable("site_traffic_sources", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  siteId: text("site_id").notNull(),
+  source: text("source").notNull(), // 'direct', 'social', 'search', 'referral'
+  referrer: text("referrer"), // Full referrer domain when available
+  count: integer("count").notNull().default(1),
+}, (table) => [
+  index("IDX_traffic_site_source").on(table.siteId, table.source),
+]);
+
+export type SiteTrafficSource = typeof siteTrafficSources.$inferSelect;

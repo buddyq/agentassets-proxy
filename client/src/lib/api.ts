@@ -764,3 +764,24 @@ export function useDailyStats(siteId: string, days: number = 7) {
     enabled: !!siteId
   });
 }
+
+// Traffic sources for analytics
+export type TrafficSource = {
+  id: string;
+  siteId: string;
+  source: 'direct' | 'social' | 'search' | 'referral';
+  referrer: string | null;
+  count: number;
+};
+
+export function useTrafficSources(siteId: string) {
+  return useQuery({
+    queryKey: ['traffic-sources', siteId],
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE}/sites/${siteId}/traffic-sources`, { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to fetch traffic sources');
+      return res.json() as Promise<TrafficSource[]>;
+    },
+    enabled: !!siteId
+  });
+}
