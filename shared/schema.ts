@@ -31,6 +31,7 @@ export const users = pgTable("users", {
   teamName: text("team_name"),
   address: text("address"),
   isAdmin: boolean("is_admin").notNull().default(false),
+  accountType: text("account_type").notNull().default('individual'),
   socialMedia: jsonb("social_media").$type<{
     instagram?: string;
     youtube?: string;
