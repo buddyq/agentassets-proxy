@@ -10,7 +10,7 @@ import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import archiver from "archiver";
-import { sendLeadNotificationEmail, sendAgentInvitationEmail } from "./email";
+import { sendLeadNotificationEmail, sendAgentInvitationEmail, sendGroupRequestEmail } from "./email";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 
 function getExtensionFromMime(mimeType: string): string {
@@ -1957,6 +1957,64 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error updating templates explored milestone:", error);
       res.status(500).json({ error: "Failed to update onboarding milestone" });
+    }
+  });
+
+  // Request a new group (for non-admin members)
+  app.post("/api/brokerage/group-requests", isBrokerageMember, async (req: any, res) => {
+    try {
+      const { name, description } = req.body;
+      
+      if (!name || name.trim().length === 0) {
+        return res.status(400).json({ error: "Group name is required" });
+      }
+      
+      const membership = await storage.getBrokerageMembership(req.user.id);
+      if (!membership) {
+        return res.status(404).json({ error: "Brokerage membership not found" });
+      }
+      
+      const brokerage = await storage.getBrokerage(membership.brokerageId);
+      if (!brokerage) {
+        return res.status(404).json({ error: "Brokerage not found" });
+      }
+      
+      const requester = await storage.getUser(req.user.id);
+      if (!requester) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      // Get all brokerage admins
+      const members = await storage.getBrokerageMembers(membership.brokerageId);
+      const adminMembers = members.filter(m => m.role === 'admin');
+      
+      if (adminMembers.length === 0) {
+        return res.status(500).json({ error: "No admins found for this brokerage" });
+      }
+      
+      // Send email to each admin
+      const emailPromises = adminMembers.map(async (adminMember) => {
+        const admin = await storage.getUser(adminMember.userId);
+        if (admin && admin.email) {
+          return sendGroupRequestEmail({
+            adminEmail: admin.email,
+            adminName: admin.name || 'Admin',
+            brokerageName: brokerage.name,
+            brokerageLogo: brokerage.logo || null,
+            requesterName: requester.name || requester.username || 'Team Member',
+            requesterEmail: requester.email || '',
+            groupName: name.trim(),
+            description: description?.trim() || null,
+          });
+        }
+      });
+      
+      await Promise.all(emailPromises);
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error sending group request:", error);
+      res.status(500).json({ error: "Failed to send group request" });
     }
   });
 

@@ -14,6 +14,7 @@ import {
   useUpdateBrokerageMember,
   useCreateBrokerageGroup,
   useDeleteBrokerageGroup,
+  useRequestBrokerageGroup,
   useAddUserToGroup,
   useRemoveUserFromGroup,
   useGroupMembers,
@@ -157,6 +158,112 @@ function AddAgentDialog({ onSuccess }: { onSuccess: () => void }) {
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function NonAdminMemberView({ brokerage, setLocation }: { brokerage: any; setLocation: (path: string) => void }) {
+  const [requestDialogOpen, setRequestDialogOpen] = useState(false);
+  const [groupName, setGroupName] = useState('');
+  const [groupDescription, setGroupDescription] = useState('');
+  const requestGroup = useRequestBrokerageGroup();
+  const { toast } = useToast();
+
+  const handleRequestGroup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await requestGroup.mutateAsync({ name: groupName, description: groupDescription || undefined });
+      toast({ title: 'Group request sent!', description: 'Your brokerage admins will be notified.', variant: 'success' });
+      setRequestDialogOpen(false);
+      setGroupName('');
+      setGroupDescription('');
+    } catch (error: any) {
+      toast({ title: error.message || 'Failed to send request', variant: 'destructive' });
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col bg-background">
+      <Navbar />
+      <main className="flex-1 container mx-auto px-4 py-8">
+        <div className="max-w-2xl mx-auto">
+          <Card>
+            <CardHeader className="text-center">
+              {brokerage.logo && (
+                <div className="flex justify-center mb-4">
+                  <img src={brokerage.logo} alt={brokerage.name} className="h-12 object-contain" />
+                </div>
+              )}
+              <CardTitle className="text-2xl">{brokerage.name}</CardTitle>
+              <CardDescription>You are a member of this brokerage</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="text-center text-muted-foreground">
+                <p>As a team member, you can create property sites using your brokerage's templates.</p>
+                <p className="mt-2">Need a new group for your team? Request one below and your brokerage admins will be notified.</p>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button onClick={() => setLocation('/dashboard')} data-testid="button-go-dashboard">
+                  <Home className="w-4 h-4 mr-2" />
+                  Go to Dashboard
+                </Button>
+                
+                <Dialog open={requestDialogOpen} onOpenChange={setRequestDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" data-testid="button-request-group">
+                      <FolderOpen className="w-4 h-4 mr-2" />
+                      Request New Group
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Request a New Group</DialogTitle>
+                      <DialogDescription>
+                        Submit a request to your brokerage admins to create a new group. They will be notified by email.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleRequestGroup}>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                          <Label htmlFor="request-group-name">Group Name</Label>
+                          <Input
+                            id="request-group-name"
+                            value={groupName}
+                            onChange={(e) => setGroupName(e.target.value)}
+                            placeholder="e.g., Downtown Specialists"
+                            required
+                            data-testid="input-request-group-name"
+                          />
+                        </div>
+                        <div className="grid gap-2">
+                          <Label htmlFor="request-group-description">Reason / Description (optional)</Label>
+                          <Input
+                            id="request-group-description"
+                            value={groupDescription}
+                            onChange={(e) => setGroupDescription(e.target.value)}
+                            placeholder="Describe why you need this group..."
+                            data-testid="input-request-group-description"
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button type="button" variant="outline" onClick={() => setRequestDialogOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button type="submit" disabled={requestGroup.isPending} data-testid="button-submit-group-request">
+                          {requestGroup.isPending ? 'Sending...' : 'Send Request'}
+                        </Button>
+                      </DialogFooter>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </main>
+      <Footer />
+    </div>
   );
 }
 
@@ -543,19 +650,7 @@ export default function BrokerageDashboard() {
   }
 
   if (membership.role !== 'admin') {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-4 p-6 text-center">
-        <Building2 className="w-16 h-16 text-muted-foreground" />
-        <h1 className="text-2xl font-bold">Admin Access Required</h1>
-        <p className="text-muted-foreground max-w-md">
-          You need to be a brokerage admin to access this page. Contact your brokerage administrator for access.
-        </p>
-        <Button variant="outline" onClick={() => setLocation('/dashboard')}>
-          <Home className="w-4 h-4 mr-2" />
-          Go to Dashboard
-        </Button>
-      </div>
-    );
+    return <NonAdminMemberView brokerage={brokerage} setLocation={setLocation} />;
   }
 
   const handleRemoveAgent = async (memberId: string) => {
