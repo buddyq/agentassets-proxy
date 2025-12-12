@@ -130,7 +130,9 @@ export default function AuthPage() {
       <div className="flex flex-col justify-center px-4 py-12 lg:px-8">
         <div className="mx-auto w-full max-w-md">
           <div className="mb-8 text-center">
-            <img src={logoUrl} alt="AgentAssets" className="h-16 mx-auto mb-4" />
+            <Link href="/">
+              <img src={logoUrl} alt="AgentAssets" className="h-16 mx-auto mb-4 cursor-pointer hover:opacity-80 transition-opacity" />
+            </Link>
             <h1 className="text-2xl font-bold text-secondary">Welcome to AgentAssets</h1>
             <p className="text-muted-foreground">Create beautiful property websites in minutes</p>
           </div>
