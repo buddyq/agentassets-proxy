@@ -205,6 +205,9 @@ Partner organizations can sync their paying members to receive automatic discoun
 - **Webhook Endpoint**: `POST /api/webhooks/partner/:partnerKey` receives membership status updates from partners
 - **Security**: HMAC-SHA256 signature verification using partner-specific secrets (`WEBHOOK_SECRET_ATXPOCKET`)
 - **Webhook Actions**: `activate`, `deactivate`, `update` to manage membership status
+  - `activate`: Creates/updates membership with discount enabled
+  - `deactivate`: Only removes the discount for future purchases - does NOT affect user's account or existing credits
+  - `update`: Modifies discount percent or expiration date
 - **Discount Application**: Credits page shows discounted prices with partner badge when discount is active
 - **API**: `GET /api/user/partner-discount` returns active discount percent for authenticated user
 - **Email Matching**: Memberships matched by email address (case-insensitive)
