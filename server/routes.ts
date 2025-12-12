@@ -129,6 +129,45 @@ export async function registerRoutes(
     }
   });
 
+  // Change password route (protected)
+  const changePasswordSchema = z.object({
+    currentPassword: z.string().min(1, "Current password is required"),
+    newPassword: z.string().min(8, "New password must be at least 8 characters"),
+  });
+
+  app.post("/api/user/change-password", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const result = changePasswordSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ error: "Invalid data", details: result.error.issues });
+      }
+
+      const { currentPassword, newPassword } = result.data;
+
+      // Get current user
+      const user = await storage.getUser(userId);
+      if (!user || !user.password) {
+        return res.status(400).json({ error: "User not found or no password set" });
+      }
+
+      // Verify current password
+      const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+      if (!isValidPassword) {
+        return res.status(400).json({ error: "Current password is incorrect" });
+      }
+
+      // Hash and update new password
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      await storage.updateUserPassword(userId, hashedPassword);
+
+      res.json({ success: true, message: "Password changed successfully" });
+    } catch (error) {
+      console.error("Error changing password:", error);
+      res.status(500).json({ error: "Failed to change password" });
+    }
+  });
+
   // Site routes (protected)
   app.get("/api/sites", isAuthenticated, async (req: any, res) => {
     try {

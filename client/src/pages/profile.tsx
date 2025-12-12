@@ -6,10 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
-import { useUpdateUserProfile, getUploadUrl, normalizeObjectUrl } from "@/lib/api";
+import { useUpdateUserProfile, useChangePassword, getUploadUrl, normalizeObjectUrl } from "@/lib/api";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { useToast } from "@/hooks/use-toast";
-import { Instagram, Youtube, Facebook, Linkedin, X, Image, Trash2, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Instagram, Youtube, Facebook, Linkedin, X, Image, Trash2, AlertCircle, CheckCircle2, Lock } from "lucide-react";
 import { useLocation } from "wouter";
 
 export default function Profile() {
@@ -17,6 +17,13 @@ export default function Profile() {
   const { user, isLoading } = useAuth();
   const { toast } = useToast();
   const updateProfileMutation = useUpdateUserProfile();
+  const changePasswordMutation = useChangePassword();
+
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
 
   const [formData, setFormData] = useState({
     name: user?.name || "",
@@ -114,6 +121,45 @@ export default function Profile() {
         });
       }
     });
+  };
+
+  const handlePasswordChange = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast({
+        title: "Error",
+        description: "New passwords do not match.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (passwordData.newPassword.length < 8) {
+      toast({
+        title: "Error",
+        description: "New password must be at least 8 characters.",
+        variant: "destructive",
+      });
+      return;
+    }
+    changePasswordMutation.mutate(
+      { currentPassword: passwordData.currentPassword, newPassword: passwordData.newPassword },
+      {
+        onSuccess: () => {
+          toast({
+            title: "Password Changed",
+            description: "Your password has been updated successfully.",
+          });
+          setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+        },
+        onError: (error: any) => {
+          toast({
+            title: "Error",
+            description: error.message || "Failed to change password.",
+            variant: "destructive",
+          });
+        }
+      }
+    );
   };
 
   if (isLoading) return <div>Loading...</div>;
@@ -410,6 +456,58 @@ export default function Profile() {
             </Button>
           </div>
         </form>
+
+        {/* Change Password Section */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Lock className="h-5 w-5" />
+              Change Password
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handlePasswordChange} className="space-y-4">
+              <div>
+                <Label htmlFor="currentPassword">Current Password</Label>
+                <Input
+                  id="currentPassword"
+                  type="password"
+                  value={passwordData.currentPassword}
+                  onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
+                  data-testid="input-current-password"
+                />
+              </div>
+              <div>
+                <Label htmlFor="newPassword">New Password</Label>
+                <Input
+                  id="newPassword"
+                  type="password"
+                  value={passwordData.newPassword}
+                  onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
+                  placeholder="At least 8 characters"
+                  data-testid="input-new-password"
+                />
+              </div>
+              <div>
+                <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={passwordData.confirmPassword}
+                  onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                  data-testid="input-confirm-password"
+                />
+              </div>
+              <Button 
+                type="submit" 
+                disabled={changePasswordMutation.isPending || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
+                data-testid="button-change-password"
+              >
+                {changePasswordMutation.isPending ? "Changing..." : "Change Password"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       </main>
 
       <Footer />

@@ -84,6 +84,24 @@ export function useUpdateUserProfile() {
   });
 }
 
+// Change user password
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: async (data: { currentPassword: string; newPassword: string }) => {
+      const res = await fetch(`${API_BASE}/user/change-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to change password');
+      }
+      return res.json();
+    }
+  });
+}
+
 // Get partner discount for current user
 export function usePartnerDiscount() {
   return useQuery({
