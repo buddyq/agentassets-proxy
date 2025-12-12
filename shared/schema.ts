@@ -438,6 +438,7 @@ export const brokerageTemplates = pgTable("brokerage_templates", {
   templateType: text("template_type").notNull(), // 'layout' or 'theme'
   templateId: text("template_id").notNull(), // References layouts.id or themes.id
   assignedBy: text("assigned_by"), // AgentAssets admin who assigned it
+  availableToAll: boolean("available_to_all").notNull().default(false), // When true, all agents in brokerage can use this
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => [
   index("IDX_brokerage_templates_brokerage").on(table.brokerageId),
