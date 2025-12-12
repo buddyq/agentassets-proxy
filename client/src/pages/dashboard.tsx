@@ -325,19 +325,21 @@ export default function Dashboard() {
   const hasTrialCredits = user && (user.trialCredits || 0) > 0 && 
     user.trialEndsAt && new Date(user.trialEndsAt) > new Date();
 
-  // Analytics data - currently shows empty until real tracking is implemented
+  // Analytics data - show comparison of views, visitors, and leads
   const analyticsData = useMemo(() => {
     if (!selectedSiteForAnalytics) return [];
     
-    // Return empty data - daily tracking not yet implemented
-    return Array.from({ length: 7 }).map((_, i) => {
-      const date = subDays(new Date(), 6 - i);
-      return {
-        name: format(date, 'MMM dd'),
-        views: 0,
-      };
-    });
-  }, [selectedSiteForAnalytics]);
+    const site = sites.find(s => s.id === selectedSiteForAnalytics);
+    if (!site) return [];
+    
+    const stats = site.stats || { views: 0, uniqueVisitors: 0, leads: 0 };
+    
+    return [
+      { name: 'Page Views', value: stats.views || 0 },
+      { name: 'Unique Visitors', value: stats.uniqueVisitors || 0 },
+      { name: 'Leads', value: stats.leads || 0 },
+    ];
+  }, [selectedSiteForAnalytics, sites]);
 
   const activeSite = sites.find(s => s.id === selectedSiteForAnalytics);
 
@@ -889,9 +891,9 @@ export default function Dashboard() {
                 <BarChart data={analyticsData}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis dataKey="name" className="text-xs" />
-                  <YAxis className="text-xs" />
+                  <YAxis className="text-xs" allowDecimals={false} />
                   <Tooltip />
-                  <Bar dataKey="views" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
