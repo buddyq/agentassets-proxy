@@ -373,6 +373,14 @@ export default function Dashboard() {
                 </Button>
               </Link>
             )}
+            {user?.accountType === 'broker' && !brokerageData?.brokerage && (
+              <Link href="/brokerage">
+                <Button size="lg" variant="outline" className="gap-2" data-testid="button-setup-brokerage">
+                  <Building2 className="h-4 w-4" />
+                  Set Up Brokerage
+                </Button>
+              </Link>
+            )}
             <Link href={isBrokerageAgent || (user && (user.credits > 0 || hasTrialCredits)) ? "/create-site" : "/credits"}>
               <Button size="lg" className="gap-2 shadow-lg shadow-primary/20">
                 <Plus className="h-4 w-4" />
