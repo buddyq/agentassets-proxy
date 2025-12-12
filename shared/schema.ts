@@ -346,6 +346,9 @@ export const brokerages = pgTable("brokerages", {
   phone: text("phone"),
   email: text("email"),
   address: text("address"),
+  // Trial period
+  trialEndsAt: timestamp("trial_ends_at").default(sql`now() + interval '7 days'`),
+  plannedAgentCount: text("planned_agent_count"), // Survey field: expected agent count by end of year
   // Stripe billing
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
@@ -353,7 +356,7 @@ export const brokerages = pgTable("brokerages", {
   includedSeats: integer("included_seats").notNull().default(15),
   additionalSeats: integer("additional_seats").notNull().default(0),
   // Status
-  status: text("status").notNull().default('active'), // 'active', 'suspended', 'cancelled'
+  status: text("status").notNull().default('trial'), // 'trial', 'active', 'suspended', 'cancelled'
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

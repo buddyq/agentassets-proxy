@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useSearch } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
-import { useBrokerage, useBrokerageCheckout } from '@/lib/api';
+import { useBrokerage, useBrokerageRegister } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Building2, Users, Check, ArrowRight, Loader2, Mail, Phone, User } from 'lucide-react';
+import { Building2, Users, Check, ArrowRight, Loader2, Mail, Phone, User, Sparkles } from 'lucide-react';
 
 const agentCountRanges = [
   { value: '1-15', label: '1-15 agents' },
@@ -31,13 +31,13 @@ export default function BrokerageSignup() {
   const [plannedAgentCount, setPlannedAgentCount] = useState('');
   
   const { data: brokerageData, isLoading: brokerageLoading } = useBrokerage();
-  const brokerageCheckout = useBrokerageCheckout();
+  const brokerageRegister = useBrokerageRegister();
 
   const canceled = new URLSearchParams(searchString).get('canceled') === 'true';
 
   useEffect(() => {
     if (canceled) {
-      toast.error('Checkout was canceled. You can try again when ready.');
+      toast.error('Registration was canceled. You can try again when ready.');
     }
   }, [canceled]);
 
@@ -89,18 +89,17 @@ export default function BrokerageSignup() {
     }
 
     try {
-      const result = await brokerageCheckout.mutateAsync({ 
+      await brokerageRegister.mutateAsync({ 
         brokerageName: brokerageName.trim(),
         contactName: contactName.trim(),
         contactEmail: contactEmail.trim(),
         contactPhone: contactPhone.trim() || undefined,
         plannedAgentCount,
       });
-      if (result.url) {
-        window.location.href = result.url;
-      }
+      toast.success('Welcome! Your brokerage trial has started.');
+      setLocation('/brokerage');
     } catch (error: any) {
-      toast.error(error.message || 'Failed to start checkout');
+      toast.error(error.message || 'Failed to register brokerage');
     }
   };
 
@@ -121,17 +120,18 @@ export default function BrokerageSignup() {
             <Building2 className="w-8 h-8 text-primary" />
           </div>
           <h1 className="text-4xl font-bold mb-4" data-testid="text-brokerage-signup-title">
-            Brokerage Plan
+            Start Your Brokerage Trial
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Empower your team with centralized property site management, custom branding, and exclusive templates.
+            Get 7 days free to explore all brokerage features. No credit card required.
           </p>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
           <Card className="relative overflow-hidden border-2 border-primary/20">
-            <div className="absolute top-0 right-0 bg-primary text-white px-4 py-1 text-sm font-medium rounded-bl-lg">
-              Most Popular
+            <div className="absolute top-0 right-0 bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-4 py-1 text-sm font-medium rounded-bl-lg flex items-center gap-1">
+              <Sparkles className="w-3 h-3" />
+              7-Day Free Trial
             </div>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -149,7 +149,7 @@ export default function BrokerageSignup() {
                   <span className="text-muted-foreground">/month</span>
                 </div>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Includes 15 agent seats
+                  After your 7-day free trial
                 </p>
               </div>
 
@@ -174,9 +174,9 @@ export default function BrokerageSignup() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Get Started</CardTitle>
+              <CardTitle>Create Your Brokerage Account</CardTitle>
               <CardDescription>
-                Tell us about yourself and your brokerage
+                Tell us about yourself and your brokerage to get started
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -268,25 +268,24 @@ export default function BrokerageSignup() {
                   type="submit" 
                   className="w-full" 
                   size="lg"
-                  disabled={brokerageCheckout.isPending}
-                  data-testid="button-start-subscription"
+                  disabled={brokerageRegister.isPending}
+                  data-testid="button-start-trial"
                 >
-                  {brokerageCheckout.isPending ? (
+                  {brokerageRegister.isPending ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Processing...
+                      Creating Your Account...
                     </>
                   ) : (
                     <>
-                      Continue to Payment
+                      Start Free Trial
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </>
                   )}
                 </Button>
 
                 <p className="text-xs text-center text-muted-foreground">
-                  You'll be redirected to Stripe to complete your subscription. 
-                  Cancel anytime from your account settings.
+                  No credit card required. Your trial includes all features for 7 days.
                 </p>
               </form>
             </CardContent>

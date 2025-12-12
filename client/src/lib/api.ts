@@ -1127,8 +1127,9 @@ export function useDeleteBrokerageSite() {
   });
 }
 
-// Brokerage subscription checkout
-export function useBrokerageCheckout() {
+// Brokerage registration (free trial)
+export function useBrokerageRegister() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (data: { 
       brokerageName: string; 
@@ -1137,10 +1138,31 @@ export function useBrokerageCheckout() {
       contactPhone?: string;
       plannedAgentCount: string;
     }) => {
-      const res = await fetch(`${API_BASE}/stripe/brokerage-checkout`, {
+      const res = await fetch(`${API_BASE}/brokerage/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
+        credentials: 'include'
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to register brokerage');
+      }
+      return res.json() as Promise<{ success: boolean; brokerageId: string }>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['brokerage'] });
+    }
+  });
+}
+
+// Brokerage subscription checkout (for upgrading from trial)
+export function useBrokerageCheckout() {
+  return useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`${API_BASE}/stripe/brokerage-checkout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include'
       });
       if (!res.ok) {

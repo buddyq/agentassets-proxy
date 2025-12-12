@@ -1089,8 +1089,8 @@ export async function registerRoutes(
     }
   });
 
-  // Brokerage subscription checkout
-  const brokerageCheckoutSchema = z.object({
+  // Brokerage registration (free trial)
+  const brokerageRegisterSchema = z.object({
     brokerageName: z.string().min(2, "Brokerage name must be at least 2 characters"),
     contactName: z.string().min(2, "Name must be at least 2 characters"),
     contactEmail: z.string().email("Please enter a valid email"),
@@ -1098,9 +1098,9 @@ export async function registerRoutes(
     plannedAgentCount: z.string().min(1, "Please select agent count range"),
   });
 
-  app.post("/api/stripe/brokerage-checkout", isAuthenticated, async (req: any, res) => {
+  app.post("/api/brokerage/register", isAuthenticated, async (req: any, res) => {
     try {
-      const validated = brokerageCheckoutSchema.parse(req.body);
+      const validated = brokerageRegisterSchema.parse(req.body);
       const user = await storage.getUser(req.user.id);
       if (!user) {
         return res.status(404).json({ error: "User not found" });
@@ -1120,6 +1120,62 @@ export async function registerRoutes(
       
       if (Object.keys(profileUpdates).length > 0) {
         await storage.updateUserProfile(user.id, profileUpdates);
+      }
+
+      // Create the brokerage with 7-day trial
+      const trialEndsAt = new Date();
+      trialEndsAt.setDate(trialEndsAt.getDate() + 7);
+
+      const brokerage = await storage.createBrokerage({
+        name: validated.brokerageName,
+        ownerUserId: user.id,
+        email: validated.contactEmail,
+        phone: validated.contactPhone || null,
+        status: 'trial',
+        plannedAgentCount: validated.plannedAgentCount,
+        includedSeats: 15,
+        additionalSeats: 0,
+      });
+
+      // Update with trial end date
+      await storage.updateBrokerage(brokerage.id, { trialEndsAt });
+
+      // Add the user as brokerage admin
+      await storage.addBrokerageMember({
+        brokerageId: brokerage.id,
+        userId: user.id,
+        role: 'admin',
+        status: 'active',
+        joinedAt: new Date(),
+      });
+
+      res.status(201).json({ success: true, brokerageId: brokerage.id });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors[0].message });
+      }
+      console.error("Brokerage registration error:", error);
+      res.status(500).json({ error: "Failed to register brokerage" });
+    }
+  });
+
+  // Brokerage subscription checkout (for upgrading from trial)
+  app.post("/api/stripe/brokerage-checkout", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.id);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Check if user has a brokerage membership
+      const membership = await storage.getBrokerageMembership(user.id);
+      if (!membership || membership.role !== 'admin') {
+        return res.status(400).json({ error: "You must be a brokerage admin to upgrade" });
+      }
+
+      const brokerage = await storage.getBrokerage(membership.brokerageId);
+      if (!brokerage) {
+        return res.status(404).json({ error: "Brokerage not found" });
       }
 
       const stripe = await getUncachableStripeClient();
@@ -1148,25 +1204,18 @@ export async function registerRoutes(
           quantity: 1,
         }],
         mode: 'subscription',
-        success_url: `${baseUrl}/brokerage?success=true&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${baseUrl}/brokerage/signup?canceled=true`,
+        success_url: `${baseUrl}/brokerage?upgraded=true&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${baseUrl}/brokerage?canceled=true`,
         metadata: {
           userId: user.id,
-          brokerageName: validated.brokerageName,
-          contactName: validated.contactName,
-          contactEmail: validated.contactEmail,
-          contactPhone: validated.contactPhone || '',
-          plannedAgentCount: validated.plannedAgentCount,
+          brokerageId: brokerage.id,
           type: 'brokerage_subscription',
         },
-        customer_email: validated.contactEmail,
+        customer_email: brokerage.email || user.email || undefined,
       });
 
       res.json({ url: session.url });
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: error.errors[0].message });
-      }
       console.error("Brokerage checkout error:", error);
       res.status(500).json({ error: "Failed to create checkout session" });
     }
