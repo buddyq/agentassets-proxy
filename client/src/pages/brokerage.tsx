@@ -39,6 +39,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { 
   Users, 
@@ -871,85 +872,34 @@ export default function BrokerageDashboard() {
                             <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
                               <LayoutTemplate className="h-6 w-6 text-primary" />
                             </div>
-                            <div>
+                            <div className="flex-1">
                               <h3 className="font-semibold">{layout?.name || 'Unknown Layout'}</h3>
                               <p className="text-sm text-muted-foreground">{layout?.description || 'Exclusive brokerage layout'}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <div className="flex flex-col items-end gap-1">
-                              <div className="flex items-center gap-2">
-                                <label className="text-xs text-muted-foreground" htmlFor={`available-all-${template.id}`}>
-                                  Access:
-                                </label>
-                                <Button
-                                  id={`available-all-${template.id}`}
-                                  variant={template.availableToAll ? "default" : "outline"}
-                                  size="sm"
-                                  disabled={updateTemplate.isPending}
-                                  onClick={() => {
-                                    if (template.availableToAll) {
-                                      // Switching to Groups Only - update flag and open dialog
-                                      updateTemplate.mutate(
-                                        { templateId: template.id, availableToAll: false },
-                                        {
-                                          onSuccess: () => {
-                                            toast.success('Layout restricted to selected groups');
-                                            refetchTemplates();
-                                            // Automatically open the group selection dialog
-                                            setSelectedTemplate(template.id);
-                                          },
-                                          onError: (err) => toast.error(err.message)
-                                        }
-                                      );
-                                    } else {
-                                      // Switching to Everyone
-                                      updateTemplate.mutate(
-                                        { templateId: template.id, availableToAll: true },
-                                        {
-                                          onSuccess: () => {
-                                            toast.success('Layout now available to all agents');
-                                            refetchTemplates();
-                                          },
-                                          onError: (err) => toast.error(err.message)
-                                        }
-                                      );
-                                    }
-                                  }}
-                                >
-                                  {template.availableToAll ? (
-                                    <>
-                                      <CheckCircle className="w-4 h-4 mr-1" />
-                                      All Agents
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Users className="w-4 h-4 mr-1" />
-                                      Groups Only
-                                    </>
-                                  )}
-                                </Button>
-                              </div>
-                              {!template.availableToAll && (
-                                <div className="text-xs text-muted-foreground">
-                                  {template.assignedGroups?.length ? (
-                                    <span>{template.assignedGroups.length} group{template.assignedGroups.length !== 1 ? 's' : ''} assigned</span>
-                                  ) : (
-                                    <span className="text-amber-600">No groups assigned yet</span>
-                                  )}
+                              {template.assignedGroups && template.assignedGroups.length > 0 ? (
+                                <div className="flex flex-wrap gap-1 mt-2">
+                                  {template.assignedGroups.map(ag => {
+                                    const group = groups.find(g => g.id === ag.groupId);
+                                    return group ? (
+                                      <span key={ag.id} className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full">
+                                        <FolderOpen className="w-3 h-3" />
+                                        {group.name}
+                                      </span>
+                                    ) : null;
+                                  })}
                                 </div>
+                              ) : (
+                                <p className="text-xs text-muted-foreground mt-2">Available to all agents</p>
                               )}
                             </div>
-                            {!template.availableToAll && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setSelectedTemplate(template.id)}
-                              >
-                                Select Groups
-                              </Button>
-                            )}
                           </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSelectedTemplate(template.id)}
+                          >
+                            <Users className="w-4 h-4 mr-1" />
+                            Assign to Groups
+                          </Button>
                         </div>
                       </CardContent>
                     </Card>
@@ -962,70 +912,62 @@ export default function BrokerageDashboard() {
       </main>
 
       <Dialog open={!!selectedTemplate} onOpenChange={(open) => !open && setSelectedTemplate(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Assign Layout to Groups</DialogTitle>
             <DialogDescription>
-              Select which groups can use this layout.
+              Select which groups can access this layout. If no groups are selected, all agents can use it.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <h4 className="text-sm font-medium">Available Groups</h4>
-            <div className="grid gap-2 max-h-[300px] overflow-y-auto">
-              {groups.map(group => {
-                const isAssigned = templateGroupAssignments.some(a => a.groupId === group.id);
-                return (
-                  <div key={group.id} className="flex items-center justify-between p-3 border rounded">
-                    <div className="flex items-center gap-2">
-                      <FolderOpen className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm font-medium">{group.name}</span>
-                    </div>
-                    {isAssigned ? (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={async () => {
-                          try {
-                            await removeFromGroupMutation.mutateAsync({ 
-                              templateId: selectedTemplate!, 
-                              groupId: group.id 
-                            });
-                            toast.success('Group removed');
-                          } catch (error: any) {
-                            toast.error(error.message);
-                          }
-                        }}
-                      >
-                        Remove
-                      </Button>
-                    ) : (
-                      <Button
-                        size="sm"
-                        onClick={async () => {
-                          try {
-                            await assignToGroup.mutateAsync({ 
-                              templateId: selectedTemplate!, 
-                              groupId: group.id 
-                            });
-                            toast.success('Group added');
-                          } catch (error: any) {
-                            toast.error(error.message);
-                          }
-                        }}
-                      >
-                        Add
-                      </Button>
-                    )}
+          <div className="space-y-2 py-4 max-h-[300px] overflow-y-auto">
+            {groups.map(group => {
+              const isAssigned = templateGroupAssignments.some(a => a.groupId === group.id);
+              return (
+                <label
+                  key={group.id}
+                  className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${
+                    isAssigned ? 'bg-primary/5 border-primary' : 'hover:bg-muted/50'
+                  }`}
+                >
+                  <Checkbox
+                    checked={isAssigned}
+                    onCheckedChange={async (checked) => {
+                      try {
+                        if (checked) {
+                          await assignToGroup.mutateAsync({ 
+                            templateId: selectedTemplate!, 
+                            groupId: group.id 
+                          });
+                        } else {
+                          await removeFromGroupMutation.mutateAsync({ 
+                            templateId: selectedTemplate!, 
+                            groupId: group.id 
+                          });
+                        }
+                        refetchTemplates();
+                      } catch (error: any) {
+                        toast.error(error.message);
+                      }
+                    }}
+                  />
+                  <div className="flex items-center gap-2">
+                    <FolderOpen className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">{group.name}</span>
                   </div>
-                );
-              })}
-              {groups.length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  No groups created yet. Create groups first to assign layouts.
-                </p>
-              )}
-            </div>
+                </label>
+              );
+            })}
+            {groups.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No groups created yet. Create groups in the Agents tab first.
+              </p>
+            )}
           </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSelectedTemplate(null)}>
+              Done
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
