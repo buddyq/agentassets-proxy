@@ -1161,8 +1161,8 @@ export class DatabaseStorage implements IStorage {
     }
     
     // Get templates available to all in the brokerage
-    const brokerageTemplates = await this.getBrokerageTemplates(membership.brokerageId);
-    const availableToAllTemplates = brokerageTemplates.filter(t => t.availableToAll);
+    const userBrokerageTemplates = await this.getBrokerageTemplates(membership.brokerageId);
+    const availableToAllTemplates = userBrokerageTemplates.filter(t => t.availableToAll);
     const availableToAllIds = availableToAllTemplates.map(t => t.templateId);
     
     // Get user's groups and their templates
