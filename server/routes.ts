@@ -1112,14 +1112,18 @@ export async function registerRoutes(
         return res.status(400).json({ error: "You are already a member of a brokerage" });
       }
 
-      // Update user profile with contact info if not already set
+      // Update user profile with contact info if not already set (skip email to avoid conflicts)
       const profileUpdates: Record<string, string> = {};
       if (!user.name && validated.contactName) profileUpdates.name = validated.contactName;
-      if (!user.email && validated.contactEmail) profileUpdates.email = validated.contactEmail;
       if (!user.phone && validated.contactPhone) profileUpdates.phone = validated.contactPhone;
       
       if (Object.keys(profileUpdates).length > 0) {
-        await storage.updateUserProfile(user.id, profileUpdates);
+        try {
+          await storage.updateUserProfile(user.id, profileUpdates);
+        } catch (e) {
+          // Ignore profile update errors - brokerage creation is more important
+          console.log("Profile update skipped:", e);
+        }
       }
 
       // Create the brokerage with 7-day trial
