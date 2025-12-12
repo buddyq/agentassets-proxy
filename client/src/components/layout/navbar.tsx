@@ -1,7 +1,8 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { LayoutDashboard, CreditCard, Palette, User, Settings, LogOut as LogOutIcon } from "lucide-react";
+import { useBrokerage } from "@/lib/api";
+import { LayoutDashboard, CreditCard, Palette, User, Settings, LogOut as LogOutIcon, Infinity } from "lucide-react";
 import logoUrl from "@/assets/logo.png";
 import {
   DropdownMenu,
@@ -13,6 +14,10 @@ import {
 export function Navbar() {
   const [location, setLocation] = useLocation();
   const { user, isLoading, logoutMutation } = useAuth();
+  const { data: brokerageData } = useBrokerage();
+  
+  // Check if user is a brokerage member (agent role, not admin)
+  const isBrokerageAgent = brokerageData?.membership?.role === 'agent';
 
   const handleLogout = () => {
     logoutMutation.mutate();
@@ -59,12 +64,19 @@ export function Navbar() {
                     Themes
                   </Button>
                 </Link>
-                <Link href="/credits">
-                  <Button variant={location === "/credits" ? "secondary" : "ghost"} size="sm" className="gap-2">
-                    <CreditCard className="h-4 w-4" />
-                    Credits: {user.credits ?? 0}
-                  </Button>
-                </Link>
+                {isBrokerageAgent ? (
+                  <div className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-primary">
+                    <Infinity className="h-4 w-4" />
+                    Unlimited Credits
+                  </div>
+                ) : (
+                  <Link href="/credits">
+                    <Button variant={location === "/credits" ? "secondary" : "ghost"} size="sm" className="gap-2">
+                      <CreditCard className="h-4 w-4" />
+                      Credits: {user.credits ?? 0}
+                    </Button>
+                  </Link>
+                )}
               </div>
               
               <DropdownMenu>

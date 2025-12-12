@@ -48,6 +48,7 @@ export default function Dashboard() {
   const { toast } = useToast();
   
   const isBrokerageAdmin = brokerageData?.membership?.role === 'admin';
+  const isBrokerageAgent = brokerageData?.membership?.role === 'agent';
 
   const getThemeName = (id: string) => themes.find(t => t.id === id)?.name || 'Unknown Theme';
   const getLayoutName = (id: string | null) => id ? layouts.find(l => l.id === id)?.name || 'Unknown Layout' : 'N/A';
@@ -372,11 +373,11 @@ export default function Dashboard() {
                 </Button>
               </Link>
             )}
-            <Link href={user && (user.credits > 0 || hasTrialCredits) ? "/create-site" : "/credits"}>
+            <Link href={isBrokerageAgent || (user && (user.credits > 0 || hasTrialCredits)) ? "/create-site" : "/credits"}>
               <Button size="lg" className="gap-2 shadow-lg shadow-primary/20">
                 <Plus className="h-4 w-4" />
                 Create New Site
-                {hasTrialCredits && user?.credits === 0 && (
+                {hasTrialCredits && user?.credits === 0 && !isBrokerageAgent && (
                   <Badge variant="outline" className="ml-1 bg-amber-50 text-amber-700 border-amber-200 text-xs">
                     Trial
                   </Badge>
@@ -451,10 +452,10 @@ export default function Dashboard() {
                 </div>
                 <h3 className="text-xl font-medium mb-2">No sites created yet</h3>
                 <p className="text-muted-foreground mb-6">Get started by creating your first property website.</p>
-                <Link href={user && (user.credits > 0 || hasTrialCredits) ? "/create-site" : "/credits"}>
+                <Link href={isBrokerageAgent || (user && (user.credits > 0 || hasTrialCredits)) ? "/create-site" : "/credits"}>
                   <Button>
-                    {user && (user.credits > 0 || hasTrialCredits) ? "Create First Site" : "Purchase Credits"}
-                    {hasTrialCredits && user?.credits === 0 && (
+                    {isBrokerageAgent || (user && (user.credits > 0 || hasTrialCredits)) ? "Create First Site" : "Purchase Credits"}
+                    {hasTrialCredits && user?.credits === 0 && !isBrokerageAgent && (
                       <Badge variant="outline" className="ml-2 bg-amber-50 text-amber-700 border-amber-200 text-xs">
                         Free Trial
                       </Badge>
