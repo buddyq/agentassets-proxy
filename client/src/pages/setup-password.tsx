@@ -13,13 +13,13 @@ function FloatingParticles() {
       {[...Array(50)].map((_, i) => (
         <div
           key={i}
-          className="absolute rounded-full opacity-20"
+          className="absolute rounded-full"
           style={{
             width: `${Math.random() * 6 + 2}px`,
             height: `${Math.random() * 6 + 2}px`,
             left: `${Math.random() * 100}%`,
             top: `${Math.random() * 100}%`,
-            background: `rgba(13, 148, 136, ${Math.random() * 0.5 + 0.2})`,
+            background: `rgba(255, 255, 255, ${Math.random() * 0.3 + 0.1})`,
             animation: `float-${i % 5} ${Math.random() * 20 + 15}s ease-in-out infinite`,
             animationDelay: `${Math.random() * -20}s`,
           }}
@@ -30,11 +30,11 @@ function FloatingParticles() {
           key={`large-${i}`}
           className="absolute rounded-full blur-sm"
           style={{
-            width: `${Math.random() * 80 + 40}px`,
-            height: `${Math.random() * 80 + 40}px`,
+            width: `${Math.random() * 100 + 50}px`,
+            height: `${Math.random() * 100 + 50}px`,
             left: `${Math.random() * 100}%`,
             top: `${Math.random() * 100}%`,
-            background: `radial-gradient(circle, rgba(13, 148, 136, ${Math.random() * 0.08 + 0.02}) 0%, transparent 70%)`,
+            background: `radial-gradient(circle, rgba(255, 255, 255, ${Math.random() * 0.1 + 0.03}) 0%, transparent 70%)`,
             animation: `float-slow ${Math.random() * 40 + 30}s ease-in-out infinite`,
             animationDelay: `${Math.random() * -30}s`,
           }}
@@ -158,9 +158,7 @@ export default function SetupPasswordPage() {
   };
 
   const backgroundStyle = {
-    background: `
-      radial-gradient(ellipse at center, rgba(240, 253, 250, 1) 0%, rgba(204, 251, 241, 0.6) 30%, rgba(13, 148, 136, 0.15) 60%, rgba(15, 23, 42, 0.9) 100%)
-    `,
+    background: `radial-gradient(circle, rgba(87, 161, 153, 1) 0%, rgba(29, 87, 89, 1) 100%)`,
   };
 
   if (loading) {
