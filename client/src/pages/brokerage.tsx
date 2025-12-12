@@ -877,10 +877,10 @@ export default function BrokerageDashboard() {
                               <p className="text-sm text-muted-foreground">{layout?.description || 'Exclusive brokerage layout'}</p>
                               {template.assignedGroups && template.assignedGroups.length > 0 ? (
                                 <div className="flex flex-wrap gap-1 mt-2">
-                                  {template.assignedGroups.map(ag => {
-                                    const group = groups.find(g => g.id === ag.groupId);
+                                  {template.assignedGroups.map(groupId => {
+                                    const group = groups.find(g => g.id === groupId);
                                     return group ? (
-                                      <span key={ag.id} className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full">
+                                      <span key={groupId} className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full">
                                         <FolderOpen className="w-3 h-3" />
                                         {group.name}
                                       </span>
