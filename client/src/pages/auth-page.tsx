@@ -1,35 +1,60 @@
 import { useState, useEffect, useMemo } from "react";
 import { useLocation, useSearch } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import { useBrokerageRegister } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import logoUrl from "@/assets/logo.png";
 import heroImage from "@assets/generated_images/luxury_living_room_interior_for_hero_background.png";
-import { Loader2, Check, Sparkles, ArrowRight } from "lucide-react";
+import { Loader2, Check, Sparkles, ArrowRight, User, Building2 } from "lucide-react";
 import { Link } from "wouter";
+import { toast } from "sonner";
+
+const agentCountRanges = [
+  { value: '1-15', label: '1-15 agents' },
+  { value: '16-50', label: '16-50 agents' },
+  { value: '51-100', label: '51-100 agents' },
+  { value: '101-250', label: '101-250 agents' },
+  { value: '251-500', label: '251-500 agents' },
+  { value: '500+', label: '500+ agents' },
+];
 
 export default function AuthPage() {
   const [, setLocation] = useLocation();
   const searchString = useSearch();
   const { user, loginMutation, registerMutation } = useAuth();
+  const brokerageRegister = useBrokerageRegister();
 
   const isTrialFlow = useMemo(() => {
     const params = new URLSearchParams(searchString);
     return params.get('trial') === 'true';
   }, [searchString]);
 
+  const isBrokerageFlow = useMemo(() => {
+    const params = new URLSearchParams(searchString);
+    return params.get('type') === 'brokerage';
+  }, [searchString]);
+
   const [justRegistered, setJustRegistered] = useState(false);
-  const [activeTab, setActiveTab] = useState(isTrialFlow ? "register" : "login");
+  const [activeTab, setActiveTab] = useState(isTrialFlow || isBrokerageFlow ? "register" : "login");
+  const [accountType, setAccountType] = useState<'individual' | 'brokerage'>(isBrokerageFlow ? 'brokerage' : 'individual');
 
   // Update active tab when trial param changes (e.g., navigating from another page)
   useEffect(() => {
-    if (isTrialFlow) {
+    if (isTrialFlow || isBrokerageFlow) {
       setActiveTab("register");
     }
-  }, [isTrialFlow]);
+  }, [isTrialFlow, isBrokerageFlow]);
+
+  useEffect(() => {
+    if (isBrokerageFlow) {
+      setAccountType('brokerage');
+    }
+  }, [isBrokerageFlow]);
 
   const [loginData, setLoginData] = useState({ username: "", password: "" });
   const [registerData, setRegisterData] = useState({ 
@@ -38,6 +63,11 @@ export default function AuthPage() {
     confirmPassword: "",
     email: "", 
     name: "" 
+  });
+  const [brokerageData, setBrokerageData] = useState({
+    brokerageName: "",
+    contactPhone: "",
+    plannedAgentCount: "",
   });
 
   useEffect(() => {
@@ -53,16 +83,46 @@ export default function AuthPage() {
     loginMutation.mutate(loginData);
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (registerData.password !== registerData.confirmPassword) {
       return;
     }
+    
+    if (accountType === 'brokerage') {
+      if (!brokerageData.brokerageName.trim()) {
+        toast.error('Please enter your brokerage name');
+        return;
+      }
+      if (!brokerageData.plannedAgentCount) {
+        toast.error('Please select the number of agents');
+        return;
+      }
+    }
+
     registerMutation.mutate({
       username: registerData.username,
       password: registerData.password,
       email: registerData.email || undefined,
       name: registerData.name || undefined,
+    }, {
+      onSuccess: async () => {
+        if (accountType === 'brokerage') {
+          try {
+            await brokerageRegister.mutateAsync({
+              brokerageName: brokerageData.brokerageName.trim(),
+              contactName: registerData.name.trim() || registerData.username,
+              contactEmail: registerData.email.trim(),
+              contactPhone: brokerageData.contactPhone.trim() || undefined,
+              plannedAgentCount: brokerageData.plannedAgentCount,
+            });
+            toast.success('Welcome! Your brokerage trial has started.');
+            setLocation('/brokerage');
+          } catch (error: any) {
+            toast.error(error.message || 'Account created but failed to set up brokerage. Please try again from your dashboard.');
+          }
+        }
+      }
     });
   };
 
@@ -175,11 +235,63 @@ export default function AuthPage() {
                   <CardDescription>
                     {isTrialFlow 
                       ? "Fill in your details to start your free trial" 
-                      : "Sign up to start creating property websites"}
+                      : accountType === 'brokerage'
+                        ? "Set up your brokerage account"
+                        : "Sign up to start creating property websites"}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
+                  <div className="grid grid-cols-2 gap-2 mb-6">
+                    <button
+                      type="button"
+                      onClick={() => setAccountType('individual')}
+                      className={`flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-all ${
+                        accountType === 'individual'
+                          ? 'border-primary bg-primary/5 text-primary'
+                          : 'border-muted hover:border-muted-foreground/30'
+                      }`}
+                      data-testid="toggle-individual"
+                    >
+                      <User className="h-4 w-4" />
+                      <span className="font-medium">Individual</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAccountType('brokerage')}
+                      className={`flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-all ${
+                        accountType === 'brokerage'
+                          ? 'border-primary bg-primary/5 text-primary'
+                          : 'border-muted hover:border-muted-foreground/30'
+                      }`}
+                      data-testid="toggle-brokerage"
+                    >
+                      <Building2 className="h-4 w-4" />
+                      <span className="font-medium">Brokerage</span>
+                    </button>
+                  </div>
+
+                  {accountType === 'brokerage' && (
+                    <div className="mb-4 p-3 bg-gradient-to-r from-primary/5 to-teal-50 border border-primary/20 rounded-lg">
+                      <p className="text-sm text-muted-foreground">
+                        Get <span className="font-semibold text-primary">7 days free</span> with up to 15 agents included. $249/month after trial.
+                      </p>
+                    </div>
+                  )}
+
                   <form onSubmit={handleRegister} className="space-y-4">
+                    {accountType === 'brokerage' && (
+                      <div className="space-y-2">
+                        <Label htmlFor="register-brokerage-name">Brokerage Name</Label>
+                        <Input 
+                          id="register-brokerage-name"
+                          data-testid="input-register-brokerage-name"
+                          placeholder="ABC Realty"
+                          value={brokerageData.brokerageName}
+                          onChange={(e) => setBrokerageData({ ...brokerageData, brokerageName: e.target.value })}
+                          required
+                        />
+                      </div>
+                    )}
                     <div className="space-y-2">
                       <Label htmlFor="register-name">Full Name</Label>
                       <Input 
@@ -188,6 +300,7 @@ export default function AuthPage() {
                         placeholder="John Doe"
                         value={registerData.name}
                         onChange={(e) => setRegisterData({ ...registerData, name: e.target.value })}
+                        required={accountType === 'brokerage'}
                       />
                     </div>
                     <div className="space-y-2">
@@ -199,8 +312,42 @@ export default function AuthPage() {
                         placeholder="john@example.com"
                         value={registerData.email}
                         onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
+                        required={accountType === 'brokerage'}
                       />
                     </div>
+                    {accountType === 'brokerage' && (
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor="register-phone">Phone (optional)</Label>
+                          <Input 
+                            id="register-phone"
+                            data-testid="input-register-phone"
+                            type="tel"
+                            placeholder="(512) 555-0123"
+                            value={brokerageData.contactPhone}
+                            onChange={(e) => setBrokerageData({ ...brokerageData, contactPhone: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="planned-agents">Planned Number of Agents</Label>
+                          <Select 
+                            value={brokerageData.plannedAgentCount} 
+                            onValueChange={(value) => setBrokerageData({ ...brokerageData, plannedAgentCount: value })}
+                          >
+                            <SelectTrigger id="planned-agents" data-testid="select-planned-agents">
+                              <SelectValue placeholder="Select a range" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {agentCountRanges.map((range) => (
+                                <SelectItem key={range.value} value={range.value}>
+                                  {range.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </>
+                    )}
                     <div className="space-y-2">
                       <Label htmlFor="register-username">Username</Label>
                       <Input 
@@ -243,14 +390,14 @@ export default function AuthPage() {
                       type="submit" 
                       className="w-full"
                       data-testid="button-register"
-                      disabled={registerMutation.isPending || (registerData.password !== registerData.confirmPassword)}
+                      disabled={registerMutation.isPending || brokerageRegister.isPending || (registerData.password !== registerData.confirmPassword)}
                     >
-                      {registerMutation.isPending ? (
+                      {(registerMutation.isPending || brokerageRegister.isPending) ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           Creating account...
                         </>
-                      ) : "Create Account"}
+                      ) : accountType === 'brokerage' ? "Start Brokerage Trial" : "Create Account"}
                     </Button>
                   </form>
                 </CardContent>
