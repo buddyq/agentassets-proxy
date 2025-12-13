@@ -1258,6 +1258,8 @@ export async function registerRoutes(
   // Brokerage subscription checkout (for upgrading from trial)
   app.post("/api/stripe/brokerage-checkout", isAuthenticated, async (req: any, res) => {
     try {
+      const { couponCode } = req.body;
+      
       const user = await storage.getUser(req.user.id);
       if (!user) {
         return res.status(404).json({ error: "User not found" });
@@ -1283,6 +1285,23 @@ export async function registerRoutes(
         baseUrl = domains.length > 0 ? `https://${domains[0]}` : 'http://localhost:5000';
       }
 
+      // Validate coupon code if provided
+      let discounts: { coupon: string }[] | undefined;
+      if (couponCode) {
+        try {
+          const coupon = await stripe.coupons.retrieve(couponCode);
+          if (!coupon.valid) {
+            return res.status(400).json({ error: "This coupon is no longer valid" });
+          }
+          discounts = [{ coupon: couponCode }];
+        } catch (couponError: any) {
+          if (couponError.code === 'resource_missing') {
+            return res.status(400).json({ error: "Invalid coupon code" });
+          }
+          throw couponError;
+        }
+      }
+
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
         line_items: [{
@@ -1300,6 +1319,8 @@ export async function registerRoutes(
           quantity: 1,
         }],
         mode: 'subscription',
+        discounts,
+        allow_promotion_codes: !couponCode, // Allow promo code entry if no coupon provided
         success_url: `${baseUrl}/brokerage?upgraded=true&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${baseUrl}/brokerage?canceled=true`,
         metadata: {
@@ -1314,6 +1335,181 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Brokerage checkout error:", error);
       res.status(500).json({ error: "Failed to create checkout session" });
+    }
+  });
+
+  // Validate a Stripe coupon code
+  app.post("/api/stripe/validate-coupon", isAuthenticated, async (req: any, res) => {
+    try {
+      const { couponCode } = req.body;
+      if (!couponCode) {
+        return res.status(400).json({ error: "Coupon code is required" });
+      }
+
+      const stripe = await getUncachableStripeClient();
+      
+      try {
+        const coupon = await stripe.coupons.retrieve(couponCode);
+        if (!coupon.valid) {
+          return res.status(400).json({ error: "This coupon is no longer valid", valid: false });
+        }
+        
+        res.json({
+          valid: true,
+          coupon: {
+            id: coupon.id,
+            percentOff: coupon.percent_off,
+            amountOff: coupon.amount_off,
+            currency: coupon.currency,
+            duration: coupon.duration,
+            durationInMonths: coupon.duration_in_months,
+            name: coupon.name,
+          }
+        });
+      } catch (couponError: any) {
+        if (couponError.code === 'resource_missing') {
+          return res.status(400).json({ error: "Invalid coupon code", valid: false });
+        }
+        throw couponError;
+      }
+    } catch (error) {
+      console.error("Coupon validation error:", error);
+      res.status(500).json({ error: "Failed to validate coupon" });
+    }
+  });
+
+  // Purchase additional seats for brokerage
+  const purchaseSeatsSchema = z.object({
+    seats: z.number().min(1).max(100),
+  });
+
+  app.post("/api/stripe/purchase-seats", isAuthenticated, async (req: any, res) => {
+    try {
+      const validated = purchaseSeatsSchema.parse(req.body);
+      
+      const user = await storage.getUser(req.user.id);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Check if user has a brokerage membership
+      const membership = await storage.getBrokerageMembership(user.id);
+      if (!membership || membership.role !== 'admin') {
+        return res.status(400).json({ error: "You must be a brokerage admin to purchase seats" });
+      }
+
+      const brokerage = await storage.getBrokerage(membership.brokerageId);
+      if (!brokerage) {
+        return res.status(404).json({ error: "Brokerage not found" });
+      }
+
+      // Check if brokerage has an active subscription
+      if (!brokerage.stripeSubscriptionId) {
+        return res.status(400).json({ error: "You must have an active subscription to purchase additional seats" });
+      }
+
+      const stripe = await getUncachableStripeClient();
+      
+      // Get the current subscription
+      const subscription = await stripe.subscriptions.retrieve(brokerage.stripeSubscriptionId);
+      
+      if (subscription.status !== 'active') {
+        return res.status(400).json({ error: "Your subscription must be active to add seats" });
+      }
+
+      // Use custom BASE_URL if set, otherwise fall back to REPLIT_DOMAINS
+      let baseUrl = process.env.BASE_URL;
+      if (!baseUrl) {
+        const domains = process.env.REPLIT_DOMAINS?.split(',') || [];
+        baseUrl = domains.length > 0 ? `https://${domains[0]}` : 'http://localhost:5000';
+      }
+
+      // Create a checkout session for additional seats
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [{
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: 'Additional Agent Seats',
+              description: `${validated.seats} additional seat${validated.seats > 1 ? 's' : ''} for your brokerage`,
+            },
+            unit_amount: 1500, // $15.00 per seat per month
+            recurring: {
+              interval: 'month',
+            },
+          },
+          quantity: validated.seats,
+        }],
+        mode: 'subscription',
+        success_url: `${baseUrl}/brokerage?seats_added=${validated.seats}&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${baseUrl}/brokerage?canceled=true`,
+        metadata: {
+          userId: user.id,
+          brokerageId: brokerage.id,
+          seats: validated.seats.toString(),
+          type: 'additional_seats',
+        },
+        customer: brokerage.stripeCustomerId || undefined,
+        customer_email: !brokerage.stripeCustomerId ? (brokerage.email || user.email || undefined) : undefined,
+      });
+
+      res.json({ url: session.url });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors[0].message });
+      }
+      console.error("Purchase seats error:", error);
+      res.status(500).json({ error: "Failed to create checkout session" });
+    }
+  });
+
+  // Handle seat purchase success
+  app.post("/api/stripe/seats-success", isAuthenticated, async (req: any, res) => {
+    try {
+      const { sessionId } = req.body;
+      if (!sessionId) {
+        return res.status(400).json({ error: "Session ID required" });
+      }
+
+      const stripe = await getUncachableStripeClient();
+      const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+      if (session.payment_status !== 'paid' || session.metadata?.type !== 'additional_seats') {
+        return res.status(400).json({ error: "Invalid or unpaid session" });
+      }
+
+      const userId = session.metadata?.userId;
+      const brokerageId = session.metadata?.brokerageId;
+      const seats = parseInt(session.metadata?.seats || '0', 10);
+
+      if (!userId || userId !== req.user.id) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+
+      if (!brokerageId || seats <= 0) {
+        return res.status(400).json({ error: "Invalid session data" });
+      }
+
+      // Get current brokerage and update additional seats
+      const brokerage = await storage.getBrokerage(brokerageId);
+      if (!brokerage) {
+        return res.status(404).json({ error: "Brokerage not found" });
+      }
+
+      const newAdditionalSeats = (brokerage.additionalSeats || 0) + seats;
+      await storage.updateBrokerage(brokerageId, { 
+        additionalSeats: newAdditionalSeats 
+      });
+
+      res.json({ 
+        success: true, 
+        addedSeats: seats,
+        totalSeats: brokerage.includedSeats + newAdditionalSeats
+      });
+    } catch (error) {
+      console.error("Seats success error:", error);
+      res.status(500).json({ error: "Failed to process seat purchase" });
     }
   });
 

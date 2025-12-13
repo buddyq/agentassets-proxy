@@ -26,6 +26,8 @@ import {
   useRemoveTemplateFromGroup,
   useLayouts,
   useUpdateBrokerage,
+  usePurchaseSeats,
+  useConfirmSeatsPurchase,
   normalizeObjectUrl,
   getUploadUrl,
   type BrokerageMember,
@@ -446,11 +448,16 @@ export default function BrokerageDashboard() {
   
   const { data: brokerageData, isLoading: brokerageLoading, refetch: refetchBrokerage } = useBrokerage();
   const confirmSubscription = useConfirmBrokerageSubscription();
+  const purchaseSeats = usePurchaseSeats();
+  const confirmSeatsPurchase = useConfirmSeatsPurchase();
+  const [purchaseSeatsOpen, setPurchaseSeatsOpen] = useState(false);
+  const [seatsToAdd, setSeatsToAdd] = useState(5);
 
   useEffect(() => {
     const params = new URLSearchParams(searchString);
     const success = params.get('success') === 'true';
     const sessionId = params.get('session_id');
+    const seatsAdded = params.get('seats_added');
     
     if (success && sessionId && !processingSuccess && !brokerageData?.brokerage) {
       setProcessingSuccess(true);
@@ -465,7 +472,21 @@ export default function BrokerageDashboard() {
           setProcessingSuccess(false);
         });
     }
-  }, [searchString, processingSuccess, brokerageData, confirmSubscription, refetchBrokerage]);
+    
+    if (seatsAdded && sessionId && !processingSuccess) {
+      setProcessingSuccess(true);
+      confirmSeatsPurchase.mutateAsync(sessionId)
+        .then((result) => {
+          toast({ title: `Successfully added ${result.addedSeats} seats! Total: ${result.totalSeats} seats.`, variant: 'success' });
+          refetchBrokerage();
+          window.history.replaceState({}, '', '/brokerage');
+        })
+        .catch((error) => {
+          toast({ title: error.message || 'Failed to confirm seat purchase', variant: 'destructive' });
+          setProcessingSuccess(false);
+        });
+    }
+  }, [searchString, processingSuccess, brokerageData, confirmSubscription, confirmSeatsPurchase, refetchBrokerage]);
   const { data: members = [], refetch: refetchMembers } = useBrokerageMembers();
   const { data: groups = [], refetch: refetchGroups } = useBrokerageGroups();
   const { data: sites = [] } = useBrokerageSites(siteSearch || undefined);
@@ -782,7 +803,67 @@ export default function BrokerageDashboard() {
                   Manage agents in your brokerage ({usedSeats} of {totalSeats} seats)
                 </p>
               </div>
-              <AddAgentDialog onSuccess={() => { refetchMembers(); refetchBrokerage(); }} />
+              <div className="flex items-center gap-2">
+                <Dialog open={purchaseSeatsOpen} onOpenChange={setPurchaseSeatsOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" data-testid="button-purchase-seats">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Seats
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Purchase Additional Seats</DialogTitle>
+                      <DialogDescription>
+                        Add more agent seats to your brokerage. Each additional seat costs $15/month.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4">
+                      <Label htmlFor="seats">Number of seats to add</Label>
+                      <div className="flex items-center gap-4 mt-2">
+                        <Input
+                          id="seats"
+                          type="number"
+                          min={1}
+                          max={100}
+                          value={seatsToAdd}
+                          onChange={(e) => setSeatsToAdd(Math.max(1, Math.min(100, parseInt(e.target.value) || 1)))}
+                          className="w-24"
+                          data-testid="input-seats-count"
+                        />
+                        <div className="text-sm text-muted-foreground">
+                          = <span className="font-semibold text-foreground">${seatsToAdd * 15}/month</span>
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-4">
+                        After purchase, you'll have {totalSeats + seatsToAdd} total seats.
+                      </p>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setPurchaseSeatsOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={async () => {
+                          try {
+                            const result = await purchaseSeats.mutateAsync(seatsToAdd);
+                            if (result.url) {
+                              window.location.href = result.url;
+                            }
+                          } catch (error: any) {
+                            toast({ title: error.message || 'Failed to start checkout', variant: 'destructive' });
+                          }
+                        }}
+                        disabled={purchaseSeats.isPending}
+                        data-testid="button-confirm-purchase-seats"
+                      >
+                        {purchaseSeats.isPending ? 'Processing...' : `Purchase ${seatsToAdd} Seats`}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+                <AddAgentDialog onSuccess={() => { refetchMembers(); refetchBrokerage(); }} />
+              </div>
             </div>
             
             <Separator />

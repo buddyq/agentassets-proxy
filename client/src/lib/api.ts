@@ -982,6 +982,92 @@ export function useUpdateBrokerage() {
   });
 }
 
+export type StripeCoupon = {
+  id: string;
+  percentOff: number | null;
+  amountOff: number | null;
+  currency: string | null;
+  duration: string;
+  durationInMonths: number | null;
+  name: string | null;
+};
+
+export function useValidateStripeCoupon() {
+  return useMutation({
+    mutationFn: async (couponCode: string) => {
+      const res = await fetch(`${API_BASE}/stripe/validate-coupon`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ couponCode }),
+        credentials: 'include'
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Invalid coupon code');
+      }
+      return res.json() as Promise<{ valid: boolean; coupon: StripeCoupon }>;
+    }
+  });
+}
+
+export function useBrokerageCheckout() {
+  return useMutation({
+    mutationFn: async (couponCode?: string) => {
+      const res = await fetch(`${API_BASE}/stripe/brokerage-checkout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ couponCode }),
+        credentials: 'include'
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to create checkout session');
+      }
+      return res.json() as Promise<{ url: string }>;
+    }
+  });
+}
+
+export function usePurchaseSeats() {
+  return useMutation({
+    mutationFn: async (seats: number) => {
+      const res = await fetch(`${API_BASE}/stripe/purchase-seats`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ seats }),
+        credentials: 'include'
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to purchase seats');
+      }
+      return res.json() as Promise<{ url: string }>;
+    }
+  });
+}
+
+export function useConfirmSeatsPurchase() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (sessionId: string) => {
+      const res = await fetch(`${API_BASE}/stripe/seats-success`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId }),
+        credentials: 'include'
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to confirm seat purchase');
+      }
+      return res.json() as Promise<{ success: boolean; addedSeats: number; totalSeats: number }>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['brokerage'] });
+    }
+  });
+}
+
 export function useBrokerageMembers() {
   return useQuery({
     queryKey: ['brokerage-members'],
@@ -1242,24 +1328,6 @@ export function useBrokerageRegister() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['brokerage'] });
-    }
-  });
-}
-
-// Brokerage subscription checkout (for upgrading from trial)
-export function useBrokerageCheckout() {
-  return useMutation({
-    mutationFn: async () => {
-      const res = await fetch(`${API_BASE}/stripe/brokerage-checkout`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
-      });
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || 'Failed to create checkout session');
-      }
-      return res.json() as Promise<{ url: string }>;
     }
   });
 }
