@@ -28,12 +28,15 @@ import {
   useUpdateBrokerage,
   usePurchaseSeats,
   useConfirmSeatsPurchase,
+  useBrokerageCheckout,
+  useValidateStripeCoupon,
   normalizeObjectUrl,
   getUploadUrl,
   type BrokerageMember,
   type BrokerageGroup,
   type BrokerageSite,
-  type BrokerageTemplate
+  type BrokerageTemplate,
+  type StripeCoupon
 } from '@/lib/api';
 import { ObjectUploader } from '@/components/ObjectUploader';
 import { Button } from '@/components/ui/button';
@@ -70,7 +73,9 @@ import {
   Palette,
   LayoutTemplate,
   CheckCircle,
-  Circle
+  Circle,
+  Loader2,
+  Tag
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
@@ -231,6 +236,144 @@ function CreateGroupDialog({ onSuccess }: { onSuccess: () => void }) {
             </Button>
           </DialogFooter>
         </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function UpgradeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+  const [couponCode, setCouponCode] = useState('');
+  const [validatedCoupon, setValidatedCoupon] = useState<StripeCoupon | null>(null);
+  const validateCoupon = useValidateStripeCoupon();
+  const brokerageCheckout = useBrokerageCheckout();
+  const { toast } = useToast();
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen) {
+      setCouponCode('');
+      setValidatedCoupon(null);
+    }
+    onOpenChange(newOpen);
+  };
+
+  const handleValidateCoupon = async () => {
+    if (!couponCode.trim()) return;
+    try {
+      const result = await validateCoupon.mutateAsync(couponCode.trim());
+      if (result.valid) {
+        setValidatedCoupon(result.coupon);
+        toast({ title: 'Coupon applied!', variant: 'success' });
+      }
+    } catch (error: any) {
+      setValidatedCoupon(null);
+      toast({ title: error.message || 'Invalid coupon code', variant: 'destructive' });
+    }
+  };
+
+  const handleUpgrade = async () => {
+    try {
+      const codeToUse = validatedCoupon ? couponCode.trim() : undefined;
+      const result = await brokerageCheckout.mutateAsync(codeToUse);
+      if (result.url) {
+        window.location.href = result.url;
+      }
+    } catch (error: any) {
+      toast({ title: error.message || 'Failed to start checkout', variant: 'destructive' });
+    }
+  };
+
+  const getDiscountText = () => {
+    if (!validatedCoupon) return null;
+    let discount = '';
+    if (validatedCoupon.percentOff) {
+      discount = `${validatedCoupon.percentOff}% off`;
+    } else if (validatedCoupon.amountOff) {
+      discount = `$${(validatedCoupon.amountOff / 100).toFixed(2)} off`;
+    }
+    if (validatedCoupon.duration === 'repeating' && validatedCoupon.durationInMonths) {
+      discount += ` for ${validatedCoupon.durationInMonths} months`;
+    } else if (validatedCoupon.duration === 'forever') {
+      discount += ' forever';
+    } else if (validatedCoupon.duration === 'once') {
+      discount += ' (first payment)';
+    }
+    return discount;
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Upgrade Your Brokerage</DialogTitle>
+          <DialogDescription>
+            Subscribe to continue using all brokerage features after your trial ends.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="p-4 bg-muted/50 rounded-lg">
+            <div className="flex items-baseline gap-1 mb-2">
+              <span className="text-3xl font-bold">$249</span>
+              <span className="text-muted-foreground">/month</span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Includes 15 agent seats. Additional seats available at tiered pricing.
+            </p>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="coupon-code">Have a coupon code?</Label>
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="coupon-code"
+                  value={couponCode}
+                  onChange={(e) => {
+                    setCouponCode(e.target.value);
+                    if (validatedCoupon) setValidatedCoupon(null);
+                  }}
+                  placeholder="Enter coupon code"
+                  className="pl-10"
+                  data-testid="input-coupon-code"
+                />
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleValidateCoupon}
+                disabled={!couponCode.trim() || validateCoupon.isPending}
+                data-testid="button-apply-coupon"
+              >
+                {validateCoupon.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Apply'}
+              </Button>
+            </div>
+            {validatedCoupon && (
+              <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 p-2 rounded">
+                <CheckCircle className="w-4 h-4" />
+                <span>{validatedCoupon.name || 'Coupon'}: {getDiscountText()}</span>
+              </div>
+            )}
+          </div>
+        </div>
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleUpgrade} 
+            disabled={brokerageCheckout.isPending}
+            data-testid="button-upgrade-checkout"
+          >
+            {brokerageCheckout.isPending ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              'Continue to Payment'
+            )}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
@@ -452,6 +595,7 @@ export default function BrokerageDashboard() {
   const confirmSeatsPurchase = useConfirmSeatsPurchase();
   const [purchaseSeatsOpen, setPurchaseSeatsOpen] = useState(false);
   const [seatsToAdd, setSeatsToAdd] = useState(5);
+  const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(searchString);
@@ -697,10 +841,19 @@ export default function BrokerageDashboard() {
             </div>
             <div className="flex items-center gap-2">
               {isOnTrial && (
-                <Badge variant="secondary" className="bg-gradient-to-r from-yellow-100 to-orange-100 text-orange-700 border-orange-200">
-                  <Clock className="w-3 h-3 mr-1" />
-                  {trialDaysRemaining} days left in trial
-                </Badge>
+                <>
+                  <Badge variant="secondary" className="bg-gradient-to-r from-yellow-100 to-orange-100 text-orange-700 border-orange-200">
+                    <Clock className="w-3 h-3 mr-1" />
+                    {trialDaysRemaining} days left in trial
+                  </Badge>
+                  <Button 
+                    size="sm" 
+                    onClick={() => setUpgradeDialogOpen(true)}
+                    data-testid="button-upgrade-brokerage"
+                  >
+                    Upgrade Now
+                  </Button>
+                </>
               )}
               <Badge variant="outline" className="text-sm">
                 {usedSeats} / {totalSeats} seats used
@@ -1268,6 +1421,8 @@ export default function BrokerageDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      <UpgradeDialog open={upgradeDialogOpen} onOpenChange={setUpgradeDialogOpen} />
       
       <Footer />
     </div>
