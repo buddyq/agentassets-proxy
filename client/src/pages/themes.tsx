@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import type { Theme } from "@shared/schema";
 import { useThemes, useCreateTheme, useDeleteTheme, useUpdateTheme } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
-import { Plus, Palette, Trash2, Check, Upload, Image as ImageIcon, Edit2 } from "lucide-react";
+import { Plus, Palette, Trash2, Check, Edit2 } from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -30,7 +30,6 @@ export default function Themes() {
   const [secondaryColor, setSecondaryColor] = useState("#ffffff");
   const [backgroundColor, setBackgroundColor] = useState("#ffffff");
   const [textColor, setTextColor] = useState("#000000");
-  const [logoUrl, setLogoUrl] = useState<string | undefined>(undefined);
 
   const handleCreateTheme = () => {
     if (!newThemeName) return;
@@ -44,8 +43,7 @@ export default function Themes() {
           secondary: secondaryColor,
           background: backgroundColor,
           text: textColor
-        },
-        logoUrl: logoUrl || null
+        }
       },
       {
         onSuccess: () => {
@@ -68,7 +66,6 @@ export default function Themes() {
     setSecondaryColor(theme.colors.secondary);
     setBackgroundColor(theme.colors.background);
     setTextColor(theme.colors.text);
-    setLogoUrl(theme.logoUrl || undefined);
     setIsEditMode(true);
     setIsDialogOpen(true);
   };
@@ -86,8 +83,7 @@ export default function Themes() {
             secondary: secondaryColor,
             background: backgroundColor,
             text: textColor
-          },
-          logoUrl: logoUrl || null
+          }
         }
       },
       {
@@ -112,19 +108,8 @@ export default function Themes() {
     setSecondaryColor("#ffffff");
     setBackgroundColor("#ffffff");
     setTextColor("#000000");
-    setLogoUrl(undefined);
     setIsEditMode(false);
     setSelectedThemeId(null);
-  };
-
-  // Mock logo upload
-  const handleLogoUpload = () => {
-    setLogoUrl("https://via.placeholder.com/150x50?text=LOGO");
-    toast({
-      title: "Logo Uploaded",
-      description: "Logo successfully attached to this theme.",
-      variant: "success",
-    });
   };
 
   return (
@@ -233,25 +218,6 @@ export default function Themes() {
                   </div>
                 </div>
                 
-                <div className="grid gap-2">
-                  <Label>Logo (Optional)</Label>
-                  <div className="border-2 border-dashed rounded-lg p-6 text-center">
-                    {logoUrl ? (
-                      <div className="flex flex-col items-center gap-2">
-                        <img src={logoUrl} alt="Logo preview" className="max-h-12" />
-                        <Button variant="ghost" size="sm" onClick={() => setLogoUrl(undefined)}>Remove</Button>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                        <ImageIcon className="h-8 w-8" />
-                        <Button variant="outline" size="sm" onClick={handleLogoUpload}>
-                          <Upload className="h-4 w-4 mr-2" /> Upload Logo
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
                 <div className="p-4 rounded-lg border bg-muted/30">
                   <p className="text-sm text-muted-foreground mb-2">Preview</p>
                   <div className="flex gap-3">
