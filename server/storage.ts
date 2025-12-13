@@ -198,6 +198,7 @@ export interface IStorage {
   removeUserFromGroup(groupId: string, userId: string): Promise<void>;
   getGroupMembers(groupId: string): Promise<BrokerageGroupMember[]>;
   getUserGroups(userId: string): Promise<BrokerageGroup[]>;
+  getGroupMembership(userId: string, groupId: string): Promise<BrokerageGroupMember | undefined>;
   
   // Brokerage template methods
   assignTemplateToBrokerage(brokerageId: string, templateType: string, templateId: string, assignedBy?: string): Promise<BrokerageTemplate>;
@@ -1033,6 +1034,17 @@ export class DatabaseStorage implements IStorage {
     return groups;
   }
 
+  async getGroupMembership(userId: string, groupId: string): Promise<BrokerageGroupMember | undefined> {
+    const [membership] = await db
+      .select()
+      .from(brokerageGroupMembers)
+      .where(and(
+        eq(brokerageGroupMembers.userId, userId),
+        eq(brokerageGroupMembers.groupId, groupId)
+      ));
+    return membership || undefined;
+  }
+
   // Brokerage template methods
   async assignTemplateToBrokerage(
     brokerageId: string, 
@@ -1155,18 +1167,52 @@ export class DatabaseStorage implements IStorage {
     // Filter out brokerage-assigned themes from public results
     publicThemes = publicThemes.filter(t => !brokerageThemeIds.includes(t.id));
     
+    // Get user's own personal themes (custom themes they created)
+    const userPersonalThemes = await db
+      .select()
+      .from(themes)
+      .where(eq(themes.userId, userId));
+    
     // Check if user is in a brokerage
     const membership = await this.getBrokerageMembership(userId);
     if (!membership) {
-      return { layouts: publicLayouts, themes: publicThemes };
+      // Not in a brokerage - return public themes + user's personal themes
+      const allThemes = [...publicThemes];
+      for (const theme of userPersonalThemes) {
+        if (!allThemes.find(t => t.id === theme.id)) {
+          allThemes.push(theme);
+        }
+      }
+      return { layouts: publicLayouts, themes: allThemes };
     }
-    
-    // Get all templates for this brokerage
-    const userBrokerageTemplates = await this.getBrokerageTemplates(membership.brokerageId);
     
     // Get user's groups
     const userGroups = await this.getUserGroups(userId);
     const userGroupIds = userGroups.map(g => g.id);
+    
+    // Get brokerage-scoped themes (type='brokerage' AND brokerageId matches user's brokerage)
+    const brokerageScopedThemes = await db
+      .select()
+      .from(themes)
+      .where(and(
+        eq(themes.type, 'brokerage'),
+        eq(themes.brokerageId, membership.brokerageId)
+      ));
+    
+    // Get group-scoped themes (type='group' AND groupId matches any of user's groups)
+    let groupScopedThemes: Theme[] = [];
+    if (userGroupIds.length > 0) {
+      groupScopedThemes = await db
+        .select()
+        .from(themes)
+        .where(and(
+          eq(themes.type, 'group'),
+          sql`${themes.groupId} IN (${sql.join(userGroupIds.map(id => sql`${id}`), sql`, `)})`
+        ));
+    }
+    
+    // Get all templates for this brokerage (via brokerageTemplates table)
+    const userBrokerageTemplates = await this.getBrokerageTemplates(membership.brokerageId);
     
     // For each brokerage template, check if it has group assignments
     // If NO group assignments → available to all agents
@@ -1188,20 +1234,21 @@ export class DatabaseStorage implements IStorage {
       }
     }
     
-    if (accessibleTemplateIds.length === 0) {
-      return { layouts: publicLayouts, themes: publicThemes };
-    }
-    
     // Get the actual layout/theme records for assigned templates
-    const assignedLayouts = await db
-      .select()
-      .from(layouts)
-      .where(sql`${layouts.id} IN (${sql.join(accessibleTemplateIds.map(id => sql`${id}`), sql`, `)})`);
+    let assignedLayouts: Layout[] = [];
+    let assignedThemes: Theme[] = [];
     
-    const assignedThemes = await db
-      .select()
-      .from(themes)
-      .where(sql`${themes.id} IN (${sql.join(accessibleTemplateIds.map(id => sql`${id}`), sql`, `)})`);
+    if (accessibleTemplateIds.length > 0) {
+      assignedLayouts = await db
+        .select()
+        .from(layouts)
+        .where(sql`${layouts.id} IN (${sql.join(accessibleTemplateIds.map(id => sql`${id}`), sql`, `)})`);
+      
+      assignedThemes = await db
+        .select()
+        .from(themes)
+        .where(sql`${themes.id} IN (${sql.join(accessibleTemplateIds.map(id => sql`${id}`), sql`, `)})`);
+    }
     
     // Combine public and assigned templates (deduplicated)
     const allLayouts = [...publicLayouts];
@@ -1211,12 +1258,22 @@ export class DatabaseStorage implements IStorage {
       }
     }
     
+    // Combine all theme sources (deduplicated)
     const allThemes = [...publicThemes];
-    for (const theme of assignedThemes) {
+    const addTheme = (theme: Theme) => {
       if (!allThemes.find(t => t.id === theme.id)) {
         allThemes.push(theme);
       }
-    }
+    };
+    
+    // Add user's personal themes
+    userPersonalThemes.forEach(addTheme);
+    // Add brokerage-scoped themes
+    brokerageScopedThemes.forEach(addTheme);
+    // Add group-scoped themes
+    groupScopedThemes.forEach(addTheme);
+    // Add themes from brokerage templates
+    assignedThemes.forEach(addTheme);
     
     return { layouts: allLayouts, themes: allThemes };
   }
