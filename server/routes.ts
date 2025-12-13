@@ -628,6 +628,7 @@ export async function registerRoutes(
       const themes = await storage.getAllThemes();
       res.json(themes);
     } catch (error) {
+      console.error("Error fetching themes:", error);
       res.status(500).json({ error: "Failed to fetch themes" });
     }
   });
