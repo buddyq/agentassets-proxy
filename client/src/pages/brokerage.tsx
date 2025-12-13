@@ -14,7 +14,6 @@ import {
   useUpdateBrokerageMember,
   useCreateBrokerageGroup,
   useDeleteBrokerageGroup,
-  useUpdateBrokerageGroup,
   useAddUserToGroup,
   useRemoveUserFromGroup,
   useGroupMembers,
@@ -451,16 +450,13 @@ function AgentMemberCard({ member, onRemove, onPromote, userGroups }: {
   );
 }
 
-function GroupCard({ group, members, onDelete, onManageMembers, themes, onUpdateTheme }: {
+function GroupCard({ group, members, onDelete, onManageMembers }: {
   group: BrokerageGroup;
   members: BrokerageMember[];
   onDelete: () => void;
   onManageMembers: () => void;
-  themes: { id: string; name: string; colors: { primary: string } }[];
-  onUpdateTheme: (themeId: string | null) => void;
 }) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const currentTheme = themes.find(t => t.id === group.defaultThemeId);
   
   return (
     <Card data-testid={`card-group-${group.id}`} className="transition-all hover:shadow-md hover:border-primary/30">
@@ -485,7 +481,7 @@ function GroupCard({ group, members, onDelete, onManageMembers, themes, onUpdate
           <CardDescription>{group.description}</CardDescription>
         )}
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Users className="w-4 h-4" />
@@ -500,44 +496,6 @@ function GroupCard({ group, members, onDelete, onManageMembers, themes, onUpdate
             <UserPlus className="w-4 h-4 mr-2" />
             Manage
           </Button>
-        </div>
-        
-        <div className="pt-2 border-t">
-          <Label className="text-xs text-muted-foreground mb-2 block">Default Theme</Label>
-          <Select 
-            value={group.defaultThemeId || 'none'} 
-            onValueChange={(value) => onUpdateTheme(value === 'none' ? null : value)}
-          >
-            <SelectTrigger className="w-full" data-testid={`select-group-theme-${group.id}`}>
-              <SelectValue placeholder="No default theme">
-                {currentTheme ? (
-                  <div className="flex items-center gap-2">
-                    <div 
-                      className="w-3 h-3 rounded-full border" 
-                      style={{ backgroundColor: currentTheme.colors.primary }}
-                    />
-                    {currentTheme.name}
-                  </div>
-                ) : (
-                  'No default theme'
-                )}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">No default theme</SelectItem>
-              {themes.map(theme => (
-                <SelectItem key={theme.id} value={theme.id}>
-                  <div className="flex items-center gap-2">
-                    <div 
-                      className="w-3 h-3 rounded-full border" 
-                      style={{ backgroundColor: theme.colors.primary }}
-                    />
-                    {theme.name}
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
       </CardContent>
       
@@ -692,7 +650,6 @@ export default function BrokerageDashboard() {
   const removeMember = useRemoveBrokerageMember();
   const updateMember = useUpdateBrokerageMember();
   const deleteGroup = useDeleteBrokerageGroup();
-  const updateGroup = useUpdateBrokerageGroup();
   const deleteSite = useDeleteBrokerageSite();
   const addToGroup = useAddUserToGroup();
   const removeFromGroup = useRemoveUserFromGroup();
@@ -1171,17 +1128,6 @@ export default function BrokerageDashboard() {
                     members={activeMembers}
                     onDelete={() => handleDeleteGroup(group.id)}
                     onManageMembers={() => setSelectedGroup(group.id)}
-                    themes={availableThemes.map(t => ({ id: t.id, name: t.name, colors: t.colors }))}
-                    onUpdateTheme={(themeId) => {
-                      updateGroup.mutateAsync({ groupId: group.id, updates: { defaultThemeId: themeId } })
-                        .then(() => {
-                          toast({ title: 'Group default theme updated', variant: 'success' });
-                          refetchGroups();
-                        })
-                        .catch(() => {
-                          toast({ title: 'Failed to update theme', variant: 'destructive' });
-                        });
-                    }}
                   />
                 ))
               )}
@@ -1354,7 +1300,7 @@ export default function BrokerageDashboard() {
                           <span className="flex items-center gap-2">
                             <span 
                               className="w-4 h-4 rounded-full border inline-block"
-                              style={{ backgroundColor: theme.colors.primary }}
+                              style={{ backgroundColor: theme.primaryColor }}
                             />
                             {theme.name}
                           </span>

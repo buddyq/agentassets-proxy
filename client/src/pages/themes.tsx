@@ -4,11 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import type { Theme } from "@shared/schema";
-import { useThemes, useCreateTheme, useDeleteTheme, useUpdateTheme, useBrokerage, useUpdateBrokerage } from "@/lib/api";
+import { useThemes, useCreateTheme, useDeleteTheme, useUpdateTheme } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
-import { Plus, Palette, Trash2, Check, Edit2, Building2 } from "lucide-react";
+import { Plus, Palette, Trash2, Check, Edit2 } from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -20,33 +19,10 @@ export default function Themes() {
   const createThemeMutation = useCreateTheme();
   const updateThemeMutation = useUpdateTheme();
   const deleteThemeMutation = useDeleteTheme();
-  const { data: brokerageData, refetch: refetchBrokerage } = useBrokerage();
-  const updateBrokerage = useUpdateBrokerage();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedThemeId, setSelectedThemeId] = useState<string | null>(null);
   const { toast } = useToast();
-  
-  const isBrokerageAdmin = brokerageData?.membership?.role === 'admin';
-  const currentDefaultThemeId = brokerageData?.brokerage?.defaultThemeId;
-  
-  const handleSetBrokerageDefault = async (themeId: string, themeName: string) => {
-    try {
-      await updateBrokerage.mutateAsync({ defaultThemeId: themeId });
-      refetchBrokerage();
-      toast({
-        title: "Default Theme Updated",
-        description: `${themeName} is now the brokerage default theme.`,
-        variant: "success",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Failed to update default theme",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
 
   // Form State
   const [newThemeName, setNewThemeName] = useState("");
@@ -67,10 +43,7 @@ export default function Themes() {
           secondary: secondaryColor,
           background: backgroundColor,
           text: textColor
-        },
-        logoUrl: null,
-        brokerageId: null,
-        groupId: null
+        }
       },
       {
         onSuccess: () => {
@@ -301,19 +274,13 @@ export default function Themes() {
             </h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {userThemes.map((theme) => (
-                <Card key={theme.id} className={`overflow-hidden ${currentDefaultThemeId === theme.id ? 'border-primary ring-2 ring-primary/20' : 'border-primary/20'}`}>
+                <Card key={theme.id} className="overflow-hidden border-primary/20">
                   <CardHeader className="pb-2 bg-primary/5">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-base flex items-center gap-2">
                         <Palette className="h-4 w-4" style={{ color: theme.colors.primary }} />
                         {theme.name}
                       </CardTitle>
-                      {currentDefaultThemeId === theme.id && (
-                        <Badge variant="default" className="text-xs">
-                          <Building2 className="h-3 w-3 mr-1" />
-                          Brokerage Default
-                        </Badge>
-                      )}
                     </div>
                   </CardHeader>
                   <CardContent className="pt-4">
@@ -345,46 +312,33 @@ export default function Themes() {
                       </div>
                     )}
                   </CardContent>
-                  <CardFooter className="border-t pt-3 gap-2 flex flex-col">
-                    <div className="flex gap-2 w-full">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="flex-1 hover:bg-primary/10 hover:border-primary/50"
-                        onClick={() => handleEditTheme(theme)}
-                      >
-                        <Edit2 className="h-4 w-4 mr-2" /> Edit
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="flex-1 text-destructive hover:text-destructive/90 hover:bg-destructive/10"
-                        onClick={() => {
-                          deleteThemeMutation.mutate(theme.id, {
-                            onSuccess: () => {
-                              toast({
-                                title: "Theme Deleted",
-                                description: `${theme.name} has been removed.`,
-                                variant: "success",
-                              });
-                            }
-                          });
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" /> Delete
-                      </Button>
-                    </div>
-                    {isBrokerageAdmin && currentDefaultThemeId !== theme.id && (
-                      <Button 
-                        variant="secondary" 
-                        size="sm" 
-                        className="w-full"
-                        onClick={() => handleSetBrokerageDefault(theme.id, theme.name)}
-                        disabled={updateBrokerage.isPending}
-                      >
-                        <Building2 className="h-4 w-4 mr-2" /> Set as Brokerage Default
-                      </Button>
-                    )}
+                  <CardFooter className="border-t pt-3 gap-2 flex">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1 hover:bg-primary/10 hover:border-primary/50"
+                      onClick={() => handleEditTheme(theme)}
+                    >
+                      <Edit2 className="h-4 w-4 mr-2" /> Edit
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="flex-1 text-destructive hover:text-destructive/90 hover:bg-destructive/10"
+                      onClick={() => {
+                        deleteThemeMutation.mutate(theme.id, {
+                          onSuccess: () => {
+                            toast({
+                              title: "Theme Deleted",
+                              description: `${theme.name} has been removed.`,
+                              variant: "success",
+                            });
+                          }
+                        });
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" /> Delete
+                    </Button>
                   </CardFooter>
                 </Card>
               ))}
@@ -398,22 +352,14 @@ export default function Themes() {
             <h2 className="text-xl font-semibold mb-6 text-muted-foreground">Preset Themes</h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {presetThemes.map((theme) => (
-                <Card key={theme.id} className={`overflow-hidden ${currentDefaultThemeId === theme.id ? 'border-primary ring-2 ring-primary/20 opacity-100' : 'opacity-75 hover:opacity-100'} transition-opacity`}>
+                <Card key={theme.id} className="overflow-hidden opacity-75">
                   <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between flex-wrap gap-1">
+                    <div className="flex items-center justify-between">
                       <CardTitle className="text-base flex items-center gap-2">
                         <Palette className="h-4 w-4" style={{ color: theme.colors.primary }} />
                         {theme.name}
                       </CardTitle>
-                      <div className="flex items-center gap-1">
-                        {currentDefaultThemeId === theme.id && (
-                          <Badge variant="default" className="text-xs">
-                            <Building2 className="h-3 w-3 mr-1" />
-                            Brokerage Default
-                          </Badge>
-                        )}
-                        <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">Preset</span>
-                      </div>
+                      <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">Preset</span>
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -445,26 +391,6 @@ export default function Themes() {
                       </div>
                     )}
                   </CardContent>
-                  {isBrokerageAdmin && (
-                    <CardFooter className="border-t pt-3">
-                      {currentDefaultThemeId === theme.id ? (
-                        <div className="flex items-center gap-2 text-sm text-primary">
-                          <Check className="h-4 w-4" />
-                          Current brokerage default
-                        </div>
-                      ) : (
-                        <Button 
-                          variant="secondary" 
-                          size="sm" 
-                          className="w-full"
-                          onClick={() => handleSetBrokerageDefault(theme.id, theme.name)}
-                          disabled={updateBrokerage.isPending}
-                        >
-                          <Building2 className="h-4 w-4 mr-2" /> Set as Brokerage Default
-                        </Button>
-                      )}
-                    </CardFooter>
-                  )}
                 </Card>
               ))}
             </div>

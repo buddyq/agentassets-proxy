@@ -873,7 +873,6 @@ export type Brokerage = {
   hasAddedFirstAgent: boolean;
   hasCreatedFirstGroup: boolean;
   hasExploredTemplates: boolean;
-  defaultThemeId: string | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -903,8 +902,6 @@ export type BrokerageGroup = {
   description: string | null;
   createdAt: Date;
   memberCount?: number;
-  logo?: string | null;
-  defaultThemeId?: string | null;
 };
 
 export type BrokerageTemplate = {
@@ -1178,7 +1175,7 @@ export function useCreateBrokerageGroup() {
 export function useUpdateBrokerageGroup() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ groupId, updates }: { groupId: string; updates: { name?: string; description?: string; defaultThemeId?: string | null; logo?: string | null } }) => {
+    mutationFn: async ({ groupId, updates }: { groupId: string; updates: { name?: string; description?: string } }) => {
       const res = await fetch(`${API_BASE}/brokerage/groups/${groupId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },

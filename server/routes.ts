@@ -628,7 +628,6 @@ export async function registerRoutes(
       const themes = await storage.getAllThemes();
       res.json(themes);
     } catch (error) {
-      console.error("Error fetching themes:", error);
       res.status(500).json({ error: "Failed to fetch themes" });
     }
   });
@@ -648,39 +647,7 @@ export async function registerRoutes(
   app.post("/api/themes", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
-      let { type, brokerageId, groupId } = req.body;
-      
-      // Validate permissions for brokerage/group theme creation
-      if (type === 'brokerage') {
-        if (!brokerageId) {
-          return res.status(400).json({ error: "brokerageId is required for brokerage themes" });
-        }
-        // Only brokerage admins can create brokerage-wide themes
-        const membership = await storage.getBrokerageMembership(userId);
-        if (!membership || membership.brokerageId !== brokerageId || membership.role !== 'admin') {
-          return res.status(403).json({ error: "Only brokerage admins can create brokerage themes" });
-        }
-        // Clear groupId for brokerage themes
-        groupId = null;
-      } else if (type === 'group') {
-        if (!groupId) {
-          return res.status(400).json({ error: "groupId is required for group themes" });
-        }
-        // Only team leads of this group can create group themes
-        const groupMembership = await storage.getGroupMembership(userId, groupId);
-        if (!groupMembership || groupMembership.role !== 'team_lead') {
-          return res.status(403).json({ error: "Only team leads can create group themes" });
-        }
-        // Clear brokerageId for group themes
-        brokerageId = null;
-      } else {
-        // For custom/preset themes, ensure type defaults to 'custom' and clear scoping
-        type = type || 'custom';
-        brokerageId = null;
-        groupId = null;
-      }
-      
-      const validated = insertThemeSchema.parse({ ...req.body, userId, type, brokerageId, groupId });
+      const validated = insertThemeSchema.parse({ ...req.body, userId });
       const theme = await storage.createTheme(validated);
       res.status(201).json(theme);
     } catch (error) {
@@ -2323,6 +2290,7 @@ export async function registerRoutes(
         // Create a new user account
         const tempPassword = crypto.randomBytes(16).toString('hex');
         const newUser = await storage.createUser({
+          username: email.split('@')[0] + '-' + crypto.randomBytes(3).toString('hex'),
           password: tempPassword, // Will need to be reset
           email,
           name,
@@ -2534,37 +2502,18 @@ export async function registerRoutes(
     }
   });
 
-  // Update a group (brokerage admins can update any group, team leads can update their own group)
-  app.patch("/api/brokerage/groups/:groupId", isBrokerageMember, async (req: any, res) => {
+  // Update a group
+  app.patch("/api/brokerage/groups/:groupId", isBrokerageAdmin, async (req: any, res) => {
     try {
       const { groupId } = req.params;
-      const { name, description, defaultThemeId, logo } = req.body;
-      const userId = req.user.id;
+      const { name, description } = req.body;
       
       const group = await storage.getBrokerageGroup(groupId);
       if (!group || group.brokerageId !== req.brokerageId) {
         return res.status(404).json({ error: "Group not found" });
       }
       
-      // Check authorization: must be brokerage admin OR team lead of this group
-      const isAdmin = req.brokerageMembership?.role === 'admin';
-      const groupMembership = await storage.getGroupMembership(userId, groupId);
-      const isTeamLead = groupMembership?.role === 'team_lead';
-      
-      if (!isAdmin && !isTeamLead) {
-        return res.status(403).json({ error: "Only brokerage admins or team leads can update groups" });
-      }
-      
-      // Team leads can only update defaultThemeId and logo, not name/description
-      const updates: any = {};
-      if (isAdmin) {
-        if (name !== undefined) updates.name = name;
-        if (description !== undefined) updates.description = description;
-      }
-      if (defaultThemeId !== undefined) updates.defaultThemeId = defaultThemeId;
-      if (logo !== undefined) updates.logo = logo;
-      
-      const updated = await storage.updateBrokerageGroup(groupId, updates);
+      const updated = await storage.updateBrokerageGroup(groupId, { name, description });
       res.json(updated);
     } catch (error) {
       console.error("Error updating brokerage group:", error);
