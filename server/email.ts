@@ -1,6 +1,6 @@
-import nodemailer from 'nodemailer';
+import nodemailer from "nodemailer";
 
-const smtpPort = parseInt(process.env.SMTP_PORT || '465');
+const smtpPort = parseInt(process.env.SMTP_PORT || "465");
 const isSecure = smtpPort === 465;
 
 const transporter = nodemailer.createTransport({
@@ -15,13 +15,13 @@ const transporter = nodemailer.createTransport({
 
 function escapeHtml(text: string): string {
   const htmlEntities: Record<string, string> = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;',
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
   };
-  return text.replace(/[&<>"']/g, char => htmlEntities[char] || char);
+  return text.replace(/[&<>"']/g, (char) => htmlEntities[char] || char);
 }
 
 interface LeadEmailData {
@@ -36,17 +36,19 @@ interface LeadEmailData {
   leadMessage: string;
 }
 
-export async function sendLeadNotificationEmail(data: LeadEmailData): Promise<void> {
-  const { 
-    recipientEmail, 
+export async function sendLeadNotificationEmail(
+  data: LeadEmailData,
+): Promise<void> {
+  const {
+    recipientEmail,
     recipientName,
-    propertyAddress, 
+    propertyAddress,
     propertyTitle,
-    leadFirstName, 
-    leadLastName, 
-    leadEmail, 
-    leadPhone, 
-    leadMessage 
+    leadFirstName,
+    leadLastName,
+    leadEmail,
+    leadPhone,
+    leadMessage,
   } = data;
 
   const safePropertyTitle = escapeHtml(propertyTitle);
@@ -135,7 +137,7 @@ This notification was sent by AgentAssets
   `.trim();
 
   await transporter.sendMail({
-    from: `"AgentAssets" <${process.env.SMTP_FROM || 'no-reply@agentassets.com'}>`,
+    from: `"AgentAssets" <${process.env.SMTP_FROM || "no-reply@agentassets.com"}>`,
     to: recipientEmail,
     subject: `New Inquiry: ${propertyAddress}`,
     text: textContent,
@@ -163,28 +165,38 @@ interface AnalyticsEmailData {
   year: number;
 }
 
-export async function sendMonthlyAnalyticsEmail(data: AnalyticsEmailData): Promise<void> {
+export async function sendMonthlyAnalyticsEmail(
+  data: AnalyticsEmailData,
+): Promise<void> {
   const { recipientEmail, recipientName, sites, monthName, year } = data;
-  
-  const safeName = escapeHtml(recipientName || 'there');
-  
+
+  const safeName = escapeHtml(recipientName || "there");
+
   const totalViews = sites.reduce((sum, site) => sum + site.views, 0);
-  const totalVisitors = sites.reduce((sum, site) => sum + site.uniqueVisitors, 0);
+  const totalVisitors = sites.reduce(
+    (sum, site) => sum + site.uniqueVisitors,
+    0,
+  );
   const totalLeads = sites.reduce((sum, site) => sum + site.leads, 0);
-  const publishedSites = sites.filter(s => s.status === 'published').length;
-  
-  const siteCardsHtml = sites.length > 0 
-    ? sites.map(site => {
-        const siteUrl = site.customDomain 
-          ? `https://${site.customDomain}` 
-          : `https://agentassets.com/p/${site.slug}`;
-        const safeSiteTitle = escapeHtml(site.title || site.address);
-        const safeAddress = escapeHtml(site.address);
-        const statusColor = site.status === 'published' ? '#558B73' : '#9ca3af';
-        const statusBg = site.status === 'published' ? '#ecfdf5' : '#f3f4f6';
-        const statusText = site.status === 'published' ? 'Published' : 'Draft';
-        
-        return `
+  const publishedSites = sites.filter((s) => s.status === "published").length;
+
+  const siteCardsHtml =
+    sites.length > 0
+      ? sites
+          .map((site) => {
+            const siteUrl = site.customDomain
+              ? `https://${site.customDomain}`
+              : `https://agentassets.com/p/${site.slug}`;
+            const safeSiteTitle = escapeHtml(site.title || site.address);
+            const safeAddress = escapeHtml(site.address);
+            const statusColor =
+              site.status === "published" ? "#558B73" : "#9ca3af";
+            const statusBg =
+              site.status === "published" ? "#ecfdf5" : "#f3f4f6";
+            const statusText =
+              site.status === "published" ? "Published" : "Draft";
+
+            return `
           <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 16px;">
             <tr>
               <td style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
@@ -229,8 +241,9 @@ export async function sendMonthlyAnalyticsEmail(data: AnalyticsEmailData): Promi
             </tr>
           </table>
         `;
-      }).join('')
-    : `
+          })
+          .join("")
+      : `
       <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 16px;">
         <tr>
           <td style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 48px; text-align: center;">
@@ -303,7 +316,7 @@ export async function sendMonthlyAnalyticsEmail(data: AnalyticsEmailData): Promi
                 <td style="padding: 40px;">
                   <div style="margin-bottom: 24px;">
                     <div style="font-size: 18px; color: #111827; font-weight: 600; margin-bottom: 8px;">Hi ${safeName} 👋</div>
-                    <div style="font-size: 15px; color: #6b7280; line-height: 1.6;">Here's how your property sites performed this month. ${totalLeads > 0 ? `Great job generating ${totalLeads} lead${totalLeads > 1 ? 's' : ''}!` : 'Keep up the great work!'}</div>
+                    <div style="font-size: 15px; color: #6b7280; line-height: 1.6;">Here's how your property sites performed this month. ${totalLeads > 0 ? `Great job generating ${totalLeads} lead${totalLeads > 1 ? "s" : ""}!` : "Keep up the great work!"}</div>
                   </div>
                   
                   <!-- Section Title -->
@@ -348,24 +361,27 @@ export async function sendMonthlyAnalyticsEmail(data: AnalyticsEmailData): Promi
     </html>
   `;
 
-  const sitesList = sites.length > 0
-    ? sites.map(site => {
-        const siteUrl = site.customDomain 
-          ? `https://${site.customDomain}` 
-          : `https://agentassets.com/p/${site.slug}`;
-        return `
+  const sitesList =
+    sites.length > 0
+      ? sites
+          .map((site) => {
+            const siteUrl = site.customDomain
+              ? `https://${site.customDomain}`
+              : `https://agentassets.com/p/${site.slug}`;
+            return `
 ${site.title || site.address}
 ${site.address}
 URL: ${siteUrl}
 Views: ${site.views} | Visitors: ${site.uniqueVisitors} | Leads: ${site.leads}
 `;
-      }).join('\n---\n')
-    : 'No property sites yet. Create your first property site to start tracking analytics!';
+          })
+          .join("\n---\n")
+      : "No property sites yet. Create your first property site to start tracking analytics!";
 
   const textContent = `
 Your Monthly Analytics Report - ${monthName} ${year}
 
-Hi ${recipientName || 'there'},
+Hi ${recipientName || "there"},
 
 Here's how your property sites performed this month:
 
@@ -388,7 +404,7 @@ Questions? Reply to this email or visit agentassets.com
   `.trim();
 
   await transporter.sendMail({
-    from: `"AgentAssets" <${process.env.SMTP_FROM || 'no-reply@agentassets.com'}>`,
+    from: `"AgentAssets" <${process.env.SMTP_FROM || "no-reply@agentassets.com"}>`,
     to: recipientEmail,
     subject: `Your ${monthName} Property Analytics Report`,
     text: textContent,
@@ -406,13 +422,23 @@ interface AgentInvitationEmailData {
   baseUrl: string;
 }
 
-export async function sendAgentInvitationEmail(data: AgentInvitationEmailData): Promise<void> {
-  const { recipientEmail, recipientName, brokerageName, inviterName, setupToken, baseUrl } = data;
-  
-  const safeRecipientName = escapeHtml(recipientName || 'there');
+export async function sendAgentInvitationEmail(
+  data: AgentInvitationEmailData,
+): Promise<void> {
+  const {
+    recipientEmail,
+    recipientName,
+    brokerageName,
+    inviterName,
+    setupToken,
+    baseUrl,
+  } = data;
+
+  const safeRecipientName = escapeHtml(recipientName || "there");
   const safeBrokerageName = escapeHtml(brokerageName);
   const setupUrl = `${baseUrl}/setup-password?token=${setupToken}`;
-  const logoUrl = 'https://atxpocket.nyc3.cdn.digitaloceanspaces.com/static/img/logos/agentassets_logo_white.png';
+  const logoUrl =
+    "https://atxpocket.nyc3.cdn.digitaloceanspaces.com/static/img/logos/agentassets_logo_white.png";
 
   const htmlContent = `
     <!DOCTYPE html>
@@ -510,7 +536,7 @@ export async function sendAgentInvitationEmail(data: AgentInvitationEmailData): 
   `;
 
   const textContent = `
-Hi ${recipientName || 'there'},
+Hi ${recipientName || "there"},
 
 You've been invited to join the ${brokerageName} team on AgentAssets!
 
@@ -530,7 +556,7 @@ AgentAssets - Beautiful Property Websites for Real Estate Professionals
   `.trim();
 
   await transporter.sendMail({
-    from: `"AgentAssets" <${process.env.SMTP_FROM || 'no-reply@agentassets.com'}>`,
+    from: `"AgentAssets" <${process.env.SMTP_FROM || "no-reply@agentassets.com"}>`,
     to: recipientEmail,
     subject: `You're invited to join ${brokerageName} on AgentAssets`,
     text: textContent,
@@ -546,13 +572,16 @@ interface GroupMemberAddedEmailData {
   adderName: string;
 }
 
-export async function sendGroupMemberAddedEmail(data: GroupMemberAddedEmailData): Promise<void> {
+export async function sendGroupMemberAddedEmail(
+  data: GroupMemberAddedEmailData,
+): Promise<void> {
   const { recipientEmail, recipientName, groupName, adderName } = data;
-  
-  const safeRecipientName = escapeHtml(recipientName || 'there');
+
+  const safeRecipientName = escapeHtml(recipientName || "there");
   const safeGroupName = escapeHtml(groupName);
   const safeAdderName = escapeHtml(adderName);
-  const logoUrl = 'https://atxpocket.nyc3.cdn.digitaloceanspaces.com/static/img/logos/agentassets_logo_white.png';
+  const logoUrl =
+    "https://atxpocket.nyc3.cdn.digitaloceanspaces.com/static/img/logos/agentassets_logo_white.png";
 
   const htmlContent = `
     <!DOCTYPE html>
@@ -582,8 +611,8 @@ export async function sendGroupMemberAddedEmail(data: GroupMemberAddedEmailData)
           <div class="content">
             <div class="welcome-box">
               <h2>Hi ${safeRecipientName},</h2>
-              <p style="font-size: 18px; font-weight: 500;">You have been added to ${safeGroupName} by ${safeAdderName}.</p>
-              <p style="margin-top: 8px;">You now have access to exclusive templates and resources for this team.</p>
+              <p style="font-size: 18px; font-weight: 500;">You have been added to the group "${safeGroupName}" by ${safeAdderName}.</p>
+              <p style="margin-top: 8px;">You now have access to exclusive templates and themes for this group.</p>
             </div>
             
             <div style="text-align: center; margin-top: 32px;">
@@ -601,7 +630,7 @@ export async function sendGroupMemberAddedEmail(data: GroupMemberAddedEmailData)
   `;
 
   const textContent = `
-Hi ${recipientName || 'there'},
+Hi ${recipientName || "there"},
 
 You have been added to ${groupName} by ${adderName}.
 
@@ -614,7 +643,7 @@ AgentAssets - Beautiful Property Websites for Real Estate Professionals
   `.trim();
 
   await transporter.sendMail({
-    from: `"AgentAssets" <${process.env.SMTP_FROM || 'no-reply@agentassets.com'}>`,
+    from: `"AgentAssets" <${process.env.SMTP_FROM || "no-reply@agentassets.com"}>`,
     to: recipientEmail,
     subject: `You've been added to ${groupName}`,
     text: textContent,
