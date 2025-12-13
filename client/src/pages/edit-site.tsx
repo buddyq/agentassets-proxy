@@ -809,7 +809,7 @@ export default function EditSite() {
                             <img 
                               src={layout.thumbnailUrl} 
                               alt={`${layout.name} layout preview`}
-                              className="w-full h-full object-cover object-top"
+                              className="w-full h-full object-contain object-top"
                             />
                           ) : (
                             <div className="h-full p-4 flex flex-col justify-end">
