@@ -4,13 +4,13 @@ import crypto from "crypto";
 import bcrypt from "bcrypt";
 import { storage } from "./storage";
 import { db } from "./db";
-import { setupAuth, isAuthenticated, isAdmin, isBrokerageAdmin, isBrokerageMember } from "./auth";
+import { setupAuth, isAuthenticated, isAdmin, isBrokerageAdmin, isBrokerageMember, isGroupTeamLead, isBrokerageAdminOrGroupTeamLead } from "./auth";
 import { insertSiteSchema, insertThemeSchema, insertLayoutSchema, insertLeadSchema, insertCouponSchema, brokerageMembers, leads } from "@shared/schema";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import archiver from "archiver";
-import { sendLeadNotificationEmail, sendAgentInvitationEmail } from "./email";
+import { sendLeadNotificationEmail, sendAgentInvitationEmail, sendGroupMemberAddedEmail } from "./email";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 
 function getExtensionFromMime(mimeType: string): string {
@@ -2502,18 +2502,32 @@ export async function registerRoutes(
     }
   });
 
-  // Update a group
-  app.patch("/api/brokerage/groups/:groupId", isBrokerageAdmin, async (req: any, res) => {
+  // Update a group (admin can update all fields, team lead can only update logo and defaultThemeId)
+  app.patch("/api/brokerage/groups/:groupId", isBrokerageAdminOrGroupTeamLead, async (req: any, res) => {
     try {
       const { groupId } = req.params;
-      const { name, description } = req.body;
+      const { name, description, teamLeadUserId, logo, defaultThemeId } = req.body;
       
-      const group = await storage.getBrokerageGroup(groupId);
-      if (!group || group.brokerageId !== req.brokerageId) {
-        return res.status(404).json({ error: "Group not found" });
+      const group = req.group; // Already loaded by middleware
+      
+      const updates: any = {};
+      
+      // Admin-only fields
+      if (req.isAdmin) {
+        if (name !== undefined) updates.name = name;
+        if (description !== undefined) updates.description = description;
+        if (teamLeadUserId !== undefined) updates.teamLeadUserId = teamLeadUserId;
       }
       
-      const updated = await storage.updateBrokerageGroup(groupId, { name, description });
+      // Fields both admin and team lead can update
+      if (logo !== undefined) updates.logo = logo;
+      if (defaultThemeId !== undefined) updates.defaultThemeId = defaultThemeId;
+      
+      if (Object.keys(updates).length === 0) {
+        return res.status(400).json({ error: "No valid fields to update" });
+      }
+      
+      const updated = await storage.updateBrokerageGroup(groupId, updates);
       res.json(updated);
     } catch (error) {
       console.error("Error updating brokerage group:", error);
@@ -2572,64 +2586,87 @@ export async function registerRoutes(
     }
   });
 
-  // Add a user to a group
-  app.post("/api/brokerage/groups/:groupId/members", isBrokerageAdmin, async (req: any, res) => {
+  // Add users to a group (supports both single userId and array of userIds)
+  app.post("/api/brokerage/groups/:groupId/members", isBrokerageAdminOrGroupTeamLead, async (req: any, res) => {
     try {
       const { groupId } = req.params;
-      const { userId } = req.body;
+      const { userId, userIds } = req.body;
       
-      if (!userId) {
-        return res.status(400).json({ error: "User ID is required" });
+      // Support both single userId and array of userIds
+      const idsToAdd: string[] = userIds || (userId ? [userId] : []);
+      
+      if (idsToAdd.length === 0) {
+        return res.status(400).json({ error: "User ID(s) required" });
       }
       
-      // Verify group belongs to this brokerage
-      const group = await storage.getBrokerageGroup(groupId);
-      if (!group || group.brokerageId !== req.brokerageId) {
-        return res.status(404).json({ error: "Group not found" });
-      }
+      const group = req.group; // Already loaded by middleware
       
-      // Verify user is a member of this brokerage
+      // Verify all users are members of this brokerage
       const members = await storage.getBrokerageMembers(req.brokerageId);
-      const isMember = members.some(m => m.userId === userId && m.status === 'active');
-      if (!isMember) {
-        return res.status(400).json({ error: "User is not a member of this brokerage" });
+      const activeMemberIds = new Set(members.filter(m => m.status === 'active').map(m => m.userId));
+      
+      const invalidUserIds = idsToAdd.filter(id => !activeMemberIds.has(id));
+      if (invalidUserIds.length > 0) {
+        return res.status(400).json({ error: `Users not found in brokerage: ${invalidUserIds.join(', ')}` });
       }
       
-      // Check if already in group
-      const groupMembers = await storage.getGroupMembers(groupId);
-      if (groupMembers.some(gm => gm.userId === userId)) {
-        return res.status(400).json({ error: "User is already in this group" });
+      // Get existing group members to check duplicates
+      const existingGroupMembers = await storage.getGroupMembers(groupId);
+      const existingUserIds = new Set(existingGroupMembers.map(gm => gm.userId));
+      
+      // Filter out already added users
+      const newUserIds = idsToAdd.filter(id => !existingUserIds.has(id));
+      
+      if (newUserIds.length === 0) {
+        return res.status(400).json({ error: "All users are already in this group" });
       }
       
-      const groupMember = await storage.addUserToGroup(groupId, userId);
+      // Add users to group
+      const addedMembers = await Promise.all(newUserIds.map(async (id) => {
+        const groupMember = await storage.addUserToGroup(groupId, id);
+        const user = await storage.getUser(id);
+        return {
+          ...groupMember,
+          user: user ? {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            profileImageUrl: user.profileImageUrl,
+          } : null,
+        };
+      }));
       
-      const user = await storage.getUser(userId);
-      res.status(201).json({
-        ...groupMember,
-        user: user ? {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          profileImageUrl: user.profileImageUrl,
-        } : null,
-      });
+      // Get adder info for email
+      const adder = await storage.getUser(req.user.id);
+      const adderName = adder?.name || 'A team administrator';
+      
+      // Send email notifications to all added users (async, don't block response)
+      for (const member of addedMembers) {
+        if (member.user?.email) {
+          sendGroupMemberAddedEmail({
+            recipientEmail: member.user.email,
+            recipientName: member.user.name || 'there',
+            groupName: group.name,
+            adderName,
+          }).catch(err => {
+            console.error(`Failed to send group member email to ${member.user?.email}:`, err);
+          });
+        }
+      }
+      
+      res.status(201).json(addedMembers);
     } catch (error) {
       console.error("Error adding user to group:", error);
       res.status(500).json({ error: "Failed to add user to group" });
     }
   });
 
-  // Remove a user from a group
-  app.delete("/api/brokerage/groups/:groupId/members/:userId", isBrokerageAdmin, async (req: any, res) => {
+  // Remove a user from a group (admin or team lead)
+  app.delete("/api/brokerage/groups/:groupId/members/:userId", isBrokerageAdminOrGroupTeamLead, async (req: any, res) => {
     try {
       const { groupId, userId } = req.params;
       
-      // Verify group belongs to this brokerage
-      const group = await storage.getBrokerageGroup(groupId);
-      if (!group || group.brokerageId !== req.brokerageId) {
-        return res.status(404).json({ error: "Group not found" });
-      }
-      
+      // Group already validated by middleware
       await storage.removeUserFromGroup(groupId, userId);
       res.json({ success: true });
     } catch (error) {

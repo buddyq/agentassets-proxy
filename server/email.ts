@@ -538,3 +538,87 @@ AgentAssets - Beautiful Property Websites for Real Estate Professionals
   });
   console.log(`Agent invitation email sent to ${recipientEmail}`);
 }
+
+interface GroupMemberAddedEmailData {
+  recipientEmail: string;
+  recipientName: string;
+  groupName: string;
+  adderName: string;
+}
+
+export async function sendGroupMemberAddedEmail(data: GroupMemberAddedEmailData): Promise<void> {
+  const { recipientEmail, recipientName, groupName, adderName } = data;
+  
+  const safeRecipientName = escapeHtml(recipientName || 'there');
+  const safeGroupName = escapeHtml(groupName);
+  const safeAdderName = escapeHtml(adderName);
+  const logoUrl = 'https://atxpocket.nyc3.cdn.digitaloceanspaces.com/static/img/logos/agentassets_logo_white.png';
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background: #f5f7f5; }
+        .wrapper { padding: 40px 20px; }
+        .container { max-width: 560px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(13, 148, 136, 0.12); }
+        .header { background: #0d9488; padding: 32px 40px; text-align: center; }
+        .header img { max-width: 200px; height: auto; }
+        .content { padding: 40px; }
+        .welcome-box { background: linear-gradient(135deg, #f0fdfa 0%, #e6f7f5 100%); border-radius: 12px; padding: 24px; margin-bottom: 32px; border-left: 4px solid #0d9488; }
+        .welcome-box h2 { margin: 0 0 8px; font-size: 20px; color: #333; }
+        .welcome-box p { margin: 0; color: #666; }
+        .footer { background: #f9fafb; padding: 24px 40px; text-align: center; border-top: 1px solid #e5e7eb; }
+        .footer p { margin: 0; font-size: 13px; color: #888; }
+        .footer a { color: #0d9488; text-decoration: none; }
+      </style>
+    </head>
+    <body>
+      <div class="wrapper">
+        <div class="container">
+          <div class="header">
+            <img src="${logoUrl}" alt="AgentAssets" />
+          </div>
+          <div class="content">
+            <div class="welcome-box">
+              <h2>Hi ${safeRecipientName},</h2>
+              <p style="font-size: 18px; font-weight: 500;">You have been added to ${safeGroupName} by ${safeAdderName}.</p>
+              <p style="margin-top: 8px;">You now have access to exclusive templates and resources for this team.</p>
+            </div>
+            
+            <div style="text-align: center; margin-top: 32px;">
+              <a href="https://agentassets.com/dashboard" style="display: inline-block; background: #0d9488; color: white; padding: 16px 40px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 16px;">Go to Dashboard</a>
+            </div>
+          </div>
+          <div class="footer">
+            <p>Questions? Contact your team lead or visit <a href="https://agentassets.com">agentassets.com</a></p>
+            <p style="margin-top: 8px;">AgentAssets - Beautiful Property Websites for Real Estate Professionals</p>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const textContent = `
+Hi ${recipientName || 'there'},
+
+You have been added to ${groupName} by ${adderName}.
+
+You now have access to exclusive templates and resources for this team.
+
+Visit your dashboard: https://agentassets.com/dashboard
+
+---
+AgentAssets - Beautiful Property Websites for Real Estate Professionals
+  `.trim();
+
+  await transporter.sendMail({
+    from: `"AgentAssets" <${process.env.SMTP_FROM || 'no-reply@agentassets.com'}>`,
+    to: recipientEmail,
+    subject: `You've been added to ${groupName}`,
+    text: textContent,
+    html: htmlContent,
+  });
+  console.log(`Group member added email sent to ${recipientEmail}`);
+}

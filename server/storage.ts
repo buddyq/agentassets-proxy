@@ -963,11 +963,25 @@ export class DatabaseStorage implements IStorage {
     return created;
   }
 
-  async getBrokerageGroups(brokerageId: string): Promise<BrokerageGroup[]> {
-    return db
+  async getBrokerageGroups(brokerageId: string): Promise<(BrokerageGroup & { teamLead?: { id: string; name: string | null; email: string | null } })[]> {
+    const groups = await db
       .select()
       .from(brokerageGroups)
       .where(eq(brokerageGroups.brokerageId, brokerageId));
+    
+    // Enrich with team lead info
+    const enrichedGroups = await Promise.all(groups.map(async (group) => {
+      if (group.teamLeadUserId) {
+        const teamLead = await this.getUser(group.teamLeadUserId);
+        return {
+          ...group,
+          teamLead: teamLead ? { id: teamLead.id, name: teamLead.name, email: teamLead.email } : undefined,
+        };
+      }
+      return { ...group, teamLead: undefined };
+    }));
+    
+    return enrichedGroups;
   }
 
   async getBrokerageGroup(id: string): Promise<BrokerageGroup | undefined> {

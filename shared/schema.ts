@@ -408,6 +408,9 @@ export const brokerageGroups = pgTable("brokerage_groups", {
   brokerageId: text("brokerage_id").notNull(),
   name: text("name").notNull(),
   description: text("description"),
+  teamLeadUserId: text("team_lead_user_id"),
+  logo: text("logo"),
+  defaultThemeId: text("default_theme_id"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => [
   index("IDX_brokerage_groups_brokerage").on(table.brokerageId),

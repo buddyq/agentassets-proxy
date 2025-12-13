@@ -210,3 +210,74 @@ export async function isBrokerageMember(req: any, res: any, next: any) {
     return res.status(500).json({ message: "Error checking brokerage membership" });
   }
 }
+
+// Middleware to check if user is the team lead of a specific group
+export async function isGroupTeamLead(req: any, res: any, next: any) {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  
+  try {
+    const groupId = req.params.groupId || req.body.groupId;
+    if (!groupId) {
+      return res.status(400).json({ message: "Group ID is required" });
+    }
+    
+    const group = await storage.getBrokerageGroup(groupId);
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+    
+    if (group.teamLeadUserId !== req.user.id) {
+      return res.status(403).json({ message: "Forbidden - Team lead access required" });
+    }
+    
+    req.group = group;
+    req.brokerageId = group.brokerageId;
+    next();
+  } catch (error) {
+    return res.status(500).json({ message: "Error checking team lead status" });
+  }
+}
+
+// Middleware to allow either brokerage admin OR group team lead
+export async function isBrokerageAdminOrGroupTeamLead(req: any, res: any, next: any) {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  
+  try {
+    const groupId = req.params.groupId || req.body.groupId;
+    if (!groupId) {
+      return res.status(400).json({ message: "Group ID is required" });
+    }
+    
+    const group = await storage.getBrokerageGroup(groupId);
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+    
+    // Check if user is team lead of this group
+    const isTeamLead = group.teamLeadUserId === req.user.id;
+    
+    // Check if user is brokerage admin
+    const membership = await storage.getBrokerageMembership(req.user.id);
+    const isAdmin = membership && 
+                    membership.role === 'admin' && 
+                    membership.status === 'active' && 
+                    membership.brokerageId === group.brokerageId;
+    
+    if (!isTeamLead && !isAdmin) {
+      return res.status(403).json({ message: "Forbidden - Brokerage admin or team lead access required" });
+    }
+    
+    req.group = group;
+    req.brokerageId = group.brokerageId;
+    req.isTeamLead = isTeamLead;
+    req.isAdmin = isAdmin;
+    req.brokerageMembership = membership;
+    next();
+  } catch (error) {
+    return res.status(500).json({ message: "Error checking access permissions" });
+  }
+}

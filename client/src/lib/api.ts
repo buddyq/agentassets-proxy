@@ -900,8 +900,16 @@ export type BrokerageGroup = {
   brokerageId: string;
   name: string;
   description: string | null;
+  teamLeadUserId: string | null;
+  logo: string | null;
+  defaultThemeId: string | null;
   createdAt: Date;
   memberCount?: number;
+  teamLead?: {
+    id: string;
+    name: string | null;
+    email: string | null;
+  } | null;
 };
 
 export type BrokerageTemplate = {
