@@ -332,7 +332,7 @@ function UpgradeDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
                     setCouponCode(e.target.value);
                     if (validatedCoupon) setValidatedCoupon(null);
                   }}
-                  placeholder="Enter coupon code"
+                  placeholder="Enter coupon ID (e.g. ABC123)"
                   className="pl-10"
                   data-testid="input-coupon-code"
                 />

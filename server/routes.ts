@@ -1292,7 +1292,9 @@ export async function registerRoutes(
         const promoCodes = await stripe.promotionCodes.list({ code: couponCode, active: true, limit: 1, expand: ['data.coupon'] });
         if (promoCodes.data.length > 0) {
           const promoCode = promoCodes.data[0];
-          if (!promoCode.coupon.valid) {
+          // Cast coupon to Stripe.Coupon since we expanded it (TypeScript types don't reflect expand)
+          const coupon = (promoCode as any).coupon as { valid: boolean; id: string };
+          if (!coupon.valid) {
             return res.status(400).json({ error: "This promotion code is no longer valid" });
           }
           discounts = [{ promotion_code: promoCode.id }];
@@ -1359,23 +1361,36 @@ export async function registerRoutes(
 
       const stripe = await getUncachableStripeClient();
       
-      // First try to find a promotion code
+      // First try to find a promotion code with expanded coupon
       try {
         console.log(`Looking up promotion code: ${couponCode}`);
-        const promoCodes = await stripe.promotionCodes.list({ code: couponCode, active: true, limit: 1 });
+        const promoCodes = await stripe.promotionCodes.list({ 
+          code: couponCode, 
+          active: true, 
+          limit: 1, 
+          expand: ['data.coupon'] 
+        });
         console.log(`Promotion codes found: ${promoCodes.data.length}`);
         if (promoCodes.data.length > 0) {
-          const promoCodeId = promoCodes.data[0].id;
-          // Retrieve the full promotion code with coupon expanded
-          const promoCode = await stripe.promotionCodes.retrieve(promoCodeId, { expand: ['coupon'] });
-          const couponData = promoCode.coupon as any;
+          const promoCode = promoCodes.data[0];
+          // Cast coupon to expected type since we expanded it (TypeScript types don't reflect expand)
+          const couponData = (promoCode as any).coupon as {
+            id: string;
+            valid: boolean;
+            percent_off: number | null;
+            amount_off: number | null;
+            currency: string | null;
+            duration: string;
+            duration_in_months: number | null;
+            name: string | null;
+          };
           console.log('Retrieved promo code coupon:', JSON.stringify(couponData, null, 2));
           
-          if (!couponData) {
+          if (!couponData || typeof couponData === 'string') {
             return res.status(400).json({ error: "Promotion code has no associated coupon", valid: false });
           }
           
-          // Check if coupon is valid (valid field may not be present in all responses)
+          // Check if coupon is valid
           if (couponData.valid === false) {
             return res.status(400).json({ error: "This coupon is no longer valid", valid: false });
           }
