@@ -1289,13 +1289,17 @@ export async function registerRoutes(
       let discounts: ({ coupon: string } | { promotion_code: string })[] | undefined;
       if (couponCode) {
         // First try to find a promotion code
-        const promoCodes = await stripe.promotionCodes.list({ code: couponCode, active: true, limit: 1, expand: ['data.coupon'] });
+        const promoCodes = await stripe.promotionCodes.list({ code: couponCode, active: true, limit: 1 });
         if (promoCodes.data.length > 0) {
           const promoCode = promoCodes.data[0];
-          // Cast coupon to Stripe.Coupon since we expanded it (TypeScript types don't reflect expand)
-          const coupon = (promoCode as any).coupon as { valid: boolean; id: string };
-          if (!coupon.valid) {
-            return res.status(400).json({ error: "This promotion code is no longer valid" });
+          // Get coupon ID and validate it
+          const couponIdOrObj = (promoCode as any).coupon;
+          const couponId = typeof couponIdOrObj === 'string' ? couponIdOrObj : couponIdOrObj?.id;
+          if (couponId) {
+            const coupon = await stripe.coupons.retrieve(couponId);
+            if (!coupon.valid) {
+              return res.status(400).json({ error: "This promotion code is no longer valid" });
+            }
           }
           discounts = [{ promotion_code: promoCode.id }];
         } else {
@@ -1361,37 +1365,32 @@ export async function registerRoutes(
 
       const stripe = await getUncachableStripeClient();
       
-      // First try to find a promotion code with expanded coupon
+      // First try to find a promotion code
       try {
         console.log(`Looking up promotion code: ${couponCode}`);
         const promoCodes = await stripe.promotionCodes.list({ 
           code: couponCode, 
           active: true, 
-          limit: 1, 
-          expand: ['data.coupon'] 
+          limit: 1
         });
         console.log(`Promotion codes found: ${promoCodes.data.length}`);
         if (promoCodes.data.length > 0) {
           const promoCode = promoCodes.data[0];
-          // Cast coupon to expected type since we expanded it (TypeScript types don't reflect expand)
-          const couponData = (promoCode as any).coupon as {
-            id: string;
-            valid: boolean;
-            percent_off: number | null;
-            amount_off: number | null;
-            currency: string | null;
-            duration: string;
-            duration_in_months: number | null;
-            name: string | null;
-          };
-          console.log('Retrieved promo code coupon:', JSON.stringify(couponData, null, 2));
+          // Get the coupon ID - it may be a string ID or an object
+          const couponIdOrObj = (promoCode as any).coupon;
+          const couponId = typeof couponIdOrObj === 'string' ? couponIdOrObj : couponIdOrObj?.id;
+          console.log(`Promotion code found, coupon ID: ${couponId}`);
           
-          if (!couponData || typeof couponData === 'string') {
+          if (!couponId) {
             return res.status(400).json({ error: "Promotion code has no associated coupon", valid: false });
           }
           
+          // Fetch the full coupon details
+          const couponData = await stripe.coupons.retrieve(couponId);
+          console.log('Retrieved coupon:', JSON.stringify(couponData, null, 2));
+          
           // Check if coupon is valid
-          if (couponData.valid === false) {
+          if (!couponData.valid) {
             return res.status(400).json({ error: "This coupon is no longer valid", valid: false });
           }
           
