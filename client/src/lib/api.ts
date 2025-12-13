@@ -873,6 +873,7 @@ export type Brokerage = {
   hasAddedFirstAgent: boolean;
   hasCreatedFirstGroup: boolean;
   hasExploredTemplates: boolean;
+  defaultThemeId: string | null;
   createdAt: Date;
   updatedAt: Date;
 };
