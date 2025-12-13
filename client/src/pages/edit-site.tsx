@@ -796,7 +796,7 @@ export default function EditSite() {
                       <Label 
                         key={layout.id}
                         htmlFor={`edit-layout-${layout.id}`}
-                        className={`cursor-pointer rounded-xl border-2 overflow-hidden transition-all ${
+                        className={`cursor-pointer rounded-b-xl border-2 overflow-hidden transition-all ${
                           formData.layoutId === layout.id 
                             ? "border-primary ring-2 ring-primary/20" 
                             : "border-muted hover:border-primary/50"
@@ -809,7 +809,7 @@ export default function EditSite() {
                             <img 
                               src={layout.thumbnailUrl} 
                               alt={`${layout.name} layout preview`}
-                              className="w-full h-full object-contain"
+                              className="w-full h-full object-cover object-top"
                             />
                           ) : (
                             <div className="h-full p-4 flex flex-col justify-end">
