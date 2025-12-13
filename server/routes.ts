@@ -1292,9 +1292,9 @@ export async function registerRoutes(
         const promoCodes = await stripe.promotionCodes.list({ code: couponCode, active: true, limit: 1 });
         if (promoCodes.data.length > 0) {
           const promoCode = promoCodes.data[0];
-          // Get coupon ID and validate it
-          const couponIdOrObj = (promoCode as any).coupon;
-          const couponId = typeof couponIdOrObj === 'string' ? couponIdOrObj : couponIdOrObj?.id;
+          // Get coupon ID - it's in promoCode.promotion.coupon (not promoCode.coupon)
+          const promotion = (promoCode as any).promotion;
+          const couponId = promotion?.coupon || (promoCode as any).coupon;
           if (couponId) {
             const coupon = await stripe.coupons.retrieve(couponId);
             if (!coupon.valid) {
@@ -1376,14 +1376,10 @@ export async function registerRoutes(
         console.log(`Promotion codes found: ${promoCodes.data.length}`);
         if (promoCodes.data.length > 0) {
           const promoCode = promoCodes.data[0];
-          // Log the full promo code object to debug
-          console.log('Full promo code object:', JSON.stringify(promoCode, null, 2));
-          console.log('Promo code keys:', Object.keys(promoCode));
-          
-          // Get the coupon ID - it may be a string ID or an object
-          const couponIdOrObj = (promoCode as any).coupon;
-          const couponId = typeof couponIdOrObj === 'string' ? couponIdOrObj : couponIdOrObj?.id;
-          console.log(`Coupon field value: ${JSON.stringify(couponIdOrObj)}, extracted ID: ${couponId}`);
+          // Get the coupon ID - it's in promoCode.promotion.coupon (not promoCode.coupon)
+          const promotion = (promoCode as any).promotion;
+          const couponId = promotion?.coupon || (promoCode as any).coupon;
+          console.log(`Promotion code found, coupon ID: ${couponId}`);
           
           if (!couponId) {
             return res.status(400).json({ error: "Promotion code has no associated coupon", valid: false });
