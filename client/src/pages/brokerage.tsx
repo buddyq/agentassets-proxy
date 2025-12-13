@@ -597,11 +597,20 @@ export default function BrokerageDashboard() {
   const [seatsToAdd, setSeatsToAdd] = useState(5);
   const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
 
+  const { toast } = useToast();
+  
   useEffect(() => {
     const params = new URLSearchParams(searchString);
     const success = params.get('success') === 'true';
     const sessionId = params.get('session_id');
     const seatsAdded = params.get('seats_added');
+    const canceled = params.get('canceled') === 'true';
+    
+    if (canceled) {
+      toast({ title: 'Checkout was canceled. You can try again anytime.', variant: 'default' });
+      window.history.replaceState({}, '', '/brokerage');
+      return;
+    }
     
     if (success && sessionId && !processingSuccess && !brokerageData?.brokerage) {
       setProcessingSuccess(true);
@@ -630,7 +639,7 @@ export default function BrokerageDashboard() {
           setProcessingSuccess(false);
         });
     }
-  }, [searchString, processingSuccess, brokerageData, confirmSubscription, confirmSeatsPurchase, refetchBrokerage]);
+  }, [searchString, processingSuccess, brokerageData, confirmSubscription, confirmSeatsPurchase, refetchBrokerage, toast]);
   const { data: members = [], refetch: refetchMembers } = useBrokerageMembers();
   const { data: groups = [], refetch: refetchGroups } = useBrokerageGroups();
   const { data: sites = [] } = useBrokerageSites(siteSearch || undefined);
@@ -643,7 +652,6 @@ export default function BrokerageDashboard() {
   const addToGroup = useAddUserToGroup();
   const removeFromGroup = useRemoveUserFromGroup();
   const updateBrokerage = useUpdateBrokerage();
-  const { toast } = useToast();
   
   const [brokerageNameEdit, setBrokerageNameEdit] = useState('');
   const [brokerageLogoEdit, setBrokerageLogoEdit] = useState<string | null>(null);
