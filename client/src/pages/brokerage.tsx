@@ -607,7 +607,7 @@ export default function BrokerageDashboard() {
     const canceled = params.get('canceled') === 'true';
     
     if (canceled) {
-      toast({ title: 'Checkout was canceled. You can try again anytime.', variant: 'default' });
+      toast({ title: 'Checkout was canceled. You can try again anytime.', variant: 'warning' });
       window.history.replaceState({}, '', '/brokerage');
       return;
     }
