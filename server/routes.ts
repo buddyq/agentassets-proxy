@@ -1363,20 +1363,14 @@ export async function registerRoutes(
       try {
         console.log(`Looking up promotion code: ${couponCode}`);
         const promoCodes = await stripe.promotionCodes.list({ code: couponCode, active: true, limit: 1 });
-        console.log(`Promotion codes found: ${promoCodes.data.length}`, promoCodes.data.map(p => ({ id: p.id, code: p.code, coupon: p.coupon })));
+        console.log(`Promotion codes found: ${promoCodes.data.length}`);
         if (promoCodes.data.length > 0) {
-          const promoCode = promoCodes.data[0];
-          // Coupon can be a string (ID) or Coupon object
-          const couponId = typeof promoCode.coupon === 'string' ? promoCode.coupon : promoCode.coupon?.id;
+          const promoCodeId = promoCodes.data[0].id;
+          // Retrieve the full promotion code with coupon expanded
+          const promoCode = await stripe.promotionCodes.retrieve(promoCodeId, { expand: ['coupon'] });
+          const couponData = promoCode.coupon as any;
           
-          if (!couponId) {
-            return res.status(400).json({ error: "Promotion code has no associated coupon", valid: false });
-          }
-          
-          // Retrieve the full coupon
-          const coupon = await stripe.coupons.retrieve(couponId);
-          
-          if (!coupon.valid) {
+          if (!couponData || !couponData.valid) {
             return res.status(400).json({ error: "This promotion code is no longer valid", valid: false });
           }
           
@@ -1385,13 +1379,13 @@ export async function registerRoutes(
             isPromoCode: true,
             promoCodeId: promoCode.id,
             coupon: {
-              id: coupon.id,
-              percentOff: coupon.percent_off,
-              amountOff: coupon.amount_off,
-              currency: coupon.currency,
-              duration: coupon.duration,
-              durationInMonths: coupon.duration_in_months,
-              name: coupon.name || promoCode.code,
+              id: couponData.id,
+              percentOff: couponData.percent_off,
+              amountOff: couponData.amount_off,
+              currency: couponData.currency,
+              duration: couponData.duration,
+              durationInMonths: couponData.duration_in_months,
+              name: couponData.name || promoCode.code,
             }
           });
         }
