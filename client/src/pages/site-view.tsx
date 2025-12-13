@@ -2997,12 +2997,22 @@ function MagazineContact({ site, theme, agentInfo }: { site: Site; theme?: Theme
   );
 }
 
-function MagazineFooter({ site, theme }: { site: Site; theme?: Theme }) {
+function MagazineFooter({ site, theme, footerLogo }: { site: Site; theme?: Theme; footerLogo?: string | null }) {
   return (
     <footer className="py-8 px-6 bg-gray-900 text-white/60 text-center">
-      <p style={{ fontFamily: 'var(--font-body)' }}>
-        Property listing powered by AgentAssets
-      </p>
+      <div className="flex flex-col items-center gap-4">
+        {footerLogo && (
+          <img 
+            src={footerLogo} 
+            alt="Logo" 
+            className="h-10 w-auto object-contain brightness-0 invert"
+            data-testid="img-footer-logo"
+          />
+        )}
+        <p style={{ fontFamily: 'var(--font-body)' }}>
+          Property listing powered by AgentAssets
+        </p>
+      </div>
     </footer>
   );
 }
@@ -3360,6 +3370,8 @@ export default function SiteView({ siteId: propSiteId, params: routeParams }: Si
   const effectiveHeroLogo = (site as any).effectiveHeroLogo || null;
   // Get agent info for contact section
   const agentInfo = (site as any).agentInfo || null;
+  // Get footer logo: brokerage logo for brokerage members, user profile logo for individuals
+  const footerLogo = (site as any).footerLogo || null;
 
   if (isShoalwoodLayout) {
     return (
@@ -3443,8 +3455,16 @@ export default function SiteView({ siteId: propSiteId, params: routeParams }: Si
         <ShoalwoodContact site={site} theme={theme} />
 
         <footer className="py-8 px-4 border-t bg-white">
-          <div className="container mx-auto text-center text-sm text-gray-500">
-            <p>Property listing powered by AgentAssets</p>
+          <div className="container mx-auto flex flex-col items-center gap-4">
+            {footerLogo && (
+              <img 
+                src={footerLogo} 
+                alt="Logo" 
+                className="h-10 w-auto object-contain"
+                data-testid="img-footer-logo"
+              />
+            )}
+            <p className="text-sm text-gray-500">Property listing powered by AgentAssets</p>
           </div>
         </footer>
       </div>
@@ -3545,8 +3565,16 @@ export default function SiteView({ siteId: propSiteId, params: routeParams }: Si
         <ModernContact site={site} theme={theme} agentInfo={agentInfo} />
 
         <footer className="py-8 px-6 border-t bg-white">
-          <div className="container mx-auto text-center text-sm text-gray-500">
-            <p>Property listing powered by AgentAssets</p>
+          <div className="container mx-auto flex flex-col items-center gap-4">
+            {footerLogo && (
+              <img 
+                src={footerLogo} 
+                alt="Logo" 
+                className="h-10 w-auto object-contain"
+                data-testid="img-footer-logo"
+              />
+            )}
+            <p className="text-sm text-gray-500">Property listing powered by AgentAssets</p>
           </div>
         </footer>
       </div>
@@ -3649,7 +3677,7 @@ export default function SiteView({ siteId: propSiteId, params: routeParams }: Si
         </section>
 
         <MagazineContact site={site} theme={theme} agentInfo={agentInfo} />
-        <MagazineFooter site={site} theme={theme} />
+        <MagazineFooter site={site} theme={theme} footerLogo={footerLogo} />
       </div>
     );
   }
@@ -3834,8 +3862,16 @@ export default function SiteView({ siteId: propSiteId, params: routeParams }: Si
 
       {/* Footer */}
       <footer className="py-8 px-4 border-t">
-        <div className="container mx-auto text-center text-sm text-muted-foreground">
-          <p>Property listing powered by AgentAssets</p>
+        <div className="container mx-auto flex flex-col items-center gap-4">
+          {footerLogo && (
+            <img 
+              src={footerLogo} 
+              alt="Logo" 
+              className="h-10 w-auto object-contain"
+              data-testid="img-footer-logo"
+            />
+          )}
+          <p className="text-sm text-muted-foreground">Property listing powered by AgentAssets</p>
         </div>
       </footer>
     </div>

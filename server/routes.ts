@@ -216,7 +216,10 @@ export async function registerRoutes(
         socialMedia: user.socialMedia || null,
       } : null;
       
-      res.json({ ...site, effectiveLogo, effectiveHeroLogo, agentInfo });
+      // Footer logo: brokerage logo for brokerage members, user's profile logo for individuals
+      const footerLogo = brokerage?.logo || user?.logo || null;
+      
+      res.json({ ...site, effectiveLogo, effectiveHeroLogo, agentInfo, footerLogo });
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch site" });
     }
@@ -322,7 +325,10 @@ export async function registerRoutes(
         socialMedia: user.socialMedia || null,
       } : null;
       
-      res.json({ ...site, effectiveLogo, effectiveHeroLogo, agentInfo });
+      // Footer logo: brokerage logo for brokerage members, user's profile logo for individuals
+      const footerLogo = brokerage?.logo || user?.logo || null;
+      
+      res.json({ ...site, effectiveLogo, effectiveHeroLogo, agentInfo, footerLogo });
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch site" });
     }
@@ -454,7 +460,10 @@ export async function registerRoutes(
         socialMedia: user.socialMedia || null,
       } : null;
       
-      res.json({ ...site, effectiveLogo, effectiveHeroLogo, agentInfo });
+      // Footer logo: brokerage logo for brokerage members, user's profile logo for individuals
+      const footerLogo = brokerage?.logo || user?.logo || null;
+      
+      res.json({ ...site, effectiveLogo, effectiveHeroLogo, agentInfo, footerLogo });
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch site" });
     }
