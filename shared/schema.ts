@@ -154,6 +154,7 @@ export const sites = pgTable("sites", {
   heroPhotos: text("hero_photos").array(),
   heroSlides: jsonb("hero_slides").$type<HeroSlide[]>().default([]),
   heroLogo: text("hero_logo"),
+  invertLogo: boolean("invert_logo").notNull().default(false),
   videoUrl: text("video_url"),
   documents: jsonb("documents").$type<SiteDocument[]>().default([]),
   // Magazine layout specific fields
