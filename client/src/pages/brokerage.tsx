@@ -25,6 +25,7 @@ import {
   useAssignTemplateToGroup,
   useRemoveTemplateFromGroup,
   useLayouts,
+  useThemes,
   useUpdateBrokerage,
   usePurchaseSeats,
   useConfirmSeatsPurchase,
@@ -50,6 +51,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Users, 
@@ -656,17 +658,20 @@ export default function BrokerageDashboard() {
   const [brokerageNameEdit, setBrokerageNameEdit] = useState('');
   const [brokerageLogoEdit, setBrokerageLogoEdit] = useState<string | null>(null);
   const [brokerageWebsiteEdit, setBrokerageWebsiteEdit] = useState('');
+  const [defaultThemeIdEdit, setDefaultThemeIdEdit] = useState<string | null>(null);
   
   useEffect(() => {
     if (brokerageData?.brokerage) {
       setBrokerageNameEdit(brokerageData.brokerage.name || '');
       setBrokerageLogoEdit(brokerageData.brokerage.logo || null);
       setBrokerageWebsiteEdit(brokerageData.brokerage.website || '');
+      setDefaultThemeIdEdit(brokerageData.brokerage.defaultThemeId || null);
     }
   }, [brokerageData?.brokerage]);
   
   const { data: brokerageTemplates = [], refetch: refetchTemplates } = useBrokerageTemplates();
   const { data: allLayouts = [] } = useLayouts({ preset: true });
+  const { data: availableThemes = [] } = useThemes({ forUser: true });
   const { data: allGroupMemberships = [] } = useAllGroupMemberships();
   const updateTemplate = useUpdateBrokerageTemplate();
   const assignToGroup = useAssignTemplateToGroup();
@@ -1276,6 +1281,35 @@ export default function BrokerageDashboard() {
                   </div>
                 </div>
 
+                <div className="grid gap-2">
+                  <Label htmlFor="default-theme">Default Theme</Label>
+                  <p className="text-sm text-muted-foreground">
+                    This theme will be the default for all new property sites created by your agents
+                  </p>
+                  <Select
+                    value={defaultThemeIdEdit || 'none'}
+                    onValueChange={(value) => setDefaultThemeIdEdit(value === 'none' ? null : value)}
+                  >
+                    <SelectTrigger id="default-theme" className="w-full" data-testid="select-default-theme">
+                      <SelectValue placeholder="Select a default theme" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No default theme</SelectItem>
+                      {availableThemes.map((theme) => (
+                        <SelectItem key={theme.id} value={theme.id}>
+                          <span className="flex items-center gap-2">
+                            <span 
+                              className="w-4 h-4 rounded-full border inline-block"
+                              style={{ backgroundColor: theme.primaryColor }}
+                            />
+                            {theme.name}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <Button 
                   onClick={async () => {
                     if (!brokerageNameEdit.trim()) {
@@ -1286,7 +1320,8 @@ export default function BrokerageDashboard() {
                       await updateBrokerage.mutateAsync({ 
                         name: brokerageNameEdit.trim(),
                         logo: brokerageLogoEdit,
-                        website: brokerageWebsiteEdit.trim() || null
+                        website: brokerageWebsiteEdit.trim() || null,
+                        defaultThemeId: defaultThemeIdEdit
                       });
                       toast({ title: 'Brokerage settings updated', variant: 'success' });
                       refetchBrokerage();
