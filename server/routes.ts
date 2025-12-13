@@ -1362,11 +1362,19 @@ export async function registerRoutes(
       // First try to find a promotion code
       try {
         console.log(`Looking up promotion code: ${couponCode}`);
-        const promoCodes = await stripe.promotionCodes.list({ code: couponCode, active: true, limit: 1, expand: ['data.coupon'] });
-        console.log(`Promotion codes found: ${promoCodes.data.length}`, promoCodes.data.map(p => ({ id: p.id, code: p.code })));
+        const promoCodes = await stripe.promotionCodes.list({ code: couponCode, active: true, limit: 1 });
+        console.log(`Promotion codes found: ${promoCodes.data.length}`, promoCodes.data.map(p => ({ id: p.id, code: p.code, coupon: p.coupon })));
         if (promoCodes.data.length > 0) {
           const promoCode = promoCodes.data[0];
-          const coupon = promoCode.coupon;
+          // Coupon can be a string (ID) or Coupon object
+          const couponId = typeof promoCode.coupon === 'string' ? promoCode.coupon : promoCode.coupon?.id;
+          
+          if (!couponId) {
+            return res.status(400).json({ error: "Promotion code has no associated coupon", valid: false });
+          }
+          
+          // Retrieve the full coupon
+          const coupon = await stripe.coupons.retrieve(couponId);
           
           if (!coupon.valid) {
             return res.status(400).json({ error: "This promotion code is no longer valid", valid: false });
