@@ -2332,7 +2332,6 @@ export async function registerRoutes(
         // Create a new user account
         const tempPassword = crypto.randomBytes(16).toString('hex');
         const newUser = await storage.createUser({
-          username: email.split('@')[0] + '-' + crypto.randomBytes(3).toString('hex'),
           password: tempPassword, // Will need to be reset
           email,
           name,

@@ -214,6 +214,7 @@ export default function AdminDashboard() {
         type: 'preset',
         enabled: true,
         thumbnailUrl: null,
+        sampleSiteSlug: null,
         structure: {
           heroStyle: newLayoutHeroStyle,
           galleryStyle: newLayoutGalleryStyle,
