@@ -68,7 +68,9 @@ export default function Themes() {
           background: backgroundColor,
           text: textColor
         },
-        logoUrl: null
+        logoUrl: null,
+        brokerageId: null,
+        groupId: null
       },
       {
         onSuccess: () => {

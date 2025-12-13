@@ -86,7 +86,7 @@ export type Layout = typeof layouts.$inferSelect;
 export const themes = pgTable("themes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
-  type: text("type").notNull(),
+  type: text("type").notNull(), // 'preset', 'custom', 'brokerage', 'group'
   colors: jsonb("colors").notNull().$type<{
     primary: string;
     secondary: string;
@@ -94,7 +94,9 @@ export const themes = pgTable("themes", {
     text: string;
   }>(),
   logoUrl: text("logo_url"),
-  userId: text("user_id"),
+  userId: text("user_id"), // Creator (for personal themes)
+  brokerageId: text("brokerage_id"), // If scoped to a brokerage
+  groupId: text("group_id"), // If scoped to a group
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -408,6 +410,8 @@ export const brokerageGroups = pgTable("brokerage_groups", {
   brokerageId: text("brokerage_id").notNull(),
   name: text("name").notNull(),
   description: text("description"),
+  logo: text("logo"), // Group-specific logo (overrides brokerage logo)
+  defaultThemeId: text("default_theme_id"), // Group's default theme
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => [
   index("IDX_brokerage_groups_brokerage").on(table.brokerageId),
@@ -425,6 +429,7 @@ export const brokerageGroupMembers = pgTable("brokerage_group_members", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   groupId: text("group_id").notNull(),
   userId: text("user_id").notNull(),
+  role: text("role").notNull().default('member'), // 'member', 'team_lead'
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => [
   index("IDX_group_members_group").on(table.groupId),
