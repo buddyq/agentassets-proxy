@@ -2177,7 +2177,7 @@ export async function registerRoutes(
   // Update brokerage details
   app.patch("/api/brokerage", isBrokerageAdmin, async (req: any, res) => {
     try {
-      const { name, logo, website, phone, email, address } = req.body;
+      const { name, logo, website, phone, email, address, defaultThemeId } = req.body;
       const updated = await storage.updateBrokerage(req.brokerageId, {
         name,
         logo,
@@ -2185,6 +2185,7 @@ export async function registerRoutes(
         phone,
         email,
         address,
+        defaultThemeId,
       });
       res.json(updated);
     } catch (error) {

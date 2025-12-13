@@ -357,6 +357,8 @@ export const brokerages = pgTable("brokerages", {
   additionalSeats: integer("additional_seats").notNull().default(0),
   // Status
   status: text("status").notNull().default('trial'), // 'trial', 'active', 'suspended', 'cancelled'
+  // Default theme for all sites created under this brokerage
+  defaultThemeId: text("default_theme_id"),
   // Onboarding milestones
   onboardingCompletedAt: timestamp("onboarding_completed_at"),
   hasAddedFirstAgent: boolean("has_added_first_agent").notNull().default(false),
