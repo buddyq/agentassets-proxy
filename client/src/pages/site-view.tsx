@@ -689,9 +689,116 @@ function ShoalwoodContact({ site, theme, agentInfo }: { site: Site; theme?: Them
           Get in Touch
         </h2>
         
-        <div className="grid md:grid-cols-2 gap-8 md:gap-12">
-          {/* Left side - Agent Info */}
-          <div className="flex flex-col justify-center">
+        <div className="flex flex-col md:flex-row gap-8 md:gap-0">
+          {/* Left side - Contact Form */}
+          <div className="flex-1 md:pr-10">
+            <div className="bg-white p-8 md:p-10 rounded-lg shadow-sm border border-gray-100">
+              <form onSubmit={handleSubmit} className="grid gap-6">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="firstName">First Name *</Label>
+                    <Input 
+                      id="firstName" 
+                      value={formData.firstName}
+                      onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                      required 
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="lastName">Last Name *</Label>
+                    <Input 
+                      id="lastName" 
+                      value={formData.lastName}
+                      onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                      required 
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="email">Email *</Label>
+                    <Input 
+                      id="email" 
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({...formData, email: e.target.value})}
+                      required 
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="phone">Phone *</Label>
+                    <Input 
+                      id="phone" 
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                      required 
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="message">Message *</Label>
+                  <Textarea 
+                    id="message" 
+                    value={formData.message}
+                    onChange={(e) => setFormData({...formData, message: e.target.value})}
+                    required 
+                    className="mt-1"
+                    rows={4}
+                  />
+                </div>
+                {submitStatus === 'success' && (
+                  <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">
+                    Thank you for your inquiry! The agent will be in touch with you soon.
+                  </div>
+                )}
+                
+                {submitStatus === 'error' && (
+                  <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+                    Something went wrong. Please try again or contact us directly.
+                  </div>
+                )}
+                
+                <Button 
+                  type="submit" 
+                  size="lg"
+                  className="w-full text-white"
+                  style={{ backgroundColor: primaryColor }}
+                  disabled={isSubmitting}
+                  data-testid="button-send-inquiry"
+                >
+                  {isSubmitting ? 'Sending...' : 'Send Inquiry'}
+                </Button>
+              </form>
+            </div>
+          </div>
+
+          {/* Vertical Separator */}
+          <div className="hidden md:flex flex-col items-center justify-center px-2">
+            <div 
+              className="w-px h-full min-h-[300px]"
+              style={{ 
+                background: `linear-gradient(to bottom, transparent, ${primaryColor}40, ${primaryColor}40, transparent)` 
+              }}
+            />
+          </div>
+
+          {/* Horizontal Separator (mobile) */}
+          <div className="md:hidden flex items-center justify-center py-4">
+            <div 
+              className="h-px w-full max-w-[200px]"
+              style={{ 
+                background: `linear-gradient(to right, transparent, ${primaryColor}40, ${primaryColor}40, transparent)` 
+              }}
+            />
+          </div>
+
+          {/* Right side - Agent Info */}
+          <div className="flex-1 md:pl-10 flex flex-col justify-center">
             <div className="text-center md:text-left">
               {/* Agent Photo */}
               <div className="flex justify-center md:justify-start mb-6">
@@ -839,91 +946,6 @@ function ShoalwoodContact({ site, theme, agentInfo }: { site: Site; theme?: Them
                 </div>
               )}
             </div>
-          </div>
-
-          {/* Right side - Contact Form */}
-          <div className="bg-white p-8 md:p-10 rounded-lg shadow-sm border border-gray-100">
-            <form onSubmit={handleSubmit} className="grid gap-6">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="firstName">First Name *</Label>
-                  <Input 
-                    id="firstName" 
-                    value={formData.firstName}
-                    onChange={(e) => setFormData({...formData, firstName: e.target.value})}
-                    required 
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="lastName">Last Name *</Label>
-                  <Input 
-                    id="lastName" 
-                    value={formData.lastName}
-                    onChange={(e) => setFormData({...formData, lastName: e.target.value})}
-                    required 
-                    className="mt-1"
-                  />
-                </div>
-              </div>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="email">Email *</Label>
-                  <Input 
-                    id="email" 
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    required 
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="phone">Phone *</Label>
-                  <Input 
-                    id="phone" 
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                    required 
-                    className="mt-1"
-                  />
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="message">Message *</Label>
-                <Textarea 
-                  id="message" 
-                  value={formData.message}
-                  onChange={(e) => setFormData({...formData, message: e.target.value})}
-                  required 
-                  className="mt-1"
-                  rows={4}
-                />
-              </div>
-              {submitStatus === 'success' && (
-                <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">
-                  Thank you for your inquiry! The agent will be in touch with you soon.
-                </div>
-              )}
-              
-              {submitStatus === 'error' && (
-                <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
-                  Something went wrong. Please try again or contact us directly.
-                </div>
-              )}
-              
-              <Button 
-                type="submit" 
-                size="lg"
-                className="w-full text-white"
-                style={{ backgroundColor: primaryColor }}
-                disabled={isSubmitting}
-                data-testid="button-send-inquiry"
-              >
-                {isSubmitting ? 'Sending...' : 'Send Inquiry'}
-              </Button>
-            </form>
           </div>
         </div>
       </div>
