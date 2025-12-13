@@ -1285,20 +1285,31 @@ export async function registerRoutes(
         baseUrl = domains.length > 0 ? `https://${domains[0]}` : 'http://localhost:5000';
       }
 
-      // Validate coupon code if provided
-      let discounts: { coupon: string }[] | undefined;
+      // Validate coupon or promotion code if provided
+      let discounts: ({ coupon: string } | { promotion_code: string })[] | undefined;
       if (couponCode) {
-        try {
-          const coupon = await stripe.coupons.retrieve(couponCode);
-          if (!coupon.valid) {
-            return res.status(400).json({ error: "This coupon is no longer valid" });
+        // First try to find a promotion code
+        const promoCodes = await stripe.promotionCodes.list({ code: couponCode, active: true, limit: 1 });
+        if (promoCodes.data.length > 0) {
+          const promoCode = promoCodes.data[0];
+          if (!promoCode.coupon.valid) {
+            return res.status(400).json({ error: "This promotion code is no longer valid" });
           }
-          discounts = [{ coupon: couponCode }];
-        } catch (couponError: any) {
-          if (couponError.code === 'resource_missing') {
-            return res.status(400).json({ error: "Invalid coupon code" });
+          discounts = [{ promotion_code: promoCode.id }];
+        } else {
+          // Fall back to direct coupon ID lookup
+          try {
+            const coupon = await stripe.coupons.retrieve(couponCode);
+            if (!coupon.valid) {
+              return res.status(400).json({ error: "This coupon is no longer valid" });
+            }
+            discounts = [{ coupon: couponCode }];
+          } catch (couponError: any) {
+            if (couponError.code === 'resource_missing') {
+              return res.status(400).json({ error: "Invalid coupon code" });
+            }
+            throw couponError;
           }
-          throw couponError;
         }
       }
 
@@ -1338,7 +1349,7 @@ export async function registerRoutes(
     }
   });
 
-  // Validate a Stripe coupon code
+  // Validate a Stripe coupon or promotion code
   app.post("/api/stripe/validate-coupon", isAuthenticated, async (req: any, res) => {
     try {
       const { couponCode } = req.body;
@@ -1348,6 +1359,37 @@ export async function registerRoutes(
 
       const stripe = await getUncachableStripeClient();
       
+      // First try to find a promotion code
+      try {
+        const promoCodes = await stripe.promotionCodes.list({ code: couponCode, active: true, limit: 1 });
+        if (promoCodes.data.length > 0) {
+          const promoCode = promoCodes.data[0];
+          const coupon = promoCode.coupon;
+          
+          if (!coupon.valid) {
+            return res.status(400).json({ error: "This promotion code is no longer valid", valid: false });
+          }
+          
+          return res.json({
+            valid: true,
+            isPromoCode: true,
+            promoCodeId: promoCode.id,
+            coupon: {
+              id: coupon.id,
+              percentOff: coupon.percent_off,
+              amountOff: coupon.amount_off,
+              currency: coupon.currency,
+              duration: coupon.duration,
+              durationInMonths: coupon.duration_in_months,
+              name: coupon.name || promoCode.code,
+            }
+          });
+        }
+      } catch (promoError) {
+        // Continue to try coupon lookup
+      }
+      
+      // Fall back to direct coupon ID lookup
       try {
         const coupon = await stripe.coupons.retrieve(couponCode);
         if (!coupon.valid) {
@@ -1356,6 +1398,7 @@ export async function registerRoutes(
         
         res.json({
           valid: true,
+          isPromoCode: false,
           coupon: {
             id: coupon.id,
             percentOff: coupon.percent_off,
