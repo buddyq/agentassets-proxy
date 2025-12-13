@@ -1998,9 +1998,7 @@ function MagazineNavigation({ site, theme, effectiveLogo }: { site: Site; theme?
           <img 
             src={effectiveLogo ?? theme?.logoUrl ?? ''} 
             alt="Logo" 
-            className={`w-auto object-contain transition-all duration-300 ${
-              scrolled ? '' : 'brightness-0 invert'
-            }`}
+            className="w-auto object-contain transition-all duration-300"
             style={{ height: '80px' }}
             data-testid="img-magazine-logo"
           />
