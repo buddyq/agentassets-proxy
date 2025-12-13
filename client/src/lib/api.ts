@@ -1183,7 +1183,7 @@ export function useCreateBrokerageGroup() {
 export function useUpdateBrokerageGroup() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ groupId, updates }: { groupId: string; updates: { name?: string; description?: string } }) => {
+    mutationFn: async ({ groupId, updates }: { groupId: string; updates: { name?: string; description?: string; teamLeadUserId?: string | null; logo?: string | null; defaultThemeId?: string | null } }) => {
       const res = await fetch(`${API_BASE}/brokerage/groups/${groupId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -1195,6 +1195,30 @@ export function useUpdateBrokerageGroup() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['brokerage-groups'] });
+    }
+  });
+}
+
+export function useAddGroupMembers() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ groupId, userIds }: { groupId: string; userIds: string[] }) => {
+      const res = await fetch(`${API_BASE}/brokerage/groups/${groupId}/members`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userIds }),
+        credentials: 'include'
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to add members');
+      }
+      return res.json();
+    },
+    onSuccess: (_, { groupId }) => {
+      queryClient.invalidateQueries({ queryKey: ['group-members', groupId] });
+      queryClient.invalidateQueries({ queryKey: ['brokerage-groups'] });
+      queryClient.invalidateQueries({ queryKey: ['all-group-memberships'] });
     }
   });
 }

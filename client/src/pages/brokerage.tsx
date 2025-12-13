@@ -14,6 +14,8 @@ import {
   useUpdateBrokerageMember,
   useCreateBrokerageGroup,
   useDeleteBrokerageGroup,
+  useUpdateBrokerageGroup,
+  useAddGroupMembers,
   useAddUserToGroup,
   useRemoveUserFromGroup,
   useGroupMembers,
@@ -77,7 +79,10 @@ import {
   CheckCircle,
   Circle,
   Loader2,
-  Tag
+  Tag,
+  Crown,
+  Image,
+  X
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
@@ -462,7 +467,24 @@ function GroupCard({ group, members, onDelete, onManageMembers }: {
     <Card data-testid={`card-group-${group.id}`} className="transition-all hover:shadow-md hover:border-primary/30">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">{group.name}</CardTitle>
+          <div className="flex items-center gap-3">
+            {group.logo && (
+              <img 
+                src={group.logo} 
+                alt={`${group.name} logo`} 
+                className="h-10 w-10 rounded-lg object-cover border"
+              />
+            )}
+            <div>
+              <CardTitle className="text-lg">{group.name}</CardTitle>
+              {group.teamLead && (
+                <div className="flex items-center gap-1 mt-1">
+                  <Crown className="w-3 h-3 text-amber-500" />
+                  <span className="text-xs text-muted-foreground">{group.teamLead.name || group.teamLead.email}</span>
+                </div>
+              )}
+            </div>
+          </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" data-testid={`button-group-menu-${group.id}`}>
@@ -493,7 +515,7 @@ function GroupCard({ group, members, onDelete, onManageMembers }: {
             className="bg-primary hover:bg-primary/90"
             data-testid={`button-manage-group-${group.id}`}
           >
-            <UserPlus className="w-4 h-4 mr-2" />
+            <Settings className="w-4 h-4 mr-2" />
             Manage
           </Button>
         </div>
@@ -583,12 +605,450 @@ function SiteCard({ site, onDelete }: { site: BrokerageSite; onDelete: () => voi
   );
 }
 
+function MemberPickerDialog({ 
+  open, 
+  onOpenChange, 
+  groupId, 
+  allMembers, 
+  existingMemberIds,
+  onSuccess 
+}: { 
+  open: boolean; 
+  onOpenChange: (open: boolean) => void; 
+  groupId: string;
+  allMembers: BrokerageMember[];
+  existingMemberIds: string[];
+  onSuccess: () => void;
+}) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  const addMembers = useAddGroupMembers();
+  const { toast } = useToast();
+
+  const filteredMembers = allMembers.filter(m => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      m.user?.name?.toLowerCase().includes(searchLower) ||
+      m.user?.email?.toLowerCase().includes(searchLower)
+    );
+  });
+
+  const handleAddMembers = async () => {
+    if (selectedUserIds.length === 0) return;
+    try {
+      await addMembers.mutateAsync({ groupId, userIds: selectedUserIds });
+      toast({ title: `Added ${selectedUserIds.length} member(s) to group`, variant: 'success' });
+      setSelectedUserIds([]);
+      setSearchTerm('');
+      onSuccess();
+      onOpenChange(false);
+    } catch (error: any) {
+      toast({ title: error.message || 'Failed to add members', variant: 'destructive' });
+    }
+  };
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen) {
+      setSelectedUserIds([]);
+      setSearchTerm('');
+    }
+    onOpenChange(newOpen);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Add Members</DialogTitle>
+          <DialogDescription>
+            Select members to add to this group.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by name or email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+              data-testid="input-member-search"
+            />
+          </div>
+          <div className="max-h-[300px] overflow-y-auto space-y-2">
+            {filteredMembers.map(member => {
+              const isAlreadyInGroup = existingMemberIds.includes(member.userId);
+              const isSelected = selectedUserIds.includes(member.userId);
+              return (
+                <label
+                  key={member.id}
+                  className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${
+                    isAlreadyInGroup ? 'opacity-50 cursor-not-allowed bg-muted' : 
+                    isSelected ? 'bg-primary/5 border-primary' : 'hover:bg-muted/50'
+                  }`}
+                >
+                  <Checkbox
+                    checked={isSelected || isAlreadyInGroup}
+                    disabled={isAlreadyInGroup}
+                    onCheckedChange={(checked) => {
+                      if (isAlreadyInGroup) return;
+                      setSelectedUserIds(prev => 
+                        checked 
+                          ? [...prev, member.userId]
+                          : prev.filter(id => id !== member.userId)
+                      );
+                    }}
+                    data-testid={`checkbox-member-${member.id}`}
+                  />
+                  <Avatar className="w-8 h-8">
+                    <AvatarImage src={member.user?.profileImageUrl || undefined} />
+                    <AvatarFallback className="text-xs">
+                      {member.user?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || '??'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium truncate">{member.user?.name || 'Unknown'}</div>
+                    <div className="text-xs text-muted-foreground truncate">{member.user?.email}</div>
+                  </div>
+                  {isAlreadyInGroup && (
+                    <Badge variant="secondary" className="text-xs">In group</Badge>
+                  )}
+                </label>
+              );
+            })}
+            {filteredMembers.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No members found matching your search.
+              </p>
+            )}
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => handleOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleAddMembers} 
+            disabled={selectedUserIds.length === 0 || addMembers.isPending}
+            data-testid="button-add-selected-members"
+          >
+            {addMembers.isPending ? 'Adding...' : `Add ${selectedUserIds.length || ''} Selected`}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function GroupSettingsDialog({ 
+  group,
+  open, 
+  onOpenChange,
+  allMembers,
+  isAdmin,
+  currentUserId,
+  onSuccess 
+}: { 
+  group: BrokerageGroup | null;
+  open: boolean; 
+  onOpenChange: (open: boolean) => void;
+  allMembers: BrokerageMember[];
+  isAdmin: boolean;
+  currentUserId: string;
+  onSuccess: () => void;
+}) {
+  const [activeTab, setActiveTab] = useState('members');
+  const [showMemberPicker, setShowMemberPicker] = useState(false);
+  const [logoEdit, setLogoEdit] = useState<string | null>(null);
+  const [themeIdEdit, setThemeIdEdit] = useState<string | null>(null);
+  const [teamLeadEdit, setTeamLeadEdit] = useState<string | null>(null);
+  
+  const { data: groupMembers = [], refetch: refetchMembers } = useGroupMembers(group?.id || '');
+  const { data: availableThemes = [] } = useThemes({ forUser: true });
+  const removeFromGroup = useRemoveUserFromGroup();
+  const updateGroup = useUpdateBrokerageGroup();
+  const { toast } = useToast();
+
+  const isTeamLead = group?.teamLeadUserId === currentUserId;
+  const canManageMembers = isAdmin || isTeamLead;
+  const canEditSettings = isAdmin || isTeamLead;
+  const canEditTeamLead = isAdmin;
+
+  useEffect(() => {
+    if (group) {
+      setLogoEdit(group.logo || null);
+      setThemeIdEdit(group.defaultThemeId || null);
+      setTeamLeadEdit(group.teamLeadUserId || null);
+    }
+  }, [group]);
+
+  const handleRemoveMember = async (userId: string) => {
+    if (!group) return;
+    try {
+      await removeFromGroup.mutateAsync({ groupId: group.id, userId });
+      toast({ title: 'Member removed from group', variant: 'success' });
+      refetchMembers();
+      onSuccess();
+    } catch (error: any) {
+      toast({ title: error.message || 'Failed to remove member', variant: 'destructive' });
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    if (!group) return;
+    try {
+      const updates: any = {};
+      if (logoEdit !== group.logo) updates.logo = logoEdit;
+      if (themeIdEdit !== group.defaultThemeId) updates.defaultThemeId = themeIdEdit;
+      if (canEditTeamLead && teamLeadEdit !== group.teamLeadUserId) updates.teamLeadUserId = teamLeadEdit;
+      
+      if (Object.keys(updates).length > 0) {
+        await updateGroup.mutateAsync({ groupId: group.id, updates });
+        toast({ title: 'Group settings updated', variant: 'success' });
+        onSuccess();
+      }
+    } catch (error: any) {
+      toast({ title: error.message || 'Failed to update settings', variant: 'destructive' });
+    }
+  };
+
+  if (!group) return null;
+
+  const existingMemberIds = groupMembers.map((m: any) => m.userId);
+
+  return (
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {group.logo && (
+                <img src={group.logo} alt="" className="h-6 w-6 rounded object-cover" />
+              )}
+              {group.name}
+            </DialogTitle>
+            <DialogDescription>
+              Manage group members and settings.
+            </DialogDescription>
+          </DialogHeader>
+
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="members" className="flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                Members
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="flex items-center gap-2">
+                <Settings className="w-4 h-4" />
+                Settings
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="members" className="space-y-4 mt-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">
+                  {groupMembers.length} member{groupMembers.length !== 1 ? 's' : ''}
+                </span>
+                {canManageMembers && (
+                  <Button size="sm" onClick={() => setShowMemberPicker(true)} data-testid="button-open-member-picker">
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add Members
+                  </Button>
+                )}
+              </div>
+              <div className="max-h-[250px] overflow-y-auto space-y-2">
+                {groupMembers.map((gm: any) => {
+                  const member = allMembers.find(m => m.userId === gm.userId);
+                  if (!member) return null;
+                  const isGroupTeamLead = group.teamLeadUserId === member.userId;
+                  return (
+                    <div key={gm.id || member.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="w-8 h-8">
+                          <AvatarImage src={member.user?.profileImageUrl || undefined} />
+                          <AvatarFallback className="text-xs">
+                            {member.user?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || '??'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium">{member.user?.name}</span>
+                            {isGroupTeamLead && (
+                              <Badge variant="secondary" className="text-xs bg-amber-100 text-amber-700">
+                                <Crown className="w-3 h-3 mr-1" />
+                                Lead
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="text-xs text-muted-foreground">{member.user?.email}</div>
+                        </div>
+                      </div>
+                      {canManageMembers && !isGroupTeamLead && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleRemoveMember(member.userId)}
+                          disabled={removeFromGroup.isPending}
+                          data-testid={`button-remove-member-${member.id}`}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })}
+                {groupMembers.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No members in this group yet.
+                  </p>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="settings" className="space-y-4 mt-4">
+              {canEditTeamLead && (
+                <div className="grid gap-2">
+                  <Label>Team Lead</Label>
+                  <Select
+                    value={teamLeadEdit || 'none'}
+                    onValueChange={(value) => setTeamLeadEdit(value === 'none' ? null : value)}
+                  >
+                    <SelectTrigger data-testid="select-team-lead">
+                      <SelectValue placeholder="Select team lead" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No team lead</SelectItem>
+                      {allMembers.filter(m => m.status === 'active').map(member => (
+                        <SelectItem key={member.userId} value={member.userId}>
+                          <span className="flex items-center gap-2">
+                            <Crown className="w-3 h-3" />
+                            {member.user?.name || member.user?.email}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Team leads can manage group members, logo, and theme.
+                  </p>
+                </div>
+              )}
+
+              {canEditSettings && (
+                <>
+                  <div className="grid gap-2">
+                    <Label>Group Logo</Label>
+                    <div className="flex items-center gap-4">
+                      {logoEdit && (
+                        <div className="relative">
+                          <img 
+                            src={logoEdit} 
+                            alt="Group logo" 
+                            className="h-12 w-12 object-cover border rounded"
+                          />
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            onClick={() => setLogoEdit(null)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      )}
+                      <ObjectUploader
+                        onGetUploadParameters={getUploadUrl}
+                        onComplete={(result: { successful?: { uploadURL: string }[] }) => {
+                          if (result.successful && result.successful.length > 0) {
+                            const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
+                            setLogoEdit(normalizedUrl);
+                          }
+                        }}
+                        buttonClassName="text-sm"
+                      >
+                        <Image className="w-4 h-4 mr-2" />
+                        {logoEdit ? "Change" : "Upload"}
+                      </ObjectUploader>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label>Default Theme</Label>
+                    <Select
+                      value={themeIdEdit || 'none'}
+                      onValueChange={(value) => setThemeIdEdit(value === 'none' ? null : value)}
+                    >
+                      <SelectTrigger data-testid="select-group-theme">
+                        <SelectValue placeholder="Select default theme" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">No default theme</SelectItem>
+                        {availableThemes.map(theme => (
+                          <SelectItem key={theme.id} value={theme.id}>
+                            <span className="flex items-center gap-2">
+                              <span 
+                                className="w-3 h-3 rounded-full border inline-block"
+                                style={{ backgroundColor: theme.primaryColor }}
+                              />
+                              {theme.name}
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Applied as default for new sites created by group members.
+                    </p>
+                  </div>
+
+                  <Button 
+                    onClick={handleSaveSettings} 
+                    disabled={updateGroup.isPending}
+                    className="w-full"
+                    data-testid="button-save-group-settings"
+                  >
+                    {updateGroup.isPending ? 'Saving...' : 'Save Settings'}
+                  </Button>
+                </>
+              )}
+
+              {!canEditSettings && (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  You don't have permission to edit group settings.
+                </p>
+              )}
+            </TabsContent>
+          </Tabs>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Done
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <MemberPickerDialog
+        open={showMemberPicker}
+        onOpenChange={setShowMemberPicker}
+        groupId={group.id}
+        allMembers={allMembers.filter(m => m.status === 'active')}
+        existingMemberIds={existingMemberIds}
+        onSuccess={() => {
+          refetchMembers();
+          onSuccess();
+        }}
+      />
+    </>
+  );
+}
+
 export default function BrokerageDashboard() {
   const { user, isLoading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
   const searchString = useSearch();
   const [siteSearch, setSiteSearch] = useState('');
-  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
+  const [selectedGroup, setSelectedGroup] = useState<BrokerageGroup | null>(null);
   const [processingSuccess, setProcessingSuccess] = useState(false);
   
   const { data: brokerageData, isLoading: brokerageLoading, refetch: refetchBrokerage } = useBrokerage();
@@ -645,7 +1105,7 @@ export default function BrokerageDashboard() {
   const { data: members = [], refetch: refetchMembers } = useBrokerageMembers();
   const { data: groups = [], refetch: refetchGroups } = useBrokerageGroups();
   const { data: sites = [] } = useBrokerageSites(siteSearch || undefined);
-  const { data: groupMembers = [] } = useGroupMembers(selectedGroup || '');
+  const { data: groupMembers = [] } = useGroupMembers(selectedGroup?.id || '');
   
   const removeMember = useRemoveBrokerageMember();
   const updateMember = useUpdateBrokerageMember();
@@ -1127,7 +1587,7 @@ export default function BrokerageDashboard() {
                     group={group}
                     members={activeMembers}
                     onDelete={() => handleDeleteGroup(group.id)}
-                    onManageMembers={() => setSelectedGroup(group.id)}
+                    onManageMembers={() => setSelectedGroup(group)}
                   />
                 ))
               )}
@@ -1400,70 +1860,15 @@ export default function BrokerageDashboard() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!selectedGroup} onOpenChange={(open) => !open && setSelectedGroup(null)}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Manage Group Members</DialogTitle>
-            <DialogDescription>
-              Add or remove agents from this group.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <h4 className="text-sm font-medium">Available Agents</h4>
-            <div className="grid gap-2 max-h-[300px] overflow-y-auto">
-              {activeMembers.map(member => {
-                const isInGroup = groupMembers.some((gm: any) => gm.userId === member.userId);
-                return (
-                  <div key={member.id} className="flex items-center justify-between p-3 border rounded">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="w-10 h-10">
-                        <AvatarFallback className="text-xs">
-                          {member.user?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || '??'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="text-sm font-medium">{member.user?.name}</div>
-                        <div className="text-xs text-muted-foreground">{member.user?.email || 'No email'}</div>
-                      </div>
-                    </div>
-                    {isInGroup ? (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={async () => {
-                          await removeFromGroup.mutateAsync({ groupId: selectedGroup!, userId: member.userId });
-                          toast({ title: 'Removed from group', variant: 'success' });
-                        }}
-                      >
-                        Remove
-                      </Button>
-                    ) : (
-                      <Button
-                        size="sm"
-                        onClick={async () => {
-                          try {
-                            await addToGroup.mutateAsync({ groupId: selectedGroup!, userId: member.userId });
-                            toast({ title: 'Added to group', variant: 'success' });
-                          } catch (error: any) {
-                            toast({ title: error.message, variant: 'destructive' });
-                          }
-                        }}
-                      >
-                        Add
-                      </Button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setSelectedGroup(null)}>
-              Done
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <GroupSettingsDialog
+        group={selectedGroup}
+        open={!!selectedGroup}
+        onOpenChange={(open) => !open && setSelectedGroup(null)}
+        allMembers={activeMembers}
+        isAdmin={membership?.role === 'admin'}
+        currentUserId={user?.id || ''}
+        onSuccess={refetchGroups}
+      />
       
       <UpgradeDialog open={upgradeDialogOpen} onOpenChange={setUpgradeDialogOpen} />
       
