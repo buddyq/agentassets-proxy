@@ -804,15 +804,15 @@ export default function EditSite() {
                         data-testid={`edit-layout-option-${layout.id}`}
                       >
                         <RadioGroupItem value={layout.id} id={`edit-layout-${layout.id}`} className="sr-only" />
-                        <div className="h-56 bg-gradient-to-br from-muted to-muted/50 overflow-hidden">
+                        <div className="bg-muted/30 overflow-hidden">
                           {layout.thumbnailUrl ? (
                             <img 
                               src={layout.thumbnailUrl} 
                               alt={`${layout.name} layout preview`}
-                              className="w-full h-full object-contain object-top"
+                              className="w-full"
                             />
                           ) : (
-                            <div className="h-full p-4 flex flex-col justify-end">
+                            <div className="h-32 p-4 flex flex-col justify-end">
                               <div className="flex gap-1 mb-2">
                                 {layout.structure?.heroStyle === 'fullscreen' && (
                                   <div className="w-full h-6 bg-primary/20 rounded" />
