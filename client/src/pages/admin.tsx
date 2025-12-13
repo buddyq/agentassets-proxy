@@ -15,6 +15,7 @@ import {
   useAdminBrokerages, useAdminBrokerageTemplates, useAdminAssignTemplateToBrokerage, useAdminRemoveTemplateFromBrokerage,
   useAdminAllBrokerageTemplates,
   useAdminStats,
+  useAdminSampleSites,
   type BrokerageWithOwner, type BrokerageTemplate
 } from "@/lib/api";
 import { Plus, Palette, Trash2, Shield, Pencil, LayoutTemplate, Ticket, Users, CreditCard, Gift, Clock, Hash, Calendar, Loader2, Building2, Check, Infinity, TrendingUp, Eye, FileText, ArrowUpRight, Globe } from "lucide-react";
@@ -36,6 +37,7 @@ export default function AdminDashboard() {
   const { data: coupons = [], isError: couponsError } = useAdminCoupons();
   const { data: users = [], isError: usersError } = useAdminUsers();
   const { data: stats, isLoading: statsLoading } = useAdminStats();
+  const { data: sampleSites = [] } = useAdminSampleSites();
   const createThemeMutation = useCreateTheme();
   const updateThemeMutation = useUpdateTheme();
   const deleteThemeMutation = useDeleteTheme();
@@ -482,6 +484,10 @@ export default function AdminDashboard() {
             <TabsTrigger value="coupons" className="gap-2">
               <Ticket className="h-4 w-4" />
               Coupons
+            </TabsTrigger>
+            <TabsTrigger value="sample-sites" className="gap-2">
+              <Eye className="h-4 w-4" />
+              Sample Sites
             </TabsTrigger>
           </TabsList>
 
@@ -2051,6 +2057,73 @@ export default function AdminDashboard() {
                         </table>
                       </div>
                     )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="sample-sites">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Eye className="h-5 w-5" />
+                  Sample Sites
+                </CardTitle>
+                <CardDescription>
+                  Manage sample sites that appear as layout previews. Click "Edit" to customize photos, content, and details.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4 md:grid-cols-2">
+                  {sampleSites.map((sample) => (
+                    <Card key={sample.layout.id} className="overflow-hidden">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-lg">{sample.layout.name}</CardTitle>
+                          <Badge variant="outline">{sample.layout.sampleSiteSlug}</Badge>
+                        </div>
+                        <CardDescription>
+                          {sample.site ? sample.site.address : 'Sample site not created yet'}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <div className="flex gap-2">
+                          <a 
+                            href={`/p/${sample.layout.sampleSiteSlug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1"
+                          >
+                            <Button variant="outline" className="w-full gap-2">
+                              <Eye className="h-4 w-4" />
+                              Preview
+                            </Button>
+                          </a>
+                          {sample.site ? (
+                            <a 
+                              href={`/edit-site/${sample.site.id}`}
+                              className="flex-1"
+                            >
+                              <Button className="w-full gap-2">
+                                <Pencil className="h-4 w-4" />
+                                Edit
+                              </Button>
+                            </a>
+                          ) : (
+                            <Button className="flex-1 gap-2" disabled>
+                              <Pencil className="h-4 w-4" />
+                              No Site
+                            </Button>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+                {sampleSites.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No sample sites configured. Add a sampleSiteSlug to layouts to create sample sites.
                   </div>
                 )}
               </CardContent>

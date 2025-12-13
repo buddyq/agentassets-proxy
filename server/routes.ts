@@ -1971,6 +1971,39 @@ export async function registerRoutes(
     }
   });
 
+  // Admin route to get sample sites for editing
+  app.get("/api/admin/sample-sites", isAdmin, async (req, res) => {
+    try {
+      const layouts = await storage.getPresetLayouts();
+      const layoutsWithSamples = layouts.filter(l => l.sampleSiteSlug);
+      
+      const sampleSites = await Promise.all(
+        layoutsWithSamples.map(async (layout) => {
+          const site = await storage.getSiteBySubdomain(layout.sampleSiteSlug!);
+          return {
+            layout: {
+              id: layout.id,
+              name: layout.name,
+              sampleSiteSlug: layout.sampleSiteSlug
+            },
+            site: site ? {
+              id: site.id,
+              title: site.title,
+              address: site.address,
+              photos: site.photos,
+              heroPhotos: site.heroPhotos
+            } : null
+          };
+        })
+      );
+      
+      res.json(sampleSites);
+    } catch (error) {
+      console.error("Error fetching sample sites:", error);
+      res.status(500).json({ error: "Failed to fetch sample sites" });
+    }
+  });
+
   // Admin route to trigger monthly analytics emails
   app.post("/api/admin/send-analytics-emails", isAdmin, async (req: any, res) => {
     try {

@@ -594,6 +594,33 @@ export function useAdminStats() {
   });
 }
 
+// Admin Sample Sites
+export interface AdminSampleSite {
+  layout: {
+    id: string;
+    name: string;
+    sampleSiteSlug: string | null;
+  };
+  site: {
+    id: string;
+    title: string | null;
+    address: string;
+    photos: string[] | null;
+    heroPhotos: string[] | null;
+  } | null;
+}
+
+export function useAdminSampleSites() {
+  return useQuery({
+    queryKey: ['admin', 'sample-sites'],
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE}/admin/sample-sites`);
+      if (!res.ok) throw new Error('Failed to fetch sample sites');
+      return res.json() as Promise<AdminSampleSite[]>;
+    }
+  });
+}
+
 // Admin Coupons
 export function useAdminCoupons() {
   return useQuery({
