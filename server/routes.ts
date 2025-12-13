@@ -1361,7 +1361,9 @@ export async function registerRoutes(
       
       // First try to find a promotion code
       try {
+        console.log(`Looking up promotion code: ${couponCode}`);
         const promoCodes = await stripe.promotionCodes.list({ code: couponCode, active: true, limit: 1 });
+        console.log(`Promotion codes found: ${promoCodes.data.length}`, promoCodes.data.map(p => ({ id: p.id, code: p.code })));
         if (promoCodes.data.length > 0) {
           const promoCode = promoCodes.data[0];
           const coupon = promoCode.coupon;
@@ -1385,12 +1387,14 @@ export async function registerRoutes(
             }
           });
         }
-      } catch (promoError) {
+      } catch (promoError: any) {
+        console.log(`Promotion code lookup error:`, promoError.message);
         // Continue to try coupon lookup
       }
       
       // Fall back to direct coupon ID lookup
       try {
+        console.log(`Looking up coupon by ID: ${couponCode}`);
         const coupon = await stripe.coupons.retrieve(couponCode);
         if (!coupon.valid) {
           return res.status(400).json({ error: "This coupon is no longer valid", valid: false });
