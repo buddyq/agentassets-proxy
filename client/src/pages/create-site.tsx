@@ -9,7 +9,7 @@ import { useCreateSite, useUpdateCredits, useThemes, useLayouts, getUploadUrl, n
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
-import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, CreditCard, LayoutGrid, Plus, X, Image, GripVertical, Star, Settings, FileText, AlertTriangle, UserCircle, Phone, Mail } from "lucide-react";
+import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, CreditCard, LayoutGrid, Plus, X, Image, GripVertical, Star, Settings, FileText, AlertTriangle, UserCircle, Phone, Mail, ExternalLink } from "lucide-react";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -855,6 +855,19 @@ export default function CreateSite() {
                               {layout.structure?.galleryStyle}
                             </span>
                           </div>
+                          {layout.sampleSiteSlug && (
+                            <a
+                              href={`/p/${layout.sampleSiteSlug}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="mt-3 inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                              data-testid={`view-sample-${layout.id}`}
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                              View Sample
+                            </a>
+                          )}
                         </div>
                       </Label>
                     ))}
