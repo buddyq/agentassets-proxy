@@ -1336,8 +1336,8 @@ export async function registerRoutes(
           quantity: 1,
         }],
         mode: 'subscription',
-        discounts,
-        allow_promotion_codes: !couponCode, // Allow promo code entry if no coupon provided
+        // Can only use one of discounts OR allow_promotion_codes, not both
+        ...(discounts ? { discounts } : { allow_promotion_codes: true }),
         success_url: `${baseUrl}/brokerage?upgraded=true&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${baseUrl}/brokerage?canceled=true`,
         metadata: {
