@@ -626,7 +626,7 @@ function ShoalwoodDetails({ site, theme }: { site: Site; theme?: Theme }) {
   );
 }
 
-function ShoalwoodContact({ site, theme }: { site: Site; theme?: Theme }) {
+function ShoalwoodContact({ site, theme, agentInfo }: { site: Site; theme?: Theme; agentInfo?: AgentInfo | null }) {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -636,6 +636,7 @@ function ShoalwoodContact({ site, theme }: { site: Site; theme?: Theme }) {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const primaryColor = theme?.colors?.primary || '#558B73';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -675,7 +676,7 @@ function ShoalwoodContact({ site, theme }: { site: Site; theme?: Theme }) {
 
   return (
     <section id="contact" className="py-20 px-4 md:px-8 border-t border-gray-100">
-      <div className="container mx-auto max-w-2xl">
+      <div className="container mx-auto max-w-5xl">
         <h2 
           className="text-3xl md:text-4xl mb-10 text-center" 
           style={{ 
@@ -688,88 +689,242 @@ function ShoalwoodContact({ site, theme }: { site: Site; theme?: Theme }) {
           Get in Touch
         </h2>
         
-        <div className="bg-white p-8 md:p-10 rounded-lg shadow-sm border border-gray-100">
-          <form onSubmit={handleSubmit} className="grid gap-6">
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="firstName">First Name *</Label>
-                <Input 
-                  id="firstName" 
-                  value={formData.firstName}
-                  onChange={(e) => setFormData({...formData, firstName: e.target.value})}
-                  required 
-                  className="mt-1"
-                />
+        <div className="grid md:grid-cols-2 gap-8 md:gap-12">
+          {/* Left side - Agent Info */}
+          <div className="flex flex-col justify-center">
+            <div className="text-center md:text-left">
+              {/* Agent Photo */}
+              <div className="flex justify-center md:justify-start mb-6">
+                {agentInfo?.profileImageUrl ? (
+                  <div 
+                    className="w-28 h-28 rounded-full overflow-hidden shadow-lg border-4"
+                    style={{ borderColor: primaryColor + '30' }}
+                  >
+                    <img 
+                      src={agentInfo.profileImageUrl} 
+                      alt={agentInfo.name || 'Agent'} 
+                      className="w-full h-full object-cover"
+                      data-testid="img-shoalwood-agent-photo"
+                    />
+                  </div>
+                ) : (
+                  <div 
+                    className="w-28 h-28 rounded-full flex items-center justify-center text-white text-3xl font-semibold shadow-lg"
+                    style={{ backgroundColor: primaryColor }}
+                  >
+                    {agentInfo?.name ? agentInfo.name.charAt(0).toUpperCase() : 'A'}
+                  </div>
+                )}
               </div>
-              <div>
-                <Label htmlFor="lastName">Last Name *</Label>
-                <Input 
-                  id="lastName" 
-                  value={formData.lastName}
-                  onChange={(e) => setFormData({...formData, lastName: e.target.value})}
-                  required 
-                  className="mt-1"
-                />
+
+              {/* Agent Name & Title */}
+              <h3 
+                className="text-2xl font-semibold mb-1"
+                style={{ fontFamily: 'var(--font-heading)', color: 'var(--theme-text)' }}
+                data-testid="text-shoalwood-agent-name"
+              >
+                {agentInfo?.name || 'Your Real Estate Agent'}
+              </h3>
+              {agentInfo?.teamName && (
+                <p className="text-gray-500 mb-1" style={{ fontFamily: 'var(--font-body)' }}>
+                  {agentInfo.teamName}
+                </p>
+              )}
+              {agentInfo?.brokerage && (
+                <p className="text-gray-400 text-sm mb-6" style={{ fontFamily: 'var(--font-body)' }}>
+                  {agentInfo.brokerage}
+                </p>
+              )}
+
+              {/* Contact Details */}
+              <div className="space-y-4 mt-6">
+                {agentInfo?.phone && (
+                  <a 
+                    href={`tel:${agentInfo.phone}`}
+                    className="flex items-center justify-center md:justify-start gap-3 text-gray-600 hover:text-gray-900 transition-colors group"
+                    data-testid="link-shoalwood-agent-phone"
+                  >
+                    <div 
+                      className="w-10 h-10 rounded-full flex items-center justify-center transition-colors"
+                      style={{ backgroundColor: primaryColor + '15' }}
+                    >
+                      <Phone className="w-4 h-4" style={{ color: primaryColor }} />
+                    </div>
+                    <span style={{ fontFamily: 'var(--font-body)' }}>{agentInfo.phone}</span>
+                  </a>
+                )}
+                {agentInfo?.email && (
+                  <a 
+                    href={`mailto:${agentInfo.email}`}
+                    className="flex items-center justify-center md:justify-start gap-3 text-gray-600 hover:text-gray-900 transition-colors group"
+                    data-testid="link-shoalwood-agent-email"
+                  >
+                    <div 
+                      className="w-10 h-10 rounded-full flex items-center justify-center transition-colors"
+                      style={{ backgroundColor: primaryColor + '15' }}
+                    >
+                      <Mail className="w-4 h-4" style={{ color: primaryColor }} />
+                    </div>
+                    <span style={{ fontFamily: 'var(--font-body)' }}>{agentInfo.email}</span>
+                  </a>
+                )}
               </div>
+
+              {/* Social Media Links */}
+              {agentInfo?.socialMedia && Object.values(agentInfo.socialMedia).some(v => v) && (
+                <div className="mt-8">
+                  <p className="text-xs uppercase tracking-wider text-gray-400 mb-3" style={{ fontFamily: 'var(--font-body)' }}>Follow Me</p>
+                  <div className="flex gap-3 justify-center md:justify-start">
+                    {agentInfo.socialMedia.instagram && (
+                      <a 
+                        href={agentInfo.socialMedia.instagram.startsWith('http') ? agentInfo.socialMedia.instagram : `https://instagram.com/${agentInfo.socialMedia.instagram}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-10 h-10 rounded-full flex items-center justify-center transition-colors hover:opacity-80"
+                        style={{ backgroundColor: primaryColor + '15' }}
+                        data-testid="link-shoalwood-social-instagram"
+                      >
+                        <Instagram className="w-4 h-4" style={{ color: primaryColor }} />
+                      </a>
+                    )}
+                    {agentInfo.socialMedia.facebook && (
+                      <a 
+                        href={agentInfo.socialMedia.facebook.startsWith('http') ? agentInfo.socialMedia.facebook : `https://facebook.com/${agentInfo.socialMedia.facebook}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-10 h-10 rounded-full flex items-center justify-center transition-colors hover:opacity-80"
+                        style={{ backgroundColor: primaryColor + '15' }}
+                        data-testid="link-shoalwood-social-facebook"
+                      >
+                        <Facebook className="w-4 h-4" style={{ color: primaryColor }} />
+                      </a>
+                    )}
+                    {agentInfo.socialMedia.linkedin && (
+                      <a 
+                        href={agentInfo.socialMedia.linkedin.startsWith('http') ? agentInfo.socialMedia.linkedin : `https://linkedin.com/in/${agentInfo.socialMedia.linkedin}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-10 h-10 rounded-full flex items-center justify-center transition-colors hover:opacity-80"
+                        style={{ backgroundColor: primaryColor + '15' }}
+                        data-testid="link-shoalwood-social-linkedin"
+                      >
+                        <Linkedin className="w-4 h-4" style={{ color: primaryColor }} />
+                      </a>
+                    )}
+                    {agentInfo.socialMedia.youtube && (
+                      <a 
+                        href={agentInfo.socialMedia.youtube.startsWith('http') ? agentInfo.socialMedia.youtube : `https://youtube.com/${agentInfo.socialMedia.youtube}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-10 h-10 rounded-full flex items-center justify-center transition-colors hover:opacity-80"
+                        style={{ backgroundColor: primaryColor + '15' }}
+                        data-testid="link-shoalwood-social-youtube"
+                      >
+                        <Youtube className="w-4 h-4" style={{ color: primaryColor }} />
+                      </a>
+                    )}
+                    {agentInfo.socialMedia.x && (
+                      <a 
+                        href={agentInfo.socialMedia.x.startsWith('http') ? agentInfo.socialMedia.x : `https://x.com/${agentInfo.socialMedia.x}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-10 h-10 rounded-full flex items-center justify-center transition-colors hover:opacity-80"
+                        style={{ backgroundColor: primaryColor + '15' }}
+                        data-testid="link-shoalwood-social-x"
+                      >
+                        <Twitter className="w-4 h-4" style={{ color: primaryColor }} />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="email">Email *</Label>
-                <Input 
-                  id="email" 
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
-                  required 
-                  className="mt-1"
-                />
+          </div>
+
+          {/* Right side - Contact Form */}
+          <div className="bg-white p-8 md:p-10 rounded-lg shadow-sm border border-gray-100">
+            <form onSubmit={handleSubmit} className="grid gap-6">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="firstName">First Name *</Label>
+                  <Input 
+                    id="firstName" 
+                    value={formData.firstName}
+                    onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                    required 
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="lastName">Last Name *</Label>
+                  <Input 
+                    id="lastName" 
+                    value={formData.lastName}
+                    onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                    required 
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="email">Email *</Label>
+                  <Input 
+                    id="email" 
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    required 
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="phone">Phone *</Label>
+                  <Input 
+                    id="phone" 
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    required 
+                    className="mt-1"
+                  />
+                </div>
               </div>
               <div>
-                <Label htmlFor="phone">Phone *</Label>
-                <Input 
-                  id="phone" 
-                  type="tel"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                <Label htmlFor="message">Message *</Label>
+                <Textarea 
+                  id="message" 
+                  value={formData.message}
+                  onChange={(e) => setFormData({...formData, message: e.target.value})}
                   required 
                   className="mt-1"
+                  rows={4}
                 />
               </div>
-            </div>
-            <div>
-              <Label htmlFor="message">Message *</Label>
-              <Textarea 
-                id="message" 
-                value={formData.message}
-                onChange={(e) => setFormData({...formData, message: e.target.value})}
-                required 
-                className="mt-1"
-                rows={4}
-              />
-            </div>
-            {submitStatus === 'success' && (
-              <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">
-                Thank you for your inquiry! The agent will be in touch with you soon.
-              </div>
-            )}
-            
-            {submitStatus === 'error' && (
-              <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
-                Something went wrong. Please try again or contact us directly.
-              </div>
-            )}
-            
-            <Button 
-              type="submit" 
-              size="lg"
-              className="w-full md:w-auto text-white"
-              style={{ backgroundColor: theme?.colors?.primary || '#1a1a1a' }}
-              disabled={isSubmitting}
-              data-testid="button-send-inquiry"
-            >
-              {isSubmitting ? 'Sending...' : 'Send Inquiry'}
-            </Button>
-          </form>
+              {submitStatus === 'success' && (
+                <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">
+                  Thank you for your inquiry! The agent will be in touch with you soon.
+                </div>
+              )}
+              
+              {submitStatus === 'error' && (
+                <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+                  Something went wrong. Please try again or contact us directly.
+                </div>
+              )}
+              
+              <Button 
+                type="submit" 
+                size="lg"
+                className="w-full text-white"
+                style={{ backgroundColor: primaryColor }}
+                disabled={isSubmitting}
+                data-testid="button-send-inquiry"
+              >
+                {isSubmitting ? 'Sending...' : 'Send Inquiry'}
+              </Button>
+            </form>
+          </div>
         </div>
       </div>
     </section>
@@ -3452,7 +3607,7 @@ export default function SiteView({ siteId: propSiteId, params: routeParams }: Si
           </div>
         </section>
 
-        <ShoalwoodContact site={site} theme={theme} />
+        <ShoalwoodContact site={site} theme={theme} agentInfo={agentInfo} />
 
         <footer className="py-8 px-4 border-t bg-white">
           <div className="container mx-auto flex flex-col items-center gap-4">
