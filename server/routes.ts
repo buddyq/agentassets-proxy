@@ -1376,10 +1376,14 @@ export async function registerRoutes(
         console.log(`Promotion codes found: ${promoCodes.data.length}`);
         if (promoCodes.data.length > 0) {
           const promoCode = promoCodes.data[0];
+          // Log the full promo code object to debug
+          console.log('Full promo code object:', JSON.stringify(promoCode, null, 2));
+          console.log('Promo code keys:', Object.keys(promoCode));
+          
           // Get the coupon ID - it may be a string ID or an object
           const couponIdOrObj = (promoCode as any).coupon;
           const couponId = typeof couponIdOrObj === 'string' ? couponIdOrObj : couponIdOrObj?.id;
-          console.log(`Promotion code found, coupon ID: ${couponId}`);
+          console.log(`Coupon field value: ${JSON.stringify(couponIdOrObj)}, extracted ID: ${couponId}`);
           
           if (!couponId) {
             return res.status(400).json({ error: "Promotion code has no associated coupon", valid: false });
