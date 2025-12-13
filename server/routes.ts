@@ -1289,7 +1289,7 @@ export async function registerRoutes(
       let discounts: ({ coupon: string } | { promotion_code: string })[] | undefined;
       if (couponCode) {
         // First try to find a promotion code
-        const promoCodes = await stripe.promotionCodes.list({ code: couponCode, active: true, limit: 1 });
+        const promoCodes = await stripe.promotionCodes.list({ code: couponCode, active: true, limit: 1, expand: ['data.coupon'] });
         if (promoCodes.data.length > 0) {
           const promoCode = promoCodes.data[0];
           if (!promoCode.coupon.valid) {
@@ -1362,7 +1362,7 @@ export async function registerRoutes(
       // First try to find a promotion code
       try {
         console.log(`Looking up promotion code: ${couponCode}`);
-        const promoCodes = await stripe.promotionCodes.list({ code: couponCode, active: true, limit: 1 });
+        const promoCodes = await stripe.promotionCodes.list({ code: couponCode, active: true, limit: 1, expand: ['data.coupon'] });
         console.log(`Promotion codes found: ${promoCodes.data.length}`, promoCodes.data.map(p => ({ id: p.id, code: p.code })));
         if (promoCodes.data.length > 0) {
           const promoCode = promoCodes.data[0];
