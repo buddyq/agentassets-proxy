@@ -1369,9 +1369,15 @@ export async function registerRoutes(
           // Retrieve the full promotion code with coupon expanded
           const promoCode = await stripe.promotionCodes.retrieve(promoCodeId, { expand: ['coupon'] });
           const couponData = promoCode.coupon as any;
+          console.log('Retrieved promo code coupon:', JSON.stringify(couponData, null, 2));
           
-          if (!couponData || !couponData.valid) {
-            return res.status(400).json({ error: "This promotion code is no longer valid", valid: false });
+          if (!couponData) {
+            return res.status(400).json({ error: "Promotion code has no associated coupon", valid: false });
+          }
+          
+          // Check if coupon is valid (valid field may not be present in all responses)
+          if (couponData.valid === false) {
+            return res.status(400).json({ error: "This coupon is no longer valid", valid: false });
           }
           
           return res.json({
