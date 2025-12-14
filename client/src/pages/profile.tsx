@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { useUpdateUserProfile, useChangePassword, getUploadUrl, normalizeObjectUrl, useBrokerage } from "@/lib/api";
 import { ObjectUploader } from "@/components/ObjectUploader";
+import { ImageCropper } from "@/components/ImageCropper";
 import { useToast } from "@/hooks/use-toast";
 import { Instagram, Youtube, Facebook, Linkedin, X, Image, Trash2, AlertCircle, CheckCircle2, Lock } from "lucide-react";
 import { useLocation } from "wouter";
@@ -27,6 +28,11 @@ export default function Profile() {
     newPassword: "",
     confirmPassword: "",
   });
+
+  const [cropperOpen, setCropperOpen] = useState(false);
+  const [selectedImageForCrop, setSelectedImageForCrop] = useState<string | null>(null);
+  const [isUploadingCroppedImage, setIsUploadingCroppedImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     name: user?.name || "",
@@ -64,21 +70,6 @@ export default function Profile() {
     }));
   };
 
-  const handleProfileImageUpload = (result: { successful?: { uploadURL: string }[] }) => {
-    if (result.successful && result.successful.length > 0) {
-      const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
-      setFormData(prev => ({
-        ...prev,
-        profileImageUrl: normalizedUrl
-      }));
-      toast({
-        title: "Profile Image Uploaded",
-        description: "Your profile photo has been updated.",
-        variant: "success",
-      });
-    }
-  };
-
   const handleLogoUpload = (result: { successful?: { uploadURL: string }[] }) => {
     if (result.successful && result.successful.length > 0) {
       const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
@@ -106,6 +97,53 @@ export default function Profile() {
       ...prev,
       profileImageUrl: null
     }));
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setSelectedImageForCrop(reader.result as string);
+        setCropperOpen(true);
+      };
+      reader.readAsDataURL(file);
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleCroppedImage = async (blob: Blob) => {
+    setIsUploadingCroppedImage(true);
+    try {
+      const { url } = await getUploadUrl();
+      const response = await fetch(url, { 
+        method: 'PUT', 
+        body: blob,
+        headers: { 'Content-Type': 'image/jpeg' }
+      });
+      if (!response.ok) {
+        throw new Error(`Upload failed with status ${response.status}`);
+      }
+      const normalizedUrl = normalizeObjectUrl(url);
+      setFormData(prev => ({ ...prev, profileImageUrl: normalizedUrl }));
+      toast({
+        title: "Profile Image Uploaded",
+        description: "Your profile photo has been updated.",
+        variant: "success",
+      });
+    } catch (error) {
+      console.error('Error uploading cropped image:', error);
+      toast({
+        title: "Upload Failed",
+        description: "Failed to upload your profile photo. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingCroppedImage(false);
+      setSelectedImageForCrop(null);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -264,17 +302,40 @@ export default function Profile() {
                   </div>
                 )}
                 <div className="flex-1">
-                  <ObjectUploader 
-                    onGetUploadParameters={getUploadUrl}
-                    onComplete={handleProfileImageUpload}
-                    buttonClassName="bg-primary text-primary-foreground hover:bg-primary/90"
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    accept="image/*"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    data-testid="input-profile-image"
+                  />
+                  <Button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploadingCroppedImage}
+                    data-testid="button-upload-profile-image"
                   >
-                    {formData.profileImageUrl ? "Change Photo" : "Upload Photo"}
-                  </ObjectUploader>
+                    {isUploadingCroppedImage ? "Uploading..." : formData.profileImageUrl ? "Change Photo" : "Upload Photo"}
+                  </Button>
                 </div>
               </div>
             </CardContent>
           </Card>
+
+          {selectedImageForCrop && (
+            <ImageCropper
+              imageSrc={selectedImageForCrop}
+              open={cropperOpen}
+              onClose={() => {
+                setCropperOpen(false);
+                setSelectedImageForCrop(null);
+              }}
+              onCropComplete={handleCroppedImage}
+              aspectRatio={1}
+              cropShape="round"
+            />
+          )}
 
           {/* Logo Section */}
           <Card>
