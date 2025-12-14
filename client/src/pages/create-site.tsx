@@ -16,7 +16,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { CustomDetail, HeroSlide, OpenHouseEvent } from "@shared/schema";
+import type { CustomDetail, HeroSlide, OpenHouseEvent, HeroTransitionType } from "@shared/schema";
+import { heroTransitionTypes } from "@shared/schema";
 
 const FEATURE_SUGGESTIONS = [
   'Community Clubhouse',
@@ -130,6 +131,7 @@ export default function CreateSite() {
     contentGridImage1: '', // Image for content grid position 2 (top right)
     contentGridImage2: '', // Image for content grid position 3 (bottom left)
     features: '' as string, // Comma-separated feature tags
+    heroTransition: 'slide' as HeroTransitionType, // Hero slider transition effect
   });
   
   // Custom details state
@@ -343,6 +345,7 @@ export default function CreateSite() {
         photos: photos,
         heroPhotos: heroPhotos,
         heroSlides: formData.heroSlides,
+        heroTransition: formData.heroTransition,
         heroLogo: formData.heroLogo || null,
         logo: formData.logo || null,
         stats: { views: 0, uniqueVisitors: 0, leads: 0 },
@@ -940,6 +943,42 @@ export default function CreateSite() {
                         }}
                       />
                     )}
+                  </div>
+
+                  {/* Hero Transition Effect */}
+                  <div className="grid gap-2 border-t pt-6">
+                    <Label>Hero Transition Effect</Label>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Choose how your hero images transition between slides.
+                    </p>
+                    <RadioGroup
+                      value={formData.heroTransition}
+                      onValueChange={(value) => setFormData({...formData, heroTransition: value as HeroTransitionType})}
+                      className="grid grid-cols-2 gap-3"
+                    >
+                      {[
+                        { value: 'slide', label: 'Slide', description: 'Classic horizontal sliding effect' },
+                        { value: 'crossfade', label: 'Crossfade', description: 'Smooth fade between images' },
+                        { value: 'kenburns', label: 'Ken Burns', description: 'Gentle zoom with fade transition' },
+                        { value: 'liquid-webgl', label: 'Liquid Wipe', description: 'Premium WebGL distortion effect' },
+                      ].map((option) => (
+                        <Label
+                          key={option.value}
+                          htmlFor={`transition-${option.value}`}
+                          className={`flex flex-col cursor-pointer rounded-lg border-2 p-4 transition-all ${
+                            formData.heroTransition === option.value
+                              ? 'border-primary bg-primary/5'
+                              : 'border-muted hover:border-muted-foreground/50'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <RadioGroupItem value={option.value} id={`transition-${option.value}`} />
+                            <span className="font-medium">{option.label}</span>
+                          </div>
+                          <span className="text-xs text-muted-foreground mt-1 ml-6">{option.description}</span>
+                        </Label>
+                      ))}
+                    </RadioGroup>
                   </div>
 
                   {/* Layout-specific options */}

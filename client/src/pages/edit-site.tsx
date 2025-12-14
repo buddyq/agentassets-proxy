@@ -17,7 +17,8 @@ import { Switch } from "@/components/ui/switch";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { CustomDetail, HeroSlide, SiteDocument, OpenHouseEvent } from "@shared/schema";
+import type { CustomDetail, HeroSlide, SiteDocument, OpenHouseEvent, HeroTransitionType } from "@shared/schema";
+import { heroTransitionTypes } from "@shared/schema";
 import { FileText, Download, Trash2 } from "lucide-react";
 
 const FEATURE_SUGGESTIONS = [
@@ -100,6 +101,7 @@ export default function EditSite() {
     contentGridImage1: "",
     contentGridImage2: "",
     features: "",
+    heroTransition: "slide" as HeroTransitionType,
   });
 
   const [customDetails, setCustomDetails] = useState<CustomDetail[]>([]);
@@ -198,6 +200,7 @@ export default function EditSite() {
         contentGridImage1: (site as any).contentGridImage1 || "",
         contentGridImage2: (site as any).contentGridImage2 || "",
         features: (site as any).features && Array.isArray(site.features) ? (site.features as string[]).join(', ') : "",
+        heroTransition: (site.heroTransition as HeroTransitionType) || "slide",
       });
       setCustomDetails(site.customDetails || []);
       setDocuments(site.documents || []);
@@ -252,6 +255,7 @@ export default function EditSite() {
           logo: formData.logo || null,
           heroLogo: formData.heroLogo || null,
           heroSlides: formData.heroSlides,
+          heroTransition: formData.heroTransition,
           documents: validDocuments,
           // Magazine layout fields
           buyerAgentComp: formData.buyerAgentComp || null,
@@ -977,6 +981,42 @@ export default function EditSite() {
                         data-testid="switch-invert-logo"
                       />
                     </div>
+                  </div>
+
+                  {/* Hero Transition Effect */}
+                  <div className="grid gap-2 border-t pt-6">
+                    <Label>Hero Transition Effect</Label>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Choose how your hero images transition between slides.
+                    </p>
+                    <RadioGroup
+                      value={formData.heroTransition}
+                      onValueChange={(value) => setFormData({...formData, heroTransition: value as HeroTransitionType})}
+                      className="grid grid-cols-2 gap-3"
+                    >
+                      {[
+                        { value: 'slide', label: 'Slide', description: 'Classic horizontal sliding effect' },
+                        { value: 'crossfade', label: 'Crossfade', description: 'Smooth fade between images' },
+                        { value: 'kenburns', label: 'Ken Burns', description: 'Gentle zoom with fade transition' },
+                        { value: 'liquid-webgl', label: 'Liquid Wipe', description: 'Premium WebGL distortion effect' },
+                      ].map((option) => (
+                        <Label
+                          key={option.value}
+                          htmlFor={`transition-${option.value}`}
+                          className={`flex flex-col cursor-pointer rounded-lg border-2 p-4 transition-all ${
+                            formData.heroTransition === option.value
+                              ? 'border-primary bg-primary/5'
+                              : 'border-muted hover:border-muted-foreground/50'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <RadioGroupItem value={option.value} id={`transition-${option.value}`} />
+                            <span className="font-medium">{option.label}</span>
+                          </div>
+                          <span className="text-xs text-muted-foreground mt-1 ml-6">{option.description}</span>
+                        </Label>
+                      ))}
+                    </RadioGroup>
                   </div>
 
                   {/* Layout-specific options */}

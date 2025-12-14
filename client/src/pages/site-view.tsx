@@ -8,7 +8,8 @@ import { MapPin, Play, Home, Info, Video, Image, X, ChevronLeft, ChevronRight, C
 import heroImage from "@assets/generated_images/luxury_living_room_interior_for_hero_background.png";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import useEmblaCarousel from "embla-carousel-react";
-import type { Site, Theme, Layout } from "@shared/schema";
+import type { Site, Theme, Layout, HeroTransitionType } from "@shared/schema";
+import HeroSlider from "@/components/hero/HeroSlider";
 
 function getThemeStyles(theme?: Theme) {
   const primary = theme?.colors?.primary || '#558B73';
@@ -82,49 +83,12 @@ function ShoalwoodHero({ site, theme, heroImage, effectiveLogo, invertLogo }: { 
       ? site.photos 
       : [heroImage];
   
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
+  const heroTransition = (site.heroTransition as HeroTransitionType) || 'slide';
 
-  const scrollPrev = useCallback(() => {
-    if (emblaApi) emblaApi.scrollPrev();
-  }, [emblaApi]);
+  const overlayContent = (
+    <>
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/20 z-10" />
 
-  const scrollNext = useCallback(() => {
-    if (emblaApi) emblaApi.scrollNext();
-  }, [emblaApi]);
-
-  useEffect(() => {
-    if (!emblaApi) return;
-    const onSelect = () => setCurrentSlide(emblaApi.selectedScrollSnap());
-    emblaApi.on('select', onSelect);
-    onSelect();
-    return () => { emblaApi.off('select', onSelect); };
-  }, [emblaApi]);
-
-  useEffect(() => {
-    if (!emblaApi || heroImages.length <= 1) return;
-    const interval = setInterval(() => emblaApi.scrollNext(), 5000);
-    return () => clearInterval(interval);
-  }, [emblaApi, heroImages.length]);
-
-  return (
-    <section id="home" className="relative h-screen w-full overflow-hidden">
-      <div className="absolute inset-0" ref={emblaRef}>
-        <div className="flex h-full">
-          {heroImages.map((image, index) => (
-            <div key={index} className="flex-[0_0_100%] min-w-0 relative">
-              <div 
-                className="absolute inset-0 bg-cover bg-center"
-                style={{ backgroundImage: `url(${image})` }}
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-      
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/20" />
-
-      {/* Top right - Logo and Request Info (scroll with hero) */}
       <div className="absolute top-4 right-4 md:top-6 md:right-6 z-20 flex items-center gap-4">
         {(effectiveLogo || theme?.logoUrl) && (
           <img 
@@ -147,26 +111,8 @@ function ShoalwoodHero({ site, theme, heroImage, effectiveLogo, invertLogo }: { 
         </a>
       </div>
       
-      {heroImages.length > 1 && (
-        <>
-          <button 
-            onClick={scrollPrev}
-            className="absolute left-[80px] top-1/2 -translate-y-1/2 z-30 bg-white/10 hover:bg-white/30 text-white p-3 rounded-full transition-all backdrop-blur-sm border border-white/20"
-          >
-            <ChevronLeft className="h-6 w-6" />
-          </button>
-          <button 
-            onClick={scrollNext}
-            className="absolute right-6 top-1/2 -translate-y-1/2 z-30 bg-white/10 hover:bg-white/30 text-white p-3 rounded-full transition-all backdrop-blur-sm border border-white/20"
-          >
-            <ChevronRight className="h-6 w-6" />
-          </button>
-        </>
-      )}
-      
       <div className="absolute bottom-0 left-0 right-0 p-8 md:p-16 z-10 pl-20 md:pl-24">
         <div className="container mx-auto">
-          {/* Status badge */}
           <div className="inline-block bg-white/95 backdrop-blur-sm px-5 py-2.5 rounded mb-6">
             <span 
               className="text-xs font-semibold tracking-[0.2em] uppercase" 
@@ -175,7 +121,6 @@ function ShoalwoodHero({ site, theme, heroImage, effectiveLogo, invertLogo }: { 
               For Sale
             </span>
           </div>
-          {/* Price */}
           <h1 
             className="text-white mb-3"
             style={{ 
@@ -188,7 +133,6 @@ function ShoalwoodHero({ site, theme, heroImage, effectiveLogo, invertLogo }: { 
           >
             {site.price}
           </h1>
-          {/* Address - all caps */}
           <h2 
             className="text-lg md:text-xl text-white/90 tracking-wide uppercase"
             style={{ 
@@ -201,20 +145,20 @@ function ShoalwoodHero({ site, theme, heroImage, effectiveLogo, invertLogo }: { 
           </h2>
         </div>
       </div>
+    </>
+  );
 
-      {heroImages.length > 1 && (
-        <div className="absolute bottom-8 right-8 z-20 flex gap-2">
-          {heroImages.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => emblaApi?.scrollTo(index)}
-              className={`w-2.5 h-2.5 rounded-full transition-all ${
-                currentSlide === index ? 'bg-white w-8' : 'bg-white/40 hover:bg-white/60'
-              }`}
-            />
-          ))}
-        </div>
-      )}
+  return (
+    <section id="home" className="relative h-screen w-full overflow-hidden">
+      <HeroSlider
+        images={heroImages}
+        transition={heroTransition}
+        autoPlayInterval={5000}
+        showArrows={heroImages.length > 1}
+        showDots={heroImages.length > 1}
+        className="h-full w-full"
+        overlay={overlayContent}
+      />
     </section>
   );
 }
@@ -1148,6 +1092,8 @@ function ModernHero({ site, theme, heroImage, effectiveHeroLogo }: {
   heroImage: string;
   effectiveHeroLogo?: string | null;
 }) {
+  const heroTransition = (site.heroTransition as HeroTransitionType) || 'kenburns';
+  
   // Use heroPhotos array for the slider, fallback to photos or default
   const heroImages = site.heroPhotos && site.heroPhotos.length > 0 
     ? site.heroPhotos 
@@ -1162,6 +1108,67 @@ function ModernHero({ site, theme, heroImage, effectiveHeroLogo }: {
         subtitle: i === 0 ? (site.price || 'Luxury Living Awaits') : '',
         backgroundImage: img
       }));
+
+  const scrollToDetails = () => {
+    document.getElementById('details')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // Use HeroSlider for liquid-webgl, slide, or crossfade transitions
+  if (heroTransition === 'liquid-webgl' || heroTransition === 'slide' || heroTransition === 'crossfade') {
+    const overlayContent = (
+      <>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/25 to-black/15 z-10" />
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center px-6">
+          <h1 
+            className="text-white mb-6"
+            style={{ 
+              fontFamily: 'var(--font-heading)',
+              fontWeight: 'normal',
+              letterSpacing: '-0.02em',
+              lineHeight: '1.1',
+              fontSize: '46px',
+              textShadow: '0 2px 8px rgba(0,0,0,0.3)'
+            }}
+          >
+            {site.title || site.address}
+          </h1>
+          <p 
+            className="text-xl md:text-2xl text-white/90 mb-10 max-w-2xl mx-auto"
+            style={{ 
+              fontFamily: 'var(--font-body)',
+              fontWeight: '400',
+              letterSpacing: '0.02em',
+              textShadow: '0 1px 4px rgba(0,0,0,0.2)'
+            }}
+          >
+            {site.price}
+          </p>
+          <button
+            onClick={scrollToDetails}
+            className="px-8 py-4 bg-white/20 backdrop-blur-sm text-white text-base font-medium tracking-wider uppercase border border-white/40 hover:bg-white/30 transition-all duration-300 rounded-sm"
+            style={{ fontFamily: 'var(--font-nav)' }}
+            data-testid="button-have-a-look"
+          >
+            Have a look
+          </button>
+        </div>
+      </>
+    );
+
+    return (
+      <section id="home" className="relative h-screen w-full overflow-hidden">
+        <HeroSlider
+          images={heroImages}
+          transition={heroTransition}
+          autoPlayInterval={6000}
+          showArrows={heroImages.length > 1}
+          showDots={heroImages.length > 1}
+          className="h-full w-full"
+          overlay={overlayContent}
+        />
+      </section>
+    );
+  }
   
   const [currentSlide, setCurrentSlide] = useState(0);
   const [previousSlide, setPreviousSlide] = useState(0);
@@ -1225,10 +1232,6 @@ function ModernHero({ site, theme, heroImage, effectiveHeroLogo }: {
   };
 
   const currentSlideData = slides[currentSlide];
-
-  const scrollToDetails = () => {
-    document.getElementById('details')?.scrollIntoView({ behavior: 'smooth' });
-  };
 
   // Calculate Ken Burns zoom scale (1.0 to 1.08 over the duration)
   const zoomScale = 1 + (zoomProgress * 0.08);
@@ -2126,25 +2129,10 @@ function MagazineHero({ site, theme, heroImage }: { site: Site; theme?: Theme; h
       ? site.photos.slice(0, 4) 
       : [site.imageUrl || heroImage];
   
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [isTransitioning, setIsTransitioning] = useState(false);
+  const heroTransition = (site.heroTransition as HeroTransitionType) || 'crossfade';
 
-  useEffect(() => {
-    if (heroPhotos.length <= 1) return;
-    
-    const interval = setInterval(() => {
-      setIsTransitioning(true);
-      setTimeout(() => {
-        setCurrentSlide(prev => (prev + 1) % heroPhotos.length);
-        setIsTransitioning(false);
-      }, 500);
-    }, 6000);
-    
-    return () => clearInterval(interval);
-  }, [heroPhotos.length]);
-
-  return (
-    <section id="home" className="relative h-screen w-full overflow-hidden">
+  const overlayContent = (
+    <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&display=swap');
         .magazine-hero-text {
@@ -2154,25 +2142,7 @@ function MagazineHero({ site, theme, heroImage }: { site: Site; theme?: Theme; h
           0%, 100% { transform: translateY(0); opacity: 1; }
           50% { transform: translateY(8px); opacity: 0.5; }
         }
-        @keyframes magazine-zoom-out {
-          0% { transform: scale(1.1); }
-          100% { transform: scale(1); }
-        }
       `}</style>
-      
-      {heroPhotos.map((photo, index) => (
-        <div
-          key={index}
-          className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ${
-            index === currentSlide && !isTransitioning ? 'opacity-100' : 'opacity-0'
-          }`}
-          style={{ 
-            backgroundImage: `url(${photo})`,
-            zIndex: index === currentSlide ? 1 : 0,
-            animation: index === currentSlide ? 'magazine-zoom-out 6s ease-out forwards' : 'none'
-          }}
-        />
-      ))}
       
       <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/70 z-10" />
       
@@ -2203,6 +2173,20 @@ function MagazineHero({ site, theme, heroImage }: { site: Site; theme?: Theme; h
           style={{ animation: 'scroll-arrow 2s ease-in-out infinite' }}
         />
       </button>
+    </>
+  );
+
+  return (
+    <section id="home" className="relative h-screen w-full overflow-hidden">
+      <HeroSlider
+        images={heroPhotos}
+        transition={heroTransition}
+        autoPlayInterval={6000}
+        showArrows={heroPhotos.length > 1}
+        showDots={heroPhotos.length > 1}
+        className="h-full w-full"
+        overlay={overlayContent}
+      />
     </section>
   );
 }
