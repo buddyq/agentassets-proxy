@@ -2057,16 +2057,6 @@ export default function AdminDashboard() {
                                   <Pencil className="h-3 w-3" />
                                   Edit
                                 </Button>
-                                <Button 
-                                  variant="outline" 
-                                  size="sm" 
-                                  className="gap-1"
-                                  onClick={() => handleEditUserCredits(user)}
-                                  data-testid={`button-edit-credits-${user.id}`}
-                                >
-                                  <CreditCard className="h-3 w-3" />
-                                  Credits
-                                </Button>
                                 <AlertDialog>
                                   <AlertDialogTrigger asChild>
                                     <Button 
