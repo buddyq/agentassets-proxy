@@ -13,6 +13,7 @@ import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, Save, Image, X, 
 import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -89,6 +90,7 @@ export default function EditSite() {
     layoutId: "",
     themeId: "",
     logo: "", // Site-specific logo override
+    invertLogo: false, // Invert logo colors for dark backgrounds
     heroLogo: "", // Hero-specific logo for Modern layout
     heroSlides: [] as HeroSlide[], // Up to 3 slides for Modern layout
     // Magazine layout fields
@@ -186,6 +188,7 @@ export default function EditSite() {
         layoutId: site.layoutId || layouts[0]?.id || "",
         themeId: site.themeId || themes[0]?.id || "",
         logo: site.logo || "",
+        invertLogo: site.invertLogo || false,
         heroLogo: site.heroLogo || "",
         heroSlides: site.heroSlides || [],
         // Magazine layout fields
@@ -958,6 +961,22 @@ export default function EditSite() {
                         }}
                       />
                     )}
+                    
+                    {/* Invert Logo Toggle */}
+                    <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="invert-logo">Invert Logo for Dark Backgrounds</Label>
+                        <p className="text-sm text-muted-foreground">
+                          Enable this if your logo is dark and you want it to appear white on dark hero sections.
+                        </p>
+                      </div>
+                      <Switch
+                        id="invert-logo"
+                        checked={formData.invertLogo}
+                        onCheckedChange={(checked) => setFormData({...formData, invertLogo: checked})}
+                        data-testid="switch-invert-logo"
+                      />
+                    </div>
                   </div>
 
                   {/* Layout-specific options */}

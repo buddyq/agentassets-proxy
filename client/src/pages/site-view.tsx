@@ -954,7 +954,7 @@ function ShoalwoodContact({ site, theme, agentInfo }: { site: Site; theme?: Them
 }
 
 // Modern Layout Components - Transparent nav that becomes solid on scroll, fade hero slider
-function ModernNavigation({ site, theme, hasPhotos, hasVideo, hasDocuments, effectiveHeroLogo, effectiveLogo }: { 
+function ModernNavigation({ site, theme, hasPhotos, hasVideo, hasDocuments, effectiveHeroLogo, effectiveLogo, invertLogo }: { 
   site: Site; 
   theme?: Theme; 
   hasPhotos: boolean; 
@@ -962,6 +962,7 @@ function ModernNavigation({ site, theme, hasPhotos, hasVideo, hasDocuments, effe
   hasDocuments: boolean;
   effectiveHeroLogo?: string | null;
   effectiveLogo?: string | null;
+  invertLogo?: boolean;
 }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -1018,7 +1019,7 @@ function ModernNavigation({ site, theme, hasPhotos, hasVideo, hasDocuments, effe
               <img 
                 src={effectiveHeroLogo} 
                 alt="Logo" 
-                className="w-auto object-contain transition-all duration-500 brightness-0 invert drop-shadow-lg"
+                className={`w-auto object-contain transition-all duration-500 drop-shadow-lg ${invertLogo ? 'brightness-0 invert' : ''}`}
                 style={{ height: '70px' }}
                 data-testid="img-modern-nav-hero-logo"
               />
@@ -1958,7 +1959,7 @@ function ModernDocuments({ site, theme }: { site: Site; theme?: Theme }) {
 
 // ===================== MAGAZINE LAYOUT COMPONENTS =====================
 
-function MagazineNavigation({ site, theme, effectiveLogo }: { site: Site; theme?: Theme; effectiveLogo?: string | null }) {
+function MagazineNavigation({ site, theme, effectiveLogo, invertLogo }: { site: Site; theme?: Theme; effectiveLogo?: string | null; invertLogo?: boolean }) {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -1998,7 +1999,9 @@ function MagazineNavigation({ site, theme, effectiveLogo }: { site: Site; theme?
           <img 
             src={effectiveLogo ?? theme?.logoUrl ?? ''} 
             alt="Logo" 
-            className="w-auto object-contain transition-all duration-300"
+            className={`w-auto object-contain transition-all duration-300 ${
+              !scrolled && invertLogo ? 'brightness-0 invert' : ''
+            }`}
             style={{ height: '80px' }}
             data-testid="img-magazine-logo"
           />
@@ -3172,7 +3175,7 @@ function MagazineContact({ site, theme, agentInfo }: { site: Site; theme?: Theme
   );
 }
 
-function MagazineFooter({ site, theme, footerLogo }: { site: Site; theme?: Theme; footerLogo?: string | null }) {
+function MagazineFooter({ site, theme, footerLogo, invertLogo }: { site: Site; theme?: Theme; footerLogo?: string | null; invertLogo?: boolean }) {
   return (
     <footer className="py-8 px-6 bg-gray-900 text-white/60 text-center">
       <div className="flex flex-col items-center gap-4">
@@ -3180,7 +3183,7 @@ function MagazineFooter({ site, theme, footerLogo }: { site: Site; theme?: Theme
           <img 
             src={footerLogo} 
             alt="Logo" 
-            className="h-10 w-auto object-contain"
+            className={`h-10 w-auto object-contain ${invertLogo ? 'brightness-0 invert' : ''}`}
             data-testid="img-footer-logo"
           />
         )}
@@ -3666,6 +3669,7 @@ export default function SiteView({ siteId: propSiteId, params: routeParams }: Si
           hasDocuments={!!(site.documents && site.documents.length > 0)}
           effectiveHeroLogo={effectiveHeroLogo}
           effectiveLogo={effectiveLogo}
+          invertLogo={site.invertLogo}
         />
         <ModernHero 
           site={site} 
@@ -3769,7 +3773,7 @@ export default function SiteView({ siteId: propSiteId, params: routeParams }: Si
           fontFamily: 'var(--font-body)'
         }}
       >
-        <MagazineNavigation site={site} theme={theme} effectiveLogo={effectiveLogo} />
+        <MagazineNavigation site={site} theme={theme} effectiveLogo={effectiveLogo} invertLogo={site.invertLogo} />
         <MagazineHero site={site} theme={theme} heroImage={heroImage} />
         <MagazineFactsBar site={site} theme={theme} />
         
@@ -3852,7 +3856,7 @@ export default function SiteView({ siteId: propSiteId, params: routeParams }: Si
         </section>
 
         <MagazineContact site={site} theme={theme} agentInfo={agentInfo} />
-        <MagazineFooter site={site} theme={theme} footerLogo={footerLogo} />
+        <MagazineFooter site={site} theme={theme} footerLogo={footerLogo} invertLogo={site.invertLogo} />
       </div>
     );
   }
