@@ -1861,9 +1861,22 @@ export default function AdminDashboard() {
                 <div className="py-4">
                   {editingUser && (
                     <div className="space-y-4">
-                      <div className="p-4 bg-muted rounded-lg">
-                        <p className="font-medium">{editingUser.name || editingUser.username || 'Unknown User'}</p>
-                        <p className="text-sm text-muted-foreground">@{editingUser.username}</p>
+                      <div className="p-4 bg-muted rounded-lg flex items-center gap-4">
+                        {editingUser.profileImageUrl ? (
+                          <img 
+                            src={editingUser.profileImageUrl} 
+                            alt={editingUser.name || 'User'} 
+                            className="w-16 h-16 rounded-full object-cover border-2 border-primary"
+                          />
+                        ) : (
+                          <div className="w-16 h-16 rounded-full bg-secondary/20 flex items-center justify-center text-secondary text-xl font-bold">
+                            {(editingUser.name || editingUser.username || 'U').charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-medium">{editingUser.name || editingUser.username || 'Unknown User'}</p>
+                          <p className="text-sm text-muted-foreground">@{editingUser.username}</p>
+                        </div>
                       </div>
                       
                       <div className="grid gap-4">
