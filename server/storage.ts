@@ -93,6 +93,7 @@ export interface IStorage {
   updateUserLogo(id: string, logo: string | null): Promise<User>;
   updateUserProfile(id: string, profile: Partial<User>): Promise<User>;
   updateUserPassword(id: string, password: string): Promise<void>;
+  updateUserAdminStatus(id: string, isAdmin: boolean): Promise<User>;
   
   // Site methods
   getSite(id: string): Promise<Site | undefined>;
@@ -304,6 +305,15 @@ export class DatabaseStorage implements IStorage {
       .update(users)
       .set({ password, updatedAt: new Date() })
       .where(eq(users.id, id));
+  }
+
+  async updateUserAdminStatus(id: string, isAdmin: boolean): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ isAdmin, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return user;
   }
 
   // Site methods

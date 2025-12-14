@@ -734,6 +734,38 @@ export function useAdminDeleteUser() {
   });
 }
 
+export type AdminUserProfileUpdate = {
+  name?: string;
+  email?: string;
+  phone?: string | null;
+  brokerage?: string | null;
+  teamName?: string | null;
+  address?: string | null;
+  credits?: number;
+  isAdmin?: boolean;
+};
+
+export function useAdminUpdateUserProfile() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: AdminUserProfileUpdate }) => {
+      const res = await fetch(`${API_BASE}/admin/users/${id}/profile`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to update user profile');
+      }
+      return res.json() as Promise<Omit<User, 'password'>>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+    }
+  });
+}
+
 // User coupon redemption
 export function useRedeemCoupon() {
   const queryClient = useQueryClient();

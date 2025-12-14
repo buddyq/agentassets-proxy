@@ -11,7 +11,7 @@ import {
   useThemes, useCreateTheme, useUpdateTheme, useDeleteTheme, 
   useLayouts, useCreateLayout, useUpdateLayout, useDeleteLayout,
   useAdminCoupons, useCreateCoupon, useUpdateCoupon, useDeleteCoupon,
-  useAdminUsers, useAdminUpdateUserCredits, useAdminDeleteUser,
+  useAdminUsers, useAdminUpdateUserCredits, useAdminDeleteUser, useAdminUpdateUserProfile,
   useAdminBrokerages, useAdminBrokerageTemplates, useAdminAssignTemplateToBrokerage, useAdminRemoveTemplateFromBrokerage,
   useAdminAllBrokerageTemplates,
   useAdminStats,
@@ -48,8 +48,10 @@ export default function AdminDashboard() {
   const updateCouponMutation = useUpdateCoupon();
   const deleteCouponMutation = useDeleteCoupon();
   const updateUserCreditsMutation = useAdminUpdateUserCredits();
+  const updateUserProfileMutation = useAdminUpdateUserProfile();
   const deleteUserMutation = useAdminDeleteUser();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isUserProfileDialogOpen, setIsUserProfileDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isLayoutDialogOpen, setIsLayoutDialogOpen] = useState(false);
   const [isLayoutEditDialogOpen, setIsLayoutEditDialogOpen] = useState(false);
@@ -87,6 +89,14 @@ export default function AdminDashboard() {
   const [editCouponExpiresAt, setEditCouponExpiresAt] = useState<string>("");
   const [editCouponIsActive, setEditCouponIsActive] = useState(true);
   const [newCreditsAmount, setNewCreditsAmount] = useState<number>(0);
+  const [editUserName, setEditUserName] = useState("");
+  const [editUserEmail, setEditUserEmail] = useState("");
+  const [editUserPhone, setEditUserPhone] = useState("");
+  const [editUserBrokerage, setEditUserBrokerage] = useState("");
+  const [editUserTeamName, setEditUserTeamName] = useState("");
+  const [editUserAddress, setEditUserAddress] = useState("");
+  const [editUserCredits, setEditUserCredits] = useState<number>(0);
+  const [editUserIsAdmin, setEditUserIsAdmin] = useState(false);
   const [newThemeName, setNewThemeName] = useState("");
   const [primaryColor, setPrimaryColor] = useState("#000000");
   const [secondaryColor, setSecondaryColor] = useState("#ffffff");
@@ -427,6 +437,82 @@ export default function AdminDashboard() {
           toast({
             title: "Credits Updated",
             description: `User now has ${newCreditsAmount} credits.`,
+          });
+        }
+      }
+    );
+  };
+
+  const handleEditUserProfile = (user: Omit<User, 'password'>) => {
+    setEditingUser(user);
+    setEditUserName(user.name || "");
+    setEditUserEmail(user.email || "");
+    setEditUserPhone(user.phone || "");
+    setEditUserBrokerage(user.brokerage || "");
+    setEditUserTeamName(user.teamName || "");
+    setEditUserAddress(user.address || "");
+    setEditUserCredits(user.credits);
+    setEditUserIsAdmin(user.isAdmin || false);
+    setIsUserProfileDialogOpen(true);
+  };
+
+  const handleSaveUserProfile = () => {
+    if (!editingUser) return;
+
+    // Only send fields that have actually changed to avoid overwriting concurrent changes
+    const updates: Record<string, any> = {};
+    
+    if (editUserName !== (editingUser.name || "")) {
+      updates.name = editUserName || undefined;
+    }
+    if (editUserEmail !== (editingUser.email || "")) {
+      updates.email = editUserEmail || undefined;
+    }
+    if (editUserPhone !== (editingUser.phone || "")) {
+      updates.phone = editUserPhone || null;
+    }
+    if (editUserBrokerage !== (editingUser.brokerage || "")) {
+      updates.brokerage = editUserBrokerage || null;
+    }
+    if (editUserTeamName !== (editingUser.teamName || "")) {
+      updates.teamName = editUserTeamName || null;
+    }
+    if (editUserAddress !== (editingUser.address || "")) {
+      updates.address = editUserAddress || null;
+    }
+    if (editUserCredits !== editingUser.credits) {
+      updates.credits = editUserCredits;
+    }
+    if (editUserIsAdmin !== (editingUser.isAdmin || false)) {
+      updates.isAdmin = editUserIsAdmin;
+    }
+
+    // If no changes, just close the dialog
+    if (Object.keys(updates).length === 0) {
+      setIsUserProfileDialogOpen(false);
+      setEditingUser(null);
+      return;
+    }
+
+    updateUserProfileMutation.mutate(
+      {
+        id: editingUser.id,
+        updates
+      },
+      {
+        onSuccess: () => {
+          setIsUserProfileDialogOpen(false);
+          setEditingUser(null);
+          toast({
+            title: "Profile Updated",
+            description: "User profile has been updated successfully.",
+          });
+        },
+        onError: (error: Error) => {
+          toast({
+            title: "Error",
+            description: error.message,
+            variant: "destructive"
           });
         }
       }
@@ -1766,6 +1852,133 @@ export default function AdminDashboard() {
               </DialogContent>
             </Dialog>
 
+            {/* User Profile Edit Dialog */}
+            <Dialog open={isUserProfileDialogOpen} onOpenChange={setIsUserProfileDialogOpen}>
+              <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Edit User Profile</DialogTitle>
+                </DialogHeader>
+                <div className="py-4">
+                  {editingUser && (
+                    <div className="space-y-4">
+                      <div className="p-4 bg-muted rounded-lg">
+                        <p className="font-medium">{editingUser.name || editingUser.username || 'Unknown User'}</p>
+                        <p className="text-sm text-muted-foreground">@{editingUser.username}</p>
+                      </div>
+                      
+                      <div className="grid gap-4">
+                        <div className="grid gap-2">
+                          <Label htmlFor="edit-user-name">Name</Label>
+                          <Input 
+                            id="edit-user-name" 
+                            value={editUserName} 
+                            onChange={(e) => setEditUserName(e.target.value)}
+                            placeholder="Full name"
+                            data-testid="input-edit-user-name"
+                          />
+                        </div>
+                        
+                        <div className="grid gap-2">
+                          <Label htmlFor="edit-user-email">Email</Label>
+                          <Input 
+                            id="edit-user-email" 
+                            type="email"
+                            value={editUserEmail} 
+                            onChange={(e) => setEditUserEmail(e.target.value)}
+                            placeholder="Email address"
+                            data-testid="input-edit-user-email"
+                          />
+                        </div>
+                        
+                        <div className="grid gap-2">
+                          <Label htmlFor="edit-user-phone">Phone</Label>
+                          <Input 
+                            id="edit-user-phone" 
+                            value={editUserPhone} 
+                            onChange={(e) => setEditUserPhone(e.target.value)}
+                            placeholder="Phone number"
+                            data-testid="input-edit-user-phone"
+                          />
+                        </div>
+                        
+                        <div className="grid gap-2">
+                          <Label htmlFor="edit-user-brokerage">Brokerage</Label>
+                          <Input 
+                            id="edit-user-brokerage" 
+                            value={editUserBrokerage} 
+                            onChange={(e) => setEditUserBrokerage(e.target.value)}
+                            placeholder="Brokerage name"
+                            data-testid="input-edit-user-brokerage"
+                          />
+                        </div>
+                        
+                        <div className="grid gap-2">
+                          <Label htmlFor="edit-user-team">Team Name</Label>
+                          <Input 
+                            id="edit-user-team" 
+                            value={editUserTeamName} 
+                            onChange={(e) => setEditUserTeamName(e.target.value)}
+                            placeholder="Team name"
+                            data-testid="input-edit-user-team"
+                          />
+                        </div>
+                        
+                        <div className="grid gap-2">
+                          <Label htmlFor="edit-user-address">Address</Label>
+                          <Input 
+                            id="edit-user-address" 
+                            value={editUserAddress} 
+                            onChange={(e) => setEditUserAddress(e.target.value)}
+                            placeholder="Business address"
+                            data-testid="input-edit-user-address"
+                          />
+                        </div>
+                        
+                        <div className="grid gap-2">
+                          <Label htmlFor="edit-user-credits">Credits</Label>
+                          <Input 
+                            id="edit-user-credits" 
+                            type="number"
+                            value={editUserCredits} 
+                            onChange={(e) => setEditUserCredits(parseInt(e.target.value) || 0)}
+                            min={0}
+                            data-testid="input-edit-user-credits"
+                          />
+                        </div>
+                        
+                        <div className="flex items-center justify-between p-4 border rounded-lg">
+                          <div>
+                            <Label htmlFor="edit-user-admin">Admin Access</Label>
+                            <p className="text-sm text-muted-foreground">Grant admin privileges</p>
+                          </div>
+                          <Switch
+                            id="edit-user-admin"
+                            checked={editUserIsAdmin}
+                            onCheckedChange={setEditUserIsAdmin}
+                            data-testid="switch-edit-user-admin"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsUserProfileDialogOpen(false)}>Cancel</Button>
+                  <Button 
+                    onClick={handleSaveUserProfile} 
+                    disabled={updateUserProfileMutation.isPending}
+                    data-testid="button-save-user-profile"
+                  >
+                    {updateUserProfileMutation.isPending ? (
+                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Saving...</>
+                    ) : (
+                      'Save Changes'
+                    )}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
             {/* Users Table */}
             <Card>
               <CardContent className="p-0">
@@ -1838,11 +2051,21 @@ export default function AdminDashboard() {
                                   variant="outline" 
                                   size="sm" 
                                   className="gap-1"
+                                  onClick={() => handleEditUserProfile(user)}
+                                  data-testid={`button-edit-profile-${user.id}`}
+                                >
+                                  <Pencil className="h-3 w-3" />
+                                  Edit
+                                </Button>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="gap-1"
                                   onClick={() => handleEditUserCredits(user)}
                                   data-testid={`button-edit-credits-${user.id}`}
                                 >
                                   <CreditCard className="h-3 w-3" />
-                                  Adjust Credits
+                                  Credits
                                 </Button>
                                 <AlertDialog>
                                   <AlertDialogTrigger asChild>

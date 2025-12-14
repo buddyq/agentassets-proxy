@@ -1971,6 +1971,51 @@ export async function registerRoutes(
     }
   });
 
+  // Admin route to update user profile
+  const adminUpdateProfileSchema = z.object({
+    name: z.string().optional(),
+    email: z.string().email().optional().or(z.literal("")),
+    phone: z.string().optional().nullable(),
+    brokerage: z.string().optional().nullable(),
+    teamName: z.string().optional().nullable(),
+    address: z.string().optional().nullable(),
+    credits: z.number().optional(),
+    isAdmin: z.boolean().optional(),
+  });
+
+  app.patch("/api/admin/users/:id/profile", isAdmin, async (req, res) => {
+    try {
+      const result = adminUpdateProfileSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ error: "Invalid profile data", details: result.error.issues });
+      }
+
+      const { credits, isAdmin: setAdmin, ...profileData } = result.data;
+      
+      // Update profile fields
+      let user = await storage.updateUserProfile(req.params.id, profileData);
+      
+      // Update credits if provided
+      if (typeof credits === 'number' && credits >= 0) {
+        user = await storage.updateUserCredits(req.params.id, credits);
+      }
+      
+      // Update admin status if provided
+      if (typeof setAdmin === 'boolean') {
+        user = await storage.updateUserAdminStatus(req.params.id, setAdmin);
+      }
+      
+      const { password: _, ...safeUser } = user;
+      res.json(safeUser);
+    } catch (error: any) {
+      console.error("Error updating user profile:", error);
+      if (error?.code === '23505' && error?.constraint === 'users_email_unique') {
+        return res.status(400).json({ error: "This email is already in use by another account" });
+      }
+      res.status(500).json({ error: "Failed to update user profile" });
+    }
+  });
+
   // Admin route to get sample sites for editing
   app.get("/api/admin/sample-sites", isAdmin, async (req, res) => {
     try {
