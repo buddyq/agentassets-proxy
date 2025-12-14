@@ -1,10 +1,53 @@
 import { useEffect, useRef, useState } from 'react';
 import * as PIXI from 'pixi.js';
+import gsap from 'gsap';
 
 interface LiquidWipeSliderProps {
   images: string[];
   currentIndex: number;
   onTransitionComplete?: () => void;
+}
+
+function createCrystallizeDisplacementMap(): HTMLCanvasElement {
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 512;
+  const ctx = canvas.getContext('2d');
+  
+  if (ctx) {
+    const imageData = ctx.createImageData(512, 512);
+    
+    for (let i = 0; i < imageData.data.length; i += 4) {
+      const x = (i / 4) % 512;
+      const y = Math.floor((i / 4) / 512);
+      
+      const freq1 = 0.008;
+      const freq2 = 0.012;
+      const freq3 = 0.02;
+      const freq4 = 0.004;
+      
+      const layer1 = Math.sin(x * freq1 + Math.cos(y * freq2) * 2) * Math.cos(y * freq1 + Math.sin(x * freq2) * 2);
+      const layer2 = Math.sin((x + y) * freq2) * Math.cos((x - y) * freq3);
+      const layer3 = Math.sin(x * freq3) * Math.sin(y * freq3) * Math.cos((x * y) * freq4 * 0.001);
+      const layer4 = Math.sin(Math.sqrt(x * x + y * y) * freq2) * 0.5;
+      
+      const combined = (layer1 + layer2 * 0.8 + layer3 * 0.6 + layer4) / 3;
+      
+      const voronoi = Math.abs(Math.sin(x * 0.1) * Math.cos(y * 0.1) + 
+                              Math.sin((x + 50) * 0.08) * Math.cos((y + 30) * 0.08));
+      
+      const noise = (combined * 0.7 + voronoi * 0.3) * 127 + 128;
+      const clampedNoise = Math.max(0, Math.min(255, noise));
+      
+      imageData.data[i] = clampedNoise;
+      imageData.data[i + 1] = clampedNoise;
+      imageData.data[i + 2] = clampedNoise;
+      imageData.data[i + 3] = 255;
+    }
+    ctx.putImageData(imageData, 0, 0);
+  }
+  
+  return canvas;
 }
 
 export default function LiquidWipeSlider({
@@ -16,9 +59,11 @@ export default function LiquidWipeSlider({
   const appRef = useRef<PIXI.Application | null>(null);
   const spritesRef = useRef<PIXI.Sprite[]>([]);
   const displacementSpriteRef = useRef<PIXI.Sprite | null>(null);
+  const displacementFilterRef = useRef<PIXI.DisplacementFilter | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [previousIndex, setPreviousIndex] = useState(currentIndex);
   const animatingRef = useRef(false);
+  const tickerRef = useRef<PIXI.Ticker | null>(null);
   
   useEffect(() => {
     if (!containerRef.current || images.length === 0) return;
@@ -41,43 +86,28 @@ export default function LiquidWipeSlider({
         container.appendChild(app.canvas as HTMLCanvasElement);
         appRef.current = app;
         
-        const displacementCanvas = document.createElement('canvas');
-        displacementCanvas.width = 512;
-        displacementCanvas.height = 512;
-        const ctx = displacementCanvas.getContext('2d');
-        
-        if (ctx) {
-          const imageData = ctx.createImageData(512, 512);
-          for (let i = 0; i < imageData.data.length; i += 4) {
-            const x = (i / 4) % 512;
-            const y = Math.floor((i / 4) / 512);
-            
-            const noise1 = Math.sin(x * 0.02) * Math.cos(y * 0.02) * 127 + 128;
-            const noise2 = Math.sin((x + y) * 0.015) * 127 + 128;
-            const noise3 = Math.cos(x * 0.03 - y * 0.02) * 127 + 128;
-            
-            const finalNoise = (noise1 + noise2 + noise3) / 3;
-            
-            imageData.data[i] = finalNoise;
-            imageData.data[i + 1] = finalNoise;
-            imageData.data[i + 2] = finalNoise;
-            imageData.data[i + 3] = 255;
-          }
-          ctx.putImageData(imageData, 0, 0);
-        }
-        
+        const displacementCanvas = createCrystallizeDisplacementMap();
         const displacementTexture = PIXI.Texture.from(displacementCanvas);
         const displacementSprite = new PIXI.Sprite(displacementTexture);
+        
         displacementSprite.texture.source.wrapMode = 'repeat';
+        displacementSprite.anchor.set(0.5);
+        displacementSprite.x = width / 2;
+        displacementSprite.y = height / 2;
+        displacementSprite.scale.set(2);
+        
         displacementSpriteRef.current = displacementSprite;
         
         const displacementFilter = new PIXI.DisplacementFilter({
           sprite: displacementSprite,
           scale: { x: 0, y: 0 },
         });
+        displacementFilterRef.current = displacementFilter;
         
-        app.stage.filters = [displacementFilter];
+        const slidesContainer = new PIXI.Container();
+        app.stage.addChild(slidesContainer);
         app.stage.addChild(displacementSprite);
+        app.stage.filters = [displacementFilter];
         
         const loadedSprites: PIXI.Sprite[] = [];
         
@@ -92,11 +122,12 @@ export default function LiquidWipeSlider({
             
             sprite.width = sprite.texture.width * scale;
             sprite.height = sprite.texture.height * scale;
-            sprite.x = (width - sprite.width) / 2;
-            sprite.y = (height - sprite.height) / 2;
+            sprite.anchor.set(0.5);
+            sprite.x = width / 2;
+            sprite.y = height / 2;
             sprite.alpha = i === currentIndex ? 1 : 0;
             
-            app.stage.addChild(sprite);
+            slidesContainer.addChild(sprite);
             loadedSprites.push(sprite);
           } catch (err) {
             console.warn(`Failed to load image ${i}:`, err);
@@ -104,13 +135,24 @@ export default function LiquidWipeSlider({
             graphics.rect(0, 0, width, height);
             graphics.fill(0x333333);
             const sprite = new PIXI.Sprite(app.renderer.generateTexture(graphics));
+            sprite.anchor.set(0.5);
+            sprite.x = width / 2;
+            sprite.y = height / 2;
             sprite.alpha = i === currentIndex ? 1 : 0;
-            app.stage.addChild(sprite);
+            slidesContainer.addChild(sprite);
             loadedSprites.push(sprite);
           }
         }
         
         spritesRef.current = loadedSprites;
+        
+        const ticker = new PIXI.Ticker();
+        ticker.autoStart = true;
+        ticker.add(() => {
+          app.renderer.render(app.stage);
+        });
+        tickerRef.current = ticker;
+        
         setIsInitialized(true);
         
       } catch (err) {
@@ -121,12 +163,17 @@ export default function LiquidWipeSlider({
     initPixi();
     
     return () => {
+      if (tickerRef.current) {
+        tickerRef.current.destroy();
+        tickerRef.current = null;
+      }
       if (appRef.current) {
         appRef.current.destroy(true, { children: true, texture: true });
         appRef.current = null;
       }
       spritesRef.current = [];
       displacementSpriteRef.current = null;
+      displacementFilterRef.current = null;
       setIsInitialized(false);
     };
   }, [images]);
@@ -143,7 +190,12 @@ export default function LiquidWipeSlider({
       
       appRef.current.renderer.resize(width, height);
       
-      spritesRef.current.forEach((sprite, i) => {
+      if (displacementSpriteRef.current) {
+        displacementSpriteRef.current.x = width / 2;
+        displacementSpriteRef.current.y = height / 2;
+      }
+      
+      spritesRef.current.forEach((sprite) => {
         if (sprite.texture) {
           const scaleX = width / sprite.texture.width;
           const scaleY = height / sprite.texture.height;
@@ -151,8 +203,8 @@ export default function LiquidWipeSlider({
           
           sprite.width = sprite.texture.width * scale;
           sprite.height = sprite.texture.height * scale;
-          sprite.x = (width - sprite.width) / 2;
-          sprite.y = (height - sprite.height) / 2;
+          sprite.x = width / 2;
+          sprite.y = height / 2;
         }
       });
     };
@@ -167,11 +219,11 @@ export default function LiquidWipeSlider({
     }
     
     animatingRef.current = true;
-    const app = appRef.current;
     const sprites = spritesRef.current;
     const displacementSprite = displacementSpriteRef.current;
+    const displacementFilter = displacementFilterRef.current;
     
-    if (!app || sprites.length === 0 || !displacementSprite) {
+    if (sprites.length === 0 || !displacementSprite || !displacementFilter) {
       animatingRef.current = false;
       return;
     }
@@ -184,54 +236,48 @@ export default function LiquidWipeSlider({
       return;
     }
     
-    const displacementFilter = app.stage.filters?.[0] as PIXI.DisplacementFilter;
-    if (!displacementFilter) {
-      animatingRef.current = false;
-      return;
-    }
+    const displaceScale = [300, 300];
+    const displaceScaleTo = [0, 0];
     
-    const duration = 1200;
-    const startTime = Date.now();
+    const initialRotation = displacementSprite.rotation;
+    const initialScale = displacementSprite.scale.x;
     
-    toSprite.alpha = 0;
-    fromSprite.alpha = 1;
-    
-    const animate = () => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      
-      const easedProgress = 1 - Math.pow(1 - progress, 3);
-      
-      const maxDisplacement = 80;
-      const displacement = Math.sin(easedProgress * Math.PI) * maxDisplacement;
-      displacementFilter.scale.x = displacement;
-      displacementFilter.scale.y = displacement;
-      
-      displacementSprite.x += 2;
-      displacementSprite.y += 1;
-      
-      if (progress < 0.5) {
-        fromSprite.alpha = 1;
-        toSprite.alpha = progress * 2;
-      } else {
-        fromSprite.alpha = 1 - (progress - 0.5) * 2;
-        toSprite.alpha = 1;
-      }
-      
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      } else {
-        fromSprite.alpha = 0;
-        toSprite.alpha = 1;
-        displacementFilter.scale.x = 0;
-        displacementFilter.scale.y = 0;
-        animatingRef.current = false;
+    const tl = gsap.timeline({
+      onComplete: () => {
         setPreviousIndex(currentIndex);
+        animatingRef.current = false;
+        displacementSprite.scale.set(2);
         onTransitionComplete?.();
+      },
+      onUpdate: () => {
+        const progress = tl.progress();
+        displacementSprite.rotation = initialRotation + progress * 0.15;
+        displacementSprite.scale.set(initialScale + progress * 2);
       }
-    };
+    });
     
-    requestAnimationFrame(animate);
+    tl.to(displacementFilter.scale, {
+      x: displaceScale[0],
+      y: displaceScale[1],
+      duration: 1,
+      ease: "power1.out"
+    })
+    .to(fromSprite, {
+      alpha: 0,
+      duration: 0.5,
+      ease: "power2.out"
+    }, 0.2)
+    .to(toSprite, {
+      alpha: 1,
+      duration: 0.5,
+      ease: "power2.out"
+    }, 0.3)
+    .to(displacementFilter.scale, {
+      x: displaceScaleTo[0],
+      y: displaceScaleTo[1],
+      duration: 1,
+      ease: "power2.out"
+    }, 0.3);
     
   }, [currentIndex, previousIndex, isInitialized, onTransitionComplete]);
   
