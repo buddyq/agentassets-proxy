@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import * as PIXI from 'pixi.js';
 import gsap from 'gsap';
 
@@ -6,6 +6,21 @@ interface LiquidWipeSliderProps {
   images: string[];
   currentIndex: number;
   onTransitionComplete?: () => void;
+}
+
+async function loadImageAsTexture(url: string): Promise<PIXI.Texture> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const texture = PIXI.Texture.from(img);
+      resolve(texture);
+    };
+    img.onerror = (err) => {
+      reject(new Error(`Failed to load image: ${url}`));
+    };
+    img.src = url;
+  });
 }
 
 function createCrystallizeDisplacementMap(): HTMLCanvasElement {
@@ -62,15 +77,38 @@ export default function LiquidWipeSlider({
   const displacementFilterRef = useRef<PIXI.DisplacementFilter | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [previousIndex, setPreviousIndex] = useState(currentIndex);
+  const [containerReady, setContainerReady] = useState(false);
   const animatingRef = useRef(false);
   const tickerRef = useRef<PIXI.Ticker | null>(null);
   
   useEffect(() => {
-    if (!containerRef.current || images.length === 0) return;
+    if (!containerRef.current) return;
+    
+    const checkDimensions = () => {
+      const container = containerRef.current;
+      if (container && container.clientWidth > 0 && container.clientHeight > 0) {
+        setContainerReady(true);
+      }
+    };
+    
+    checkDimensions();
+    
+    const resizeObserver = new ResizeObserver(() => {
+      checkDimensions();
+    });
+    resizeObserver.observe(containerRef.current);
+    
+    return () => resizeObserver.disconnect();
+  }, []);
+  
+  useEffect(() => {
+    if (!containerRef.current || images.length === 0 || !containerReady) return;
     
     const container = containerRef.current;
-    const width = container.clientWidth || window.innerWidth;
-    const height = container.clientHeight || window.innerHeight;
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+    
+    if (width === 0 || height === 0) return;
     
     const initPixi = async () => {
       try {
@@ -113,15 +151,17 @@ export default function LiquidWipeSlider({
         
         for (let i = 0; i < images.length; i++) {
           try {
-            const texture = await PIXI.Assets.load(images[i]);
+            const texture = await loadImageAsTexture(images[i]);
             const sprite = new PIXI.Sprite(texture);
             
-            const scaleX = width / sprite.texture.width;
-            const scaleY = height / sprite.texture.height;
+            const texWidth = sprite.texture.width || width;
+            const texHeight = sprite.texture.height || height;
+            const scaleX = width / texWidth;
+            const scaleY = height / texHeight;
             const scale = Math.max(scaleX, scaleY);
             
-            sprite.width = sprite.texture.width * scale;
-            sprite.height = sprite.texture.height * scale;
+            sprite.width = texWidth * scale;
+            sprite.height = texHeight * scale;
             sprite.anchor.set(0.5);
             sprite.x = width / 2;
             sprite.y = height / 2;
@@ -176,7 +216,7 @@ export default function LiquidWipeSlider({
       displacementFilterRef.current = null;
       setIsInitialized(false);
     };
-  }, [images]);
+  }, [images, containerReady]);
   
   useEffect(() => {
     if (!containerRef.current || !appRef.current) return;
@@ -284,8 +324,12 @@ export default function LiquidWipeSlider({
   return (
     <div 
       ref={containerRef} 
-      className="absolute inset-0"
-      style={{ backgroundColor: '#000' }}
+      className="absolute inset-0 w-full h-full"
+      style={{ 
+        backgroundColor: '#000',
+        zIndex: 1,
+        overflow: 'hidden'
+      }}
     />
   );
 }
