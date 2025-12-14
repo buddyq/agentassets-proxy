@@ -651,3 +651,94 @@ AgentAssets - Beautiful Property Websites for Real Estate Professionals
   });
   console.log(`Group member added email sent to ${recipientEmail}`);
 }
+
+interface NewUserEmailData {
+  userName: string;
+  userEmail: string;
+  createdAt: Date;
+}
+
+export async function sendNewUserNotificationEmail(data: NewUserEmailData): Promise<void> {
+  const adminEmail = "buddy@agentassets.com";
+  const { userName, userEmail, createdAt } = data;
+
+  const safeUserName = escapeHtml(userName);
+  const safeUserEmail = escapeHtml(userEmail);
+  const formattedDate = createdAt.toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #558B73 0%, #3d6b57 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+        .header h1 { margin: 0; font-size: 24px; }
+        .content { background: #f9f9f9; padding: 30px; border: 1px solid #e0e0e0; }
+        .user-info { background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #558B73; }
+        .label { font-weight: 600; color: #666; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .value { font-size: 16px; margin-bottom: 15px; color: #333; }
+        .footer { text-align: center; padding: 20px; color: #888; font-size: 12px; }
+        .cta { display: inline-block; background: #558B73; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 15px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>New User Signup</h1>
+        </div>
+        <div class="content">
+          <div class="user-info">
+            <div class="label">Name</div>
+            <div class="value" style="font-size: 18px; font-weight: 600;">${safeUserName}</div>
+            
+            <div class="label">Email</div>
+            <div class="value"><a href="mailto:${safeUserEmail}" style="color: #558B73;">${safeUserEmail}</a></div>
+            
+            <div class="label">Signed Up</div>
+            <div class="value">${formattedDate}</div>
+          </div>
+          
+          <div style="text-align: center; margin-top: 25px;">
+            <a href="https://agentassets.com/admin" class="cta">View in Admin Dashboard</a>
+          </div>
+        </div>
+        <div class="footer">
+          <p>This notification was sent by AgentAssets</p>
+          <p>You received this because a new user signed up on the platform.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const textContent = `
+New User Signup
+
+Name: ${userName}
+Email: ${userEmail}
+Signed Up: ${formattedDate}
+
+View in Admin Dashboard: https://agentassets.com/admin
+
+---
+AgentAssets - Beautiful Property Websites for Real Estate Professionals
+  `.trim();
+
+  await transporter.sendMail({
+    from: `"AgentAssets" <${process.env.SMTP_FROM || "no-reply@agentassets.com"}>`,
+    to: adminEmail,
+    subject: `New User Signup: ${userName}`,
+    text: textContent,
+    html: htmlContent,
+  });
+  console.log(`New user notification email sent to ${adminEmail} for user ${userEmail}`);
+}

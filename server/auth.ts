@@ -7,6 +7,7 @@ import { scrypt, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
+import { sendNewUserNotificationEmail } from "./email";
 
 declare global {
   namespace Express {
@@ -117,6 +118,13 @@ export function setupAuth(app: Express) {
         email,
         name: name || email.split('@')[0],
       });
+
+      // Send new user notification email to admin (async, don't block registration)
+      sendNewUserNotificationEmail({
+        userName: user.name || email.split('@')[0],
+        userEmail: email,
+        createdAt: new Date(),
+      }).catch(err => console.error("Failed to send new user notification email:", err));
 
       req.login(user, (err) => {
         if (err) return next(err);
