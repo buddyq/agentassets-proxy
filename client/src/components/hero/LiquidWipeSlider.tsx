@@ -23,9 +23,9 @@ async function loadImageAsTexture(url: string): Promise<PIXI.Texture> {
   });
 }
 
-function createRippleDisplacementMap(): HTMLCanvasElement {
+function createCrystallizeDisplacementMap(): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
-  const size = 2048;
+  const size = 512;
   canvas.width = size;
   canvas.height = size;
   const ctx = canvas.getContext('2d');
@@ -37,29 +37,27 @@ function createRippleDisplacementMap(): HTMLCanvasElement {
       const x = (i / 4) % size;
       const y = Math.floor((i / 4) / size);
       
-      const cx = size / 2;
-      const cy = size / 2;
-      const dx = x - cx;
-      const dy = y - cy;
-      const dist = Math.sqrt(dx * dx + dy * dy);
+      const freq1 = 0.008;
+      const freq2 = 0.012;
+      const freq3 = 0.02;
+      const freq4 = 0.004;
       
-      const rippleFreq = 0.015;
-      const ripple = Math.sin(dist * rippleFreq) * 0.5 + 0.5;
+      const layer1 = Math.sin(x * freq1 + Math.cos(y * freq2) * 2) * Math.cos(y * freq1 + Math.sin(x * freq2) * 2);
+      const layer2 = Math.sin((x + y) * freq2) * Math.cos((x - y) * freq3);
+      const layer3 = Math.sin(x * freq3) * Math.sin(y * freq3) * Math.cos((x * y) * freq4 * 0.001);
+      const layer4 = Math.sin(Math.sqrt(x * x + y * y) * freq2) * 0.5;
       
-      const secondaryFreq = 0.008;
-      const secondary = Math.sin(dist * secondaryFreq + Math.PI / 4) * 0.3 + 0.5;
+      const combined = (layer1 + layer2 * 0.8 + layer3 * 0.6 + layer4) / 3;
       
-      const waveX = Math.sin(x * 0.01 + y * 0.005) * 0.2;
-      const waveY = Math.cos(y * 0.01 - x * 0.005) * 0.2;
+      const voronoi = Math.abs(Math.sin(x * 0.1) * Math.cos(y * 0.1) + 
+                              Math.sin((x + 50) * 0.08) * Math.cos((y + 30) * 0.08));
       
-      const combined = (ripple * 0.6 + secondary * 0.25 + waveX * 0.075 + waveY * 0.075);
+      const noise = (combined * 0.7 + voronoi * 0.3) * 127 + 128;
+      const clampedNoise = Math.max(0, Math.min(255, noise));
       
-      const value = Math.floor(combined * 255);
-      const clampedValue = Math.max(0, Math.min(255, value));
-      
-      imageData.data[i] = clampedValue;
-      imageData.data[i + 1] = clampedValue;
-      imageData.data[i + 2] = clampedValue;
+      imageData.data[i] = clampedNoise;
+      imageData.data[i + 1] = clampedNoise;
+      imageData.data[i + 2] = clampedNoise;
       imageData.data[i + 3] = 255;
     }
     ctx.putImageData(imageData, 0, 0);
@@ -127,7 +125,7 @@ export default function LiquidWipeSlider({
         container.appendChild(app.canvas as HTMLCanvasElement);
         appRef.current = app;
         
-        const displacementCanvas = createRippleDisplacementMap();
+        const displacementCanvas = createCrystallizeDisplacementMap();
         const displacementTexture = PIXI.Texture.from(displacementCanvas);
         const displacementSprite = new PIXI.Sprite(displacementTexture);
         
@@ -141,7 +139,7 @@ export default function LiquidWipeSlider({
         
         const displacementFilter = new PIXI.DisplacementFilter({
           sprite: displacementSprite,
-          scale: { x: 20, y: 20 },
+          scale: { x: 0, y: 0 },
         });
         displacementFilterRef.current = displacementFilter;
         
@@ -191,13 +189,7 @@ export default function LiquidWipeSlider({
         
         const ticker = new PIXI.Ticker();
         ticker.autoStart = true;
-        ticker.add((delta) => {
-          displacementSprite.x += 0.1 * delta.deltaTime;
-          displacementSprite.y += 0.1 * delta.deltaTime;
-          
-          displacementSprite.x += 2.14 * delta.deltaTime;
-          displacementSprite.y += 22.24 * delta.deltaTime;
-          
+        ticker.add(() => {
           app.renderer.render(app.stage);
         });
         tickerRef.current = ticker;
@@ -285,42 +277,45 @@ export default function LiquidWipeSlider({
       return;
     }
     
-    const initialScale = displacementSprite.scale.x;
+    const displaceScale = [300, 300];
+    const displaceScaleTo = [0, 0];
     
     const tl = gsap.timeline({
       onComplete: () => {
         setPreviousIndex(currentIndex);
         animatingRef.current = false;
-        displacementSprite.scale.set(2);
+        displacementSprite.scale.set(1);
         onTransitionComplete?.();
       },
       onUpdate: () => {
         const progress = tl.progress();
         displacementSprite.rotation += progress * 0.02;
-        displacementSprite.scale.set(initialScale + progress * 3);
+        displacementSprite.scale.set(progress * 3);
       }
     });
     
     tl.to(displacementFilter.scale, {
-      y: `+=${1280}`,
+      x: displaceScale[0],
+      y: displaceScale[1],
       duration: 1,
-      ease: "power3.out"
+      ease: "power1.out"
     })
     .to(fromSprite, {
       alpha: 0,
       duration: 0.5,
-      ease: "power3.out"
-    }, 0.4)
+      ease: "power2.out"
+    }, 0.2)
     .to(toSprite, {
       alpha: 1,
       duration: 0.5,
-      ease: "power3.inOut"
-    }, 0.7)
+      ease: "power2.out"
+    }, 0.3)
     .to(displacementFilter.scale, {
-      y: 20,
+      x: displaceScaleTo[0],
+      y: displaceScaleTo[1],
       duration: 1,
-      ease: "power3.out"
-    }, 1);
+      ease: "power2.out"
+    }, 0.3);
     
   }, [currentIndex, previousIndex, isInitialized, onTransitionComplete]);
   
