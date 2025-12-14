@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
@@ -51,6 +51,28 @@ export default function Profile() {
       x: user?.socialMedia?.x || "",
     },
   });
+
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || "",
+        phone: user.phone || "",
+        email: user.email || "",
+        brokerage: user.brokerage || "",
+        teamName: user.teamName || "",
+        address: user.address || "",
+        logo: user.logo || null,
+        profileImageUrl: user.profileImageUrl || null,
+        socialMedia: {
+          instagram: user.socialMedia?.instagram || "",
+          youtube: user.socialMedia?.youtube || "",
+          facebook: user.socialMedia?.facebook || "",
+          linkedin: user.socialMedia?.linkedin || "",
+          x: user.socialMedia?.x || "",
+        },
+      });
+    }
+  }, [user]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
