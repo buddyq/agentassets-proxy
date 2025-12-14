@@ -1148,54 +1148,129 @@ function ModernHero({ site, theme, heroImage, effectiveHeroLogo }: {
   heroImage: string;
   effectiveHeroLogo?: string | null;
 }) {
+  // Use heroPhotos array for the slider, fallback to photos or default
+  const heroImages = site.heroPhotos && site.heroPhotos.length > 0 
+    ? site.heroPhotos 
+    : site.photos && site.photos.length > 0 
+      ? site.photos.slice(0, 3)
+      : [heroImage];
+  
   const slides = site.heroSlides && site.heroSlides.length > 0 
     ? site.heroSlides 
-    : [{ 
-        title: site.title || site.address, 
-        subtitle: site.price || 'Luxury Living Awaits',
-        backgroundImage: site.heroPhotos?.[0] || site.photos?.[0] || heroImage
-      }];
+    : heroImages.map((img, i) => ({ 
+        title: i === 0 ? (site.title || site.address) : '',
+        subtitle: i === 0 ? (site.price || 'Luxury Living Awaits') : '',
+        backgroundImage: img
+      }));
   
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [previousSlide, setPreviousSlide] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [zoomProgress, setZoomProgress] = useState(0);
 
-  // Auto-advance slides with fade
+  // Ken Burns zoom effect - continuous slow zoom on current slide
+  useEffect(() => {
+    if (isTransitioning) return;
+    
+    const startTime = Date.now();
+    const duration = 6000; // Match the slide interval
+    
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      setZoomProgress(progress);
+      
+      if (progress < 1 && !isTransitioning) {
+        requestAnimationFrame(animate);
+      }
+    };
+    
+    const frameId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frameId);
+  }, [currentSlide, isTransitioning]);
+
+  // Auto-advance slides with zoom/blur transition
   useEffect(() => {
     if (slides.length <= 1) return;
     
     const interval = setInterval(() => {
+      setPreviousSlide(currentSlide);
       setIsTransitioning(true);
+      setZoomProgress(0);
+      
       setTimeout(() => {
         setCurrentSlide(prev => (prev + 1) % slides.length);
-        setIsTransitioning(false);
-      }, 500);
+        setTimeout(() => {
+          setIsTransitioning(false);
+        }, 100);
+      }, 600);
     }, 6000);
     
     return () => clearInterval(interval);
-  }, [slides.length]);
+  }, [slides.length, currentSlide]);
+
+  const handleSlideChange = (index: number) => {
+    if (index !== currentSlide && !isTransitioning) {
+      setPreviousSlide(currentSlide);
+      setIsTransitioning(true);
+      setZoomProgress(0);
+      
+      setTimeout(() => {
+        setCurrentSlide(index);
+        setTimeout(() => {
+          setIsTransitioning(false);
+        }, 100);
+      }, 600);
+    }
+  };
 
   const currentSlideData = slides[currentSlide];
-  const bgImage = currentSlideData.backgroundImage || site.heroPhotos?.[currentSlide] || site.photos?.[currentSlide] || heroImage;
 
   const scrollToDetails = () => {
     document.getElementById('details')?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // Calculate Ken Burns zoom scale (1.0 to 1.08 over the duration)
+  const zoomScale = 1 + (zoomProgress * 0.08);
+
   return (
     <section id="home" className="relative h-screen w-full overflow-hidden">
-      {/* Background images - fade between them */}
-      {slides.map((slide, index) => (
-        <div
-          key={index}
-          className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ${
-            index === currentSlide && !isTransitioning ? 'opacity-100' : 'opacity-0'
-          }`}
-          style={{ 
-            backgroundImage: `url(${slide.backgroundImage || site.photos?.[index] || heroImage})`,
-            zIndex: index === currentSlide ? 1 : 0
-          }}
-        />
-      ))}
+      {/* Background images with Ken Burns zoom + scale/blur transition */}
+      {slides.map((slide, index) => {
+        const isActive = index === currentSlide;
+        const isPrevious = index === previousSlide && isTransitioning;
+        const bgImage = slide.backgroundImage || heroImages[index] || heroImage;
+        
+        return (
+          <div
+            key={index}
+            className="absolute inset-0 overflow-hidden"
+            style={{ 
+              zIndex: isActive ? 2 : isPrevious ? 1 : 0,
+              opacity: isActive || isPrevious ? 1 : 0,
+            }}
+          >
+            <div
+              className="absolute inset-0 bg-cover bg-center"
+              style={{ 
+                backgroundImage: `url(${bgImage})`,
+                transform: isActive && !isTransitioning 
+                  ? `scale(${zoomScale})`
+                  : isActive && isTransitioning
+                    ? 'scale(1.02)'
+                    : isPrevious 
+                      ? 'scale(1.12)' 
+                      : 'scale(1)',
+                filter: isPrevious ? 'blur(4px)' : 'blur(0px)',
+                opacity: isPrevious ? 0 : 1,
+                transition: isTransitioning 
+                  ? 'transform 0.8s cubic-bezier(0.4, 0, 0.2, 1), filter 0.6s ease-out, opacity 0.6s ease-out'
+                  : 'none',
+              }}
+            />
+          </div>
+        );
+      })}
       
       {/* Gradient overlay - more transparent */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/25 to-black/15 z-10" />
@@ -1203,7 +1278,7 @@ function ModernHero({ site, theme, heroImage, effectiveHeroLogo }: {
       {/* Content - no logo, just title, subtitle, and button */}
       <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center px-6">
         {/* Slide content with fade */}
-        <div className={`transition-opacity duration-500 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
+        <div className={`transition-all duration-500 ${isTransitioning ? 'opacity-0 translate-y-2' : 'opacity-100 translate-y-0'}`}>
           <h1 
             className="text-white mb-6"
             style={{ 
@@ -1242,25 +1317,37 @@ function ModernHero({ site, theme, heroImage, effectiveHeroLogo }: {
         </button>
       </div>
 
+      {/* Navigation arrows for multiple slides */}
+      {slides.length > 1 && (
+        <>
+          <button 
+            onClick={() => handleSlideChange((currentSlide - 1 + slides.length) % slides.length)}
+            className="absolute left-6 top-1/2 -translate-y-1/2 z-30 bg-white/10 hover:bg-white/25 text-white p-3 rounded-full transition-all backdrop-blur-sm border border-white/20"
+            data-testid="button-hero-prev"
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </button>
+          <button 
+            onClick={() => handleSlideChange((currentSlide + 1) % slides.length)}
+            className="absolute right-6 top-1/2 -translate-y-1/2 z-30 bg-white/10 hover:bg-white/25 text-white p-3 rounded-full transition-all backdrop-blur-sm border border-white/20"
+            data-testid="button-hero-next"
+          >
+            <ChevronRight className="h-6 w-6" />
+          </button>
+        </>
+      )}
+
       {/* Slide indicators */}
       {slides.length > 1 && (
         <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-30 flex gap-3">
           {slides.map((_, index) => (
             <button
               key={index}
-              onClick={() => {
-                if (index !== currentSlide) {
-                  setIsTransitioning(true);
-                  setTimeout(() => {
-                    setCurrentSlide(index);
-                    setIsTransitioning(false);
-                  }, 500);
-                }
-              }}
-              className={`w-3 h-3 rounded-full transition-all duration-300 ${
+              onClick={() => handleSlideChange(index)}
+              className={`h-3 rounded-full transition-all duration-500 ${
                 currentSlide === index 
                   ? 'bg-white w-10' 
-                  : 'bg-white/40 hover:bg-white/60'
+                  : 'bg-white/40 hover:bg-white/60 w-3'
               }`}
               data-testid={`slide-indicator-${index}`}
             />
