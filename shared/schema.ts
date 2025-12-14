@@ -116,6 +116,10 @@ export type HeroSlide = {
   backgroundImage?: string;
 };
 
+// Hero transition types available for all layouts
+export type HeroTransitionType = 'slide' | 'crossfade' | 'kenburns' | 'liquid-webgl';
+export const heroTransitionTypes = ['slide', 'crossfade', 'kenburns', 'liquid-webgl'] as const;
+
 // Document type for site documents
 export type SiteDocument = {
   name: string;
@@ -155,6 +159,7 @@ export const sites = pgTable("sites", {
   heroSlides: jsonb("hero_slides").$type<HeroSlide[]>().default([]),
   heroLogo: text("hero_logo"),
   invertLogo: boolean("invert_logo").notNull().default(false),
+  heroTransition: text("hero_transition").$type<HeroTransitionType>().default('slide'),
   videoUrl: text("video_url"),
   documents: jsonb("documents").$type<SiteDocument[]>().default([]),
   // Magazine layout specific fields
@@ -210,6 +215,7 @@ export const insertSiteSchema = createInsertSchema(sites).omit({ id: true, creat
   customDetails: z.array(customDetailSchema).optional().default([]),
   heroSlides: z.array(heroSlideSchema).max(3).optional().default([]),
   heroLogo: z.string().nullable().optional(),
+  heroTransition: z.enum(heroTransitionTypes).optional().default('slide'),
   documents: z.array(documentSchema).optional().default([]),
   bedrooms: z.number().nullable().optional(),
   bathrooms: z.number().nullable().optional(),
