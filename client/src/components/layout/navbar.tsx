@@ -42,7 +42,7 @@ export function Navbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b bg-[#1a4a4a] backdrop-blur-md text-white">
+    <nav className="sticky top-0 z-50 w-full border-b backdrop-blur-md text-white bg-[#166e73]">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2">
           <img src={logoUrl} alt="AgentAssets" className="h-12 w-auto" />
