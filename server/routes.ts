@@ -10,7 +10,7 @@ import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import archiver from "archiver";
-import { sendLeadNotificationEmail, sendAgentInvitationEmail, sendGroupMemberAddedEmail } from "./email";
+import { sendLeadNotificationEmail, sendAgentInvitationEmail, sendGroupMemberAddedEmail, sendNewUserNotificationEmail } from "./email";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 
 function getExtensionFromMime(mimeType: string): string {
@@ -62,6 +62,22 @@ export async function registerRoutes(
       res.json({ success: true, message: `Test email sent to ${email}` });
     } catch (error) {
       console.error("Error sending test email:", error);
+      res.status(500).json({ error: "Failed to send test email" });
+    }
+  });
+
+  // Test new user signup email
+  app.post("/api/test/new-user-email", async (req: any, res) => {
+    try {
+      await sendNewUserNotificationEmail({
+        userName: 'Test User',
+        userEmail: 'testuser@example.com',
+        createdAt: new Date(),
+      });
+      
+      res.json({ success: true, message: "Test new user email sent to buddy@agentassets.com" });
+    } catch (error) {
+      console.error("Error sending test new user email:", error);
       res.status(500).json({ error: "Failed to send test email" });
     }
   });
