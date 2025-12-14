@@ -672,48 +672,124 @@ export async function sendNewUserNotificationEmail(data: NewUserEmailData): Prom
     hour: '2-digit',
     minute: '2-digit',
   });
+  const logoUrl = "https://atxpocket.nyc3.cdn.digitaloceanspaces.com/static/img/logos/agentassets_logo_white.png";
 
   const htmlContent = `
     <!DOCTYPE html>
     <html>
     <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <style>
-        body { font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: linear-gradient(135deg, #558B73 0%, #3d6b57 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
-        .header h1 { margin: 0; font-size: 24px; }
-        .content { background: #f9f9f9; padding: 30px; border: 1px solid #e0e0e0; }
-        .user-info { background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #558B73; }
-        .label { font-weight: 600; color: #666; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .value { font-size: 16px; margin-bottom: 15px; color: #333; }
-        .footer { text-align: center; padding: 20px; color: #888; font-size: 12px; }
-        .cta { display: inline-block; background: #558B73; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 15px; }
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background: #f5f7f5; }
+        .wrapper { padding: 40px 20px; }
+        .container { max-width: 560px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(85, 139, 115, 0.15); }
+        .header { background: linear-gradient(135deg, #558B73 0%, #3d6b57 100%); padding: 32px 40px; text-align: center; }
+        .header img { max-width: 200px; height: auto; }
+        .title-banner { background: linear-gradient(135deg, #3d6b57 0%, #2d4a3e 100%); padding: 24px 40px; text-align: center; }
+        .title-banner h1 { margin: 0; font-size: 22px; color: #ffffff; font-weight: 600; letter-spacing: 0.5px; }
+        .content { padding: 40px; }
+        .alert-box { background: linear-gradient(135deg, #f0f9f5 0%, #e6f4ed 100%); border-radius: 12px; padding: 24px; margin-bottom: 32px; border-left: 4px solid #558B73; }
+        .alert-box p { margin: 0; font-size: 16px; color: #3d6b57; font-weight: 500; }
+        .user-card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 0; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .user-card-header { background: #f9fafb; padding: 16px 24px; border-bottom: 1px solid #e5e7eb; }
+        .user-card-header h3 { margin: 0; font-size: 14px; color: #6b7280; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+        .user-card-body { padding: 24px; }
+        .info-row { display: flex; margin-bottom: 20px; }
+        .info-row:last-child { margin-bottom: 0; }
+        .info-icon { width: 44px; height: 44px; background: linear-gradient(135deg, #558B73 0%, #3d6b57 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 16px; flex-shrink: 0; }
+        .info-icon span { font-size: 20px; }
+        .info-content { flex: 1; }
+        .info-label { font-size: 12px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; font-weight: 600; }
+        .info-value { font-size: 16px; color: #111827; font-weight: 500; }
+        .info-value a { color: #558B73; text-decoration: none; }
+        .info-value a:hover { text-decoration: underline; }
+        .cta-section { text-align: center; margin-top: 32px; }
+        .cta { display: inline-block; background: linear-gradient(135deg, #558B73 0%, #3d6b57 100%); color: white; padding: 16px 40px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 14px rgba(85,139,115,0.35); }
+        .footer { background: #f9fafb; padding: 24px 40px; text-align: center; border-top: 1px solid #e5e7eb; }
+        .footer p { margin: 0; font-size: 13px; color: #9ca3af; }
+        .footer a { color: #558B73; text-decoration: none; }
       </style>
     </head>
     <body>
-      <div class="container">
-        <div class="header">
-          <h1>New User Signup</h1>
-        </div>
-        <div class="content">
-          <div class="user-info">
-            <div class="label">Name</div>
-            <div class="value" style="font-size: 18px; font-weight: 600;">${safeUserName}</div>
-            
-            <div class="label">Email</div>
-            <div class="value"><a href="mailto:${safeUserEmail}" style="color: #558B73;">${safeUserEmail}</a></div>
-            
-            <div class="label">Signed Up</div>
-            <div class="value">${formattedDate}</div>
+      <div class="wrapper">
+        <div class="container">
+          <div class="header">
+            <img src="${logoUrl}" alt="AgentAssets" />
           </div>
-          
-          <div style="text-align: center; margin-top: 25px;">
-            <a href="https://agentassets.com/admin" class="cta">View in Admin Dashboard</a>
+          <div class="title-banner">
+            <h1>🎉 New User Signup!</h1>
           </div>
-        </div>
-        <div class="footer">
-          <p>This notification was sent by AgentAssets</p>
-          <p>You received this because a new user signed up on the platform.</p>
+          <div class="content">
+            <div class="alert-box">
+              <p>A new user has just signed up for AgentAssets!</p>
+            </div>
+            
+            <div class="user-card">
+              <div class="user-card-header">
+                <h3>User Details</h3>
+              </div>
+              <div class="user-card-body">
+                <table width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="padding-bottom: 20px;">
+                      <table cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td style="width: 44px; height: 44px; background: linear-gradient(135deg, #558B73 0%, #3d6b57 100%); border-radius: 10px; text-align: center; vertical-align: middle;">
+                            <span style="font-size: 20px;">👤</span>
+                          </td>
+                          <td style="padding-left: 16px;">
+                            <div style="font-size: 12px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; font-weight: 600;">Name</div>
+                            <div style="font-size: 18px; color: #111827; font-weight: 600;">${safeUserName}</div>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding-bottom: 20px;">
+                      <table cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td style="width: 44px; height: 44px; background: linear-gradient(135deg, #558B73 0%, #3d6b57 100%); border-radius: 10px; text-align: center; vertical-align: middle;">
+                            <span style="font-size: 20px;">✉️</span>
+                          </td>
+                          <td style="padding-left: 16px;">
+                            <div style="font-size: 12px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; font-weight: 600;">Email</div>
+                            <div style="font-size: 16px; color: #111827; font-weight: 500;">
+                              <a href="mailto:${safeUserEmail}" style="color: #558B73; text-decoration: none;">${safeUserEmail}</a>
+                            </div>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <table cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td style="width: 44px; height: 44px; background: linear-gradient(135deg, #558B73 0%, #3d6b57 100%); border-radius: 10px; text-align: center; vertical-align: middle;">
+                            <span style="font-size: 20px;">🕐</span>
+                          </td>
+                          <td style="padding-left: 16px;">
+                            <div style="font-size: 12px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; font-weight: 600;">Signed Up</div>
+                            <div style="font-size: 16px; color: #111827; font-weight: 500;">${formattedDate}</div>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </div>
+            </div>
+            
+            <div class="cta-section">
+              <a href="https://agentassets.com/admin" class="cta" style="color: white;">View in Admin Dashboard</a>
+            </div>
+          </div>
+          <div class="footer">
+            <p>This notification was sent by AgentAssets</p>
+            <p style="margin-top: 8px;">You received this because a new user signed up on the platform.</p>
+          </div>
         </div>
       </div>
     </body>
