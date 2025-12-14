@@ -75,7 +75,7 @@ function getLayoutTypography(layout?: Layout) {
   } as React.CSSProperties;
 }
 
-function ShoalwoodHero({ site, theme, heroImage, effectiveLogo }: { site: Site; theme?: Theme; heroImage: string; effectiveLogo?: string | null }) {
+function ShoalwoodHero({ site, theme, heroImage, effectiveLogo, invertLogo }: { site: Site; theme?: Theme; heroImage: string; effectiveLogo?: string | null; invertLogo?: boolean }) {
   const heroImages = site.heroPhotos && site.heroPhotos.length > 0 
     ? site.heroPhotos 
     : site.photos && site.photos.length > 0 
@@ -130,7 +130,7 @@ function ShoalwoodHero({ site, theme, heroImage, effectiveLogo }: { site: Site; 
           <img 
             src={effectiveLogo ?? theme?.logoUrl ?? ''} 
             alt="Logo" 
-            className="h-10 md:h-14 w-auto object-contain brightness-0 invert"
+            className={`h-10 md:h-14 w-auto object-contain ${invertLogo ? 'brightness-0 invert' : ''}`}
             data-testid="img-nav-logo"
           />
         )}
@@ -219,7 +219,7 @@ function ShoalwoodHero({ site, theme, heroImage, effectiveLogo }: { site: Site; 
   );
 }
 
-function ShoalwoodNavigation({ site, theme, hasPhotos, hasVideo, effectiveLogo }: { site: Site; theme?: Theme; hasPhotos: boolean; hasVideo: boolean; effectiveLogo?: string | null }) {
+function ShoalwoodNavigation({ site, theme, hasPhotos, hasVideo, effectiveLogo, invertLogo }: { site: Site; theme?: Theme; hasPhotos: boolean; hasVideo: boolean; effectiveLogo?: string | null; invertLogo?: boolean }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [currentSection, setCurrentSection] = useState('Menu');
   const [isOnHero, setIsOnHero] = useState(true);
@@ -3563,8 +3563,8 @@ export default function SiteView({ siteId: propSiteId, params: routeParams }: Si
         }}
       >
         {/* Navigation overlay - rendered first, floats on top of hero */}
-        <ShoalwoodNavigation site={site} theme={theme} hasPhotos={!!hasPhotos} hasVideo={hasVideo} effectiveLogo={effectiveLogo} />
-        <ShoalwoodHero site={site} theme={theme} heroImage={heroImage} effectiveLogo={effectiveLogo} />
+        <ShoalwoodNavigation site={site} theme={theme} hasPhotos={!!hasPhotos} hasVideo={hasVideo} effectiveLogo={effectiveLogo} invertLogo={site.invertLogo} />
+        <ShoalwoodHero site={site} theme={theme} heroImage={heroImage} effectiveLogo={effectiveLogo} invertLogo={site.invertLogo} />
         <ShoalwoodDescription description={site.description || "A beautiful property awaiting your discovery."} descriptionImage={site.descriptionImage} />
         <ShoalwoodDetails site={site} theme={theme} />
         
@@ -3638,7 +3638,7 @@ export default function SiteView({ siteId: propSiteId, params: routeParams }: Si
               <img 
                 src={footerLogo} 
                 alt="Logo" 
-                className="h-10 w-auto object-contain"
+                className={`h-10 w-auto object-contain ${site.invertLogo ? 'brightness-0 invert' : ''}`}
                 data-testid="img-footer-logo"
               />
             )}
