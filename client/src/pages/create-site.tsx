@@ -9,7 +9,8 @@ import { useCreateSite, useUpdateCredits, useThemes, useLayouts, getUploadUrl, n
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
-import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, CreditCard, LayoutGrid, Plus, X, Image, GripVertical, Star, Settings, FileText, AlertTriangle, UserCircle, Phone, Mail, ExternalLink } from "lucide-react";
+import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, CreditCard, LayoutGrid, Plus, X, Image, Image as ImageIcon, GripVertical, Star, Settings, FileText, AlertTriangle, UserCircle, Phone, Mail, ExternalLink, Upload } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -124,6 +125,7 @@ export default function CreateSite() {
     logo: '', // Site-specific logo override
     heroLogo: '', // Hero-specific logo for Modern layout (PNG recommended)
     heroSlides: [] as HeroSlide[], // Up to 3 slides with title/subtitle for Modern layout
+    invertLogo: false, // Invert logo for dark hero backgrounds
     // Magazine layout fields
     buyerAgentComp: '', // e.g., "3% Buyers Agent Compensation"
     openHouses: [] as OpenHouseEvent[], // Open house schedule
@@ -347,6 +349,7 @@ export default function CreateSite() {
         heroSlides: formData.heroSlides,
         heroTransition: formData.heroTransition,
         heroLogo: formData.heroLogo || null,
+        invertLogo: formData.invertLogo,
         logo: formData.logo || null,
         stats: { views: 0, uniqueVisitors: 0, leads: 0 },
         documents: [], // Documents can be added after site creation
@@ -889,176 +892,113 @@ export default function CreateSite() {
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {/* Site Logo Override */}
-                  <div className="grid gap-2">
-                    <Label>Site Logo (Optional)</Label>
-                    <p className="text-sm text-muted-foreground mb-2">
-                      {user?.logo 
-                        ? "Your default logo will be used. Upload a different logo here to override it for this site only."
-                        : "Upload a logo for this property site. You can set a default logo in your dashboard."
-                      }
-                    </p>
-                    {user?.logo && !formData.logo && (
-                      <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg mb-2">
-                        <img 
-                          src={user.logo} 
-                          alt="Default logo" 
-                          className="h-10 max-w-[100px] object-contain"
-                        />
-                        <span className="text-sm text-muted-foreground">Your default logo (will be used unless overridden)</span>
-                      </div>
-                    )}
-                    {formData.logo ? (
-                      <div className="relative inline-block">
-                        <div className="p-4 bg-muted/30 rounded-lg inline-block">
+                  {/* ===== SITE LOGO ===== */}
+                  <div className="rounded-xl border p-6 space-y-4 bg-[#ffffff]">
+                    <div className="flex items-center gap-2 pb-2 border-b">
+                      <Star className="h-5 w-5 text-primary" />
+                      <h3 className="font-semibold text-lg">Site Logo</h3>
+                    </div>
+                    <div className="bg-[#f3faf9] rounded-xl p-6 flex flex-col items-center gap-4">
+                      <p className="text-sm font-medium text-muted-foreground">Current Logo</p>
+                      <div className="w-20 h-20 rounded-full bg-white shadow-lg flex items-center justify-center p-3">
+                        {(formData.logo || user?.logo) ? (
                           <img 
-                            src={formData.logo} 
-                            alt="Site logo" 
-                            className="max-h-16 max-w-[200px] object-contain"
+                            src={formData.logo || user?.logo || ''} 
+                            alt="Current logo" 
+                            className="max-h-12 max-w-12 object-contain"
                           />
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setFormData({...formData, logo: ""})}
-                          className="absolute -top-2 -right-2 bg-destructive text-white p-1.5 rounded-full shadow-md"
-                          data-testid="button-remove-site-logo"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ) : (
-                      <ObjectUploader
-                        maxNumberOfFiles={1}
-                        maxFileSize={5242880}
-                        variant="dropzone"
-                        onGetUploadParameters={async () => {
-                          const { url } = await getUploadUrl();
-                          return { method: 'PUT' as const, url };
-                        }}
-                        onComplete={(result) => {
-                          if (result.successful && result.successful.length > 0) {
-                            const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
-                            setFormData({...formData, logo: normalizedUrl});
-                          }
-                        }}
-                      />
-                    )}
-                  </div>
-
-                  {/* Hero Transition Effect */}
-                  <div className="grid gap-2 border-t pt-6">
-                    <Label>Hero Transition Effect</Label>
-                    <p className="text-sm text-muted-foreground mb-2">
-                      Choose how your hero images transition between slides.
-                    </p>
-                    <RadioGroup
-                      value={formData.heroTransition}
-                      onValueChange={(value) => setFormData({...formData, heroTransition: value as HeroTransitionType})}
-                      className="grid grid-cols-2 gap-3"
-                    >
-                      {[
-                        { value: 'slide', label: 'Slide', description: 'Classic horizontal sliding effect' },
-                        { value: 'crossfade', label: 'Crossfade', description: 'Smooth fade between images' },
-                        { value: 'kenburns', label: 'Ken Burns', description: 'Gentle zoom with fade transition' },
-                        { value: 'liquid-webgl', label: 'Liquid Wipe', description: 'Premium WebGL distortion effect' },
-                      ].map((option) => (
-                        <Label
-                          key={option.value}
-                          htmlFor={`transition-${option.value}`}
-                          className={`flex flex-col cursor-pointer rounded-lg border-2 p-4 transition-all ${
-                            formData.heroTransition === option.value
-                              ? 'border-primary bg-primary/5'
-                              : 'border-muted bg-gray-50 hover:border-muted-foreground/50'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <RadioGroupItem value={option.value} id={`transition-${option.value}`} />
-                            <span className="font-medium">{option.label}</span>
-                          </div>
-                          <span className="text-xs text-muted-foreground mt-1 ml-6">{option.description}</span>
-                        </Label>
-                      ))}
-                    </RadioGroup>
-                  </div>
-
-                  {/* Layout-specific options */}
-                  {formData.layoutId === 'layout-shoalwood' && (
-                    <div className="border-t pt-6">
-                      <div className="grid gap-2">
-                        <Label>Description Image (Optional)</Label>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          Add a portrait-style image to display alongside your property description. Vertical/portrait orientation works best.
-                        </p>
-                        {formData.descriptionImage ? (
-                          <div className="relative w-48 aspect-[3/4] rounded-lg overflow-hidden border group">
-                            <img 
-                              src={formData.descriptionImage} 
-                              alt="Description" 
-                              className="w-full h-full object-cover"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setFormData({...formData, descriptionImage: ""})}
-                              className="absolute top-2 right-2 bg-destructive text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                              data-testid="button-remove-description-image"
-                            >
-                              <X className="h-4 w-4" />
-                            </button>
-                          </div>
                         ) : (
-                          <ObjectUploader
-                            maxNumberOfFiles={1}
-                            maxFileSize={10485760}
-                            variant="dropzone"
-                            onGetUploadParameters={async () => {
-                              const { url } = await getUploadUrl();
-                              return { method: 'PUT' as const, url };
-                            }}
-                            onComplete={(result) => {
-                              if (result.successful && result.successful.length > 0) {
-                                const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
-                                setFormData({...formData, descriptionImage: normalizedUrl});
-                              }
-                            }}
-                          />
+                          <ImageIcon className="h-8 w-8 text-muted-foreground/30" />
                         )}
                       </div>
+                      {formData.logo ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setFormData({...formData, logo: ""})}
+                          className="w-full max-w-xs"
+                          data-testid="button-remove-site-logo"
+                        >
+                          <X className="h-4 w-4 mr-2" />
+                          Remove Custom Logo
+                        </Button>
+                      ) : (
+                        <ObjectUploader
+                          maxNumberOfFiles={1}
+                          maxFileSize={5242880}
+                          variant="button"
+                          buttonClassName="w-full max-w-xs bg-primary text-primary-foreground hover:bg-primary/90"
+                          onGetUploadParameters={async () => {
+                            const { url } = await getUploadUrl();
+                            return { method: 'PUT' as const, url };
+                          }}
+                          onComplete={(result) => {
+                            if (result.successful && result.successful.length > 0) {
+                              const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
+                              setFormData({...formData, logo: normalizedUrl});
+                            }
+                          }}
+                        >
+                          <Upload className="h-4 w-4 mr-2" />
+                          Upload New Logo
+                        </ObjectUploader>
+                      )}
+                      <p className="text-sm text-muted-foreground">or drag and drop your logo here</p>
                     </div>
-                  )}
+                  </div>
 
-                  {/* Modern Layout Options */}
-                  {formData.layoutId === 'layout-modern' && (
-                    <div className="border-t pt-6 space-y-6">
-                      {/* Hero Logo for Modern Layout */}
-                      <div className="grid gap-2">
-                        <Label>Hero Logo (Optional)</Label>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          Upload a logo specifically for the hero section. Use a PNG with transparent background for best results. 
-                          If not uploaded, your default logo will be used.
-                        </p>
+                  {/* ===== HERO SECTION ===== */}
+                  <div className="rounded-xl border p-6 space-y-6 bg-[#ffffff]">
+                    <div className="flex items-center gap-2 pb-2 border-b">
+                      <LayoutGrid className="h-5 w-5 text-primary" />
+                      <h3 className="font-semibold text-lg">Hero Section</h3>
+                    </div>
+
+                    {/* Hero Logo */}
+                    <div className="grid gap-3">
+                      <Label>Hero Logo</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Upload a logo specifically for the hero section. Use a PNG with transparent background for best results.
+                      </p>
+                      <div className="rounded-xl p-6 flex flex-col items-center gap-4 bg-[#f3faf9]">
+                        <p className="text-sm font-medium text-muted-foreground">Current Hero Logo</p>
+                        <div className="w-24 h-16 rounded-lg bg-slate-800 shadow-lg flex items-center justify-center p-2">
+                          {formData.heroLogo ? (
+                            <img 
+                              src={formData.heroLogo} 
+                              alt="Hero logo" 
+                              className="max-h-12 max-w-20 object-contain"
+                            />
+                          ) : (formData.logo || user?.logo) ? (
+                            <img 
+                              src={formData.logo || user?.logo || ''} 
+                              alt="Using site logo" 
+                              className="max-h-12 max-w-20 object-contain opacity-50"
+                            />
+                          ) : (
+                            <ImageIcon className="h-6 w-6 text-white/30" />
+                          )}
+                        </div>
+                        {!formData.heroLogo && (formData.logo || user?.logo) && (
+                          <p className="text-xs text-muted-foreground">Using your site logo (upload to override)</p>
+                        )}
                         {formData.heroLogo ? (
-                          <div className="relative inline-block">
-                            <div className="p-4 bg-slate-900 rounded-lg inline-block">
-                              <img 
-                                src={formData.heroLogo} 
-                                alt="Hero logo" 
-                                className="max-h-16 max-w-[200px] object-contain"
-                              />
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => setFormData({...formData, heroLogo: ""})}
-                              className="absolute -top-2 -right-2 bg-destructive text-white p-1.5 rounded-full shadow-md"
-                              data-testid="button-remove-hero-logo"
-                            >
-                              <X className="h-4 w-4" />
-                            </button>
-                          </div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setFormData({...formData, heroLogo: ""})}
+                            className="w-full max-w-xs"
+                            data-testid="button-remove-hero-logo"
+                          >
+                            <X className="h-4 w-4 mr-2" />
+                            Remove Hero Logo
+                          </Button>
                         ) : (
                           <ObjectUploader
                             maxNumberOfFiles={1}
                             maxFileSize={5242880}
-                            variant="dropzone"
+                            variant="button"
+                            buttonClassName="w-full max-w-xs bg-primary text-primary-foreground hover:bg-primary/90"
                             onGetUploadParameters={async () => {
                               const { url } = await getUploadUrl();
                               return { method: 'PUT' as const, url };
@@ -1069,59 +1009,74 @@ export default function CreateSite() {
                                 setFormData({...formData, heroLogo: normalizedUrl});
                               }
                             }}
-                          />
+                          >
+                            <Upload className="h-4 w-4 mr-2" />
+                            Upload Hero Logo
+                          </ObjectUploader>
                         )}
                       </div>
-
-                      {/* Description Image for Modern Layout */}
-                      <div className="grid gap-2">
-                        <Label>Description Image (Optional)</Label>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          Add a vertical portrait image to display next to your property description. Portrait orientation works best.
-                        </p>
-                        {formData.descriptionImage ? (
-                          <div className="relative w-48 aspect-[3/4] rounded-lg overflow-hidden border group">
-                            <img 
-                              src={formData.descriptionImage} 
-                              alt="Description" 
-                              className="w-full h-full object-cover"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setFormData({...formData, descriptionImage: ""})}
-                              className="absolute top-2 right-2 bg-destructive text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                              data-testid="button-remove-description-image-modern"
-                            >
-                              <X className="h-4 w-4" />
-                            </button>
-                          </div>
-                        ) : (
-                          <ObjectUploader
-                            maxNumberOfFiles={1}
-                            maxFileSize={10485760}
-                            variant="dropzone"
-                            onGetUploadParameters={async () => {
-                              const { url } = await getUploadUrl();
-                              return { method: 'PUT' as const, url };
-                            }}
-                            onComplete={(result) => {
-                              if (result.successful && result.successful.length > 0) {
-                                const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
-                                setFormData({...formData, descriptionImage: normalizedUrl});
-                              }
-                            }}
-                          />
-                        )}
+                  
+                      {/* Invert Logo Toggle */}
+                      <div className="flex items-center justify-between p-4 bg-[#f3faf9] rounded-lg">
+                        <div className="space-y-0.5">
+                          <Label htmlFor="invert-logo">Invert Logo for Dark Backgrounds</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Enable this if your logo is dark and you want it to appear white on dark hero sections.
+                          </p>
+                        </div>
+                        <Switch
+                          id="invert-logo"
+                          checked={formData.invertLogo}
+                          onCheckedChange={(checked) => setFormData({...formData, invertLogo: checked})}
+                          data-testid="switch-invert-logo"
+                        />
                       </div>
+                    </div>
 
-                      {/* Hero Slides */}
-                      <div className="grid gap-4">
+                    {/* Hero Transition Effect */}
+                    <div className="grid gap-2 pt-4 border-t">
+                      <Label>Hero Transition Effect</Label>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Choose how your hero images transition between slides.
+                      </p>
+                      <RadioGroup
+                        value={formData.heroTransition}
+                        onValueChange={(value) => setFormData({...formData, heroTransition: value as HeroTransitionType})}
+                        className="grid grid-cols-2 gap-3"
+                      >
+                        {[
+                          { value: 'slide', label: 'Slide', description: 'Classic horizontal sliding effect' },
+                          { value: 'crossfade', label: 'Crossfade', description: 'Smooth fade between images' },
+                          { value: 'kenburns', label: 'Ken Burns', description: 'Gentle zoom with fade transition' },
+                          { value: 'liquid-webgl', label: 'Liquid Wipe', description: 'Premium WebGL distortion effect' },
+                        ].map((option) => (
+                          <Label
+                            key={option.value}
+                            htmlFor={`transition-${option.value}`}
+                            className={`flex flex-col cursor-pointer rounded-lg border-2 p-4 transition-all ${
+                              formData.heroTransition === option.value
+                                ? 'border-primary bg-primary/5'
+                                : 'border-muted bg-gray-50 hover:border-muted-foreground/50'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <RadioGroupItem value={option.value} id={`transition-${option.value}`} />
+                              <span className="font-medium">{option.label}</span>
+                            </div>
+                            <span className="text-xs text-muted-foreground mt-1 ml-6">{option.description}</span>
+                          </Label>
+                        ))}
+                      </RadioGroup>
+                    </div>
+
+                    {/* Hero Slides - for Modern Layout */}
+                    {formData.layoutId === 'layout-modern' && (
+                      <div className="grid gap-4 pt-4 border-t">
                         <div className="flex items-center justify-between">
                           <div>
                             <Label>Hero Slides</Label>
                             <p className="text-sm text-muted-foreground">
-                              Add up to 3 slides with title and subtitle. Each slide will fade into the next. 
-                              Background images are selected from your uploaded photos.
+                              Add up to 3 slides with title and subtitle. Each slide will fade into the next.
                             </p>
                           </div>
                           {formData.heroSlides.length < 3 && (
@@ -1142,11 +1097,12 @@ export default function CreateSite() {
                         </div>
 
                         {formData.heroSlides.length === 0 && (
-                          <div className="border-2 border-dashed border-muted rounded-lg p-8 text-center">
-                            <p className="text-muted-foreground mb-4">No hero slides added yet</p>
+                          <div className="border-2 border-dashed border-muted rounded-lg p-6 text-center">
+                            <p className="text-muted-foreground mb-3">No hero slides added yet</p>
                             <Button
                               type="button"
                               variant="outline"
+                              size="sm"
                               onClick={() => {
                                 const newSlide: HeroSlide = { title: '', subtitle: '', backgroundImage: '' };
                                 setFormData({...formData, heroSlides: [newSlide]});
@@ -1160,7 +1116,7 @@ export default function CreateSite() {
                         )}
 
                         {formData.heroSlides.map((slide, index) => (
-                          <div key={index} className="border rounded-lg p-4 bg-muted/20">
+                          <div key={index} className="border rounded-lg p-4 bg-[#f3faf9]">
                             <div className="flex items-center justify-between mb-4">
                               <span className="font-medium text-sm">Slide {index + 1}</span>
                               <Button
@@ -1177,38 +1133,32 @@ export default function CreateSite() {
                                 <X className="h-4 w-4" />
                               </Button>
                             </div>
-                            <div className="grid gap-4">
-                              <div className="grid gap-2">
-                                <Label htmlFor={`slide-title-${index}`}>Title</Label>
-                                <Input
-                                  id={`slide-title-${index}`}
-                                  placeholder="e.g., Stunning Modern Home"
-                                  value={slide.title}
-                                  onChange={(e) => {
-                                    const updated = [...formData.heroSlides];
-                                    updated[index] = { ...updated[index], title: e.target.value };
-                                    setFormData({...formData, heroSlides: updated});
-                                  }}
-                                  data-testid={`input-slide-title-${index}`}
-                                />
-                              </div>
-                              <div className="grid gap-2">
-                                <Label htmlFor={`slide-subtitle-${index}`}>Subtitle</Label>
-                                <Input
-                                  id={`slide-subtitle-${index}`}
-                                  placeholder="e.g., Experience luxury living at its finest"
-                                  value={slide.subtitle}
-                                  onChange={(e) => {
-                                    const updated = [...formData.heroSlides];
-                                    updated[index] = { ...updated[index], subtitle: e.target.value };
-                                    setFormData({...formData, heroSlides: updated});
-                                  }}
-                                  data-testid={`input-slide-subtitle-${index}`}
-                                />
-                              </div>
+                            <div className="grid gap-3">
+                              <Input
+                                className="bg-[#ffffff]"
+                                placeholder="Title (e.g., Stunning Modern Home)"
+                                value={slide.title}
+                                onChange={(e) => {
+                                  const updated = [...formData.heroSlides];
+                                  updated[index] = { ...updated[index], title: e.target.value };
+                                  setFormData({...formData, heroSlides: updated});
+                                }}
+                                data-testid={`input-slide-title-${index}`}
+                              />
+                              <Input
+                                className="bg-[#ffffff]"
+                                placeholder="Subtitle (e.g., Experience luxury living)"
+                                value={slide.subtitle}
+                                onChange={(e) => {
+                                  const updated = [...formData.heroSlides];
+                                  updated[index] = { ...updated[index], subtitle: e.target.value };
+                                  setFormData({...formData, heroSlides: updated});
+                                }}
+                                data-testid={`input-slide-subtitle-${index}`}
+                              />
                               {photos.length > 0 && (
                                 <div className="grid gap-2">
-                                  <Label>Background Image</Label>
+                                  <Label className="text-sm text-muted-foreground">Background Image</Label>
                                   <div className="grid grid-cols-4 gap-2">
                                     {photos.map((photo, photoIndex) => (
                                       <div
@@ -1243,17 +1193,81 @@ export default function CreateSite() {
                             </div>
                           </div>
                         ))}
+                      </div>
+                    )}
+                  </div>
 
-                        <p className="text-xs text-muted-foreground">
-                          Each slide includes an automatic "Have a look" button that scrolls to the property details.
-                        </p>
+                  {/* ===== LAYOUT IMAGES SECTION ===== */}
+                  {(formData.layoutId === 'layout-shoalwood' || formData.layoutId === 'layout-modern') && (
+                    <div className="rounded-xl border bg-card p-6 space-y-4">
+                      <div className="flex items-center gap-2 pb-2 border-b">
+                        <ImageIcon className="h-5 w-5 text-primary" />
+                        <div>
+                          <h3 className="font-semibold text-lg">Layout Images</h3>
+                          <p className="text-sm text-muted-foreground">The layout you chose has additional images.</p>
+                        </div>
+                      </div>
+
+                      {/* Description Image */}
+                      <div className="flex items-center gap-4 p-3 rounded-lg bg-[#f3faf9]">
+                        <div className="flex-shrink-0">
+                          {formData.descriptionImage ? (
+                            <div className="w-16 h-20 rounded overflow-hidden border">
+                              <img src={formData.descriptionImage} alt="Description" className="w-full h-full object-cover" />
+                            </div>
+                          ) : (
+                            <div className="w-16 h-20 rounded border-2 border-dashed border-muted-foreground/30 flex items-center justify-center">
+                              <ImageIcon className="h-5 w-5 text-muted-foreground/40" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">Description Image</p>
+                          <p className="text-xs text-muted-foreground">Portrait image next to description</p>
+                        </div>
+                        {formData.descriptionImage ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setFormData({...formData, descriptionImage: ""})}
+                            className="text-muted-foreground hover:text-destructive"
+                            data-testid="button-remove-description-image"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        ) : (
+                          <ObjectUploader
+                            maxNumberOfFiles={1}
+                            maxFileSize={10485760}
+                            variant="button"
+                            buttonClassName="text-sm"
+                            onGetUploadParameters={async () => {
+                              const { url } = await getUploadUrl();
+                              return { method: 'PUT' as const, url };
+                            }}
+                            onComplete={(result) => {
+                              if (result.successful && result.successful.length > 0) {
+                                const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
+                                setFormData({...formData, descriptionImage: normalizedUrl});
+                              }
+                            }}
+                          >
+                            <Upload className="h-4 w-4 mr-1" />
+                            Upload
+                          </ObjectUploader>
+                        )}
                       </div>
                     </div>
                   )}
 
-                  {/* Magazine Layout Options */}
+                  {/* ===== MAGAZINE LAYOUT OPTIONS ===== */}
                   {formData.layoutId === 'layout-magazine' && (
-                    <div className="border-t pt-6 space-y-6">
+                    <div className="rounded-xl border bg-card p-6 space-y-6">
+                      <div className="flex items-center gap-2 pb-2 border-b">
+                        <Settings className="h-5 w-5 text-primary" />
+                        <h3 className="font-semibold text-lg">Layout Options</h3>
+                      </div>
                       {/* Buyer Agent Compensation */}
                       <div className="grid gap-2">
                         <Label htmlFor="buyerAgentComp">Buyer Agent Compensation (Optional)</Label>
@@ -1276,7 +1290,7 @@ export default function CreateSite() {
                           Upload a downloadable brochure PDF for this property.
                         </p>
                         {formData.brochureUrl ? (
-                          <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+                          <div className="flex items-center gap-3 p-3 bg-[#f3faf9] rounded-lg">
                             <FileText className="h-8 w-8 text-primary" />
                             <div className="flex-1">
                               <p className="text-sm font-medium">Brochure uploaded</p>
@@ -1360,7 +1374,7 @@ export default function CreateSite() {
                         )}
 
                         {formData.openHouses.map((oh, ohIndex) => (
-                          <div key={ohIndex} className="border rounded-lg p-4 bg-muted/20">
+                          <div key={ohIndex} className="border rounded-lg p-4 bg-[#f3faf9]">
                             <div className="flex items-center justify-between mb-4">
                               <span className="font-medium text-sm">Open House {ohIndex + 1}</span>
                               <Button
@@ -1382,6 +1396,7 @@ export default function CreateSite() {
                                 <Label htmlFor={`oh-label-${ohIndex}`}>Label (Optional)</Label>
                                 <Input
                                   id={`oh-label-${ohIndex}`}
+                                  className="bg-[#ffffff]"
                                   placeholder="e.g., Broker Open"
                                   value={oh.label || ''}
                                   onChange={(e) => {
@@ -1396,6 +1411,7 @@ export default function CreateSite() {
                                 <Label htmlFor={`oh-date-${ohIndex}`}>Date</Label>
                                 <Input
                                   id={`oh-date-${ohIndex}`}
+                                  className="bg-[#ffffff]"
                                   type="date"
                                   value={oh.date}
                                   onChange={(e) => {
@@ -1410,6 +1426,7 @@ export default function CreateSite() {
                                 <Label htmlFor={`oh-start-${ohIndex}`}>Start Time</Label>
                                 <Input
                                   id={`oh-start-${ohIndex}`}
+                                  className="bg-[#ffffff]"
                                   type="time"
                                   value={oh.startTime}
                                   onChange={(e) => {
@@ -1424,6 +1441,7 @@ export default function CreateSite() {
                                 <Label htmlFor={`oh-end-${ohIndex}`}>End Time</Label>
                                 <Input
                                   id={`oh-end-${ohIndex}`}
+                                  className="bg-[#ffffff]"
                                   type="time"
                                   value={oh.endTime}
                                   onChange={(e) => {
@@ -1451,7 +1469,7 @@ export default function CreateSite() {
                           
                           <div className="grid md:grid-cols-2 gap-4">
                             {/* Grid Image 1 (Top Right) */}
-                            <div className="border rounded-lg p-4 space-y-3">
+                            <div className="border rounded-lg p-4 space-y-3 bg-[#f3faf9]">
                               <Label className="text-sm font-medium">Top Right Image</Label>
                               {formData.contentGridImage1 ? (
                                 <div className="space-y-3">
@@ -1507,7 +1525,7 @@ export default function CreateSite() {
                             </div>
 
                             {/* Grid Image 2 (Bottom Left) */}
-                            <div className="border rounded-lg p-4 space-y-3">
+                            <div className="border rounded-lg p-4 space-y-3 bg-[#f3faf9]">
                               <Label className="text-sm font-medium">Bottom Left Image</Label>
                               {formData.contentGridImage2 ? (
                                 <div className="space-y-3">
