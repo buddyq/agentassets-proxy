@@ -818,3 +818,217 @@ AgentAssets - Beautiful Property Websites for Real Estate Professionals
   });
   console.log(`New user notification email sent to ${adminEmail} for user ${userEmail}`);
 }
+
+interface CustomDomainEmailData {
+  customDomain: string;
+  propertyAddress: string;
+  propertyTitle: string | null;
+  siteSlug: string;
+  userName: string;
+  userEmail: string;
+}
+
+export async function sendCustomDomainNotificationEmail(data: CustomDomainEmailData): Promise<void> {
+  const adminEmail = "admin@agentassets.com";
+  const { customDomain, propertyAddress, propertyTitle, siteSlug, userName, userEmail } = data;
+
+  const safeDomain = escapeHtml(customDomain);
+  const safeAddress = escapeHtml(propertyAddress);
+  const safeTitle = escapeHtml(propertyTitle || propertyAddress);
+  const safeSlug = escapeHtml(siteSlug);
+  const safeUserName = escapeHtml(userName);
+  const safeUserEmail = escapeHtml(userEmail);
+  const wwwDomain = customDomain.startsWith('www.') ? customDomain : `www.${customDomain}`;
+  const safeWwwDomain = escapeHtml(wwwDomain);
+  const logoUrl = "https://atxpocket.nyc3.cdn.digitaloceanspaces.com/static/img/logos/agentassets_logo_white.png";
+  const replitIp = "34.111.179.208";
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <style>
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background: #f0fdfa; }
+        .wrapper { padding: 40px 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(13, 148, 136, 0.15); }
+        .header { background: #0d9488; padding: 32px 40px; text-align: center; }
+        .header img { max-width: 200px; height: auto; }
+        .title-banner { background: linear-gradient(135deg, #0d9488 0%, #0a7569 100%); padding: 24px 40px; text-align: center; }
+        .title-banner h1 { margin: 0; font-size: 22px; color: #ffffff; font-weight: 600; letter-spacing: 0.5px; }
+        .content { padding: 40px; }
+        .alert-box { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 12px; padding: 24px; margin-bottom: 32px; border-left: 4px solid #f59e0b; }
+        .alert-box p { margin: 0; font-size: 16px; color: #92400e; font-weight: 500; }
+        .info-card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 0; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin-bottom: 24px; }
+        .info-card-header { background: #f9fafb; padding: 16px 24px; border-bottom: 1px solid #e5e7eb; }
+        .info-card-header h3 { margin: 0; font-size: 14px; color: #6b7280; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+        .info-card-body { padding: 24px; }
+        .info-row { margin-bottom: 16px; }
+        .info-row:last-child { margin-bottom: 0; }
+        .info-label { font-size: 12px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; font-weight: 600; }
+        .info-value { font-size: 16px; color: #111827; font-weight: 500; }
+        .domain-box { background: #f0fdfa; border: 2px solid #0d9488; border-radius: 8px; padding: 16px; margin: 8px 0; font-family: monospace; font-size: 18px; color: #0d9488; font-weight: 600; }
+        .steps-card { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 12px; padding: 24px; margin-top: 24px; }
+        .steps-card h3 { margin: 0 0 16px; font-size: 16px; color: #92400e; font-weight: 700; }
+        .step { display: flex; margin-bottom: 16px; }
+        .step:last-child { margin-bottom: 0; }
+        .step-number { width: 28px; height: 28px; background: #f59e0b; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; margin-right: 12px; flex-shrink: 0; }
+        .step-content { flex: 1; font-size: 14px; color: #78350f; }
+        .step-content strong { color: #92400e; }
+        .code { background: #fef3c7; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 13px; }
+        .footer { background: #f9fafb; padding: 24px 40px; text-align: center; border-top: 1px solid #e5e7eb; }
+        .footer p { margin: 0; font-size: 13px; color: #9ca3af; }
+      </style>
+    </head>
+    <body>
+      <div class="wrapper">
+        <div class="container">
+          <div class="header">
+            <img src="${logoUrl}" alt="AgentAssets" />
+          </div>
+          <div class="title-banner">
+            <h1>🌐 Custom Domain Request</h1>
+          </div>
+          <div class="content">
+            <div class="alert-box">
+              <p>A user has added a custom domain to their property site. Action required to activate it.</p>
+            </div>
+            
+            <div class="info-card">
+              <div class="info-card-header">
+                <h3>Domain Details</h3>
+              </div>
+              <div class="info-card-body">
+                <div class="info-row">
+                  <div class="info-label">Primary Domain</div>
+                  <div class="domain-box">${safeDomain}</div>
+                </div>
+                <div class="info-row">
+                  <div class="info-label">WWW Version (also add this)</div>
+                  <div class="domain-box">${safeWwwDomain}</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="info-card">
+              <div class="info-card-header">
+                <h3>Property & User Info</h3>
+              </div>
+              <div class="info-card-body">
+                <div class="info-row">
+                  <div class="info-label">Property</div>
+                  <div class="info-value">${safeTitle}</div>
+                </div>
+                <div class="info-row">
+                  <div class="info-label">Address</div>
+                  <div class="info-value">${safeAddress}</div>
+                </div>
+                <div class="info-row">
+                  <div class="info-label">Site Slug</div>
+                  <div class="info-value"><a href="https://agentassets.com/p/${safeSlug}" style="color: #0d9488;">${safeSlug}</a></div>
+                </div>
+                <div class="info-row">
+                  <div class="info-label">User</div>
+                  <div class="info-value">${safeUserName} (<a href="mailto:${safeUserEmail}" style="color: #0d9488;">${safeUserEmail}</a>)</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="steps-card">
+              <h3>📋 Steps to Activate the Domain</h3>
+              <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                  Go to <strong>Replit Deployments</strong> → Click on the active deployment
+                </div>
+              </div>
+              <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                  Click the <strong>Settings</strong> tab at the top
+                </div>
+              </div>
+              <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                  Scroll down to <strong>"Custom domains"</strong> section
+                </div>
+              </div>
+              <div class="step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                  Click <strong>"Link a domain"</strong> or <strong>"Manually connect from another registrar"</strong>
+                </div>
+              </div>
+              <div class="step">
+                <div class="step-number">5</div>
+                <div class="step-content">
+                  Enter <span class="code">${safeDomain}</span> and click Add
+                </div>
+              </div>
+              <div class="step">
+                <div class="step-number">6</div>
+                <div class="step-content">
+                  Repeat step 5 for <span class="code">${safeWwwDomain}</span>
+                </div>
+              </div>
+              <div class="step">
+                <div class="step-number">7</div>
+                <div class="step-content">
+                  Tell the user to add an A record pointing to <span class="code">${replitIp}</span> (if not already done)
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="footer">
+            <p>This notification was sent by AgentAssets</p>
+            <p style="margin-top: 8px;">You received this because a user requested a custom domain.</p>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const textContent = `
+Custom Domain Request
+=====================
+
+A user has added a custom domain to their property site. Action required to activate it.
+
+DOMAIN DETAILS
+--------------
+Primary Domain: ${customDomain}
+WWW Version: ${wwwDomain}
+
+PROPERTY & USER INFO
+--------------------
+Property: ${propertyTitle || propertyAddress}
+Address: ${propertyAddress}
+Site URL: https://agentassets.com/p/${siteSlug}
+User: ${userName} (${userEmail})
+
+STEPS TO ACTIVATE
+-----------------
+1. Go to Replit Deployments → Click on the active deployment
+2. Click the Settings tab at the top
+3. Scroll down to "Custom domains" section
+4. Click "Link a domain" or "Manually connect from another registrar"
+5. Enter ${customDomain} and click Add
+6. Repeat step 5 for ${wwwDomain}
+7. Tell the user to add an A record pointing to ${replitIp} (if not already done)
+
+---
+AgentAssets - Beautiful Property Websites for Real Estate Professionals
+  `.trim();
+
+  await transporter.sendMail({
+    from: `"AgentAssets" <${process.env.SMTP_FROM || "no-reply@agentassets.com"}>`,
+    to: adminEmail,
+    subject: `Custom Domain Request: ${customDomain}`,
+    text: textContent,
+    html: htmlContent,
+  });
+  console.log(`Custom domain notification email sent to ${adminEmail} for domain ${customDomain}`);
+}

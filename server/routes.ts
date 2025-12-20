@@ -10,7 +10,7 @@ import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import archiver from "archiver";
-import { sendLeadNotificationEmail, sendAgentInvitationEmail, sendGroupMemberAddedEmail, sendNewUserNotificationEmail } from "./email";
+import { sendLeadNotificationEmail, sendAgentInvitationEmail, sendGroupMemberAddedEmail, sendNewUserNotificationEmail, sendCustomDomainNotificationEmail } from "./email";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 
 function getExtensionFromMime(mimeType: string): string {
@@ -549,7 +549,45 @@ export async function registerRoutes(
 
   app.patch("/api/sites/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const site = await storage.updateSite(req.params.id, req.body);
+      const userId = req.user.id;
+      const siteId = req.params.id;
+      
+      // Get the current site to check for custom domain changes
+      const existingSite = await storage.getSite(siteId);
+      if (!existingSite) {
+        return res.status(404).json({ error: "Site not found" });
+      }
+      
+      // Check if custom domain is being added or changed
+      const newCustomDomain = req.body.customDomain;
+      const oldCustomDomain = existingSite.customDomain;
+      const isCustomDomainAdded = newCustomDomain && newCustomDomain !== oldCustomDomain;
+      
+      // Update the site
+      const site = await storage.updateSite(siteId, req.body);
+      
+      // Send notification email if custom domain was added/changed
+      if (isCustomDomainAdded) {
+        try {
+          // Use the site owner's info, not the current user (in case an admin is updating)
+          const siteOwner = site.userId ? await storage.getUser(site.userId) : null;
+          if (siteOwner) {
+            await sendCustomDomainNotificationEmail({
+              customDomain: newCustomDomain,
+              propertyAddress: site.address || '',
+              propertyTitle: site.title || null,
+              siteSlug: site.subdomain || site.id,
+              userName: siteOwner.name || 'Unknown',
+              userEmail: siteOwner.email || '',
+            });
+            console.log(`Custom domain notification sent for ${newCustomDomain} (site owner: ${siteOwner.email})`);
+          }
+        } catch (emailError) {
+          // Log but don't fail the request if email fails
+          console.error("Failed to send custom domain notification email:", emailError);
+        }
+      }
+      
       res.json(site);
     } catch (error) {
       res.status(500).json({ error: "Failed to update site" });
