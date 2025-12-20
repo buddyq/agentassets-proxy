@@ -930,351 +930,236 @@ export default function EditSite() {
                     </TabsList>
 
                     <TabsContent value="branding" className="space-y-6">
-                      {/* Site Logo Override */}
-                      <div className="grid gap-3">
-                        <Label>Site Logo</Label>
-                        
-                        <div className="bg-muted/30 rounded-xl p-6 flex flex-col items-center gap-4">
-                          {/* Current Logo Display */}
-                          <p className="text-sm font-medium text-muted-foreground">Current Logo</p>
-                          <div className="w-20 h-20 rounded-full bg-white shadow-lg flex items-center justify-center p-3">
-                            {(formData.logo || user?.logo) ? (
-                              <img 
-                                src={formData.logo || user?.logo || ''} 
-                                alt="Current logo" 
-                                className="max-h-12 max-w-12 object-contain"
-                              />
-                            ) : (
-                              <Image className="h-8 w-8 text-muted-foreground/30" />
-                            )}
-                          </div>
-                          
-                          {/* Upload Button */}
-                          {formData.logo ? (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              onClick={() => setFormData({...formData, logo: ""})}
-                              className="w-full max-w-xs"
-                              data-testid="button-remove-site-logo"
-                            >
-                              <X className="h-4 w-4 mr-2" />
-                              Remove Custom Logo
-                            </Button>
-                          ) : (
-                            <ObjectUploader
-                              maxNumberOfFiles={1}
-                              maxFileSize={5242880}
-                              variant="button"
-                              buttonClassName="w-full max-w-xs bg-primary text-primary-foreground hover:bg-primary/90"
-                              onGetUploadParameters={async () => {
-                                const { url } = await getUploadUrl();
-                                return { method: 'PUT' as const, url };
-                              }}
-                              onComplete={(result) => {
-                                if (result.successful && result.successful.length > 0) {
-                                  const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
-                                  setFormData({...formData, logo: normalizedUrl});
-                                }
-                              }}
-                            >
-                              <Upload className="h-4 w-4 mr-2" />
-                              Upload New Logo
-                            </ObjectUploader>
-                          )}
-                          
-                          <p className="text-sm text-muted-foreground">or drag and drop your logo here</p>
+                      {/* ===== HERO SECTION ===== */}
+                      <div className="rounded-xl border bg-card p-6 space-y-6">
+                        <div className="flex items-center gap-2 pb-2 border-b">
+                          <LayoutGrid className="h-5 w-5 text-primary" />
+                          <h3 className="font-semibold text-lg">Hero Section</h3>
                         </div>
-                    
-                    {/* Invert Logo Toggle */}
-                    <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
-                      <div className="space-y-0.5">
-                        <Label htmlFor="invert-logo">Invert Logo for Dark Backgrounds</Label>
-                        <p className="text-sm text-muted-foreground">
-                          Enable this if your logo is dark and you want it to appear white on dark hero sections.
-                        </p>
-                      </div>
-                      <Switch
-                        id="invert-logo"
-                        checked={formData.invertLogo}
-                        onCheckedChange={(checked) => setFormData({...formData, invertLogo: checked})}
-                        data-testid="switch-invert-logo"
-                      />
-                    </div>
-                  </div>
 
-                  {/* Hero Transition Effect */}
-                  <div className="grid gap-2 border-t pt-6">
-                    <Label>Hero Transition Effect</Label>
-                    <p className="text-sm text-muted-foreground mb-2">
-                      Choose how your hero images transition between slides.
-                    </p>
-                    <RadioGroup
-                      value={formData.heroTransition}
-                      onValueChange={(value) => setFormData({...formData, heroTransition: value as HeroTransitionType})}
-                      className="grid grid-cols-2 gap-3"
-                    >
-                      {[
-                        { value: 'slide', label: 'Slide', description: 'Classic horizontal sliding effect' },
-                        { value: 'crossfade', label: 'Crossfade', description: 'Smooth fade between images' },
-                        { value: 'kenburns', label: 'Ken Burns', description: 'Gentle zoom with fade transition' },
-                        { value: 'liquid-webgl', label: 'Liquid Wipe', description: 'Premium WebGL distortion effect' },
-                      ].map((option) => (
-                        <Label
-                          key={option.value}
-                          htmlFor={`transition-${option.value}`}
-                          className={`flex flex-col cursor-pointer rounded-lg border-2 p-4 transition-all ${
-                            formData.heroTransition === option.value
-                              ? 'border-primary bg-primary/5'
-                              : 'border-muted hover:border-muted-foreground/50'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <RadioGroupItem value={option.value} id={`transition-${option.value}`} />
-                            <span className="font-medium">{option.label}</span>
-                          </div>
-                          <span className="text-xs text-muted-foreground mt-1 ml-6">{option.description}</span>
-                        </Label>
-                      ))}
-                    </RadioGroup>
-                  </div>
-
-                  {/* Layout-specific options */}
-                  {formData.layoutId === 'layout-shoalwood' && (
-                    <div className="border-t pt-6">
-                      <div className="grid gap-2">
-                        <Label>Description Image (Optional)</Label>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          Add a portrait-style image to display alongside your property description. Vertical/portrait orientation works best.
-                        </p>
-                        {formData.descriptionImage ? (
-                          <div className="relative w-48 aspect-[3/4] rounded-lg overflow-hidden border group">
-                            <img 
-                              src={formData.descriptionImage} 
-                              alt="Description" 
-                              className="w-full h-full object-cover"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setFormData({...formData, descriptionImage: ""})}
-                              className="absolute top-2 right-2 bg-destructive text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                              data-testid="button-remove-description-image"
-                            >
-                              <X className="h-4 w-4" />
-                            </button>
-                          </div>
-                        ) : (
-                          <ObjectUploader
-                            maxNumberOfFiles={1}
-                            maxFileSize={10485760}
-                            variant="dropzone"
-                            onGetUploadParameters={async () => {
-                              const { url } = await getUploadUrl();
-                              return { method: 'PUT' as const, url };
-                            }}
-                            onComplete={(result) => {
-                              if (result.successful && result.successful.length > 0) {
-                                const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
-                                setFormData({...formData, descriptionImage: normalizedUrl});
-                              }
-                            }}
-                          />
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Modern Layout Options */}
-                  {formData.layoutId === 'layout-modern' && (
-                    <div className="border-t pt-6 space-y-6">
-                      {/* Hero Logo for Modern Layout */}
-                      <div className="grid gap-2">
-                        <Label>Hero Logo (Optional)</Label>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          Upload a logo specifically for the hero section. Use a PNG with transparent background for best results. 
-                          If not uploaded, your default logo will be used.
-                        </p>
-                        {formData.heroLogo ? (
-                          <div className="relative inline-block">
-                            <div className="p-4 bg-slate-900 rounded-lg inline-block">
-                              <img 
-                                src={formData.heroLogo} 
-                                alt="Hero logo" 
-                                className="max-h-16 max-w-[200px] object-contain"
-                              />
+                        {/* Site Logo */}
+                        <div className="grid gap-3">
+                          <Label>Site Logo</Label>
+                          <div className="bg-muted/30 rounded-xl p-6 flex flex-col items-center gap-4">
+                            <p className="text-sm font-medium text-muted-foreground">Current Logo</p>
+                            <div className="w-20 h-20 rounded-full bg-white shadow-lg flex items-center justify-center p-3">
+                              {(formData.logo || user?.logo) ? (
+                                <img 
+                                  src={formData.logo || user?.logo || ''} 
+                                  alt="Current logo" 
+                                  className="max-h-12 max-w-12 object-contain"
+                                />
+                              ) : (
+                                <Image className="h-8 w-8 text-muted-foreground/30" />
+                              )}
                             </div>
-                            <button
-                              type="button"
-                              onClick={() => setFormData({...formData, heroLogo: ""})}
-                              className="absolute -top-2 -right-2 bg-destructive text-white p-1.5 rounded-full shadow-md"
-                              data-testid="button-remove-hero-logo"
-                            >
-                              <X className="h-4 w-4" />
-                            </button>
-                          </div>
-                        ) : (
-                          <ObjectUploader
-                            maxNumberOfFiles={1}
-                            maxFileSize={5242880}
-                            variant="dropzone"
-                            onGetUploadParameters={async () => {
-                              const { url } = await getUploadUrl();
-                              return { method: 'PUT' as const, url };
-                            }}
-                            onComplete={(result) => {
-                              if (result.successful && result.successful.length > 0) {
-                                const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
-                                setFormData({...formData, heroLogo: normalizedUrl});
-                              }
-                            }}
-                          />
-                        )}
-                      </div>
-
-                      {/* Description Image for Modern Layout */}
-                      <div className="grid gap-2">
-                        <Label>Description Image (Optional)</Label>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          Add a vertical portrait image to display next to your property description. Portrait orientation works best.
-                        </p>
-                        {formData.descriptionImage ? (
-                          <div className="relative w-48 aspect-[3/4] rounded-lg overflow-hidden border group">
-                            <img 
-                              src={formData.descriptionImage} 
-                              alt="Description" 
-                              className="w-full h-full object-cover"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setFormData({...formData, descriptionImage: ""})}
-                              className="absolute top-2 right-2 bg-destructive text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                              data-testid="button-remove-description-image-modern"
-                            >
-                              <X className="h-4 w-4" />
-                            </button>
-                          </div>
-                        ) : (
-                          <ObjectUploader
-                            maxNumberOfFiles={1}
-                            maxFileSize={10485760}
-                            variant="dropzone"
-                            onGetUploadParameters={async () => {
-                              const { url } = await getUploadUrl();
-                              return { method: 'PUT' as const, url };
-                            }}
-                            onComplete={(result) => {
-                              if (result.successful && result.successful.length > 0) {
-                                const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
-                                setFormData({...formData, descriptionImage: normalizedUrl});
-                              }
-                            }}
-                          />
-                        )}
-                      </div>
-
-                      {/* Hero Slides */}
-                      <div className="grid gap-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <Label>Hero Slides</Label>
-                            <p className="text-sm text-muted-foreground">
-                              Add up to 3 slides with title and subtitle. Each slide will fade into the next.
-                            </p>
-                          </div>
-                          {formData.heroSlides.length < 3 && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                const newSlide: HeroSlide = { title: '', subtitle: '', backgroundImage: '' };
-                                setFormData({...formData, heroSlides: [...formData.heroSlides, newSlide]});
-                              }}
-                              data-testid="button-add-hero-slide"
-                            >
-                              <Plus className="h-4 w-4 mr-1" />
-                              Add Slide
-                            </Button>
-                          )}
-                        </div>
-
-                        {formData.heroSlides.length === 0 && (
-                          <div className="border-2 border-dashed border-muted rounded-lg p-8 text-center">
-                            <p className="text-muted-foreground mb-4">No hero slides added yet</p>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              onClick={() => {
-                                const newSlide: HeroSlide = { title: '', subtitle: '', backgroundImage: '' };
-                                setFormData({...formData, heroSlides: [newSlide]});
-                              }}
-                              data-testid="button-add-first-hero-slide"
-                            >
-                              <Plus className="h-4 w-4 mr-1" />
-                              Add First Slide
-                            </Button>
-                          </div>
-                        )}
-
-                        {formData.heroSlides.map((slide, index) => (
-                          <div key={index} className="border rounded-lg p-4 bg-muted/20">
-                            <div className="flex items-center justify-between mb-4">
-                              <span className="font-medium text-sm">Slide {index + 1}</span>
+                            {formData.logo ? (
                               <Button
                                 type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="text-destructive hover:text-destructive"
-                                onClick={() => {
-                                  const updated = formData.heroSlides.filter((_, i) => i !== index);
-                                  setFormData({...formData, heroSlides: updated});
-                                }}
-                                data-testid={`button-remove-hero-slide-${index}`}
+                                variant="outline"
+                                onClick={() => setFormData({...formData, logo: ""})}
+                                className="w-full max-w-xs"
+                                data-testid="button-remove-site-logo"
                               >
-                                <X className="h-4 w-4" />
+                                <X className="h-4 w-4 mr-2" />
+                                Remove Custom Logo
                               </Button>
+                            ) : (
+                              <ObjectUploader
+                                maxNumberOfFiles={1}
+                                maxFileSize={5242880}
+                                variant="button"
+                                buttonClassName="w-full max-w-xs bg-primary text-primary-foreground hover:bg-primary/90"
+                                onGetUploadParameters={async () => {
+                                  const { url } = await getUploadUrl();
+                                  return { method: 'PUT' as const, url };
+                                }}
+                                onComplete={(result) => {
+                                  if (result.successful && result.successful.length > 0) {
+                                    const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
+                                    setFormData({...formData, logo: normalizedUrl});
+                                  }
+                                }}
+                              >
+                                <Upload className="h-4 w-4 mr-2" />
+                                Upload New Logo
+                              </ObjectUploader>
+                            )}
+                            <p className="text-sm text-muted-foreground">or drag and drop your logo here</p>
+                          </div>
+                      
+                          {/* Invert Logo Toggle */}
+                          <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
+                            <div className="space-y-0.5">
+                              <Label htmlFor="invert-logo">Invert Logo for Dark Backgrounds</Label>
+                              <p className="text-sm text-muted-foreground">
+                                Enable this if your logo is dark and you want it to appear white on dark hero sections.
+                              </p>
                             </div>
-                            <div className="grid gap-4">
-                              <div className="grid gap-2">
-                                <Label htmlFor={`edit-slide-title-${index}`}>Title</Label>
-                                <Input
-                                  id={`edit-slide-title-${index}`}
-                                  placeholder="e.g., Stunning Modern Home"
-                                  value={slide.title}
-                                  onChange={(e) => {
-                                    const updated = [...formData.heroSlides];
-                                    updated[index] = { ...updated[index], title: e.target.value };
-                                    setFormData({...formData, heroSlides: updated});
-                                  }}
-                                  data-testid={`input-slide-title-${index}`}
-                                />
+                            <Switch
+                              id="invert-logo"
+                              checked={formData.invertLogo}
+                              onCheckedChange={(checked) => setFormData({...formData, invertLogo: checked})}
+                              data-testid="switch-invert-logo"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Hero Transition Effect */}
+                        <div className="grid gap-2 pt-4 border-t">
+                          <Label>Hero Transition Effect</Label>
+                          <p className="text-sm text-muted-foreground mb-2">
+                            Choose how your hero images transition between slides.
+                          </p>
+                          <RadioGroup
+                            value={formData.heroTransition}
+                            onValueChange={(value) => setFormData({...formData, heroTransition: value as HeroTransitionType})}
+                            className="grid grid-cols-2 gap-3"
+                          >
+                            {[
+                              { value: 'slide', label: 'Slide', description: 'Classic horizontal sliding effect' },
+                              { value: 'crossfade', label: 'Crossfade', description: 'Smooth fade between images' },
+                              { value: 'kenburns', label: 'Ken Burns', description: 'Gentle zoom with fade transition' },
+                              { value: 'liquid-webgl', label: 'Liquid Wipe', description: 'Premium WebGL distortion effect' },
+                            ].map((option) => (
+                              <Label
+                                key={option.value}
+                                htmlFor={`transition-${option.value}`}
+                                className={`flex flex-col cursor-pointer rounded-lg border-2 p-4 transition-all ${
+                                  formData.heroTransition === option.value
+                                    ? 'border-primary bg-primary/5'
+                                    : 'border-muted hover:border-muted-foreground/50'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <RadioGroupItem value={option.value} id={`transition-${option.value}`} />
+                                  <span className="font-medium">{option.label}</span>
+                                </div>
+                                <span className="text-xs text-muted-foreground mt-1 ml-6">{option.description}</span>
+                              </Label>
+                            ))}
+                          </RadioGroup>
+                        </div>
+
+                        {/* Hero Slides - for Modern Layout */}
+                        {formData.layoutId === 'layout-modern' && (
+                          <div className="grid gap-4 pt-4 border-t">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <Label>Hero Slides</Label>
+                                <p className="text-sm text-muted-foreground">
+                                  Add up to 3 slides with title and subtitle. Each slide will fade into the next.
+                                </p>
                               </div>
-                              <div className="grid gap-2">
-                                <Label htmlFor={`edit-slide-subtitle-${index}`}>Subtitle</Label>
-                                <Input
-                                  id={`edit-slide-subtitle-${index}`}
-                                  placeholder="e.g., Experience luxury living at its finest"
-                                  value={slide.subtitle}
-                                  onChange={(e) => {
-                                    const updated = [...formData.heroSlides];
-                                    updated[index] = { ...updated[index], subtitle: e.target.value };
-                                    setFormData({...formData, heroSlides: updated});
+                              {formData.heroSlides.length < 3 && (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    const newSlide: HeroSlide = { title: '', subtitle: '', backgroundImage: '' };
+                                    setFormData({...formData, heroSlides: [...formData.heroSlides, newSlide]});
                                   }}
-                                  data-testid={`input-slide-subtitle-${index}`}
-                                />
+                                  data-testid="button-add-hero-slide"
+                                >
+                                  <Plus className="h-4 w-4 mr-1" />
+                                  Add Slide
+                                </Button>
+                              )}
+                            </div>
+
+                            {formData.heroSlides.length === 0 && (
+                              <div className="border-2 border-dashed border-muted rounded-lg p-6 text-center">
+                                <p className="text-muted-foreground mb-3">No hero slides added yet</p>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    const newSlide: HeroSlide = { title: '', subtitle: '', backgroundImage: '' };
+                                    setFormData({...formData, heroSlides: [newSlide]});
+                                  }}
+                                  data-testid="button-add-first-hero-slide"
+                                >
+                                  <Plus className="h-4 w-4 mr-1" />
+                                  Add First Slide
+                                </Button>
                               </div>
-                              <div className="grid gap-2">
-                                <Label>Background Image</Label>
-                                {slide.backgroundImage ? (
-                                  <div className="relative w-full max-w-xs">
-                                    <div className="aspect-video rounded-lg overflow-hidden border">
-                                      <img 
-                                        src={slide.backgroundImage} 
-                                        alt="Slide background" 
-                                        className="w-full h-full object-cover"
-                                      />
-                                    </div>
-                                    <div className="flex gap-2 mt-2">
+                            )}
+
+                            {formData.heroSlides.map((slide, index) => (
+                              <div key={index} className="border rounded-lg p-4 bg-muted/20">
+                                <div className="flex items-center justify-between mb-4">
+                                  <span className="font-medium text-sm">Slide {index + 1}</span>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-destructive hover:text-destructive"
+                                    onClick={() => {
+                                      const updated = formData.heroSlides.filter((_, i) => i !== index);
+                                      setFormData({...formData, heroSlides: updated});
+                                    }}
+                                    data-testid={`button-remove-hero-slide-${index}`}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                                <div className="grid gap-3">
+                                  <Input
+                                    placeholder="Title (e.g., Stunning Modern Home)"
+                                    value={slide.title}
+                                    onChange={(e) => {
+                                      const updated = [...formData.heroSlides];
+                                      updated[index] = { ...updated[index], title: e.target.value };
+                                      setFormData({...formData, heroSlides: updated});
+                                    }}
+                                    data-testid={`input-slide-title-${index}`}
+                                  />
+                                  <Input
+                                    placeholder="Subtitle (e.g., Experience luxury living)"
+                                    value={slide.subtitle}
+                                    onChange={(e) => {
+                                      const updated = [...formData.heroSlides];
+                                      updated[index] = { ...updated[index], subtitle: e.target.value };
+                                      setFormData({...formData, heroSlides: updated});
+                                    }}
+                                    data-testid={`input-slide-subtitle-${index}`}
+                                  />
+                                  <div className="flex items-center gap-3">
+                                    <span className="text-sm text-muted-foreground">Background:</span>
+                                    {slide.backgroundImage ? (
+                                      <>
+                                        <div className="w-16 h-10 rounded overflow-hidden border">
+                                          <img src={slide.backgroundImage} alt="Slide bg" className="w-full h-full object-cover" />
+                                        </div>
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => {
+                                            setImagePickerTarget(`heroSlide-${index}` as 'heroSlide-0' | 'heroSlide-1' | 'heroSlide-2');
+                                            setImagePickerOpen(true);
+                                          }}
+                                          data-testid={`button-change-slide-bg-${index}`}
+                                        >
+                                          Change
+                                        </Button>
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => {
+                                            const updated = [...formData.heroSlides];
+                                            updated[index] = { ...updated[index], backgroundImage: '' };
+                                            setFormData({...formData, heroSlides: updated});
+                                          }}
+                                          data-testid={`button-clear-slide-bg-${index}`}
+                                        >
+                                          <X className="h-4 w-4" />
+                                        </Button>
+                                      </>
+                                    ) : (
                                       <Button
                                         type="button"
                                         variant="outline"
@@ -1283,59 +1168,242 @@ export default function EditSite() {
                                           setImagePickerTarget(`heroSlide-${index}` as 'heroSlide-0' | 'heroSlide-1' | 'heroSlide-2');
                                           setImagePickerOpen(true);
                                         }}
-                                        data-testid={`button-change-slide-bg-${index}`}
+                                        disabled={!site?.photos || site.photos.length === 0}
+                                        data-testid={`button-select-slide-bg-${index}`}
                                       >
-                                        Change Image
+                                        <Image className="h-4 w-4 mr-1" />
+                                        Select Image
                                       </Button>
-                                      <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="sm"
-                                        className="text-muted-foreground"
-                                        onClick={() => {
-                                          const updated = [...formData.heroSlides];
-                                          updated[index] = { ...updated[index], backgroundImage: '' };
-                                          setFormData({...formData, heroSlides: updated});
-                                        }}
-                                        data-testid={`button-clear-slide-bg-${index}`}
-                                      >
-                                        Clear
-                                      </Button>
-                                    </div>
+                                    )}
                                   </div>
-                                ) : (
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    className="w-full h-20 border-dashed"
-                                    onClick={() => {
-                                      setImagePickerTarget(`heroSlide-${index}` as 'heroSlide-0' | 'heroSlide-1' | 'heroSlide-2');
-                                      setImagePickerOpen(true);
-                                    }}
-                                    disabled={!site?.photos || site.photos.length === 0}
-                                    data-testid={`button-select-slide-bg-${index}`}
-                                  >
-                                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                                      <Image className="h-5 w-5" />
-                                      <span>{site?.photos && site.photos.length > 0 ? 'Select Background Image' : 'Add photos first'}</span>
-                                    </div>
-                                  </Button>
-                                )}
+                                </div>
                               </div>
-                            </div>
+                            ))}
                           </div>
-                        ))}
-
-                        <p className="text-xs text-muted-foreground">
-                          Each slide includes an automatic "Have a look" button that scrolls to the property details.
-                        </p>
+                        )}
                       </div>
+
+                  {/* ===== LAYOUT IMAGES SECTION ===== */}
+                  {(formData.layoutId === 'layout-shoalwood' || formData.layoutId === 'layout-modern' || formData.layoutId === 'layout-magazine') && (
+                    <div className="rounded-xl border bg-card p-6 space-y-4">
+                      <div className="flex items-center gap-2 pb-2 border-b">
+                        <Image className="h-5 w-5 text-primary" />
+                        <div>
+                          <h3 className="font-semibold text-lg">Layout Images</h3>
+                          <p className="text-sm text-muted-foreground">The layout you chose has additional images.</p>
+                        </div>
+                      </div>
+
+                      {/* Description Image - for Shoalwood and Modern layouts */}
+                      {(formData.layoutId === 'layout-shoalwood' || formData.layoutId === 'layout-modern') && (
+                        <div className="flex items-center gap-4 p-3 bg-muted/20 rounded-lg">
+                          <div className="flex-shrink-0">
+                            {formData.descriptionImage ? (
+                              <div className="w-16 h-20 rounded overflow-hidden border">
+                                <img src={formData.descriptionImage} alt="Description" className="w-full h-full object-cover" />
+                              </div>
+                            ) : (
+                              <div className="w-16 h-20 rounded border-2 border-dashed border-muted-foreground/30 flex items-center justify-center">
+                                <Image className="h-5 w-5 text-muted-foreground/40" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-medium text-sm">Description Image</p>
+                            <p className="text-xs text-muted-foreground">Portrait image next to description</p>
+                          </div>
+                          {formData.descriptionImage ? (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setFormData({...formData, descriptionImage: ""})}
+                              className="text-muted-foreground hover:text-destructive"
+                              data-testid="button-remove-description-image"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <ObjectUploader
+                              maxNumberOfFiles={1}
+                              maxFileSize={10485760}
+                              variant="button"
+                              buttonClassName="text-sm"
+                              onGetUploadParameters={async () => {
+                                const { url } = await getUploadUrl();
+                                return { method: 'PUT' as const, url };
+                              }}
+                              onComplete={(result) => {
+                                if (result.successful && result.successful.length > 0) {
+                                  const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
+                                  setFormData({...formData, descriptionImage: normalizedUrl});
+                                }
+                              }}
+                            >
+                              <Upload className="h-4 w-4 mr-1" />
+                              Upload
+                            </ObjectUploader>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Hero Logo - for Modern layout */}
+                      {formData.layoutId === 'layout-modern' && (
+                        <div className="flex items-center gap-4 p-3 bg-muted/20 rounded-lg">
+                          <div className="flex-shrink-0">
+                            {formData.heroLogo ? (
+                              <div className="w-16 h-12 rounded bg-slate-800 flex items-center justify-center p-1">
+                                <img src={formData.heroLogo} alt="Hero logo" className="max-h-10 max-w-14 object-contain" />
+                              </div>
+                            ) : (
+                              <div className="w-16 h-12 rounded border-2 border-dashed border-muted-foreground/30 flex items-center justify-center">
+                                <Star className="h-5 w-5 text-muted-foreground/40" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-medium text-sm">Hero Logo</p>
+                            <p className="text-xs text-muted-foreground">Special logo for the hero section</p>
+                          </div>
+                          {formData.heroLogo ? (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setFormData({...formData, heroLogo: ""})}
+                              className="text-muted-foreground hover:text-destructive"
+                              data-testid="button-remove-hero-logo"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <ObjectUploader
+                              maxNumberOfFiles={1}
+                              maxFileSize={5242880}
+                              variant="button"
+                              buttonClassName="text-sm"
+                              onGetUploadParameters={async () => {
+                                const { url } = await getUploadUrl();
+                                return { method: 'PUT' as const, url };
+                              }}
+                              onComplete={(result) => {
+                                if (result.successful && result.successful.length > 0) {
+                                  const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
+                                  setFormData({...formData, heroLogo: normalizedUrl});
+                                }
+                              }}
+                            >
+                              <Upload className="h-4 w-4 mr-1" />
+                              Upload
+                            </ObjectUploader>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Content Grid Images - for Magazine layout */}
+                      {formData.layoutId === 'layout-magazine' && (
+                        <>
+                          <div className="flex items-center gap-4 p-3 bg-muted/20 rounded-lg">
+                            <div className="flex-shrink-0">
+                              {formData.contentGridImage1 ? (
+                                <div className="w-16 h-12 rounded overflow-hidden border">
+                                  <img src={formData.contentGridImage1} alt="Grid 1" className="w-full h-full object-cover" />
+                                </div>
+                              ) : (
+                                <div className="w-16 h-12 rounded border-2 border-dashed border-muted-foreground/30 flex items-center justify-center">
+                                  <Image className="h-5 w-5 text-muted-foreground/40" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-medium text-sm">Top Right Image</p>
+                              <p className="text-xs text-muted-foreground">Featured in content grid</p>
+                            </div>
+                            {formData.contentGridImage1 ? (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setFormData({...formData, contentGridImage1: ""})}
+                                className="text-muted-foreground hover:text-destructive"
+                                data-testid="button-clear-grid-image-1"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            ) : (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setImagePickerTarget('contentGridImage1');
+                                  setImagePickerOpen(true);
+                                }}
+                                disabled={!site?.photos || site.photos.length === 0}
+                                data-testid="button-select-grid-image-1"
+                              >
+                                <Image className="h-4 w-4 mr-1" />
+                                Select
+                              </Button>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-4 p-3 bg-muted/20 rounded-lg">
+                            <div className="flex-shrink-0">
+                              {formData.contentGridImage2 ? (
+                                <div className="w-16 h-12 rounded overflow-hidden border">
+                                  <img src={formData.contentGridImage2} alt="Grid 2" className="w-full h-full object-cover" />
+                                </div>
+                              ) : (
+                                <div className="w-16 h-12 rounded border-2 border-dashed border-muted-foreground/30 flex items-center justify-center">
+                                  <Image className="h-5 w-5 text-muted-foreground/40" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-medium text-sm">Bottom Left Image</p>
+                              <p className="text-xs text-muted-foreground">Featured in content grid</p>
+                            </div>
+                            {formData.contentGridImage2 ? (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setFormData({...formData, contentGridImage2: ""})}
+                                className="text-muted-foreground hover:text-destructive"
+                                data-testid="button-clear-grid-image-2"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            ) : (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setImagePickerTarget('contentGridImage2');
+                                  setImagePickerOpen(true);
+                                }}
+                                disabled={!site?.photos || site.photos.length === 0}
+                                data-testid="button-select-grid-image-2"
+                              >
+                                <Image className="h-4 w-4 mr-1" />
+                                Select
+                              </Button>
+                            )}
+                          </div>
+                        </>
+                      )}
                     </div>
                   )}
 
-                  {/* Magazine Layout Options */}
+                  {/* ===== MAGAZINE LAYOUT OPTIONS ===== */}
                   {formData.layoutId === 'layout-magazine' && (
-                    <div className="border-t pt-6 space-y-6">
+                    <div className="rounded-xl border bg-card p-6 space-y-6">
+                      <div className="flex items-center gap-2 pb-2 border-b">
+                        <Settings className="h-5 w-5 text-primary" />
+                        <h3 className="font-semibold text-lg">Layout Options</h3>
+                      </div>
                       {/* Buyer Agent Compensation */}
                       <div className="grid gap-2">
                         <Label htmlFor="edit-buyerAgentComp">Buyer Agent Compensation (Optional)</Label>
@@ -1520,132 +1588,6 @@ export default function EditSite() {
                           </div>
                         ))}
                       </div>
-
-                      {/* Content Grid Images */}
-                      {site?.photos && site.photos.length > 0 && (
-                        <div className="grid gap-4">
-                          <div>
-                            <Label>Content Section Images</Label>
-                            <p className="text-sm text-muted-foreground">
-                              Select images from your gallery to display in the content section grid.
-                            </p>
-                          </div>
-                          
-                          <div className="grid md:grid-cols-2 gap-4">
-                            {/* Grid Image 1 (Top Right) */}
-                            <div className="border rounded-lg p-4 space-y-3">
-                              <Label className="text-sm font-medium">Top Right Image</Label>
-                              {formData.contentGridImage1 ? (
-                                <div className="space-y-3">
-                                  <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
-                                    <img
-                                      src={formData.contentGridImage1}
-                                      alt="Selected top right"
-                                      className="w-full h-full object-cover"
-                                    />
-                                  </div>
-                                  <div className="flex gap-2">
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => {
-                                        setImagePickerTarget('contentGridImage1');
-                                        setImagePickerOpen(true);
-                                      }}
-                                      data-testid="button-change-grid-image-1"
-                                    >
-                                      Change
-                                    </Button>
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => setFormData({...formData, contentGridImage1: ''})}
-                                      className="text-muted-foreground"
-                                      data-testid="button-clear-grid-image-1"
-                                    >
-                                      Clear
-                                    </Button>
-                                  </div>
-                                </div>
-                              ) : (
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  className="w-full h-24 border-dashed"
-                                  onClick={() => {
-                                    setImagePickerTarget('contentGridImage1');
-                                    setImagePickerOpen(true);
-                                  }}
-                                  data-testid="button-select-grid-image-1"
-                                >
-                                  <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                                    <Image className="h-6 w-6" />
-                                    <span>Select Image</span>
-                                  </div>
-                                </Button>
-                              )}
-                            </div>
-
-                            {/* Grid Image 2 (Bottom Left) */}
-                            <div className="border rounded-lg p-4 space-y-3">
-                              <Label className="text-sm font-medium">Bottom Left Image</Label>
-                              {formData.contentGridImage2 ? (
-                                <div className="space-y-3">
-                                  <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
-                                    <img
-                                      src={formData.contentGridImage2}
-                                      alt="Selected bottom left"
-                                      className="w-full h-full object-cover"
-                                    />
-                                  </div>
-                                  <div className="flex gap-2">
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => {
-                                        setImagePickerTarget('contentGridImage2');
-                                        setImagePickerOpen(true);
-                                      }}
-                                      data-testid="button-change-grid-image-2"
-                                    >
-                                      Change
-                                    </Button>
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => setFormData({...formData, contentGridImage2: ''})}
-                                      className="text-muted-foreground"
-                                      data-testid="button-clear-grid-image-2"
-                                    >
-                                      Clear
-                                    </Button>
-                                  </div>
-                                </div>
-                              ) : (
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  className="w-full h-24 border-dashed"
-                                  onClick={() => {
-                                    setImagePickerTarget('contentGridImage2');
-                                    setImagePickerOpen(true);
-                                  }}
-                                  data-testid="button-select-grid-image-2"
-                                >
-                                  <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                                    <Image className="h-6 w-6" />
-                                    <span>Select Image</span>
-                                  </div>
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      )}
 
                     </div>
                   )}
