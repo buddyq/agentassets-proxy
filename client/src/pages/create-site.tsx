@@ -963,7 +963,7 @@ export default function CreateSite() {
                 </CardHeader>
                 <CardContent>
                   <Tabs defaultValue="branding" className="w-full">
-                    <TabsList className="grid w-full grid-cols-4 mb-6 bg-[#f3faf9] p-1 rounded-xl">
+                    <TabsList className="grid w-full grid-cols-4 mb-6 bg-[#f3faf9] p-1 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.06)]">
                       <TabsTrigger 
                         value="branding" 
                         data-testid="tab-branding"
