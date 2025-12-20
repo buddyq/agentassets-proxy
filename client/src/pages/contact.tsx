@@ -18,6 +18,7 @@ import {
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
+import { trackLeadSubmission } from "@/lib/analytics";
 
 export default function Contact() {
   const { toast } = useToast();
@@ -36,6 +37,8 @@ export default function Contact() {
     
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    trackLeadSubmission("agentassets-contact");
     
     toast({
       title: "Message Sent!",
