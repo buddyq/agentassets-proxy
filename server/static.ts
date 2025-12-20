@@ -25,11 +25,15 @@ export function serveStatic(app: Express) {
       
       // Only inject meta tags for crawlers to avoid performance overhead for regular users
       if (isCrawler) {
-        const host = req.hostname || (req.headers.host as string) || '';
+        const host = req.headers.host || req.hostname || '';
         const requestPath = req.originalUrl || req.path || '';
+        
+        console.log('[SEO] Crawler detected:', userAgent.substring(0, 50));
+        console.log('[SEO] Host:', host, '| Path:', requestPath);
         
         // Try to get site-specific meta data
         const siteMeta = await getSiteMetaData(host, requestPath);
+        console.log('[SEO] Site meta found:', siteMeta ? 'yes' : 'no');
         
         if (siteMeta) {
           // Read HTML and inject meta tags
