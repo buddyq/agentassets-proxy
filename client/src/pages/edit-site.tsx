@@ -997,7 +997,7 @@ export default function EditSite() {
                           <p className="text-sm text-muted-foreground">
                             Upload a logo specifically for the hero section. Use a PNG with transparent background for best results.
                           </p>
-                          <div className="rounded-xl p-6 flex flex-col items-center gap-4 bg-[#ffffff]">
+                          <div className="rounded-xl p-6 flex flex-col items-center gap-4 bg-[#f3faf9]">
                             <p className="text-sm font-medium text-muted-foreground">Current Hero Logo</p>
                             <div className="w-24 h-16 rounded-lg bg-slate-800 shadow-lg flex items-center justify-center p-2">
                               {formData.heroLogo ? (
