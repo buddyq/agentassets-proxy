@@ -1706,225 +1706,231 @@ export default function EditSite() {
                     </TabsContent>
 
                     <TabsContent value="documents" className="space-y-6">
-                      {/* Documents Section */}
-                      <div className="grid gap-4">
-                        <div>
-                          <Label className="text-lg font-semibold flex items-center gap-2">
-                            <FileText className="h-5 w-5" />
-                            Property Documents
-                          </Label>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            Upload documents like floor plans, disclosures, or brochures. Visitors can download these from your property site.
-                          </p>
+                      {/* ===== DOCUMENTS SECTION ===== */}
+                      <div className="rounded-xl border p-6 space-y-4 bg-[#ffffff]">
+                        <div className="flex items-center gap-2 pb-2 border-b">
+                          <FileText className="h-5 w-5 text-primary" />
+                          <h3 className="font-semibold text-lg">Property Documents</h3>
                         </div>
+                        <p className="text-sm text-muted-foreground">
+                          Upload documents like floor plans, disclosures, or brochures. Visitors can download these from your property site.
+                        </p>
 
-                    {/* Document Upload */}
-                    <div className="space-y-4">
-                      <div className="flex gap-3">
-                        <Input
-                          placeholder="Document name (e.g., Floor Plan, Property Disclosure)"
-                          value={newDocName}
-                          onChange={(e) => setNewDocName(e.target.value)}
-                          className="flex-1"
-                          data-testid="input-document-name"
-                        />
-                        <ObjectUploader
-                          maxNumberOfFiles={1}
-                          maxFileSize={52428800}
-                          allowedFileTypes={['application/pdf', 'image/*']}
-                          onGetUploadParameters={async () => {
-                            const { url } = await getUploadUrl();
-                            return { method: 'PUT' as const, url };
-                          }}
-                          onComplete={(result) => {
-                            if (result.successful && result.successful.length > 0) {
-                              const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
-                              if (newDocName.trim()) {
-                                setDocuments([...documents, { name: newDocName.trim(), url: normalizedUrl }]);
-                                setNewDocName("");
-                                toast({
-                                  title: "Document Uploaded",
-                                  description: `"${newDocName.trim()}" has been added.`,
-                                });
-                              } else {
-                                setPendingDocUrl(normalizedUrl);
-                                toast({
-                                  title: "Enter Document Name",
-                                  description: "Please enter a name for the document, then click Add.",
-                                });
-                              }
-                            }
-                          }}
-                          buttonClassName="gap-2"
-                        >
-                          <Plus className="h-4 w-4" />
-                          Upload Document
-                        </ObjectUploader>
-                      </div>
-
-                      {pendingDocUrl && (
-                        <div className="flex gap-3 items-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                          <FileText className="h-5 w-5 text-yellow-600" />
-                          <span className="text-sm flex-1">Document uploaded. Enter a name:</span>
-                          <Input
-                            placeholder="Document name"
-                            value={newDocName}
-                            onChange={(e) => setNewDocName(e.target.value)}
-                            className="w-48"
-                            data-testid="input-pending-document-name"
-                          />
-                          <Button
-                            size="sm"
-                            onClick={() => {
-                              if (newDocName.trim() && pendingDocUrl) {
-                                setDocuments([...documents, { name: newDocName.trim(), url: pendingDocUrl }]);
-                                setNewDocName("");
-                                setPendingDocUrl(null);
-                              }
-                            }}
-                            disabled={!newDocName.trim()}
-                            data-testid="button-add-pending-document"
-                          >
-                            Add
-                          </Button>
-                        </div>
-                      )}
-
-                      {/* Document List */}
-                      {documents.length > 0 && (
-                        <div className="space-y-2">
-                          <Label className="text-sm text-muted-foreground">Uploaded Documents ({documents.length})</Label>
-                          <div className="border rounded-lg divide-y">
-                            {documents.map((doc, index) => (
-                              <div key={index} className="flex items-center justify-between p-3 hover:bg-muted/30" data-testid={`document-item-${index}`}>
-                                <div className="flex items-center gap-3">
-                                  <FileText className="h-5 w-5 text-primary" />
-                                  <span className="font-medium">{doc.name}</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    asChild
-                                  >
-                                    <a href={doc.url} target="_blank" rel="noopener noreferrer" data-testid={`button-download-document-${index}`}>
-                                      <Download className="h-4 w-4" />
-                                    </a>
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="text-destructive hover:text-destructive"
-                                    onClick={() => {
-                                      setDocuments(documents.filter((_, i) => i !== index));
-                                      toast({
-                                        title: "Document Removed",
-                                        description: `"${doc.name}" has been removed.`,
-                                      });
-                                    }}
-                                    data-testid={`button-remove-document-${index}`}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </div>
-                            ))}
+                        <div className="bg-[#f3faf9] rounded-xl p-4 space-y-4">
+                          {/* Document Upload */}
+                          <div className="flex gap-3">
+                            <Input
+                              placeholder="Document name (e.g., Floor Plan, Property Disclosure)"
+                              value={newDocName}
+                              onChange={(e) => setNewDocName(e.target.value)}
+                              className="flex-1 bg-[#ffffff]"
+                              data-testid="input-document-name"
+                            />
+                            <ObjectUploader
+                              maxNumberOfFiles={1}
+                              maxFileSize={52428800}
+                              allowedFileTypes={['application/pdf', 'image/*']}
+                              onGetUploadParameters={async () => {
+                                const { url } = await getUploadUrl();
+                                return { method: 'PUT' as const, url };
+                              }}
+                              onComplete={(result) => {
+                                if (result.successful && result.successful.length > 0) {
+                                  const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
+                                  if (newDocName.trim()) {
+                                    setDocuments([...documents, { name: newDocName.trim(), url: normalizedUrl }]);
+                                    setNewDocName("");
+                                    toast({
+                                      title: "Document Uploaded",
+                                      description: `"${newDocName.trim()}" has been added.`,
+                                    });
+                                  } else {
+                                    setPendingDocUrl(normalizedUrl);
+                                    toast({
+                                      title: "Enter Document Name",
+                                      description: "Please enter a name for the document, then click Add.",
+                                    });
+                                  }
+                                }
+                              }}
+                              buttonClassName="gap-2 bg-primary text-white hover:bg-primary/90"
+                            >
+                              <Plus className="h-4 w-4" />
+                              Upload Document
+                            </ObjectUploader>
                           </div>
-                        </div>
-                      )}
-                      </div>
-                    </div>
-                    </TabsContent>
 
-                    <TabsContent value="seo" className="space-y-6">
-                      <div className="grid gap-6">
-                        <div>
-                          <Label className="text-lg font-semibold flex items-center gap-2">
-                            <Search className="h-5 w-5" />
-                            Search Engine Optimization
-                          </Label>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            Customize how your property site appears in search results and when shared on social media.
-                          </p>
-                        </div>
+                          {pendingDocUrl && (
+                            <div className="flex gap-3 items-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                              <FileText className="h-5 w-5 text-yellow-600" />
+                              <span className="text-sm flex-1">Document uploaded. Enter a name:</span>
+                              <Input
+                                placeholder="Document name"
+                                value={newDocName}
+                                onChange={(e) => setNewDocName(e.target.value)}
+                                className="w-48 bg-[#ffffff]"
+                                data-testid="input-pending-document-name"
+                              />
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  if (newDocName.trim() && pendingDocUrl) {
+                                    setDocuments([...documents, { name: newDocName.trim(), url: pendingDocUrl }]);
+                                    setNewDocName("");
+                                    setPendingDocUrl(null);
+                                  }
+                                }}
+                                disabled={!newDocName.trim()}
+                                data-testid="button-add-pending-document"
+                              >
+                                Add
+                              </Button>
+                            </div>
+                          )}
 
-                        {/* SEO Title */}
-                        <div className="grid gap-2">
-                          <Label htmlFor="seoTitle">SEO Title</Label>
-                          <p className="text-sm text-muted-foreground">
-                            The title that appears in search results and browser tabs. If empty, we'll use your property title.
-                          </p>
-                          <Input
-                            id="seoTitle"
-                            placeholder={formData.title || formData.address || "e.g., Stunning 4BR Home in Austin Heights"}
-                            value={formData.seoTitle}
-                            onChange={(e) => setFormData({...formData, seoTitle: e.target.value})}
-                            maxLength={60}
-                            data-testid="input-seo-title"
-                          />
-                          <span className="text-xs text-muted-foreground">{formData.seoTitle.length}/60 characters</span>
-                        </div>
-
-                        {/* SEO Description */}
-                        <div className="grid gap-2">
-                          <Label htmlFor="seoDescription">SEO Description</Label>
-                          <p className="text-sm text-muted-foreground">
-                            A brief description that appears under the title in search results. For best results, aim for 150-160 characters. Include key property features and location. If left empty, we'll use your property description.
-                          </p>
-                          <Textarea
-                            id="seoDescription"
-                            placeholder="e.g., Beautiful 4 bedroom, 3 bathroom home featuring a pool, updated kitchen, and stunning views. Listed at $850,000."
-                            value={formData.seoDescription}
-                            onChange={(e) => setFormData({...formData, seoDescription: e.target.value})}
-                            maxLength={160}
-                            rows={3}
-                            data-testid="input-seo-description"
-                          />
-                          <span className="text-xs text-muted-foreground">{formData.seoDescription.length}/160 characters (optimal: 150-160)</span>
-                        </div>
-
-                        {/* SEO Image Picker */}
-                        <div className="grid gap-2">
-                          <Label>Image Shown When Shared</Label>
-                          <p className="text-sm text-muted-foreground">
-                            Select an image from your gallery that will be displayed when your site is shared on social media.
-                          </p>
-                          
-                          {formData.seoImage ? (
-                            <div className="relative w-full max-w-md">
-                              <div className="aspect-[1200/630] rounded-lg overflow-hidden border">
-                                <img 
-                                  src={formData.seoImage} 
-                                  alt="SEO preview" 
-                                  className="w-full h-full object-cover"
-                                />
-                              </div>
-                              <div className="flex gap-2 mt-2">
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    setImagePickerTarget('seoImage');
-                                    setImagePickerOpen(true);
-                                  }}
-                                  data-testid="button-change-seo-image"
-                                >
-                                  Change Image
-                                </Button>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-muted-foreground"
-                                  onClick={() => setFormData({...formData, seoImage: ""})}
-                                  data-testid="button-remove-seo-image"
-                                >
-                                  Clear
-                                </Button>
+                          {/* Document List */}
+                          {documents.length > 0 ? (
+                            <div className="space-y-2">
+                              <Label className="text-sm text-muted-foreground">Uploaded Documents ({documents.length})</Label>
+                              <div className="border rounded-lg divide-y bg-white">
+                                {documents.map((doc, index) => (
+                                  <div key={index} className="flex items-center justify-between p-3 hover:bg-muted/30" data-testid={`document-item-${index}`}>
+                                    <div className="flex items-center gap-3">
+                                      <FileText className="h-5 w-5 text-primary" />
+                                      <span className="font-medium">{doc.name}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        asChild
+                                      >
+                                        <a href={doc.url} target="_blank" rel="noopener noreferrer" data-testid={`button-download-document-${index}`}>
+                                          <Download className="h-4 w-4" />
+                                        </a>
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="text-destructive hover:text-destructive"
+                                        onClick={() => {
+                                          setDocuments(documents.filter((_, i) => i !== index));
+                                          toast({
+                                            title: "Document Removed",
+                                            description: `"${doc.name}" has been removed.`,
+                                          });
+                                        }}
+                                        data-testid={`button-remove-document-${index}`}
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ))}
                               </div>
                             </div>
                           ) : (
+                            <div className="border-2 border-dashed border-muted rounded-lg p-8 text-center bg-white">
+                              <FileText className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
+                              <p className="text-muted-foreground text-sm">No documents uploaded yet.</p>
+                              <p className="text-muted-foreground text-xs mt-1">Enter a document name and click Upload to add one.</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value="seo" className="space-y-6">
+                      {/* ===== SEO SECTION ===== */}
+                      <div className="rounded-xl border p-6 space-y-4 bg-[#ffffff]">
+                        <div className="flex items-center gap-2 pb-2 border-b">
+                          <Search className="h-5 w-5 text-primary" />
+                          <h3 className="font-semibold text-lg">Search Engine Optimization</h3>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Customize how your property site appears in search results and when shared on social media.
+                        </p>
+
+                        <div className="bg-[#f3faf9] rounded-xl p-4 space-y-6">
+                          {/* SEO Title */}
+                          <div className="grid gap-2">
+                            <Label htmlFor="seoTitle">SEO Title</Label>
+                            <p className="text-sm text-muted-foreground">
+                              The title that appears in search results and browser tabs. If empty, we'll use your property title.
+                            </p>
+                            <Input
+                              id="seoTitle"
+                              className="bg-[#ffffff]"
+                              placeholder={formData.title || formData.address || "e.g., Stunning 4BR Home in Austin Heights"}
+                              value={formData.seoTitle}
+                              onChange={(e) => setFormData({...formData, seoTitle: e.target.value})}
+                              maxLength={60}
+                              data-testid="input-seo-title"
+                            />
+                            <span className="text-xs text-muted-foreground">{formData.seoTitle.length}/60 characters</span>
+                          </div>
+
+                          {/* SEO Description */}
+                          <div className="grid gap-2">
+                            <Label htmlFor="seoDescription">SEO Description</Label>
+                            <p className="text-sm text-muted-foreground">
+                              A brief description that appears under the title in search results. For best results, aim for 150-160 characters.
+                            </p>
+                            <Textarea
+                              id="seoDescription"
+                              className="bg-[#ffffff]"
+                              placeholder="e.g., Beautiful 4 bedroom, 3 bathroom home featuring a pool, updated kitchen, and stunning views. Listed at $850,000."
+                              value={formData.seoDescription}
+                              onChange={(e) => setFormData({...formData, seoDescription: e.target.value})}
+                              maxLength={160}
+                              rows={3}
+                              data-testid="input-seo-description"
+                            />
+                            <span className="text-xs text-muted-foreground">{formData.seoDescription.length}/160 characters (optimal: 150-160)</span>
+                          </div>
+
+                          {/* SEO Image Picker */}
+                          <div className="grid gap-2">
+                            <Label>Image Shown When Shared</Label>
+                            <p className="text-sm text-muted-foreground">
+                              Select an image from your gallery that will be displayed when your site is shared on social media.
+                            </p>
+                            
+                            {formData.seoImage ? (
+                              <div className="relative w-full max-w-md">
+                                <div className="aspect-[1200/630] rounded-lg overflow-hidden border bg-white">
+                                  <img 
+                                    src={formData.seoImage} 
+                                    alt="SEO preview" 
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                <div className="flex gap-2 mt-2">
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      setImagePickerTarget('seoImage');
+                                      setImagePickerOpen(true);
+                                    }}
+                                    data-testid="button-change-seo-image"
+                                  >
+                                    Change Image
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-muted-foreground"
+                                    onClick={() => setFormData({...formData, seoImage: ""})}
+                                    data-testid="button-remove-seo-image"
+                                  >
+                                    Clear
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : (
                             <Button
                               type="button"
                               variant="outline"
@@ -1944,43 +1950,44 @@ export default function EditSite() {
                           )}
                         </div>
 
-                        {/* Custom Google Analytics */}
-                        <div className="grid gap-2 border-t pt-6">
-                          <Label htmlFor="customGaId" className="flex items-center gap-2">
-                            <BarChart3 className="h-4 w-4" />
-                            Custom Google Analytics
-                          </Label>
-                          <p className="text-sm text-muted-foreground">
-                            Add your own Google Analytics measurement ID to track visitors on this property site separately.
-                          </p>
-                          <Input
-                            id="customGaId"
-                            placeholder="G-XXXXXXXXXX"
-                            value={formData.customGaId}
-                            onChange={(e) => setFormData({...formData, customGaId: e.target.value})}
-                            data-testid="input-custom-ga-id"
-                          />
-                          <span className="text-xs text-muted-foreground">
-                            Enter your GA4 Measurement ID (found in Google Analytics → Admin → Data Streams)
-                          </span>
+                          {/* Custom Google Analytics */}
+                          <div className="grid gap-2 border-t pt-6">
+                            <Label htmlFor="customGaId" className="flex items-center gap-2">
+                              <BarChart3 className="h-4 w-4" />
+                              Custom Google Analytics
+                            </Label>
+                            <p className="text-sm text-muted-foreground">
+                              Add your own Google Analytics measurement ID to track visitors on this property site separately.
+                            </p>
+                            <Input
+                              id="customGaId"
+                              className="bg-[#ffffff]"
+                              placeholder="G-XXXXXXXXXX"
+                              value={formData.customGaId}
+                              onChange={(e) => setFormData({...formData, customGaId: e.target.value})}
+                              data-testid="input-custom-ga-id"
+                            />
+                            <span className="text-xs text-muted-foreground">
+                              Enter your GA4 Measurement ID (found in Google Analytics → Admin → Data Streams)
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </TabsContent>
 
                     <TabsContent value="password" className="space-y-6">
-                      <div className="grid gap-4">
-                        <div>
-                          <Label className="text-lg font-semibold flex items-center gap-2">
-                            <Lock className="h-5 w-5" />
-                            Password Protection
-                          </Label>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            Add passwords to restrict access to your property site. Create multiple passwords with labels to track who accessed the site.
-                          </p>
+                      {/* ===== PASSWORD SECTION ===== */}
+                      <div className="rounded-xl border p-6 space-y-4 bg-[#ffffff]">
+                        <div className="flex items-center gap-2 pb-2 border-b">
+                          <Lock className="h-5 w-5 text-primary" />
+                          <h3 className="font-semibold text-lg">Password Protection</h3>
                         </div>
+                        <p className="text-sm text-muted-foreground">
+                          Add passwords to restrict access to your property site. Create multiple passwords with labels to track who accessed the site.
+                        </p>
 
-                        {/* Add Password Form */}
-                        <div className="space-y-4 bg-muted/30 rounded-lg p-4">
+                        <div className="bg-[#f3faf9] rounded-xl p-4 space-y-4">
+                          {/* Add Password Form */}
                           <div className="grid gap-3">
                             <div className="flex gap-3">
                               <div className="flex-1">
@@ -1991,7 +1998,7 @@ export default function EditSite() {
                                     placeholder="Enter password (min 4 characters)"
                                     value={newPassword}
                                     onChange={(e) => setNewPassword(e.target.value)}
-                                    className="pr-10"
+                                    className="pr-10 bg-[#ffffff]"
                                     data-testid="input-new-password"
                                   />
                                   <button
@@ -2009,6 +2016,7 @@ export default function EditSite() {
                                   placeholder="e.g., For Broker, Buyer #1"
                                   value={newPasswordLabel}
                                   onChange={(e) => setNewPasswordLabel(e.target.value)}
+                                  className="bg-[#ffffff]"
                                   data-testid="input-password-label"
                                 />
                               </div>
@@ -2052,67 +2060,65 @@ export default function EditSite() {
                               {createPasswordMutation.isPending ? "Adding..." : "Add Password"}
                             </Button>
                           </div>
-                        </div>
 
-                        {/* Password List */}
-                        {sitePasswords.length > 0 && (
-                          <div className="space-y-2">
-                            <Label className="text-sm text-muted-foreground">Active Passwords ({sitePasswords.length})</Label>
-                            <div className="border rounded-lg divide-y">
-                              {sitePasswords.map((pw) => (
-                                <div key={pw.id} className="flex items-center justify-between p-3 hover:bg-muted/30" data-testid={`password-item-${pw.id}`}>
-                                  <div className="flex items-center gap-3">
-                                    <Lock className="h-5 w-5 text-primary" />
-                                    <div>
-                                      <span className="font-medium">{pw.label || "Unnamed Password"}</span>
-                                      <div className="text-sm text-muted-foreground flex items-center gap-3">
-                                        <span>Used {pw.usageCount} time{pw.usageCount !== 1 ? 's' : ''}</span>
-                                        {pw.lastUsedAt && (
-                                          <span>Last used: {new Date(pw.lastUsedAt).toLocaleDateString()}</span>
-                                        )}
+                          {/* Password List */}
+                          {sitePasswords.length > 0 ? (
+                            <div className="space-y-2">
+                              <Label className="text-sm text-muted-foreground">Active Passwords ({sitePasswords.length})</Label>
+                              <div className="border rounded-lg divide-y bg-white">
+                                {sitePasswords.map((pw) => (
+                                  <div key={pw.id} className="flex items-center justify-between p-3 hover:bg-muted/30" data-testid={`password-item-${pw.id}`}>
+                                    <div className="flex items-center gap-3">
+                                      <Lock className="h-5 w-5 text-primary" />
+                                      <div>
+                                        <span className="font-medium">{pw.label || "Unnamed Password"}</span>
+                                        <div className="text-sm text-muted-foreground flex items-center gap-3">
+                                          <span>Used {pw.usageCount} time{pw.usageCount !== 1 ? 's' : ''}</span>
+                                          {pw.lastUsedAt && (
+                                            <span>Last used: {new Date(pw.lastUsedAt).toLocaleDateString()}</span>
+                                          )}
+                                        </div>
                                       </div>
                                     </div>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="text-destructive hover:text-destructive"
+                                      onClick={async () => {
+                                        try {
+                                          await deletePasswordMutation.mutateAsync({
+                                            siteId,
+                                            passwordId: pw.id
+                                          });
+                                          toast({
+                                            title: "Password Removed",
+                                            description: "The password has been deleted."
+                                          });
+                                        } catch (error) {
+                                          toast({
+                                            title: "Error",
+                                            description: "Failed to remove password.",
+                                            variant: "destructive"
+                                          });
+                                        }
+                                      }}
+                                      disabled={deletePasswordMutation.isPending}
+                                      data-testid={`button-delete-password-${pw.id}`}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
                                   </div>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="text-destructive hover:text-destructive"
-                                    onClick={async () => {
-                                      try {
-                                        await deletePasswordMutation.mutateAsync({
-                                          siteId,
-                                          passwordId: pw.id
-                                        });
-                                        toast({
-                                          title: "Password Removed",
-                                          description: "The password has been deleted."
-                                        });
-                                      } catch (error) {
-                                        toast({
-                                          title: "Error",
-                                          description: "Failed to remove password.",
-                                          variant: "destructive"
-                                        });
-                                      }
-                                    }}
-                                    disabled={deletePasswordMutation.isPending}
-                                    data-testid={`button-delete-password-${pw.id}`}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              ))}
+                                ))}
+                              </div>
                             </div>
-                          </div>
-                        )}
-
-                        {sitePasswords.length === 0 && (
-                          <div className="text-center py-8 text-muted-foreground">
-                            <Lock className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                            <p>No passwords added yet.</p>
-                            <p className="text-sm">Add a password above to protect this site.</p>
-                          </div>
-                        )}
+                          ) : (
+                            <div className="border-2 border-dashed border-muted rounded-lg p-8 text-center bg-white">
+                              <Lock className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
+                              <p className="text-muted-foreground text-sm">No passwords added yet.</p>
+                              <p className="text-muted-foreground text-xs mt-1">Add a password above to protect this site.</p>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </TabsContent>
                   </Tabs>

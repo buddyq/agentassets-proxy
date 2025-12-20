@@ -17,6 +17,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Search, Lock, BarChart3 } from "lucide-react";
 import type { CustomDetail, HeroSlide, OpenHouseEvent, HeroTransitionType } from "@shared/schema";
 import { heroTransitionTypes } from "@shared/schema";
 import { parseVideoUrl } from "@/lib/utils";
@@ -135,10 +137,21 @@ export default function CreateSite() {
     contentGridImage2: '', // Image for content grid position 3 (bottom left)
     features: '' as string, // Comma-separated feature tags
     heroTransition: 'slide' as HeroTransitionType, // Hero slider transition effect
+    // SEO fields
+    seoTitle: '',
+    seoDescription: '',
+    seoImage: '',
+    customGaId: '',
   });
   
   // Custom details state
   const [customDetails, setCustomDetails] = useState<CustomDetail[]>([]);
+  
+  // Documents state (for property documents)
+  type SiteDocument = { name: string; url: string };
+  const [documents, setDocuments] = useState<SiteDocument[]>([]);
+  const [newDocName, setNewDocName] = useState("");
+  const [pendingDocUrl, setPendingDocUrl] = useState<string | null>(null);
   
   // Photo state
   const [photos, setPhotos] = useState<string[]>([]);
@@ -353,7 +366,12 @@ export default function CreateSite() {
         invertLogo: formData.invertLogo,
         logo: formData.logo || null,
         stats: { views: 0, uniqueVisitors: 0, leads: 0 },
-        documents: [], // Documents can be added after site creation
+        documents: documents,
+        // SEO fields
+        seoTitle: formData.seoTitle || null,
+        seoDescription: formData.seoDescription || null,
+        seoImage: formData.seoImage || null,
+        customGaId: formData.customGaId || null,
         // Magazine layout fields
         buyerAgentComp: formData.buyerAgentComp || null,
         openHouses: formData.openHouses,
@@ -943,13 +961,30 @@ export default function CreateSite() {
                     Customize the branding and options for your property site.
                   </p>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* ===== SITE LOGO ===== */}
-                  <div className="rounded-xl border p-6 space-y-4 bg-[#ffffff]">
-                    <div className="flex items-center gap-2 pb-2 border-b">
-                      <Star className="h-5 w-5 text-primary" />
-                      <h3 className="font-semibold text-lg">Site Logo</h3>
-                    </div>
+                <CardContent>
+                  <Tabs defaultValue="branding" className="w-full">
+                    <TabsList className="grid w-full grid-cols-3 mb-6">
+                      <TabsTrigger value="branding" data-testid="tab-branding">
+                        <Settings className="h-4 w-4 mr-2" />
+                        Branding
+                      </TabsTrigger>
+                      <TabsTrigger value="seo" data-testid="tab-seo">
+                        <Search className="h-4 w-4 mr-2" />
+                        SEO
+                      </TabsTrigger>
+                      <TabsTrigger value="documents" data-testid="tab-documents">
+                        <FileText className="h-4 w-4 mr-2" />
+                        Documents {documents.length > 0 && `(${documents.length})`}
+                      </TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="branding" className="space-y-6">
+                      {/* ===== SITE LOGO ===== */}
+                      <div className="rounded-xl border p-6 space-y-4 bg-[#ffffff]">
+                        <div className="flex items-center gap-2 pb-2 border-b">
+                          <Star className="h-5 w-5 text-primary" />
+                          <h3 className="font-semibold text-lg">Site Logo</h3>
+                        </div>
                     <div className="bg-[#f3faf9] rounded-xl p-6 flex flex-col items-center gap-4">
                       <p className="text-sm font-medium text-muted-foreground">Current Logo</p>
                       <div className="w-20 h-20 rounded-full bg-white shadow-lg flex items-center justify-center p-3">
@@ -1685,6 +1720,268 @@ export default function CreateSite() {
                       </Sheet>
                     </div>
                   )}
+                    </TabsContent>
+
+                    <TabsContent value="seo" className="space-y-6">
+                      {/* ===== SEO SECTION ===== */}
+                      <div className="rounded-xl border p-6 space-y-4 bg-[#ffffff]">
+                        <div className="flex items-center gap-2 pb-2 border-b">
+                          <Search className="h-5 w-5 text-primary" />
+                          <h3 className="font-semibold text-lg">Search Engine Optimization</h3>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Customize how your property site appears in search results and when shared on social media.
+                        </p>
+
+                        <div className="bg-[#f3faf9] rounded-xl p-4 space-y-6">
+                          {/* SEO Title */}
+                          <div className="grid gap-2">
+                            <Label htmlFor="seoTitle">SEO Title</Label>
+                            <p className="text-sm text-muted-foreground">
+                              The title that appears in search results and browser tabs. If empty, we'll use your property title.
+                            </p>
+                            <Input
+                              id="seoTitle"
+                              className="bg-[#ffffff]"
+                              placeholder={formData.title || formData.address || "e.g., Stunning 4BR Home in Austin Heights"}
+                              value={formData.seoTitle}
+                              onChange={(e) => setFormData({...formData, seoTitle: e.target.value})}
+                              maxLength={60}
+                              data-testid="input-seo-title"
+                            />
+                            <span className="text-xs text-muted-foreground">{formData.seoTitle.length}/60 characters</span>
+                          </div>
+
+                          {/* SEO Description */}
+                          <div className="grid gap-2">
+                            <Label htmlFor="seoDescription">SEO Description</Label>
+                            <p className="text-sm text-muted-foreground">
+                              A brief description that appears under the title in search results. For best results, aim for 150-160 characters.
+                            </p>
+                            <Textarea
+                              id="seoDescription"
+                              className="bg-[#ffffff]"
+                              placeholder="e.g., Beautiful 4 bedroom, 3 bathroom home featuring a pool, updated kitchen, and stunning views. Listed at $850,000."
+                              value={formData.seoDescription}
+                              onChange={(e) => setFormData({...formData, seoDescription: e.target.value})}
+                              maxLength={160}
+                              rows={3}
+                              data-testid="input-seo-description"
+                            />
+                            <span className="text-xs text-muted-foreground">{formData.seoDescription.length}/160 characters (optimal: 150-160)</span>
+                          </div>
+
+                          {/* SEO Image Picker */}
+                          <div className="grid gap-2">
+                            <Label>Image Shown When Shared</Label>
+                            <p className="text-sm text-muted-foreground">
+                              Select an image from your gallery that will be displayed when your site is shared on social media.
+                            </p>
+                            
+                            {formData.seoImage ? (
+                              <div className="relative w-full max-w-md">
+                                <div className="aspect-[1200/630] rounded-lg overflow-hidden border bg-white">
+                                  <img 
+                                    src={formData.seoImage} 
+                                    alt="SEO preview" 
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                <div className="flex gap-2 mt-2">
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      setImagePickerTarget('seoImage' as any);
+                                      setImagePickerOpen(true);
+                                    }}
+                                    data-testid="button-change-seo-image"
+                                  >
+                                    Change Image
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-muted-foreground"
+                                    onClick={() => setFormData({...formData, seoImage: ""})}
+                                    data-testid="button-remove-seo-image"
+                                  >
+                                    Clear
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="grid grid-cols-4 gap-2">
+                                {photos.length > 0 ? photos.slice(0, 8).map((photo, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="aspect-video rounded-md overflow-hidden cursor-pointer border-2 border-transparent hover:border-primary/50 transition-all"
+                                    onClick={() => setFormData({...formData, seoImage: photo})}
+                                    data-testid={`seo-image-option-${idx}`}
+                                  >
+                                    <img src={photo} alt={`Option ${idx + 1}`} className="w-full h-full object-cover" />
+                                  </div>
+                                )) : (
+                                  <div className="col-span-4 border-2 border-dashed border-muted rounded-lg p-6 text-center bg-white">
+                                    <ImageIcon className="h-8 w-8 mx-auto mb-2 text-muted-foreground/30" />
+                                    <p className="text-muted-foreground text-sm">Add photos in Step 2 to select a share image</p>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Custom Google Analytics */}
+                          <div className="grid gap-2 border-t pt-6">
+                            <Label htmlFor="customGaId" className="flex items-center gap-2">
+                              <BarChart3 className="h-4 w-4" />
+                              Custom Google Analytics
+                            </Label>
+                            <p className="text-sm text-muted-foreground">
+                              Add your own Google Analytics measurement ID to track visitors on this property site separately.
+                            </p>
+                            <Input
+                              id="customGaId"
+                              className="bg-[#ffffff]"
+                              placeholder="G-XXXXXXXXXX"
+                              value={formData.customGaId}
+                              onChange={(e) => setFormData({...formData, customGaId: e.target.value})}
+                              data-testid="input-custom-ga-id"
+                            />
+                            <span className="text-xs text-muted-foreground">
+                              Enter your GA4 Measurement ID (found in Google Analytics → Admin → Data Streams)
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value="documents" className="space-y-6">
+                      {/* ===== DOCUMENTS SECTION ===== */}
+                      <div className="rounded-xl border p-6 space-y-4 bg-[#ffffff]">
+                        <div className="flex items-center gap-2 pb-2 border-b">
+                          <FileText className="h-5 w-5 text-primary" />
+                          <h3 className="font-semibold text-lg">Property Documents</h3>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Upload documents like floor plans, disclosures, or brochures. Visitors can download these from your property site.
+                        </p>
+
+                        <div className="bg-[#f3faf9] rounded-xl p-4 space-y-4">
+                          {/* Document Upload */}
+                          <div className="flex gap-3">
+                            <Input
+                              placeholder="Document name (e.g., Floor Plan, Property Disclosure)"
+                              value={newDocName}
+                              onChange={(e) => setNewDocName(e.target.value)}
+                              className="flex-1 bg-[#ffffff]"
+                              data-testid="input-document-name"
+                            />
+                            <ObjectUploader
+                              maxNumberOfFiles={1}
+                              maxFileSize={52428800}
+                              allowedFileTypes={['application/pdf', 'image/*']}
+                              onGetUploadParameters={async () => {
+                                const { url } = await getUploadUrl();
+                                return { method: 'PUT' as const, url };
+                              }}
+                              onComplete={(result) => {
+                                if (result.successful && result.successful.length > 0) {
+                                  const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
+                                  if (newDocName.trim()) {
+                                    setDocuments([...documents, { name: newDocName.trim(), url: normalizedUrl }]);
+                                    setNewDocName("");
+                                    toast({
+                                      title: "Document Uploaded",
+                                      description: `"${newDocName.trim()}" has been added.`,
+                                    });
+                                  } else {
+                                    setPendingDocUrl(normalizedUrl);
+                                    toast({
+                                      title: "Enter Document Name",
+                                      description: "Please enter a name for the document, then click Add.",
+                                    });
+                                  }
+                                }
+                              }}
+                              buttonClassName="gap-2 bg-primary text-white hover:bg-primary/90"
+                            >
+                              <Plus className="h-4 w-4" />
+                              Upload Document
+                            </ObjectUploader>
+                          </div>
+
+                          {pendingDocUrl && (
+                            <div className="flex gap-3 items-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                              <FileText className="h-5 w-5 text-yellow-600" />
+                              <span className="text-sm flex-1">Document uploaded. Enter a name:</span>
+                              <Input
+                                placeholder="Document name"
+                                value={newDocName}
+                                onChange={(e) => setNewDocName(e.target.value)}
+                                className="w-48 bg-[#ffffff]"
+                                data-testid="input-pending-document-name"
+                              />
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  if (newDocName.trim() && pendingDocUrl) {
+                                    setDocuments([...documents, { name: newDocName.trim(), url: pendingDocUrl }]);
+                                    setNewDocName("");
+                                    setPendingDocUrl(null);
+                                  }
+                                }}
+                                disabled={!newDocName.trim()}
+                                data-testid="button-add-pending-document"
+                              >
+                                Add
+                              </Button>
+                            </div>
+                          )}
+
+                          {/* Document List */}
+                          {documents.length > 0 ? (
+                            <div className="space-y-2">
+                              <Label className="text-sm text-muted-foreground">Uploaded Documents ({documents.length})</Label>
+                              <div className="border rounded-lg divide-y bg-white">
+                                {documents.map((doc, index) => (
+                                  <div key={index} className="flex items-center justify-between p-3 hover:bg-muted/30" data-testid={`document-item-${index}`}>
+                                    <div className="flex items-center gap-3">
+                                      <FileText className="h-5 w-5 text-primary" />
+                                      <span className="font-medium">{doc.name}</span>
+                                    </div>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="text-destructive hover:text-destructive"
+                                      onClick={() => {
+                                        setDocuments(documents.filter((_, i) => i !== index));
+                                        toast({
+                                          title: "Document Removed",
+                                          description: `"${doc.name}" has been removed.`,
+                                        });
+                                      }}
+                                      data-testid={`button-remove-document-${index}`}
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="border-2 border-dashed border-muted rounded-lg p-8 text-center bg-white">
+                              <FileText className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
+                              <p className="text-muted-foreground text-sm">No documents uploaded yet.</p>
+                              <p className="text-muted-foreground text-xs mt-1">Enter a document name and click Upload to add one.</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </TabsContent>
+                  </Tabs>
                 </CardContent>
               </Card>
             )}
