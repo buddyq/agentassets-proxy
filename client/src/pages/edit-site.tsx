@@ -9,7 +9,7 @@ import { useSite, useUpdateSite, useThemes, useLayouts, useAddPhotoToSite, useRe
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useParams } from "wouter";
-import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, Save, Image, X, GripVertical, Star, LayoutGrid, Plus, Settings, Lock, Eye, EyeOff, ExternalLink } from "lucide-react";
+import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, Save, Image, X, GripVertical, Star, LayoutGrid, Plus, Settings, Lock, Eye, EyeOff, ExternalLink, Search, BarChart3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -102,6 +102,11 @@ export default function EditSite() {
     contentGridImage2: "",
     features: "",
     heroTransition: "slide" as HeroTransitionType,
+    // SEO fields
+    seoTitle: "",
+    seoDescription: "",
+    seoImage: "",
+    customGaId: "",
   });
 
   const [customDetails, setCustomDetails] = useState<CustomDetail[]>([]);
@@ -201,6 +206,11 @@ export default function EditSite() {
         contentGridImage2: (site as any).contentGridImage2 || "",
         features: (site as any).features && Array.isArray(site.features) ? (site.features as string[]).join(', ') : "",
         heroTransition: (site.heroTransition as HeroTransitionType) || "slide",
+        // SEO fields
+        seoTitle: (site as any).seoTitle || "",
+        seoDescription: (site as any).seoDescription || "",
+        seoImage: (site as any).seoImage || "",
+        customGaId: (site as any).customGaId || "",
       });
       setCustomDetails(site.customDetails || []);
       setDocuments(site.documents || []);
@@ -265,6 +275,11 @@ export default function EditSite() {
           contentGridImage2: formData.contentGridImage2 || null,
           // Features
           features: formData.features ? formData.features.split(',').map((f: string) => f.trim()).filter(Boolean) : [],
+          // SEO fields
+          seoTitle: formData.seoTitle || null,
+          seoDescription: formData.seoDescription || null,
+          seoImage: formData.seoImage || null,
+          customGaId: formData.customGaId || null,
         }
       },
       {
@@ -895,10 +910,14 @@ export default function EditSite() {
                 </CardHeader>
                 <CardContent>
                   <Tabs defaultValue="branding" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3 mb-6">
+                    <TabsList className="grid w-full grid-cols-4 mb-6">
                       <TabsTrigger value="branding" data-testid="tab-branding">
                         <Settings className="h-4 w-4 mr-2" />
                         Branding
+                      </TabsTrigger>
+                      <TabsTrigger value="seo" data-testid="tab-seo">
+                        <Search className="h-4 w-4 mr-2" />
+                        SEO
                       </TabsTrigger>
                       <TabsTrigger value="documents" data-testid="tab-documents">
                         <FileText className="h-4 w-4 mr-2" />
@@ -1784,6 +1803,128 @@ export default function EditSite() {
                       )}
                       </div>
                     </div>
+                    </TabsContent>
+
+                    <TabsContent value="seo" className="space-y-6">
+                      <div className="grid gap-6">
+                        <div>
+                          <Label className="text-lg font-semibold flex items-center gap-2">
+                            <Search className="h-5 w-5" />
+                            Search Engine Optimization
+                          </Label>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Customize how your property site appears in search results and when shared on social media.
+                          </p>
+                        </div>
+
+                        {/* SEO Title */}
+                        <div className="grid gap-2">
+                          <Label htmlFor="seoTitle">SEO Title</Label>
+                          <p className="text-sm text-muted-foreground">
+                            The title that appears in search results and browser tabs. If empty, we'll use your property title.
+                          </p>
+                          <Input
+                            id="seoTitle"
+                            placeholder={formData.title || formData.address || "e.g., Stunning 4BR Home in Austin Heights"}
+                            value={formData.seoTitle}
+                            onChange={(e) => setFormData({...formData, seoTitle: e.target.value})}
+                            maxLength={60}
+                            data-testid="input-seo-title"
+                          />
+                          <span className="text-xs text-muted-foreground">{formData.seoTitle.length}/60 characters</span>
+                        </div>
+
+                        {/* SEO Description */}
+                        <div className="grid gap-2">
+                          <Label htmlFor="seoDescription">SEO Description</Label>
+                          <p className="text-sm text-muted-foreground">
+                            A brief description that appears under the title in search results.
+                          </p>
+                          <Textarea
+                            id="seoDescription"
+                            placeholder="e.g., Beautiful 4 bedroom, 3 bathroom home featuring a pool, updated kitchen, and stunning views. Listed at $850,000."
+                            value={formData.seoDescription}
+                            onChange={(e) => setFormData({...formData, seoDescription: e.target.value})}
+                            maxLength={160}
+                            rows={3}
+                            data-testid="input-seo-description"
+                          />
+                          <span className="text-xs text-muted-foreground">{formData.seoDescription.length}/160 characters</span>
+                        </div>
+
+                        {/* SEO Image Picker */}
+                        <div className="grid gap-2">
+                          <Label>Social Share Image</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Select an image from your gallery that will be displayed when your site is shared on social media.
+                          </p>
+                          
+                          {formData.seoImage ? (
+                            <div className="relative w-full max-w-md">
+                              <div className="aspect-[1200/630] rounded-lg overflow-hidden border">
+                                <img 
+                                  src={formData.seoImage} 
+                                  alt="SEO preview" 
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setFormData({...formData, seoImage: ""})}
+                                className="absolute top-2 right-2 bg-destructive text-white p-1.5 rounded-full shadow-md"
+                                data-testid="button-remove-seo-image"
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto p-2 border rounded-lg">
+                              {site?.photos && site.photos.length > 0 ? (
+                                site.photos.map((photo, index) => (
+                                  <button
+                                    key={index}
+                                    type="button"
+                                    onClick={() => setFormData({...formData, seoImage: photo})}
+                                    className="aspect-square rounded-lg overflow-hidden border-2 border-transparent hover:border-primary transition-colors"
+                                    data-testid={`button-select-seo-image-${index}`}
+                                  >
+                                    <img 
+                                      src={photo} 
+                                      alt={`Photo ${index + 1}`}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </button>
+                                ))
+                              ) : (
+                                <p className="col-span-4 text-center text-muted-foreground py-8">
+                                  No photos uploaded yet. Add photos in the Photos step first.
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Custom Google Analytics */}
+                        <div className="grid gap-2 border-t pt-6">
+                          <Label htmlFor="customGaId" className="flex items-center gap-2">
+                            <BarChart3 className="h-4 w-4" />
+                            Custom Google Analytics
+                          </Label>
+                          <p className="text-sm text-muted-foreground">
+                            Add your own Google Analytics measurement ID to track visitors on this property site separately.
+                          </p>
+                          <Input
+                            id="customGaId"
+                            placeholder="G-XXXXXXXXXX"
+                            value={formData.customGaId}
+                            onChange={(e) => setFormData({...formData, customGaId: e.target.value})}
+                            data-testid="input-custom-ga-id"
+                          />
+                          <span className="text-xs text-muted-foreground">
+                            Enter your GA4 Measurement ID (found in Google Analytics → Admin → Data Streams)
+                          </span>
+                        </div>
+                      </div>
                     </TabsContent>
 
                     <TabsContent value="password" className="space-y-6">

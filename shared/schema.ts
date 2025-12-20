@@ -177,6 +177,12 @@ export const sites = pgTable("sites", {
   status: text("status").notNull().default('draft'),
   isTrial: boolean("is_trial").notNull().default(false),
   unpublishedAt: timestamp("unpublished_at"),
+  // SEO fields
+  seoTitle: text("seo_title"),
+  seoDescription: text("seo_description"),
+  seoImage: text("seo_image"), // Selected from photos gallery
+  // Custom Google Analytics
+  customGaId: text("custom_ga_id"), // User's own GA measurement ID (e.g., G-XXXXXXXXXX)
   stats: jsonb("stats").notNull().$type<{
     views: number;
     uniqueVisitors: number;
