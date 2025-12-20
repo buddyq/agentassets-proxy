@@ -443,89 +443,125 @@ export default function CreateSite() {
               <Card>
                 <CardHeader>
                   <CardTitle>Property Details</CardTitle>
+                  <p className="text-muted-foreground text-sm">
+                    Enter the basic information about your property listing.
+                  </p>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="title">Property Title</Label>
-                    <Input 
-                      id="title" 
-                      placeholder="e.g., Retro Mid-Mod in Westlake" 
-                      value={formData.title}
-                      onChange={e => setFormData({...formData, title: e.target.value})}
-                    />
-                  </div>
-
-                  <div className="grid gap-2">
-                    <Label htmlFor="address">Property Address</Label>
-                    <Input 
-                      id="address" 
-                      placeholder="123 Main St, Beverly Hills, CA" 
-                      value={formData.address}
-                      onChange={e => setFormData({...formData, address: e.target.value})}
-                    />
-                  </div>
-
-                  <div className="grid gap-2">
-                    <Label htmlFor="price">Price</Label>
-                    <Input 
-                      id="price" 
-                      placeholder="$1,250,000" 
-                      value={formData.price}
-                      onChange={e => setFormData({...formData, price: e.target.value})}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="bedrooms">Bedrooms</Label>
-                      <Input 
-                        id="bedrooms" 
-                        type="number" 
-                        placeholder="e.g., 3"
-                        value={formData.bedrooms}
-                        onChange={e => setFormData({...formData, bedrooms: e.target.value})}
-                        data-testid="input-bedrooms"
-                      />
+                <CardContent className="space-y-6">
+                  {/* ===== BASIC INFO SECTION ===== */}
+                  <div className="rounded-xl border p-6 space-y-4 bg-[#ffffff]">
+                    <div className="flex items-center gap-2 pb-2 border-b">
+                      <Layout className="h-5 w-5 text-primary" />
+                      <h3 className="font-semibold text-lg">Basic Info</h3>
                     </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="bathrooms">Bathrooms</Label>
-                      <Input 
-                        id="bathrooms" 
-                        type="number" 
-                        placeholder="e.g., 2"
-                        value={formData.bathrooms}
-                        onChange={e => setFormData({...formData, bathrooms: e.target.value})}
-                        data-testid="input-bathrooms"
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="yearBuilt">Year Built</Label>
-                      <Input 
-                        id="yearBuilt" 
-                        placeholder="e.g., 1985"
-                        value={formData.yearBuilt}
-                        onChange={e => setFormData({...formData, yearBuilt: e.target.value})}
-                        data-testid="input-year-built"
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="stories">Stories</Label>
-                      <Input 
-                        id="stories" 
-                        placeholder="e.g., 2"
-                        value={formData.stories}
-                        onChange={e => setFormData({...formData, stories: e.target.value})}
-                        data-testid="input-stories"
-                      />
+                    <div className="space-y-4 bg-[#f3faf9] rounded-xl p-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="title">Property Title</Label>
+                        <Input 
+                          id="title" 
+                          className="bg-[#ffffff]"
+                          placeholder="e.g., Retro Mid-Mod in Westlake" 
+                          value={formData.title}
+                          onChange={e => setFormData({...formData, title: e.target.value})}
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="address">Property Address</Label>
+                        <Input 
+                          id="address" 
+                          className="bg-[#ffffff]"
+                          placeholder="123 Main St, Beverly Hills, CA" 
+                          value={formData.address}
+                          onChange={e => setFormData({...formData, address: e.target.value})}
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="price">Price</Label>
+                        <Input 
+                          id="price" 
+                          className="bg-[#ffffff]"
+                          placeholder="$1,250,000" 
+                          value={formData.price}
+                          onChange={e => setFormData({...formData, price: e.target.value})}
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  {/* Custom Details Section */}
-                  <div className="border-t pt-4 mt-4">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <Label className="text-base">Custom Details</Label>
-                        <p className="text-sm text-muted-foreground">Add any additional property details</p>
+                  {/* ===== PROPERTY SPECS SECTION ===== */}
+                  <div className="rounded-xl border p-6 space-y-4 bg-[#ffffff]">
+                    <div className="flex items-center gap-2 pb-2 border-b">
+                      <LayoutGrid className="h-5 w-5 text-primary" />
+                      <h3 className="font-semibold text-lg">Property Specs</h3>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-[#f3faf9] rounded-xl p-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="bedrooms">Bedrooms</Label>
+                        <Input 
+                          id="bedrooms" 
+                          className="bg-[#ffffff]"
+                          type="number" 
+                          placeholder="e.g., 3"
+                          value={formData.bedrooms}
+                          onChange={e => setFormData({...formData, bedrooms: e.target.value})}
+                          data-testid="input-bedrooms"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="bathrooms">Bathrooms</Label>
+                        <Input 
+                          id="bathrooms" 
+                          className="bg-[#ffffff]"
+                          type="number" 
+                          placeholder="e.g., 2"
+                          value={formData.bathrooms}
+                          onChange={e => setFormData({...formData, bathrooms: e.target.value})}
+                          data-testid="input-bathrooms"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="sqft">Square Feet</Label>
+                        <Input 
+                          id="sqft" 
+                          className="bg-[#ffffff]"
+                          type="number" 
+                          placeholder="e.g., 2400"
+                          value={formData.sqft}
+                          onChange={e => setFormData({...formData, sqft: e.target.value})}
+                          data-testid="input-sqft"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="yearBuilt">Year Built</Label>
+                        <Input 
+                          id="yearBuilt" 
+                          className="bg-[#ffffff]"
+                          placeholder="e.g., 1985"
+                          value={formData.yearBuilt}
+                          onChange={e => setFormData({...formData, yearBuilt: e.target.value})}
+                          data-testid="input-year-built"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="stories">Stories</Label>
+                        <Input 
+                          id="stories" 
+                          className="bg-[#ffffff]"
+                          placeholder="e.g., 2"
+                          value={formData.stories}
+                          onChange={e => setFormData({...formData, stories: e.target.value})}
+                          data-testid="input-stories"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ===== CUSTOM DETAILS SECTION ===== */}
+                  <div className="rounded-xl border p-6 space-y-4 bg-[#ffffff]">
+                    <div className="flex items-center justify-between pb-2 border-b">
+                      <div className="flex items-center gap-2">
+                        <Plus className="h-5 w-5 text-primary" />
+                        <h3 className="font-semibold text-lg">Custom Details</h3>
                       </div>
                       <Button 
                         type="button" 
@@ -537,21 +573,23 @@ export default function CreateSite() {
                         <Plus className="h-4 w-4 mr-1" /> Add Detail
                       </Button>
                     </div>
-                    
-                    {customDetails.length > 0 && (
-                      <div className="space-y-3">
+                    <p className="text-sm text-muted-foreground">Add any additional property details like lot size, HOA fees, etc.</p>
+                    {customDetails.length > 0 ? (
+                      <div className="space-y-3 bg-[#f3faf9] rounded-xl p-4">
                         {customDetails.map((detail, index) => (
-                          <div key={index} className="flex gap-3 items-start">
-                            <div className="flex-1 grid gap-2">
+                          <div key={index} className="flex gap-3 items-center">
+                            <div className="flex-1">
                               <Input 
+                                className="bg-[#ffffff]"
                                 placeholder="Label (e.g., Lot Size)"
                                 value={detail.label}
                                 onChange={e => updateCustomDetail(index, 'label', e.target.value)}
                                 data-testid={`input-custom-label-${index}`}
                               />
                             </div>
-                            <div className="flex-1 grid gap-2">
+                            <div className="flex-1">
                               <Input 
+                                className="bg-[#ffffff]"
                                 placeholder="Value (e.g., 0.25 acre)"
                                 value={detail.value}
                                 onChange={e => updateCustomDetail(index, 'value', e.target.value)}
@@ -563,7 +601,7 @@ export default function CreateSite() {
                               variant="ghost" 
                               size="icon"
                               onClick={() => removeCustomDetail(index)}
-                              className="text-muted-foreground hover:text-destructive"
+                              className="text-muted-foreground hover:text-destructive flex-shrink-0"
                               data-testid={`button-remove-custom-detail-${index}`}
                             >
                               <X className="h-4 w-4" />
@@ -571,105 +609,90 @@ export default function CreateSite() {
                           </div>
                         ))}
                       </div>
-                    )}
-                  </div>
-
-                  <div className="grid gap-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea 
-                      id="description" 
-                      rows={4} 
-                      placeholder="Describe this property..."
-                      value={formData.description}
-                      onChange={e => setFormData({...formData, description: e.target.value})}
-                    />
-                  </div>
-
-                  {(formData.layoutId === 'layout-shoalwood' || formData.layoutId === 'layout-modern') && (
-                    <div className="grid gap-2">
-                      <Label>Description Image (Optional)</Label>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        {formData.layoutId === 'layout-modern' 
-                          ? 'Add a vertical portrait image to display next to your property description. Portrait orientation works best.'
-                          : 'Add a portrait-style image to display alongside your property description. Vertical/portrait orientation works best.'}
-                      </p>
-                      {formData.descriptionImage ? (
-                        <div className="relative w-48 aspect-[3/4] rounded-lg overflow-hidden border group">
-                          <img 
-                            src={formData.descriptionImage} 
-                            alt="Description" 
-                            className="w-full h-full object-cover"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setFormData({...formData, descriptionImage: ""})}
-                            className="absolute top-2 right-2 bg-destructive text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                            data-testid="button-remove-description-image"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                        </div>
-                      ) : (
-                        <ObjectUploader
-                          maxNumberOfFiles={1}
-                          maxFileSize={10485760}
-                          variant="dropzone"
-                          onGetUploadParameters={async () => {
-                            const { url } = await getUploadUrl();
-                            return { method: 'PUT' as const, url };
-                          }}
-                          onComplete={(result) => {
-                            if (result.successful && result.successful.length > 0) {
-                              const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
-                              setFormData({...formData, descriptionImage: normalizedUrl});
-                            }
-                          }}
-                        />
-                      )}
-                    </div>
-                  )}
-
-                  <div className="grid gap-2">
-                    <Label htmlFor="videoUrl">Video URL (YouTube/Vimeo)</Label>
-                    <Input 
-                      id="videoUrl" 
-                      placeholder="https://youtube.com/watch?v=..." 
-                      value={formData.videoUrl}
-                      onChange={e => setFormData({...formData, videoUrl: e.target.value})}
-                    />
-                  </div>
-
-                  <div className="grid gap-2 border-t pt-4 mt-4">
-                    <Label htmlFor="features">Features & Amenities</Label>
-                    <p className="text-sm text-muted-foreground">Enter features separated by commas. Choose from suggestions or add your own.</p>
-                    <Input 
-                      id="features" 
-                      placeholder="e.g., Pool, Ocean Views, Hardwood Floors" 
-                      value={formData.features}
-                      onChange={e => setFormData({...formData, features: e.target.value})}
-                      data-testid="input-features"
-                    />
-                    {FEATURE_SUGGESTIONS.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-3">
-                        {FEATURE_SUGGESTIONS.map((feature) => (
-                          <button
-                            key={feature}
-                            type="button"
-                            onClick={() => {
-                              const features = formData.features ? formData.features.split(',').map(f => f.trim()) : [];
-                              if (!features.includes(feature)) {
-                                features.push(feature);
-                                setFormData({...formData, features: features.join(', ')});
-                              }
-                            }}
-                            className="px-3 py-1 bg-muted hover:bg-primary hover:text-white rounded-full text-xs transition-colors cursor-pointer"
-                            data-testid={`button-feature-suggestion-${feature}`}
-                          >
-                            + {feature}
-                          </button>
-                        ))}
+                    ) : (
+                      <div className="border-2 border-dashed border-muted rounded-lg p-6 text-center bg-[#f3faf9]">
+                        <p className="text-muted-foreground text-sm">No custom details added yet. Click "Add Detail" to add one.</p>
                       </div>
                     )}
+                  </div>
+
+                  {/* ===== DESCRIPTION SECTION ===== */}
+                  <div className="rounded-xl border p-6 space-y-4 bg-[#ffffff]">
+                    <div className="flex items-center gap-2 pb-2 border-b">
+                      <FileText className="h-5 w-5 text-primary" />
+                      <h3 className="font-semibold text-lg">Description</h3>
+                    </div>
+                    <div className="bg-[#f3faf9] rounded-xl p-4">
+                      <Textarea 
+                        id="description" 
+                        className="bg-[#ffffff] min-h-[120px]"
+                        rows={4} 
+                        placeholder="Describe this property... Include details about the home's features, neighborhood, and what makes it special."
+                        value={formData.description}
+                        onChange={e => setFormData({...formData, description: e.target.value})}
+                      />
+                    </div>
+                  </div>
+
+                  {/* ===== FEATURES SECTION ===== */}
+                  <div className="rounded-xl border p-6 space-y-4 bg-[#ffffff]">
+                    <div className="flex items-center gap-2 pb-2 border-b">
+                      <Star className="h-5 w-5 text-primary" />
+                      <h3 className="font-semibold text-lg">Features & Amenities</h3>
+                    </div>
+                    <div className="space-y-4 bg-[#f3faf9] rounded-xl p-4">
+                      <p className="text-sm text-muted-foreground">Enter features separated by commas, or click suggestions below.</p>
+                      <Input 
+                        id="features" 
+                        className="bg-[#ffffff]"
+                        placeholder="e.g., Pool, Ocean Views, Hardwood Floors" 
+                        value={formData.features}
+                        onChange={e => setFormData({...formData, features: e.target.value})}
+                        data-testid="input-features"
+                      />
+                      {FEATURE_SUGGESTIONS.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {FEATURE_SUGGESTIONS.map((feature) => (
+                            <button
+                              key={feature}
+                              type="button"
+                              onClick={() => {
+                                const features = formData.features ? formData.features.split(',').map(f => f.trim()) : [];
+                                if (!features.includes(feature)) {
+                                  features.push(feature);
+                                  setFormData({...formData, features: features.join(', ')});
+                                }
+                              }}
+                              className="px-3 py-1 bg-white hover:bg-primary hover:text-white rounded-full text-xs transition-colors cursor-pointer border"
+                              data-testid={`button-feature-suggestion-${feature}`}
+                            >
+                              + {feature}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* ===== MEDIA SECTION ===== */}
+                  <div className="rounded-xl border p-6 space-y-4 bg-[#ffffff]">
+                    <div className="flex items-center gap-2 pb-2 border-b">
+                      <ExternalLink className="h-5 w-5 text-primary" />
+                      <h3 className="font-semibold text-lg">Media</h3>
+                    </div>
+                    <div className="bg-[#f3faf9] rounded-xl p-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="videoUrl">Video URL (YouTube/Vimeo)</Label>
+                        <Input 
+                          id="videoUrl" 
+                          className="bg-[#ffffff]"
+                          placeholder="https://youtube.com/watch?v=..." 
+                          value={formData.videoUrl}
+                          onChange={e => setFormData({...formData, videoUrl: e.target.value})}
+                        />
+                        <p className="text-xs text-muted-foreground">Add a video tour of the property (optional)</p>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
