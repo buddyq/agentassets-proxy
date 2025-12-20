@@ -1172,6 +1172,7 @@ export default function EditSite() {
                                 </div>
                                 <div className="grid gap-3">
                                   <Input
+                                    className="bg-[#ffffff]"
                                     placeholder="Title (e.g., Stunning Modern Home)"
                                     value={slide.title}
                                     onChange={(e) => {
