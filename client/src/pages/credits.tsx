@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useLocation, useSearch } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { Navbar } from "@/components/layout/navbar";
@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useStripeCheckout, usePartnerDiscount } from "@/lib/api";
 import { CreditCard, Sparkles, CheckCircle, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { trackPurchase } from "@/lib/analytics";
 
 const PACKAGES = [
   { id: 'starter' as const, name: 'Starter', credits: 1, price: 29 },
@@ -37,7 +38,14 @@ export default function Credits() {
 
     if (success === 'true' && credits) {
       setShowSuccess(true);
-      setPurchasedCredits(parseInt(credits, 10));
+      const creditCount = parseInt(credits, 10);
+      setPurchasedCredits(creditCount);
+      
+      const pkg = PACKAGES.find(p => p.credits === creditCount);
+      if (pkg) {
+        trackPurchase(pkg.name, pkg.credits, pkg.price);
+      }
+      
       queryClient.invalidateQueries({ queryKey: ['/api/user'] });
       navigate('/credits', { replace: true });
     }

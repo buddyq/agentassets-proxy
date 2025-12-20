@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useLocation, useSearch } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useBrokerageRegister } from "@/lib/api";
+import { trackRegistration } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -106,6 +107,7 @@ export default function AuthPage() {
       name: registerData.name || undefined,
     }, {
       onSuccess: async () => {
+        trackRegistration(accountType === 'brokerage' ? 'brokerage' : 'individual');
         if (accountType === 'brokerage') {
           try {
             await brokerageRegister.mutateAsync({

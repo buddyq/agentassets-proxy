@@ -10,6 +10,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import type { Site, Theme, Layout, HeroTransitionType } from "@shared/schema";
 import HeroSlider from "@/components/hero/HeroSlider";
+import { trackLeadSubmission } from "@/lib/analytics";
 
 function getThemeStyles(theme?: Theme) {
   const primary = theme?.colors?.primary || '#558B73';
@@ -603,6 +604,7 @@ function ShoalwoodContact({ site, theme, agentInfo }: { site: Site; theme?: Them
       
       if (!response.ok) throw new Error('Failed to submit');
       
+      trackLeadSubmission(site.subdomain || site.id);
       setSubmitStatus('success');
       setFormData({
         firstName: '',
@@ -1618,6 +1620,7 @@ function ModernContact({ site, theme, agentInfo }: { site: Site; theme?: Theme; 
       
       if (!response.ok) throw new Error('Failed to submit');
       
+      trackLeadSubmission(site.subdomain || site.id);
       setSubmitStatus('success');
       setFormData({
         firstName: '',
