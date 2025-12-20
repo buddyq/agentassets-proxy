@@ -963,7 +963,7 @@ export default function CreateSite() {
                 </CardHeader>
                 <CardContent>
                   <Tabs defaultValue="branding" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3 mb-6">
+                    <TabsList className="grid w-full grid-cols-4 mb-6">
                       <TabsTrigger value="branding" data-testid="tab-branding">
                         <Settings className="h-4 w-4 mr-2" />
                         Branding
@@ -975,6 +975,10 @@ export default function CreateSite() {
                       <TabsTrigger value="documents" data-testid="tab-documents">
                         <FileText className="h-4 w-4 mr-2" />
                         Documents {documents.length > 0 && `(${documents.length})`}
+                      </TabsTrigger>
+                      <TabsTrigger value="password" data-testid="tab-password">
+                        <Lock className="h-4 w-4 mr-2" />
+                        Password
                       </TabsTrigger>
                     </TabsList>
 
@@ -1978,6 +1982,29 @@ export default function CreateSite() {
                               <p className="text-muted-foreground text-xs mt-1">Enter a document name and click Upload to add one.</p>
                             </div>
                           )}
+                        </div>
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value="password" className="space-y-6">
+                      {/* ===== PASSWORD SECTION ===== */}
+                      <div className="rounded-xl border p-6 space-y-4 bg-[#ffffff]">
+                        <div className="flex items-center gap-2 pb-2 border-b">
+                          <Lock className="h-5 w-5 text-primary" />
+                          <h3 className="font-semibold text-lg">Password Protection</h3>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Restrict access to your property site with password protection. Create multiple passwords with labels to track who accessed the site.
+                        </p>
+
+                        <div className="bg-[#f3faf9] rounded-xl p-4">
+                          <div className="border-2 border-dashed border-muted rounded-lg p-8 text-center bg-white">
+                            <Lock className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
+                            <p className="text-muted-foreground text-sm font-medium">Password protection available after publishing</p>
+                            <p className="text-muted-foreground text-xs mt-2">
+                              Once your site is created, you can add passwords from the Edit Site page to control access.
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </TabsContent>
