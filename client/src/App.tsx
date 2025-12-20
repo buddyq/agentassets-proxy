@@ -6,6 +6,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/lib/protected-route";
+import { initGA } from "./lib/analytics";
+import { useAnalytics } from "./hooks/use-analytics";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -61,6 +63,8 @@ function SlugRoute({ params }: { params: { slug: string } }) {
 }
 
 function Router() {
+  useAnalytics();
+  
   return (
     <Switch>
       {/* Public routes */}
@@ -93,6 +97,12 @@ function Router() {
 
 function App() {
   const customDomainInfo = useCustomDomainDetection();
+  
+  useEffect(() => {
+    if (import.meta.env.VITE_GA_MEASUREMENT_ID) {
+      initGA();
+    }
+  }, []);
   
   // If on a custom domain (e.g., www.410brookhaven.com), show the site directly
   if (customDomainInfo.isCustomDomain && customDomainInfo.host) {
