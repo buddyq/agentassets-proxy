@@ -931,76 +931,59 @@ export default function EditSite() {
 
                     <TabsContent value="branding" className="space-y-6">
                       {/* Site Logo Override */}
-                      <div className="grid gap-2">
-                        <Label>Site Logo (Optional)</Label>
-                        <p className="text-sm text-muted-foreground">
-                          {user?.logo 
-                            ? "Your default logo will be used unless you upload one here."
-                            : "Upload a logo for this property site."
-                          }
-                        </p>
+                      <div className="grid gap-3">
+                        <Label>Site Logo</Label>
                         
-                        <div className="flex items-center gap-4 p-3 bg-muted/30 rounded-lg">
-                          {/* Current/Default Logo Display */}
-                          <div className="flex-shrink-0 w-24 h-12 bg-white rounded border flex items-center justify-center">
-                            {formData.logo ? (
+                        {/* Current Logo Display */}
+                        {(formData.logo || user?.logo) && (
+                          <div className="flex items-center gap-3">
+                            <span className="text-sm text-muted-foreground">Current logo:</span>
+                            <div className="p-2 bg-white rounded border">
                               <img 
-                                src={formData.logo} 
-                                alt="Site logo" 
-                                className="max-h-10 max-w-20 object-contain"
+                                src={formData.logo || user?.logo || ''} 
+                                alt="Current logo" 
+                                className="h-8 max-w-[120px] object-contain"
                               />
-                            ) : user?.logo ? (
-                              <img 
-                                src={user.logo} 
-                                alt="Default logo" 
-                                className="max-h-10 max-w-20 object-contain opacity-60"
-                              />
-                            ) : (
-                              <Image className="h-5 w-5 text-muted-foreground/40" />
+                            </div>
+                            {formData.logo && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setFormData({...formData, logo: ""})}
+                                className="text-muted-foreground hover:text-destructive"
+                                data-testid="button-remove-site-logo"
+                              >
+                                <X className="h-4 w-4 mr-1" />
+                                Remove
+                              </Button>
                             )}
                           </div>
-                          
-                          {/* Actions */}
-                          <div className="flex-1 flex items-center gap-2">
-                            {formData.logo ? (
-                              <>
-                                <span className="text-sm text-muted-foreground">Custom logo uploaded</span>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => setFormData({...formData, logo: ""})}
-                                  className="text-muted-foreground hover:text-destructive"
-                                  data-testid="button-remove-site-logo"
-                                >
-                                  <X className="h-4 w-4 mr-1" />
-                                  Remove
-                                </Button>
-                              </>
-                            ) : (
-                              <>
-                                <span className="text-sm text-muted-foreground">
-                                  {user?.logo ? "Using default" : "No logo"}
-                                </span>
-                                <ObjectUploader
-                                  maxNumberOfFiles={1}
-                                  maxFileSize={5242880}
-                                  variant="button"
-                                  onGetUploadParameters={async () => {
-                                    const { url } = await getUploadUrl();
-                                    return { method: 'PUT' as const, url };
-                                  }}
-                                  onComplete={(result) => {
-                                    if (result.successful && result.successful.length > 0) {
-                                      const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
-                                      setFormData({...formData, logo: normalizedUrl});
-                                    }
-                                  }}
-                                />
-                              </>
-                            )}
+                        )}
+                        
+                        {/* Upload Override */}
+                        {!formData.logo && (
+                          <div className="flex items-center gap-3">
+                            <span className="text-sm text-muted-foreground">
+                              {user?.logo ? "or override with a different logo:" : "Upload a logo:"}
+                            </span>
+                            <ObjectUploader
+                              maxNumberOfFiles={1}
+                              maxFileSize={5242880}
+                              variant="button"
+                              onGetUploadParameters={async () => {
+                                const { url } = await getUploadUrl();
+                                return { method: 'PUT' as const, url };
+                              }}
+                              onComplete={(result) => {
+                                if (result.successful && result.successful.length > 0) {
+                                  const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
+                                  setFormData({...formData, logo: normalizedUrl});
+                                }
+                              }}
+                            />
                           </div>
-                        </div>
+                        )}
                     
                     {/* Invert Logo Toggle */}
                     <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
