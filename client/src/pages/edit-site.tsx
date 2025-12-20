@@ -930,7 +930,7 @@ export default function EditSite() {
 
                     <TabsContent value="branding" className="space-y-6">
                       {/* ===== SITE LOGO ===== */}
-                      <div className="rounded-xl border bg-card p-6 space-y-4">
+                      <div className="rounded-xl border p-6 space-y-4 bg-[#f3faf9]">
                         <div className="flex items-center gap-2 pb-2 border-b">
                           <Star className="h-5 w-5 text-primary" />
                           <h3 className="font-semibold text-lg">Site Logo</h3>
