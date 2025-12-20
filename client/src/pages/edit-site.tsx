@@ -1262,7 +1262,7 @@ export default function EditSite() {
 
                       {/* Description Image - for Shoalwood and Modern layouts */}
                       {(formData.layoutId === 'layout-shoalwood' || formData.layoutId === 'layout-modern') && (
-                        <div className="flex items-center gap-4 p-3 bg-muted/20 rounded-lg">
+                        <div className="flex items-center gap-4 p-3 rounded-lg bg-[#f3faf9]">
                           <div className="flex-shrink-0">
                             {formData.descriptionImage ? (
                               <div className="w-16 h-20 rounded overflow-hidden border">
