@@ -1005,20 +1005,36 @@ export default function EditSite() {
                 </CardHeader>
                 <CardContent>
                   <Tabs defaultValue="branding" className="w-full">
-                    <TabsList className="grid w-full grid-cols-4 mb-6">
-                      <TabsTrigger value="branding" data-testid="tab-branding">
+                    <TabsList className="grid w-full grid-cols-4 mb-6 bg-[#f3faf9] p-1 rounded-xl">
+                      <TabsTrigger 
+                        value="branding" 
+                        data-testid="tab-branding"
+                        className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-lg"
+                      >
                         <Settings className="h-4 w-4 mr-2" />
                         Branding
                       </TabsTrigger>
-                      <TabsTrigger value="seo" data-testid="tab-seo">
+                      <TabsTrigger 
+                        value="seo" 
+                        data-testid="tab-seo"
+                        className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-lg"
+                      >
                         <Search className="h-4 w-4 mr-2" />
                         SEO
                       </TabsTrigger>
-                      <TabsTrigger value="documents" data-testid="tab-documents">
+                      <TabsTrigger 
+                        value="documents" 
+                        data-testid="tab-documents"
+                        className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-lg"
+                      >
                         <FileText className="h-4 w-4 mr-2" />
                         Documents {documents.length > 0 && `(${documents.length})`}
                       </TabsTrigger>
-                      <TabsTrigger value="password" data-testid="tab-password">
+                      <TabsTrigger 
+                        value="password" 
+                        data-testid="tab-password"
+                        className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-lg"
+                      >
                         <Lock className="h-4 w-4 mr-2" />
                         Password {sitePasswords.length > 0 && `(${sitePasswords.length})`}
                       </TabsTrigger>
