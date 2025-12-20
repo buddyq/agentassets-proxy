@@ -451,7 +451,6 @@ export default function EditSite() {
   return (
     <div className="min-h-screen flex flex-col bg-muted/10">
       <Navbar />
-      
       <main className="container mx-auto px-4 py-8 flex-1">
         <div className="max-w-5xl mx-auto">
           <div className="mb-8">
@@ -1154,7 +1153,7 @@ export default function EditSite() {
                             )}
 
                             {formData.heroSlides.map((slide, index) => (
-                              <div key={index} className="border rounded-lg p-4 bg-muted/20">
+                              <div key={index} className="border rounded-lg p-4 bg-[#f3faf9]">
                                 <div className="flex items-center justify-between mb-4">
                                   <span className="font-medium text-sm">Slide {index + 1}</span>
                                   <Button
@@ -2272,7 +2271,6 @@ export default function EditSite() {
           </div>
         </div>
       </main>
-
       <Footer />
     </div>
   );
