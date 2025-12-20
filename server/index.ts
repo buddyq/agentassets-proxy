@@ -3,9 +3,11 @@ import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 import path from "path";
+import fs from "fs";
 import { runMigrations } from 'stripe-replit-sync';
 import { getStripeSync, hasUserProvidedCredentials } from "./stripeClient";
 import { WebhookHandlers } from "./webhookHandlers";
+import { getSiteMetaData, injectMetaTags } from "./seoInjector";
 
 const app = express();
 const httpServer = createServer(app);
@@ -198,6 +200,37 @@ async function initStripe() {
   if (process.env.NODE_ENV === "production") {
     serveStatic(app);
   } else {
+    // In development, add middleware to inject meta tags for crawlers/bots
+    // This runs before vite's catch-all handler
+    app.use(async (req, res, next) => {
+      // Only intercept for crawlers/bots or property pages
+      const userAgent = req.headers['user-agent'] || '';
+      const isCrawler = /facebookexternalhit|twitterbot|linkedinbot|whatsapp|slackbot|telegrambot|discordbot/i.test(userAgent);
+      
+      if (!isCrawler) {
+        return next();
+      }
+      
+      const host = req.hostname || (req.headers.host as string) || '';
+      const requestPath = req.originalUrl || req.path || '';
+      
+      try {
+        const siteMeta = await getSiteMetaData(host, requestPath);
+        
+        if (siteMeta) {
+          // Read the base HTML template and inject meta tags
+          const clientTemplate = path.resolve(process.cwd(), 'client', 'index.html');
+          let html = fs.readFileSync(clientTemplate, 'utf-8');
+          html = injectMetaTags(html, siteMeta);
+          return res.status(200).set({ 'Content-Type': 'text/html' }).send(html);
+        }
+      } catch (error) {
+        console.error('Error injecting meta tags for crawler:', error);
+      }
+      
+      next();
+    });
+    
     const { setupVite } = await import("./vite");
     await setupVite(httpServer, app);
   }
