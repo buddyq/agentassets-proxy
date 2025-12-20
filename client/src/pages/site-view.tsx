@@ -3564,6 +3564,120 @@ export default function SiteView({ siteId: propSiteId, params: routeParams }: Si
     }
   }, [site?.id, site?.status]);
 
+  // Set SEO meta tags for property sites (only when unlocked or not password-protected)
+  useEffect(() => {
+    const isAccessible = !protectionStatus?.isProtected || isUnlocked;
+    if (!site || !isAccessible) return;
+    
+    const seoTitle = (site as any).seoTitle || site.title || site.address || 'Property Listing';
+    const seoDescription = (site as any).seoDescription || site.description?.substring(0, 160) || `View this property listing: ${site.address}`;
+    const seoImage = (site as any).seoImage || (site.heroPhotos && site.heroPhotos.length > 0 ? site.heroPhotos[0] : '');
+    
+    // Store original values upfront to restore on cleanup
+    const originalTitle = document.title;
+    const originalMetas: { selector: string; attr: 'property' | 'name'; key: string; value: string | null }[] = [];
+    
+    const cacheOriginalMeta = (attr: 'property' | 'name', key: string) => {
+      const selector = `meta[${attr}="${key}"]`;
+      const meta = document.querySelector(selector) as HTMLMetaElement;
+      originalMetas.push({ selector, attr, key, value: meta ? meta.content : null });
+    };
+    
+    // Cache all meta tags we will modify
+    cacheOriginalMeta('name', 'description');
+    cacheOriginalMeta('property', 'og:title');
+    cacheOriginalMeta('property', 'og:description');
+    cacheOriginalMeta('property', 'og:image');
+    cacheOriginalMeta('property', 'og:type');
+    cacheOriginalMeta('name', 'twitter:card');
+    cacheOriginalMeta('name', 'twitter:title');
+    cacheOriginalMeta('name', 'twitter:description');
+    cacheOriginalMeta('name', 'twitter:image');
+    
+    const setMeta = (attr: 'property' | 'name', key: string, content: string) => {
+      const selector = `meta[${attr}="${key}"]`;
+      let meta = document.querySelector(selector) as HTMLMetaElement;
+      if (!meta) {
+        meta = document.createElement('meta');
+        meta.setAttribute(attr, key);
+        document.head.appendChild(meta);
+      }
+      meta.content = content;
+    };
+    
+    document.title = seoTitle;
+    setMeta('name', 'description', seoDescription);
+    setMeta('property', 'og:title', seoTitle);
+    setMeta('property', 'og:description', seoDescription);
+    if (seoImage) {
+      setMeta('property', 'og:image', seoImage);
+    }
+    setMeta('property', 'og:type', 'website');
+    setMeta('name', 'twitter:card', 'summary_large_image');
+    setMeta('name', 'twitter:title', seoTitle);
+    setMeta('name', 'twitter:description', seoDescription);
+    if (seoImage) {
+      setMeta('name', 'twitter:image', seoImage);
+    }
+    
+    return () => {
+      // Cleanup: restore all original values when effect re-runs or component unmounts
+      document.title = originalTitle;
+      originalMetas.forEach(({ selector, attr, key, value }) => {
+        const meta = document.querySelector(selector) as HTMLMetaElement;
+        if (value === null) {
+          if (meta) meta.remove();
+        } else {
+          if (meta) {
+            meta.content = value;
+          } else {
+            const newMeta = document.createElement('meta');
+            newMeta.setAttribute(attr, key);
+            newMeta.content = value;
+            document.head.appendChild(newMeta);
+          }
+        }
+      });
+    };
+  }, [site, protectionStatus?.isProtected, isUnlocked]);
+
+  // Inject custom Google Analytics if configured (only when site is accessible)
+  useEffect(() => {
+    const isAccessible = !protectionStatus?.isProtected || isUnlocked;
+    const customGaId = (site as any)?.customGaId;
+    if (!customGaId || !customGaId.startsWith('G-') || !isAccessible) return;
+    
+    // Check if script already exists
+    const existingScript = document.querySelector(`script[src*="${customGaId}"]`);
+    if (existingScript) return;
+    
+    // Add gtag.js script
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${customGaId}`;
+    script.id = `ga-script-${customGaId}`;
+    document.head.appendChild(script);
+    
+    // Add gtag config
+    const configScript = document.createElement('script');
+    configScript.id = `ga-config-${customGaId}`;
+    configScript.textContent = `
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', '${customGaId}');
+    `;
+    document.head.appendChild(configScript);
+    
+    return () => {
+      // Cleanup when navigating away
+      const scriptEl = document.getElementById(`ga-script-${customGaId}`);
+      const configEl = document.getElementById(`ga-config-${customGaId}`);
+      if (scriptEl) scriptEl.remove();
+      if (configEl) configEl.remove();
+    };
+  }, [(site as any)?.customGaId, protectionStatus?.isProtected, isUnlocked]);
+
   if (isLoading || isLoadingProtection) {
     return (
       <div className="min-h-screen flex items-center justify-center">
