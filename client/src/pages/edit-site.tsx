@@ -1090,11 +1090,7 @@ export default function EditSite() {
                               <Label
                                 key={option.value}
                                 htmlFor={`transition-${option.value}`}
-                                className={`flex flex-col cursor-pointer rounded-lg border-2 p-4 transition-all ${
-                                  formData.heroTransition === option.value
-                                    ? 'border-primary bg-primary/5'
-                                    : 'border-muted hover:border-muted-foreground/50'
-                                }`}
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex flex-col cursor-pointer rounded-lg border-2 p-4 transition-all border-muted hover:border-muted-foreground/50 bg-[#0000000a]"
                               >
                                 <div className="flex items-center gap-2">
                                   <RadioGroupItem value={option.value} id={`transition-${option.value}`} />
