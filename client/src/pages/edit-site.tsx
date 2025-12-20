@@ -558,7 +558,7 @@ export default function EditSite() {
                       <LayoutGrid className="h-5 w-5 text-primary" />
                       <h3 className="font-semibold text-lg">Property Specs</h3>
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-[#f3faf9] rounded-xl p-4">
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3 bg-[#f3faf9] rounded-xl p-4">
                       <div className="grid gap-2">
                         <Label htmlFor="bedrooms">Bedrooms</Label>
                         <Input 
@@ -629,10 +629,10 @@ export default function EditSite() {
                       </div>
                       <Button 
                         type="button" 
-                        variant="outline" 
                         size="sm" 
                         onClick={addCustomDetail}
                         data-testid="button-add-custom-detail"
+                        className="bg-primary text-white hover:bg-primary/90"
                       >
                         <Plus className="h-4 w-4 mr-1" /> Add Detail
                       </Button>
@@ -674,8 +674,16 @@ export default function EditSite() {
                         ))}
                       </div>
                     ) : (
-                      <div className="border-2 border-dashed border-muted rounded-lg p-6 text-center bg-[#f3faf9]">
-                        <p className="text-muted-foreground text-sm">No custom details added yet. Click "Add Detail" to add one.</p>
+                      <div className="border-2 border-dashed border-muted rounded-lg p-8 text-center bg-[#f3faf9]">
+                        <p className="text-muted-foreground text-sm mb-4">No custom details added yet.</p>
+                        <Button 
+                          type="button" 
+                          onClick={addCustomDetail}
+                          className="bg-primary text-white hover:bg-primary/90"
+                          data-testid="button-add-first-custom-detail"
+                        >
+                          <Plus className="h-4 w-4 mr-2" /> Add Your First Detail
+                        </Button>
                       </div>
                     )}
                   </div>
