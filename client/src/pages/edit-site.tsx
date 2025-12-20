@@ -9,7 +9,7 @@ import { useSite, useUpdateSite, useThemes, useLayouts, useAddPhotoToSite, useRe
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useParams } from "wouter";
-import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, Save, Image, X, GripVertical, Star, LayoutGrid, Plus, Settings, Lock, Eye, EyeOff, ExternalLink, Search, BarChart3 } from "lucide-react";
+import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, Save, Image, X, GripVertical, Star, LayoutGrid, Plus, Settings, Lock, Eye, EyeOff, ExternalLink, Search, BarChart3, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -953,19 +953,20 @@ export default function EditSite() {
                           {formData.logo ? (
                             <Button
                               type="button"
-                              variant="destructive"
+                              variant="outline"
                               onClick={() => setFormData({...formData, logo: ""})}
                               className="w-full max-w-xs"
                               data-testid="button-remove-site-logo"
                             >
+                              <X className="h-4 w-4 mr-2" />
                               Remove Custom Logo
-                              <X className="h-4 w-4 ml-2" />
                             </Button>
                           ) : (
                             <ObjectUploader
                               maxNumberOfFiles={1}
                               maxFileSize={5242880}
                               variant="button"
+                              buttonClassName="w-full max-w-xs bg-primary text-primary-foreground hover:bg-primary/90"
                               onGetUploadParameters={async () => {
                                 const { url } = await getUploadUrl();
                                 return { method: 'PUT' as const, url };
@@ -976,7 +977,10 @@ export default function EditSite() {
                                   setFormData({...formData, logo: normalizedUrl});
                                 }
                               }}
-                            />
+                            >
+                              <Upload className="h-4 w-4 mr-2" />
+                              Upload New Logo
+                            </ObjectUploader>
                           )}
                           
                           <p className="text-sm text-muted-foreground">or drag and drop your logo here</p>
