@@ -157,7 +157,7 @@ export default function EditSite() {
   
   // Image picker sheet state
   const [imagePickerOpen, setImagePickerOpen] = useState(false);
-  const [imagePickerTarget, setImagePickerTarget] = useState<'contentGridImage1' | 'contentGridImage2' | null>(null);
+  const [imagePickerTarget, setImagePickerTarget] = useState<'contentGridImage1' | 'contentGridImage2' | 'seoImage' | 'heroSlide-0' | 'heroSlide-1' | 'heroSlide-2' | null>(null);
 
   // Password protection state
   const [newPassword, setNewPassword] = useState("");
@@ -1262,40 +1262,65 @@ export default function EditSite() {
                                   data-testid={`input-slide-subtitle-${index}`}
                                 />
                               </div>
-                              {site?.photos && site.photos.length > 0 && (
-                                <div className="grid gap-2">
-                                  <Label>Background Image</Label>
-                                  <div className="grid grid-cols-4 gap-2">
-                                    {site.photos.map((photo, photoIndex) => (
-                                      <div
-                                        key={photoIndex}
-                                        className={`relative aspect-video rounded-md overflow-hidden cursor-pointer border-2 transition-all ${
-                                          slide.backgroundImage === photo
-                                            ? 'border-primary ring-2 ring-primary/20'
-                                            : 'border-transparent hover:border-primary/50'
-                                        }`}
+                              <div className="grid gap-2">
+                                <Label>Background Image</Label>
+                                {slide.backgroundImage ? (
+                                  <div className="relative w-full max-w-xs">
+                                    <div className="aspect-video rounded-lg overflow-hidden border">
+                                      <img 
+                                        src={slide.backgroundImage} 
+                                        alt="Slide background" 
+                                        className="w-full h-full object-cover"
+                                      />
+                                    </div>
+                                    <div className="flex gap-2 mt-2">
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                          setImagePickerTarget(`heroSlide-${index}` as 'heroSlide-0' | 'heroSlide-1' | 'heroSlide-2');
+                                          setImagePickerOpen(true);
+                                        }}
+                                        data-testid={`button-change-slide-bg-${index}`}
+                                      >
+                                        Change Image
+                                      </Button>
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        className="text-muted-foreground"
                                         onClick={() => {
                                           const updated = [...formData.heroSlides];
-                                          updated[index] = { ...updated[index], backgroundImage: photo };
+                                          updated[index] = { ...updated[index], backgroundImage: '' };
                                           setFormData({...formData, heroSlides: updated});
                                         }}
-                                        data-testid={`select-slide-bg-${index}-${photoIndex}`}
+                                        data-testid={`button-clear-slide-bg-${index}`}
                                       >
-                                        <img
-                                          src={photo}
-                                          alt={`Photo ${photoIndex + 1}`}
-                                          className="w-full h-full object-cover"
-                                        />
-                                        {slide.backgroundImage === photo && (
-                                          <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                                            <Check className="h-6 w-6 text-white drop-shadow-lg" />
-                                          </div>
-                                        )}
-                                      </div>
-                                    ))}
+                                        Clear
+                                      </Button>
+                                    </div>
                                   </div>
-                                </div>
-                              )}
+                                ) : (
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="w-full h-20 border-dashed"
+                                    onClick={() => {
+                                      setImagePickerTarget(`heroSlide-${index}` as 'heroSlide-0' | 'heroSlide-1' | 'heroSlide-2');
+                                      setImagePickerOpen(true);
+                                    }}
+                                    disabled={!site?.photos || site.photos.length === 0}
+                                    data-testid={`button-select-slide-bg-${index}`}
+                                  >
+                                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                                      <Image className="h-5 w-5" />
+                                      <span>{site?.photos && site.photos.length > 0 ? 'Select Background Image' : 'Add photos first'}</span>
+                                    </div>
+                                  </Button>
+                                )}
+                              </div>
                             </div>
                           </div>
                         ))}
@@ -1621,54 +1646,6 @@ export default function EditSite() {
                         </div>
                       )}
 
-                      {/* Image Picker Sheet */}
-                      <Sheet open={imagePickerOpen} onOpenChange={setImagePickerOpen}>
-                        <SheetContent side="right" className="w-full sm:max-w-md">
-                          <SheetHeader>
-                            <SheetTitle>
-                              Select {imagePickerTarget === 'contentGridImage1' ? 'Top Right' : 'Bottom Left'} Image
-                            </SheetTitle>
-                          </SheetHeader>
-                          <ScrollArea className="h-[calc(100vh-120px)] mt-6 pr-4">
-                            <div className="grid grid-cols-2 gap-3">
-                              {site?.photos?.map((photo, photoIndex) => {
-                                const isSelected = imagePickerTarget === 'contentGridImage1' 
-                                  ? formData.contentGridImage1 === photo
-                                  : formData.contentGridImage2 === photo;
-                                return (
-                                  <div
-                                    key={photoIndex}
-                                    className={`relative aspect-square cursor-pointer rounded-lg overflow-hidden border-2 transition-all hover:opacity-90 ${
-                                      isSelected 
-                                        ? 'border-primary ring-2 ring-primary/20' 
-                                        : 'border-transparent hover:border-primary/50'
-                                    }`}
-                                    onClick={() => {
-                                      if (imagePickerTarget) {
-                                        setFormData({...formData, [imagePickerTarget]: photo});
-                                        setImagePickerOpen(false);
-                                        setImagePickerTarget(null);
-                                      }
-                                    }}
-                                    data-testid={`picker-image-${photoIndex}`}
-                                  >
-                                    <img
-                                      src={photo}
-                                      alt={`Photo ${photoIndex + 1}`}
-                                      className="w-full h-full object-cover"
-                                    />
-                                    {isSelected && (
-                                      <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                                        <Check className="h-8 w-8 text-white drop-shadow-lg" />
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </ScrollArea>
-                        </SheetContent>
-                      </Sheet>
                     </div>
                   )}
 
@@ -1838,7 +1815,7 @@ export default function EditSite() {
                         <div className="grid gap-2">
                           <Label htmlFor="seoDescription">SEO Description</Label>
                           <p className="text-sm text-muted-foreground">
-                            A brief description that appears under the title in search results.
+                            A brief description that appears under the title in search results. For best results, aim for 150-160 characters. Include key property features and location. If left empty, we'll use your property description.
                           </p>
                           <Textarea
                             id="seoDescription"
@@ -1849,12 +1826,12 @@ export default function EditSite() {
                             rows={3}
                             data-testid="input-seo-description"
                           />
-                          <span className="text-xs text-muted-foreground">{formData.seoDescription.length}/160 characters</span>
+                          <span className="text-xs text-muted-foreground">{formData.seoDescription.length}/160 characters (optimal: 150-160)</span>
                         </div>
 
                         {/* SEO Image Picker */}
                         <div className="grid gap-2">
-                          <Label>Social Share Image</Label>
+                          <Label>Image Shown When Shared</Label>
                           <p className="text-sm text-muted-foreground">
                             Select an image from your gallery that will be displayed when your site is shared on social media.
                           </p>
@@ -1868,39 +1845,48 @@ export default function EditSite() {
                                   className="w-full h-full object-cover"
                                 />
                               </div>
-                              <button
-                                type="button"
-                                onClick={() => setFormData({...formData, seoImage: ""})}
-                                className="absolute top-2 right-2 bg-destructive text-white p-1.5 rounded-full shadow-md"
-                                data-testid="button-remove-seo-image"
-                              >
-                                <X className="h-4 w-4" />
-                              </button>
+                              <div className="flex gap-2 mt-2">
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setImagePickerTarget('seoImage');
+                                    setImagePickerOpen(true);
+                                  }}
+                                  data-testid="button-change-seo-image"
+                                >
+                                  Change Image
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-muted-foreground"
+                                  onClick={() => setFormData({...formData, seoImage: ""})}
+                                  data-testid="button-remove-seo-image"
+                                >
+                                  Clear
+                                </Button>
+                              </div>
                             </div>
                           ) : (
-                            <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto p-2 border rounded-lg">
-                              {site?.photos && site.photos.length > 0 ? (
-                                site.photos.map((photo, index) => (
-                                  <button
-                                    key={index}
-                                    type="button"
-                                    onClick={() => setFormData({...formData, seoImage: photo})}
-                                    className="aspect-square rounded-lg overflow-hidden border-2 border-transparent hover:border-primary transition-colors"
-                                    data-testid={`button-select-seo-image-${index}`}
-                                  >
-                                    <img 
-                                      src={photo} 
-                                      alt={`Photo ${index + 1}`}
-                                      className="w-full h-full object-cover"
-                                    />
-                                  </button>
-                                ))
-                              ) : (
-                                <p className="col-span-4 text-center text-muted-foreground py-8">
-                                  No photos uploaded yet. Add photos in the Photos step first.
-                                </p>
-                              )}
-                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="w-full h-24 border-dashed"
+                              onClick={() => {
+                                setImagePickerTarget('seoImage');
+                                setImagePickerOpen(true);
+                              }}
+                              disabled={!site?.photos || site.photos.length === 0}
+                              data-testid="button-select-seo-image"
+                            >
+                              <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                                <Image className="h-6 w-6" />
+                                <span>{site?.photos && site.photos.length > 0 ? 'Select Image' : 'Add photos first'}</span>
+                              </div>
+                            </Button>
                           )}
                         </div>
 
@@ -2076,6 +2062,71 @@ export default function EditSite() {
                       </div>
                     </TabsContent>
                   </Tabs>
+
+                  {/* Global Image Picker Sheet */}
+                  <Sheet open={imagePickerOpen} onOpenChange={setImagePickerOpen}>
+                    <SheetContent side="right" className="w-full sm:max-w-md">
+                      <SheetHeader>
+                        <SheetTitle>
+                          {imagePickerTarget === 'contentGridImage1' && 'Select Top Right Image'}
+                          {imagePickerTarget === 'contentGridImage2' && 'Select Bottom Left Image'}
+                          {imagePickerTarget === 'seoImage' && 'Select Image for Sharing'}
+                          {imagePickerTarget?.startsWith('heroSlide-') && `Select Background for Slide ${parseInt(imagePickerTarget.split('-')[1]) + 1}`}
+                        </SheetTitle>
+                      </SheetHeader>
+                      <ScrollArea className="h-[calc(100vh-120px)] mt-6 pr-4">
+                        <div className="grid grid-cols-2 gap-3">
+                          {site?.photos?.map((photo, photoIndex) => {
+                            let isSelected = false;
+                            if (imagePickerTarget === 'contentGridImage1') {
+                              isSelected = formData.contentGridImage1 === photo;
+                            } else if (imagePickerTarget === 'contentGridImage2') {
+                              isSelected = formData.contentGridImage2 === photo;
+                            } else if (imagePickerTarget === 'seoImage') {
+                              isSelected = formData.seoImage === photo;
+                            } else if (imagePickerTarget?.startsWith('heroSlide-')) {
+                              const slideIndex = parseInt(imagePickerTarget.split('-')[1]);
+                              isSelected = formData.heroSlides[slideIndex]?.backgroundImage === photo;
+                            }
+                            return (
+                              <div
+                                key={photoIndex}
+                                className={`relative aspect-square cursor-pointer rounded-lg overflow-hidden border-2 transition-all hover:opacity-90 ${
+                                  isSelected 
+                                    ? 'border-primary ring-2 ring-primary/20' 
+                                    : 'border-transparent hover:border-primary/50'
+                                }`}
+                                onClick={() => {
+                                  if (imagePickerTarget?.startsWith('heroSlide-')) {
+                                    const slideIndex = parseInt(imagePickerTarget.split('-')[1]);
+                                    const updated = [...formData.heroSlides];
+                                    updated[slideIndex] = { ...updated[slideIndex], backgroundImage: photo };
+                                    setFormData({...formData, heroSlides: updated});
+                                  } else if (imagePickerTarget) {
+                                    setFormData({...formData, [imagePickerTarget]: photo});
+                                  }
+                                  setImagePickerOpen(false);
+                                  setImagePickerTarget(null);
+                                }}
+                                data-testid={`picker-image-${photoIndex}`}
+                              >
+                                <img
+                                  src={photo}
+                                  alt={`Photo ${photoIndex + 1}`}
+                                  className="w-full h-full object-cover"
+                                />
+                                {isSelected && (
+                                  <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                                    <Check className="h-8 w-8 text-white drop-shadow-lg" />
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </ScrollArea>
+                    </SheetContent>
+                  </Sheet>
                 </CardContent>
               </Card>
             )}
