@@ -8,6 +8,8 @@ AgentAssets is a platform enabling real estate agents to create and manage custo
 
 Preferred communication style: Simple, everyday language.
 
+**Important**: Any UI/styling changes made to the edit-site page should also be applied to the create-site page to maintain consistency, unless otherwise specified.
+
 ## System Architecture
 
 ### Frontend

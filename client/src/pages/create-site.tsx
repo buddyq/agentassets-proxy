@@ -968,7 +968,7 @@ export default function CreateSite() {
                           className={`flex flex-col cursor-pointer rounded-lg border-2 p-4 transition-all ${
                             formData.heroTransition === option.value
                               ? 'border-primary bg-primary/5'
-                              : 'border-muted hover:border-muted-foreground/50'
+                              : 'border-muted bg-gray-50 hover:border-muted-foreground/50'
                           }`}
                         >
                           <div className="flex items-center gap-2">
