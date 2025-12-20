@@ -930,6 +930,61 @@ export default function EditSite() {
                     </TabsList>
 
                     <TabsContent value="branding" className="space-y-6">
+                      {/* ===== SITE LOGO ===== */}
+                      <div className="rounded-xl border bg-card p-6 space-y-4">
+                        <div className="flex items-center gap-2 pb-2 border-b">
+                          <Star className="h-5 w-5 text-primary" />
+                          <h3 className="font-semibold text-lg">Site Logo</h3>
+                        </div>
+                        <div className="bg-muted/30 rounded-xl p-6 flex flex-col items-center gap-4">
+                          <p className="text-sm font-medium text-muted-foreground">Current Logo</p>
+                          <div className="w-20 h-20 rounded-full bg-white shadow-lg flex items-center justify-center p-3">
+                            {(formData.logo || user?.logo) ? (
+                              <img 
+                                src={formData.logo || user?.logo || ''} 
+                                alt="Current logo" 
+                                className="max-h-12 max-w-12 object-contain"
+                              />
+                            ) : (
+                              <Image className="h-8 w-8 text-muted-foreground/30" />
+                            )}
+                          </div>
+                          {formData.logo ? (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => setFormData({...formData, logo: ""})}
+                              className="w-full max-w-xs"
+                              data-testid="button-remove-site-logo"
+                            >
+                              <X className="h-4 w-4 mr-2" />
+                              Remove Custom Logo
+                            </Button>
+                          ) : (
+                            <ObjectUploader
+                              maxNumberOfFiles={1}
+                              maxFileSize={5242880}
+                              variant="button"
+                              buttonClassName="w-full max-w-xs bg-primary text-primary-foreground hover:bg-primary/90"
+                              onGetUploadParameters={async () => {
+                                const { url } = await getUploadUrl();
+                                return { method: 'PUT' as const, url };
+                              }}
+                              onComplete={(result) => {
+                                if (result.successful && result.successful.length > 0) {
+                                  const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
+                                  setFormData({...formData, logo: normalizedUrl});
+                                }
+                              }}
+                            >
+                              <Upload className="h-4 w-4 mr-2" />
+                              Upload New Logo
+                            </ObjectUploader>
+                          )}
+                          <p className="text-sm text-muted-foreground">or drag and drop your logo here</p>
+                        </div>
+                      </div>
+
                       {/* ===== HERO SECTION ===== */}
                       <div className="rounded-xl border bg-card p-6 space-y-6">
                         <div className="flex items-center gap-2 pb-2 border-b">
@@ -937,32 +992,44 @@ export default function EditSite() {
                           <h3 className="font-semibold text-lg">Hero Section</h3>
                         </div>
 
-                        {/* Site Logo */}
+                        {/* Hero Logo */}
                         <div className="grid gap-3">
-                          <Label>Site Logo</Label>
+                          <Label>Hero Logo</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Upload a logo specifically for the hero section. Use a PNG with transparent background for best results.
+                          </p>
                           <div className="bg-muted/30 rounded-xl p-6 flex flex-col items-center gap-4">
-                            <p className="text-sm font-medium text-muted-foreground">Current Logo</p>
-                            <div className="w-20 h-20 rounded-full bg-white shadow-lg flex items-center justify-center p-3">
-                              {(formData.logo || user?.logo) ? (
+                            <p className="text-sm font-medium text-muted-foreground">Current Hero Logo</p>
+                            <div className="w-24 h-16 rounded-lg bg-slate-800 shadow-lg flex items-center justify-center p-2">
+                              {formData.heroLogo ? (
+                                <img 
+                                  src={formData.heroLogo} 
+                                  alt="Hero logo" 
+                                  className="max-h-12 max-w-20 object-contain"
+                                />
+                              ) : (formData.logo || user?.logo) ? (
                                 <img 
                                   src={formData.logo || user?.logo || ''} 
-                                  alt="Current logo" 
-                                  className="max-h-12 max-w-12 object-contain"
+                                  alt="Using site logo" 
+                                  className="max-h-12 max-w-20 object-contain opacity-50"
                                 />
                               ) : (
-                                <Image className="h-8 w-8 text-muted-foreground/30" />
+                                <Image className="h-6 w-6 text-white/30" />
                               )}
                             </div>
-                            {formData.logo ? (
+                            {!formData.heroLogo && (formData.logo || user?.logo) && (
+                              <p className="text-xs text-muted-foreground">Using your site logo (upload to override)</p>
+                            )}
+                            {formData.heroLogo ? (
                               <Button
                                 type="button"
                                 variant="outline"
-                                onClick={() => setFormData({...formData, logo: ""})}
+                                onClick={() => setFormData({...formData, heroLogo: ""})}
                                 className="w-full max-w-xs"
-                                data-testid="button-remove-site-logo"
+                                data-testid="button-remove-hero-logo"
                               >
                                 <X className="h-4 w-4 mr-2" />
-                                Remove Custom Logo
+                                Remove Hero Logo
                               </Button>
                             ) : (
                               <ObjectUploader
@@ -977,15 +1044,14 @@ export default function EditSite() {
                                 onComplete={(result) => {
                                   if (result.successful && result.successful.length > 0) {
                                     const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
-                                    setFormData({...formData, logo: normalizedUrl});
+                                    setFormData({...formData, heroLogo: normalizedUrl});
                                   }
                                 }}
                               >
                                 <Upload className="h-4 w-4 mr-2" />
-                                Upload New Logo
+                                Upload Hero Logo
                               </ObjectUploader>
                             )}
-                            <p className="text-sm text-muted-foreground">or drag and drop your logo here</p>
                           </div>
                       
                           {/* Invert Logo Toggle */}
@@ -1247,58 +1313,6 @@ export default function EditSite() {
                         </div>
                       )}
 
-                      {/* Hero Logo - for Modern layout */}
-                      {formData.layoutId === 'layout-modern' && (
-                        <div className="flex items-center gap-4 p-3 bg-muted/20 rounded-lg">
-                          <div className="flex-shrink-0">
-                            {formData.heroLogo ? (
-                              <div className="w-16 h-12 rounded bg-slate-800 flex items-center justify-center p-1">
-                                <img src={formData.heroLogo} alt="Hero logo" className="max-h-10 max-w-14 object-contain" />
-                              </div>
-                            ) : (
-                              <div className="w-16 h-12 rounded border-2 border-dashed border-muted-foreground/30 flex items-center justify-center">
-                                <Star className="h-5 w-5 text-muted-foreground/40" />
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1">
-                            <p className="font-medium text-sm">Hero Logo</p>
-                            <p className="text-xs text-muted-foreground">Special logo for the hero section</p>
-                          </div>
-                          {formData.heroLogo ? (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setFormData({...formData, heroLogo: ""})}
-                              className="text-muted-foreground hover:text-destructive"
-                              data-testid="button-remove-hero-logo"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          ) : (
-                            <ObjectUploader
-                              maxNumberOfFiles={1}
-                              maxFileSize={5242880}
-                              variant="button"
-                              buttonClassName="text-sm"
-                              onGetUploadParameters={async () => {
-                                const { url } = await getUploadUrl();
-                                return { method: 'PUT' as const, url };
-                              }}
-                              onComplete={(result) => {
-                                if (result.successful && result.successful.length > 0) {
-                                  const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
-                                  setFormData({...formData, heroLogo: normalizedUrl});
-                                }
-                              }}
-                            >
-                              <Upload className="h-4 w-4 mr-1" />
-                              Upload
-                            </ObjectUploader>
-                          )}
-                        </div>
-                      )}
 
                       {/* Content Grid Images - for Magazine layout */}
                       {formData.layoutId === 'layout-magazine' && (
