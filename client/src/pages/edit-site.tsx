@@ -1183,6 +1183,7 @@ export default function EditSite() {
                                     data-testid={`input-slide-title-${index}`}
                                   />
                                   <Input
+                                    className="bg-[#ffffff]"
                                     placeholder="Subtitle (e.g., Experience luxury living)"
                                     value={slide.subtitle}
                                     onChange={(e) => {
@@ -1201,8 +1202,8 @@ export default function EditSite() {
                                         </div>
                                         <Button
                                           type="button"
-                                          variant="outline"
                                           size="sm"
+                                          className="bg-primary text-primary-foreground hover:bg-primary/90"
                                           onClick={() => {
                                             setImagePickerTarget(`heroSlide-${index}` as 'heroSlide-0' | 'heroSlide-1' | 'heroSlide-2');
                                             setImagePickerOpen(true);
@@ -1228,8 +1229,8 @@ export default function EditSite() {
                                     ) : (
                                       <Button
                                         type="button"
-                                        variant="outline"
                                         size="sm"
+                                        className="bg-primary text-primary-foreground hover:bg-primary/90"
                                         onClick={() => {
                                           setImagePickerTarget(`heroSlide-${index}` as 'heroSlide-0' | 'heroSlide-1' | 'heroSlide-2');
                                           setImagePickerOpen(true);
