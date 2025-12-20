@@ -9,13 +9,17 @@ export const initGA = () => {
   const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID;
 
   if (!measurementId) {
-    console.warn('Missing required Google Analytics key: VITE_GA_MEASUREMENT_ID');
+    console.warn('[GA] Missing required Google Analytics key: VITE_GA_MEASUREMENT_ID');
     return;
   }
+
+  console.log('[GA] Initializing Google Analytics with ID:', measurementId);
 
   const script1 = document.createElement('script');
   script1.async = true;
   script1.src = `https://www.googletagmanager.com/gtag/js?id=${measurementId}`;
+  script1.onload = () => console.log('[GA] gtag.js script loaded successfully');
+  script1.onerror = () => console.error('[GA] Failed to load gtag.js script');
   document.head.appendChild(script1);
 
   const script2 = document.createElement('script');
@@ -26,6 +30,8 @@ export const initGA = () => {
     gtag('config', '${measurementId}');
   `;
   document.head.appendChild(script2);
+  
+  console.log('[GA] Google Analytics initialized');
 };
 
 export const trackPageView = (url: string) => {
