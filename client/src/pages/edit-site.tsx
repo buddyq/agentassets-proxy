@@ -985,7 +985,7 @@ export default function EditSite() {
                       </div>
 
                       {/* ===== HERO SECTION ===== */}
-                      <div className="rounded-xl border bg-card p-6 space-y-6">
+                      <div className="rounded-xl border p-6 space-y-6 bg-[#f3faf9]">
                         <div className="flex items-center gap-2 pb-2 border-b">
                           <LayoutGrid className="h-5 w-5 text-primary" />
                           <h3 className="font-semibold text-lg">Hero Section</h3>
