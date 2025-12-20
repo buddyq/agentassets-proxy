@@ -19,6 +19,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { CustomDetail, HeroSlide, OpenHouseEvent, HeroTransitionType } from "@shared/schema";
 import { heroTransitionTypes } from "@shared/schema";
+import { parseVideoUrl } from "@/lib/utils";
 
 const FEATURE_SUGGESTIONS = [
   'Community Clubhouse',
@@ -688,7 +689,7 @@ export default function CreateSite() {
                       <ExternalLink className="h-5 w-5 text-primary" />
                       <h3 className="font-semibold text-lg">Media</h3>
                     </div>
-                    <div className="bg-[#f3faf9] rounded-xl p-4">
+                    <div className="bg-[#f3faf9] rounded-xl p-4 space-y-4">
                       <div className="grid gap-2">
                         <Label htmlFor="videoUrl">Video URL (YouTube/Vimeo)</Label>
                         <Input 
@@ -700,6 +701,26 @@ export default function CreateSite() {
                         />
                         <p className="text-xs text-muted-foreground">Add a video tour of the property (optional)</p>
                       </div>
+                      {(() => {
+                        const videoInfo = parseVideoUrl(formData.videoUrl);
+                        if (videoInfo) {
+                          return (
+                            <div className="mt-4">
+                              <p className="text-sm text-muted-foreground mb-2">Video Preview:</p>
+                              <div className="aspect-video rounded-lg overflow-hidden bg-black">
+                                <iframe
+                                  src={videoInfo.embedUrl}
+                                  title="Video preview"
+                                  className="w-full h-full"
+                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                  allowFullScreen
+                                />
+                              </div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
                     </div>
                   </div>
                 </CardContent>
