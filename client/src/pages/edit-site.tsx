@@ -935,7 +935,7 @@ export default function EditSite() {
                           <Star className="h-5 w-5 text-primary" />
                           <h3 className="font-semibold text-lg">Site Logo</h3>
                         </div>
-                        <div className="bg-[#ffffff] rounded-xl p-6 flex flex-col items-center gap-4">
+                        <div className="bg-[#f3faf9] rounded-xl p-6 flex flex-col items-center gap-4">
                           <p className="text-sm font-medium text-muted-foreground">Current Logo</p>
                           <div className="w-20 h-20 rounded-full bg-white shadow-lg flex items-center justify-center p-3">
                             {(formData.logo || user?.logo) ? (
@@ -1054,7 +1054,7 @@ export default function EditSite() {
                           </div>
                       
                           {/* Invert Logo Toggle */}
-                          <div className="flex items-center justify-between p-4 bg-[#ffffff] rounded-lg">
+                          <div className="flex items-center justify-between p-4 bg-[#f3faf9] rounded-lg">
                             <div className="space-y-0.5">
                               <Label htmlFor="invert-logo">Invert Logo for Dark Backgrounds</Label>
                               <p className="text-sm text-muted-foreground">
@@ -1318,7 +1318,7 @@ export default function EditSite() {
                       {/* Content Grid Images - for Magazine layout */}
                       {formData.layoutId === 'layout-magazine' && (
                         <>
-                          <div className="flex items-center gap-4 p-3 bg-[#ffffff] rounded-lg">
+                          <div className="flex items-center gap-4 p-3 bg-[#f3faf9] rounded-lg">
                             <div className="flex-shrink-0">
                               {formData.contentGridImage1 ? (
                                 <div className="w-16 h-12 rounded overflow-hidden border">
@@ -1363,7 +1363,7 @@ export default function EditSite() {
                             )}
                           </div>
 
-                          <div className="flex items-center gap-4 p-3 bg-[#ffffff] rounded-lg">
+                          <div className="flex items-center gap-4 p-3 bg-[#f3faf9] rounded-lg">
                             <div className="flex-shrink-0">
                               {formData.contentGridImage2 ? (
                                 <div className="w-16 h-12 rounded overflow-hidden border">
@@ -1441,7 +1441,7 @@ export default function EditSite() {
                           Upload a downloadable brochure PDF for this property.
                         </p>
                         {formData.brochureUrl ? (
-                          <div className="flex items-center gap-3 p-3 bg-[#ffffff] rounded-lg">
+                          <div className="flex items-center gap-3 p-3 bg-[#f3faf9] rounded-lg">
                             <FileText className="h-8 w-8 text-primary" />
                             <div className="flex-1">
                               <p className="text-sm font-medium">Brochure uploaded</p>
@@ -1525,7 +1525,7 @@ export default function EditSite() {
                         )}
 
                         {formData.openHouses.map((event, index) => (
-                          <div key={index} className="border rounded-lg p-4 bg-[#ffffff]">
+                          <div key={index} className="border rounded-lg p-4 bg-[#f3faf9]">
                             <div className="flex items-center justify-between mb-4">
                               <span className="font-medium text-sm">Open House {index + 1}</span>
                               <Button
