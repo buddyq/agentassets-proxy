@@ -932,58 +932,75 @@ export default function EditSite() {
                     <TabsContent value="branding" className="space-y-6">
                       {/* Site Logo Override */}
                       <div className="grid gap-2">
-                    <Label>Site Logo (Optional)</Label>
-                    <p className="text-sm text-muted-foreground mb-2">
-                      {user?.logo 
-                        ? "Your default logo will be used. Upload a different logo here to override it for this site only."
-                        : "Upload a logo for this property site. You can set a default logo in your dashboard."
-                      }
-                    </p>
-                    {user?.logo && !formData.logo && (
-                      <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg mb-2">
-                        <img 
-                          src={user.logo} 
-                          alt="Default logo" 
-                          className="h-10 max-w-[100px] object-contain"
-                        />
-                        <span className="text-sm text-muted-foreground">Your default logo (will be used unless overridden)</span>
-                      </div>
-                    )}
-                    {formData.logo ? (
-                      <div className="relative inline-block">
-                        <div className="p-4 bg-muted/30 rounded-lg inline-block">
-                          <img 
-                            src={formData.logo} 
-                            alt="Site logo" 
-                            className="max-h-16 max-w-[200px] object-contain"
-                          />
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setFormData({...formData, logo: ""})}
-                          className="absolute -top-2 -right-2 bg-destructive text-white p-1.5 rounded-full shadow-md"
-                          data-testid="button-remove-site-logo"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ) : (
-                      <ObjectUploader
-                        maxNumberOfFiles={1}
-                        maxFileSize={5242880}
-                        variant="dropzone"
-                        onGetUploadParameters={async () => {
-                          const { url } = await getUploadUrl();
-                          return { method: 'PUT' as const, url };
-                        }}
-                        onComplete={(result) => {
-                          if (result.successful && result.successful.length > 0) {
-                            const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
-                            setFormData({...formData, logo: normalizedUrl});
+                        <Label>Site Logo (Optional)</Label>
+                        <p className="text-sm text-muted-foreground">
+                          {user?.logo 
+                            ? "Your default logo will be used unless you upload one here."
+                            : "Upload a logo for this property site."
                           }
-                        }}
-                      />
-                    )}
+                        </p>
+                        
+                        <div className="flex items-center gap-4 p-3 bg-muted/30 rounded-lg">
+                          {/* Current/Default Logo Display */}
+                          <div className="flex-shrink-0 w-24 h-12 bg-white rounded border flex items-center justify-center">
+                            {formData.logo ? (
+                              <img 
+                                src={formData.logo} 
+                                alt="Site logo" 
+                                className="max-h-10 max-w-20 object-contain"
+                              />
+                            ) : user?.logo ? (
+                              <img 
+                                src={user.logo} 
+                                alt="Default logo" 
+                                className="max-h-10 max-w-20 object-contain opacity-60"
+                              />
+                            ) : (
+                              <Image className="h-5 w-5 text-muted-foreground/40" />
+                            )}
+                          </div>
+                          
+                          {/* Actions */}
+                          <div className="flex-1 flex items-center gap-2">
+                            {formData.logo ? (
+                              <>
+                                <span className="text-sm text-muted-foreground">Custom logo uploaded</span>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setFormData({...formData, logo: ""})}
+                                  className="text-muted-foreground hover:text-destructive"
+                                  data-testid="button-remove-site-logo"
+                                >
+                                  <X className="h-4 w-4 mr-1" />
+                                  Remove
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <span className="text-sm text-muted-foreground">
+                                  {user?.logo ? "Using default" : "No logo"}
+                                </span>
+                                <ObjectUploader
+                                  maxNumberOfFiles={1}
+                                  maxFileSize={5242880}
+                                  variant="button"
+                                  onGetUploadParameters={async () => {
+                                    const { url } = await getUploadUrl();
+                                    return { method: 'PUT' as const, url };
+                                  }}
+                                  onComplete={(result) => {
+                                    if (result.successful && result.successful.length > 0) {
+                                      const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
+                                      setFormData({...formData, logo: normalizedUrl});
+                                    }
+                                  }}
+                                />
+                              </>
+                            )}
+                          </div>
+                        </div>
                     
                     {/* Invert Logo Toggle */}
                     <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
