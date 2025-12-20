@@ -6,12 +6,7 @@ declare global {
 }
 
 export const initGA = () => {
-  const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID;
-
-  if (!measurementId) {
-    console.warn('[GA] Missing required Google Analytics key: VITE_GA_MEASUREMENT_ID');
-    return;
-  }
+  const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID || 'G-PLK8C9MSG4';
 
   console.log('[GA] Initializing Google Analytics with ID:', measurementId);
 

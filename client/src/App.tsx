@@ -99,9 +99,7 @@ function App() {
   const customDomainInfo = useCustomDomainDetection();
   
   useEffect(() => {
-    if (import.meta.env.VITE_GA_MEASUREMENT_ID) {
-      initGA();
-    }
+    initGA();
   }, []);
   
   // If on a custom domain (e.g., www.410brookhaven.com), show the site directly
