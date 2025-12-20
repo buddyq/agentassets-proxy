@@ -934,39 +934,34 @@ export default function EditSite() {
                       <div className="grid gap-3">
                         <Label>Site Logo</Label>
                         
-                        {/* Current Logo Display */}
-                        {(formData.logo || user?.logo) && (
-                          <div className="flex items-center gap-3">
-                            <span className="text-sm text-muted-foreground">Current logo:</span>
-                            <div className="p-2 bg-white rounded border">
+                        <div className="bg-muted/30 rounded-xl p-6 flex flex-col items-center gap-4">
+                          {/* Current Logo Display */}
+                          <p className="text-sm font-medium text-muted-foreground">Current Logo</p>
+                          <div className="w-20 h-20 rounded-full bg-white shadow-lg flex items-center justify-center p-3">
+                            {(formData.logo || user?.logo) ? (
                               <img 
                                 src={formData.logo || user?.logo || ''} 
                                 alt="Current logo" 
-                                className="h-8 max-w-[120px] object-contain"
+                                className="max-h-12 max-w-12 object-contain"
                               />
-                            </div>
-                            {formData.logo && (
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setFormData({...formData, logo: ""})}
-                                className="text-muted-foreground hover:text-destructive"
-                                data-testid="button-remove-site-logo"
-                              >
-                                <X className="h-4 w-4 mr-1" />
-                                Remove
-                              </Button>
+                            ) : (
+                              <Image className="h-8 w-8 text-muted-foreground/30" />
                             )}
                           </div>
-                        )}
-                        
-                        {/* Upload Override */}
-                        {!formData.logo && (
-                          <div className="flex items-center gap-3">
-                            <span className="text-sm text-muted-foreground">
-                              {user?.logo ? "or override with a different logo:" : "Upload a logo:"}
-                            </span>
+                          
+                          {/* Upload Button */}
+                          {formData.logo ? (
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              onClick={() => setFormData({...formData, logo: ""})}
+                              className="w-full max-w-xs"
+                              data-testid="button-remove-site-logo"
+                            >
+                              Remove Custom Logo
+                              <X className="h-4 w-4 ml-2" />
+                            </Button>
+                          ) : (
                             <ObjectUploader
                               maxNumberOfFiles={1}
                               maxFileSize={5242880}
@@ -982,8 +977,10 @@ export default function EditSite() {
                                 }
                               }}
                             />
-                          </div>
-                        )}
+                          )}
+                          
+                          <p className="text-sm text-muted-foreground">or drag and drop your logo here</p>
+                        </div>
                     
                     {/* Invert Logo Toggle */}
                     <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
