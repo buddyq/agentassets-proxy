@@ -3527,22 +3527,26 @@ function SoapStoneHero({ site, theme, heroImage, hasPhotos, onOpenMenu, navLinks
         </h1>
       </header>
       
-      {/* Hero section with three-column layout: left sidebar, video, right sidebar */}
-      <section id="home" className="relative h-[calc(100vh-70px)] w-full flex">
-        {/* Left white sidebar with hamburger */}
-        <div className="hidden md:flex w-12 lg:w-16 bg-white flex-shrink-0 items-center justify-center relative z-20">
-          <button
-            onClick={onOpenMenu}
-            className="p-2 text-gray-800 hover:text-gray-600 transition-colors"
-            aria-label="Open menu"
-          >
-            <svg width="28" height="20" viewBox="0 0 28 20" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="0" y1="2" x2="28" y2="2" />
-              <line x1="0" y1="10" x2="28" y2="10" />
-              <line x1="0" y1="18" x2="28" y2="18" />
-            </svg>
-          </button>
-        </div>
+      {/* Fixed left white sidebar with hamburger - always on top with shadow */}
+      <div 
+        className="hidden md:flex fixed left-0 top-0 bottom-0 w-12 lg:w-16 bg-white items-center justify-center z-[60]"
+        style={{ boxShadow: '4px 0 12px rgba(0,0,0,0.1)' }}
+      >
+        <button
+          onClick={onOpenMenu}
+          className="p-2 text-gray-800 hover:text-gray-600 transition-colors"
+          aria-label="Open menu"
+        >
+          <svg width="28" height="20" viewBox="0 0 28 20" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="0" y1="2" x2="28" y2="2" />
+            <line x1="0" y1="10" x2="28" y2="10" />
+            <line x1="0" y1="18" x2="28" y2="18" />
+          </svg>
+        </button>
+      </div>
+      
+      {/* Hero section with layout adjusted for fixed left sidebar */}
+      <section id="home" className="relative h-[calc(100vh-70px)] w-full flex md:pl-12 lg:pl-16">
         
         {/* Center hero content - video or photos */}
         <div className="flex-1 relative overflow-hidden">
