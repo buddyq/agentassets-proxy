@@ -54,7 +54,7 @@ const ALL_STEPS = [
   { id: 6, name: "Review", icon: CreditCard },
 ];
 
-const LAYOUTS_WITH_OPTIONS = ['layout-shoalwood', 'layout-modern', 'layout-magazine'];
+const LAYOUTS_WITH_OPTIONS = ['layout-shoalwood', 'layout-modern', 'layout-magazine', 'layout-soapstone'];
 const ALWAYS_SHOW_STEP_4 = true; // Always show step 4 for logo branding option
 
 export default function CreateSite() {
@@ -142,6 +142,11 @@ export default function CreateSite() {
     seoDescription: '',
     seoImage: '',
     customGaId: '',
+    // Soap Stone layout fields
+    soapstoneHeroMode: "slider" as "video" | "slider",
+    soapstoneVideoTabs: [] as { label: string; url: string }[],
+    soapstoneFloorPlans: [] as string[],
+    soapstonePresentedBy: "",
   });
   
   // Custom details state
@@ -379,6 +384,11 @@ export default function CreateSite() {
         contentGridImage1: formData.contentGridImage1 || null,
         contentGridImage2: formData.contentGridImage2 || null,
         features: formData.features ? formData.features.split(',').map(f => f.trim()).filter(f => f) : [],
+        // Soap Stone layout fields
+        soapstoneHeroMode: formData.soapstoneHeroMode || "slider",
+        soapstoneVideoTabs: formData.soapstoneVideoTabs || [],
+        soapstoneFloorPlans: formData.soapstoneFloorPlans || [],
+        soapstonePresentedBy: formData.soapstonePresentedBy || null,
         // Trial credit flag
         useTrialCredit,
       } as any,
@@ -1738,6 +1748,217 @@ export default function CreateSite() {
                           </ScrollArea>
                         </SheetContent>
                       </Sheet>
+                    </div>
+                  )}
+
+                  {/* ===== SOAP STONE LAYOUT OPTIONS ===== */}
+                  {formData.layoutId === 'layout-soapstone' && (
+                    <div className="rounded-xl border bg-card p-6 space-y-6">
+                      <div className="flex items-center gap-2 pb-2 border-b">
+                        <Settings className="h-5 w-5 text-primary" />
+                        <h3 className="font-semibold text-lg">Soap Stone Layout Options</h3>
+                      </div>
+                      
+                      {/* Hero Mode Selection */}
+                      <div className="grid gap-2">
+                        <Label>Hero Section Style</Label>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Choose between a video background or photo slider for the hero section.
+                        </p>
+                        <div className="flex gap-4">
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="soapstoneHeroMode"
+                              value="slider"
+                              checked={formData.soapstoneHeroMode === 'slider'}
+                              onChange={(e) => setFormData({...formData, soapstoneHeroMode: e.target.value as "video" | "slider"})}
+                              className="w-4 h-4"
+                            />
+                            <span>Photo Slider</span>
+                          </label>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="soapstoneHeroMode"
+                              value="video"
+                              checked={formData.soapstoneHeroMode === 'video'}
+                              onChange={(e) => setFormData({...formData, soapstoneHeroMode: e.target.value as "video" | "slider"})}
+                              className="w-4 h-4"
+                            />
+                            <span>Video Background (uses Video URL)</span>
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Presented By */}
+                      <div className="grid gap-2">
+                        <Label htmlFor="soapstonePresentedBy">Presented By (Optional)</Label>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Text displayed in the colored bar above the overview section, e.g., "Presented by Smith Realty"
+                        </p>
+                        <Input
+                          id="soapstonePresentedBy"
+                          placeholder="e.g., Presented by Smith Realty"
+                          value={formData.soapstonePresentedBy}
+                          onChange={(e) => setFormData({...formData, soapstonePresentedBy: e.target.value})}
+                          data-testid="input-soapstone-presented-by"
+                        />
+                      </div>
+
+                      {/* Video Tabs */}
+                      <div className="grid gap-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label>Video Gallery Tabs</Label>
+                            <p className="text-sm text-muted-foreground">
+                              Add tabbed video sections (e.g., Tour, Aerial, Neighborhood)
+                            </p>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const newTab = { label: '', url: '' };
+                              setFormData({...formData, soapstoneVideoTabs: [...formData.soapstoneVideoTabs, newTab]});
+                            }}
+                            data-testid="button-add-video-tab"
+                          >
+                            <Plus className="h-4 w-4 mr-1" />
+                            Add Video Tab
+                          </Button>
+                        </div>
+
+                        {formData.soapstoneVideoTabs.length === 0 && (
+                          <div className="border-2 border-dashed border-muted rounded-lg p-6 text-center">
+                            <p className="text-muted-foreground mb-4">No video tabs added yet</p>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => {
+                                const newTab = { label: 'Property Tour', url: '' };
+                                setFormData({...formData, soapstoneVideoTabs: [newTab]});
+                              }}
+                              data-testid="button-add-first-video-tab"
+                            >
+                              <Plus className="h-4 w-4 mr-1" />
+                              Add First Video Tab
+                            </Button>
+                          </div>
+                        )}
+
+                        {formData.soapstoneVideoTabs.map((tab, index) => (
+                          <div key={index} className="border rounded-lg p-4 bg-[#f3faf9]">
+                            <div className="flex items-center justify-between mb-4">
+                              <span className="font-medium text-sm">Video Tab {index + 1}</span>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="text-destructive hover:text-destructive"
+                                onClick={() => {
+                                  const updated = formData.soapstoneVideoTabs.filter((_, i) => i !== index);
+                                  setFormData({...formData, soapstoneVideoTabs: updated});
+                                }}
+                                data-testid={`button-remove-video-tab-${index}`}
+                              >
+                                <X className="h-4 w-4 mr-1" />
+                                Remove
+                              </Button>
+                            </div>
+                            <div className="grid md:grid-cols-2 gap-4">
+                              <div className="grid gap-2">
+                                <Label htmlFor={`video-tab-label-${index}`}>Tab Label</Label>
+                                <Input
+                                  id={`video-tab-label-${index}`}
+                                  placeholder="e.g., Property Tour"
+                                  value={tab.label}
+                                  onChange={(e) => {
+                                    const updated = [...formData.soapstoneVideoTabs];
+                                    updated[index] = { ...updated[index], label: e.target.value };
+                                    setFormData({...formData, soapstoneVideoTabs: updated});
+                                  }}
+                                  data-testid={`input-video-tab-label-${index}`}
+                                />
+                              </div>
+                              <div className="grid gap-2">
+                                <Label htmlFor={`video-tab-url-${index}`}>Video URL (YouTube/Vimeo)</Label>
+                                <Input
+                                  id={`video-tab-url-${index}`}
+                                  placeholder="https://youtube.com/watch?v=..."
+                                  value={tab.url}
+                                  onChange={(e) => {
+                                    const updated = [...formData.soapstoneVideoTabs];
+                                    updated[index] = { ...updated[index], url: e.target.value };
+                                    setFormData({...formData, soapstoneVideoTabs: updated});
+                                  }}
+                                  data-testid={`input-video-tab-url-${index}`}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Floor Plans */}
+                      <div className="grid gap-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label>Floor Plans</Label>
+                            <p className="text-sm text-muted-foreground">
+                              Upload floor plan images for each level of the property.
+                            </p>
+                          </div>
+                        </div>
+
+                        <ObjectUploader
+                          maxNumberOfFiles={5}
+                          maxFileSize={10485760}
+                          allowedFileTypes={['image/*']}
+                          onGetUploadParameters={async () => {
+                            const { url } = await getUploadUrl();
+                            return { method: 'PUT' as const, url };
+                          }}
+                          onComplete={(result) => {
+                            if (result.successful && result.successful.length > 0) {
+                              const newPlans = result.successful.map(file => normalizeObjectUrl(file.uploadURL));
+                              setFormData({...formData, soapstoneFloorPlans: [...formData.soapstoneFloorPlans, ...newPlans]});
+                            }
+                          }}
+                          buttonClassName="gap-2"
+                        >
+                          <Plus className="h-4 w-4" />
+                          Upload Floor Plan
+                        </ObjectUploader>
+
+                        {formData.soapstoneFloorPlans.length > 0 && (
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            {formData.soapstoneFloorPlans.map((plan, index) => (
+                              <div key={index} className="relative group">
+                                <img
+                                  src={plan}
+                                  alt={`Floor Plan ${index + 1}`}
+                                  className="w-full aspect-[4/3] object-contain rounded-lg border bg-white"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const updated = formData.soapstoneFloorPlans.filter((_, i) => i !== index);
+                                    setFormData({...formData, soapstoneFloorPlans: updated});
+                                  }}
+                                  className="absolute top-2 right-2 bg-destructive text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                  data-testid={`button-remove-floor-plan-${index}`}
+                                >
+                                  <X className="h-4 w-4" />
+                                </button>
+                                <p className="text-center text-sm text-muted-foreground mt-1">Floor {index + 1}</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
                     </div>
                   )}
                     </TabsContent>

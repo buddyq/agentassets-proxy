@@ -69,6 +69,16 @@ function getLayoutTypography(layout?: Layout) {
     } as React.CSSProperties;
   }
   
+  // Soap Stone layout uses elegant serif fonts with modern sans-serif for body
+  if (layout?.id === 'layout-soapstone') {
+    return {
+      '--font-heading': '"Playfair Display", Georgia, serif',
+      '--font-body': '"Open Sans", -apple-system, BlinkMacSystemFont, sans-serif',
+      '--heading-weight': '400',
+      '--font-nav': '"Open Sans", -apple-system, BlinkMacSystemFont, sans-serif',
+    } as React.CSSProperties;
+  }
+  
   return {
     '--font-heading': `"${headingFont}", serif`,
     '--font-body': `"${bodyFont}", sans-serif`,
@@ -3408,6 +3418,838 @@ function HeroSection({ site, theme, heroImage }: { site: Site; theme?: Theme; he
   );
 }
 
+// ==================== SOAP STONE LAYOUT COMPONENTS ====================
+
+interface VideoTab {
+  label: string;
+  url: string;
+}
+
+function SoapStoneHero({ site, theme, heroImage }: { site: Site; theme?: Theme; heroImage: string }) {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const heroMode = (site as any).soapstoneHeroMode || 'slider';
+  
+  const heroPhotos = site.heroPhotos && site.heroPhotos.length > 0 
+    ? site.heroPhotos 
+    : site.photos && site.photos.length > 0 
+      ? site.photos.slice(0, 5) 
+      : [site.imageUrl || heroImage];
+  
+  const videoUrl = site.videoUrl;
+  const hasVideo = heroMode === 'video' && videoUrl;
+
+  useEffect(() => {
+    if (heroMode === 'slider' && heroPhotos.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentSlide((prev) => (prev + 1) % heroPhotos.length);
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [heroMode, heroPhotos.length]);
+
+  const getVideoEmbedUrl = (url: string) => {
+    if (url.includes('youtube.com/watch')) {
+      const videoId = url.split('v=')[1]?.split('&')[0];
+      return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&showinfo=0&rel=0&modestbranding=1`;
+    } else if (url.includes('youtu.be/')) {
+      const videoId = url.split('youtu.be/')[1]?.split('?')[0];
+      return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&showinfo=0&rel=0&modestbranding=1`;
+    } else if (url.includes('vimeo.com/')) {
+      const videoId = url.split('vimeo.com/')[1]?.split('?')[0];
+      return `https://player.vimeo.com/video/${videoId}?autoplay=1&muted=1&loop=1&background=1`;
+    }
+    return url;
+  };
+
+  return (
+    <section id="home" className="relative h-screen w-full overflow-hidden">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Open+Sans:wght@300;400;500;600&display=swap');
+        
+        @keyframes soapstone-title-slide {
+          from { transform: translateY(30px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+        
+        @keyframes soapstone-fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        
+        .soapstone-title-animate {
+          animation: soapstone-title-slide 1.2s ease-out forwards;
+          animation-delay: 0.5s;
+          opacity: 0;
+        }
+        
+        .soapstone-subtitle-animate {
+          animation: soapstone-fade-in 1s ease-out forwards;
+          animation-delay: 1s;
+          opacity: 0;
+        }
+      `}</style>
+      
+      {hasVideo ? (
+        <iframe
+          src={getVideoEmbedUrl(videoUrl)}
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ border: 'none', pointerEvents: 'none' }}
+          allow="autoplay; fullscreen"
+          title="Hero Video"
+        />
+      ) : (
+        <>
+          {heroPhotos.map((photo, index) => (
+            <div
+              key={index}
+              className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ${
+                index === currentSlide ? 'opacity-100' : 'opacity-0'
+              }`}
+              style={{ backgroundImage: `url(${photo})` }}
+            />
+          ))}
+        </>
+      )}
+      
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/20 z-10" />
+      
+      <div className="absolute bottom-0 left-0 right-0 p-8 md:p-16 z-20">
+        <div className="container mx-auto max-w-6xl">
+          <h1 
+            className="text-white text-4xl md:text-6xl lg:text-7xl mb-4 soapstone-title-animate"
+            style={{ 
+              fontFamily: '"Playfair Display", Georgia, serif',
+              fontWeight: '400',
+              letterSpacing: '-0.02em',
+              lineHeight: '1.1'
+            }}
+          >
+            {site.title || site.address}
+          </h1>
+          <p 
+            className="text-white/90 text-xl md:text-2xl soapstone-subtitle-animate"
+            style={{ fontFamily: '"Open Sans", sans-serif', fontWeight: '300' }}
+          >
+            {site.address}
+          </p>
+        </div>
+      </div>
+      
+      {heroMode === 'slider' && heroPhotos.length > 1 && (
+        <div className="absolute bottom-8 right-8 z-20 flex gap-2">
+          {heroPhotos.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentSlide(index)}
+              className={`w-2 h-2 rounded-full transition-all ${
+                currentSlide === index ? 'bg-white w-6' : 'bg-white/50'
+              }`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function SoapstoneDotNavigation({ site, theme, hasPhotos, hasVideo }: { site: Site; theme?: Theme; hasPhotos: boolean; hasVideo: boolean }) {
+  const [currentSection, setCurrentSection] = useState('home');
+  const [isVisible, setIsVisible] = useState(false);
+  
+  const videoTabs = ((site as any).soapstoneVideoTabs as VideoTab[]) || [];
+  const floorPlans = ((site as any).soapstoneFloorPlans as string[]) || [];
+  
+  const sections = [
+    { id: 'home', label: 'Home' },
+    { id: 'overview', label: 'Overview' },
+    ...(videoTabs.length > 0 ? [{ id: 'videos', label: 'Videos' }] : []),
+    ...(hasPhotos ? [{ id: 'photos', label: 'Photos' }] : []),
+    ...(floorPlans.length > 0 ? [{ id: 'floorplans', label: 'Floor Plans' }] : []),
+    { id: 'contact', label: 'Contact' },
+    { id: 'map', label: 'Map' },
+  ];
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsVisible(window.scrollY > 100);
+      
+      const scrollPosition = window.scrollY + window.innerHeight / 3;
+      for (let i = sections.length - 1; i >= 0; i--) {
+        const section = document.getElementById(sections[i].id);
+        if (section && section.offsetTop <= scrollPosition) {
+          setCurrentSection(sections[i].id);
+          break;
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [sections]);
+
+  const scrollToSection = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  if (!isVisible) return null;
+
+  return (
+    <nav className="fixed right-6 top-1/2 -translate-y-1/2 z-50 flex flex-col gap-4">
+      {sections.map((section) => (
+        <button
+          key={section.id}
+          onClick={() => scrollToSection(section.id)}
+          className="group relative flex items-center justify-end"
+          aria-label={section.label}
+        >
+          <span 
+            className="absolute right-6 px-2 py-1 text-sm text-white bg-black/70 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap"
+            style={{ fontFamily: '"Open Sans", sans-serif' }}
+          >
+            {section.label}
+          </span>
+          <div
+            className={`w-3 h-3 rounded-full border-2 transition-all ${
+              currentSection === section.id 
+                ? 'bg-white border-white' 
+                : 'bg-transparent border-white/50 hover:border-white'
+            }`}
+          />
+        </button>
+      ))}
+    </nav>
+  );
+}
+
+function SoapstoneHamburgerMenu({ site, theme, hasPhotos, effectiveLogo, invertLogo }: { site: Site; theme?: Theme; hasPhotos: boolean; effectiveLogo?: string | null; invertLogo?: boolean }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  
+  const videoTabs = ((site as any).soapstoneVideoTabs as VideoTab[]) || [];
+  const floorPlans = ((site as any).soapstoneFloorPlans as string[]) || [];
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 50);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [isOpen]);
+
+  const navItems = [
+    { href: '#home', label: 'Home' },
+    { href: '#overview', label: 'Overview' },
+    ...(videoTabs.length > 0 ? [{ href: '#videos', label: 'Videos' }] : []),
+    ...(hasPhotos ? [{ href: '#photos', label: 'Photos' }] : []),
+    ...(floorPlans.length > 0 ? [{ href: '#floorplans', label: 'Floor Plans' }] : []),
+    { href: '#contact', label: 'Contact' },
+    { href: '#map', label: 'Map' },
+  ];
+
+  const handleNavClick = (href: string) => {
+    setIsOpen(false);
+    document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  return (
+    <>
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white shadow-md' : ''}`}>
+        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            {(effectiveLogo || theme?.logoUrl) && (
+              <img 
+                src={effectiveLogo ?? theme?.logoUrl ?? ''} 
+                alt="Logo" 
+                className={`h-10 md:h-12 w-auto object-contain transition-all ${
+                  invertLogo && !scrolled ? 'brightness-0 invert' : ''
+                }`}
+              />
+            )}
+          </div>
+          
+          <button
+            onClick={() => setIsOpen(true)}
+            className={`p-2 transition-colors ${scrolled ? 'text-gray-800' : 'text-white'}`}
+            aria-label="Open menu"
+          >
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
+        </div>
+      </nav>
+      
+      {isOpen && (
+        <div className="fixed inset-0 z-[100]">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setIsOpen(false)} />
+          <div 
+            className="absolute right-0 top-0 bottom-0 w-80 bg-white shadow-2xl"
+            style={{ animation: 'slideIn 0.3s ease-out' }}
+          >
+            <style>{`
+              @keyframes slideIn {
+                from { transform: translateX(100%); }
+                to { transform: translateX(0); }
+              }
+            `}</style>
+            
+            <div className="p-6 flex justify-end">
+              <button onClick={() => setIsOpen(false)} className="p-2 text-gray-600 hover:text-gray-800">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <nav className="px-8 py-4 flex flex-col gap-6">
+              {navItems.map((item) => (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleNavClick(item.href);
+                  }}
+                  className="text-2xl text-gray-800 hover:text-gray-600 transition-colors"
+                  style={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: '400' }}
+                >
+                  {item.label}
+                </a>
+              ))}
+            </nav>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+function SoapstoneOverview({ site, theme }: { site: Site; theme?: Theme }) {
+  const presentedBy = (site as any).soapstonePresentedBy;
+  const primaryColor = theme?.colors?.primary || '#558B73';
+  
+  return (
+    <section 
+      id="overview" 
+      className="py-20 px-6 relative"
+      style={{ 
+        backgroundColor: '#e8e8e8',
+        scrollMarginTop: '80px'
+      }}
+    >
+      <div 
+        className="absolute inset-0 opacity-10"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+        }}
+      />
+      
+      <div className="container mx-auto max-w-4xl relative z-10">
+        {presentedBy && (
+          <div 
+            className="mb-12 py-3 px-6 inline-block"
+            style={{ backgroundColor: primaryColor }}
+          >
+            <span 
+              className="text-white text-sm tracking-widest uppercase"
+              style={{ fontFamily: '"Open Sans", sans-serif', fontWeight: '500' }}
+            >
+              {presentedBy}
+            </span>
+          </div>
+        )}
+        
+        <h2 
+          className="text-4xl md:text-5xl mb-8"
+          style={{ 
+            fontFamily: '"Playfair Display", Georgia, serif',
+            fontWeight: '400',
+            color: '#1a1a1a'
+          }}
+        >
+          Property Overview
+        </h2>
+        
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
+          {site.bedrooms && (
+            <div className="text-center p-6 bg-white rounded-lg shadow-sm">
+              <Bed className="w-8 h-8 mx-auto mb-3" style={{ color: primaryColor }} />
+              <p className="text-3xl font-light mb-1" style={{ fontFamily: '"Playfair Display", serif' }}>{site.bedrooms}</p>
+              <p className="text-sm text-gray-500 uppercase tracking-wide">Bedrooms</p>
+            </div>
+          )}
+          {site.bathrooms && (
+            <div className="text-center p-6 bg-white rounded-lg shadow-sm">
+              <Bath className="w-8 h-8 mx-auto mb-3" style={{ color: primaryColor }} />
+              <p className="text-3xl font-light mb-1" style={{ fontFamily: '"Playfair Display", serif' }}>{site.bathrooms}</p>
+              <p className="text-sm text-gray-500 uppercase tracking-wide">Bathrooms</p>
+            </div>
+          )}
+          {site.sqft && (
+            <div className="text-center p-6 bg-white rounded-lg shadow-sm">
+              <Square className="w-8 h-8 mx-auto mb-3" style={{ color: primaryColor }} />
+              <p className="text-3xl font-light mb-1" style={{ fontFamily: '"Playfair Display", serif' }}>{site.sqft.toLocaleString()}</p>
+              <p className="text-sm text-gray-500 uppercase tracking-wide">Sq Ft</p>
+            </div>
+          )}
+          <div className="text-center p-6 bg-white rounded-lg shadow-sm">
+            <Building className="w-8 h-8 mx-auto mb-3" style={{ color: primaryColor }} />
+            <p className="text-3xl font-light mb-1" style={{ fontFamily: '"Playfair Display", serif' }}>{site.price || 'Call'}</p>
+            <p className="text-sm text-gray-500 uppercase tracking-wide">Price</p>
+          </div>
+        </div>
+        
+        {site.description && (
+          <div 
+            className="prose prose-lg max-w-none"
+            style={{ fontFamily: '"Open Sans", sans-serif', lineHeight: '1.8' }}
+          >
+            {site.description.split('\n').map((paragraph, index) => (
+              <p key={index} className="text-gray-700 mb-4">{paragraph}</p>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function SoapstoneVideoTabs({ site, theme }: { site: Site; theme?: Theme }) {
+  const videoTabs = ((site as any).soapstoneVideoTabs as VideoTab[]) || [];
+  const [activeTab, setActiveTab] = useState(0);
+  const primaryColor = theme?.colors?.primary || '#558B73';
+  
+  if (videoTabs.length === 0) return null;
+
+  const getVideoEmbedUrl = (url: string) => {
+    if (url.includes('youtube.com/watch')) {
+      const videoId = url.split('v=')[1]?.split('&')[0];
+      return `https://www.youtube.com/embed/${videoId}`;
+    } else if (url.includes('youtu.be/')) {
+      const videoId = url.split('youtu.be/')[1]?.split('?')[0];
+      return `https://www.youtube.com/embed/${videoId}`;
+    } else if (url.includes('vimeo.com/')) {
+      const videoId = url.split('vimeo.com/')[1]?.split('?')[0];
+      return `https://player.vimeo.com/video/${videoId}`;
+    }
+    return url;
+  };
+
+  return (
+    <section 
+      id="videos" 
+      className="py-20 px-6 bg-white"
+      style={{ scrollMarginTop: '80px' }}
+    >
+      <div className="container mx-auto max-w-5xl">
+        <h2 
+          className="text-4xl md:text-5xl mb-8 text-center"
+          style={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: '400' }}
+        >
+          Property Videos
+        </h2>
+        
+        {videoTabs.length > 1 && (
+          <div className="flex justify-center gap-4 mb-8">
+            {videoTabs.map((tab, index) => (
+              <button
+                key={index}
+                onClick={() => setActiveTab(index)}
+                className={`px-6 py-3 text-sm uppercase tracking-widest transition-all ${
+                  activeTab === index 
+                    ? 'text-white' 
+                    : 'text-gray-600 hover:text-gray-800 bg-gray-100'
+                }`}
+                style={{ 
+                  backgroundColor: activeTab === index ? primaryColor : undefined,
+                  fontFamily: '"Open Sans", sans-serif',
+                  fontWeight: '500'
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        )}
+        
+        <div className="aspect-video rounded-lg overflow-hidden shadow-lg">
+          <iframe
+            key={activeTab}
+            src={getVideoEmbedUrl(videoTabs[activeTab].url)}
+            className="w-full h-full"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            title={videoTabs[activeTab].label}
+          />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function SoapstoneGallery({ photos, theme }: { photos: string[]; theme?: Theme }) {
+  const [showAll, setShowAll] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const displayPhotos = showAll ? photos : photos.slice(0, 6);
+  const primaryColor = theme?.colors?.primary || '#558B73';
+
+  return (
+    <section 
+      id="photos" 
+      className="py-20 px-6 bg-gray-50"
+      style={{ scrollMarginTop: '80px' }}
+    >
+      <div className="container mx-auto max-w-6xl">
+        <div className="flex items-center justify-between mb-8">
+          <h2 
+            className="text-4xl md:text-5xl"
+            style={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: '400' }}
+          >
+            Photo Gallery
+          </h2>
+          {photos.length > 6 && (
+            <button
+              onClick={() => setShowAll(!showAll)}
+              className="text-sm uppercase tracking-widest hover:underline"
+              style={{ color: primaryColor, fontFamily: '"Open Sans", sans-serif', fontWeight: '500' }}
+            >
+              {showAll ? 'Show Less' : `See All ${photos.length} Photos`}
+            </button>
+          )}
+        </div>
+        
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {displayPhotos.map((photo, index) => (
+            <div 
+              key={index} 
+              className="aspect-[4/3] rounded-lg overflow-hidden cursor-pointer group"
+              onClick={() => setLightboxIndex(index)}
+            >
+              <img
+                src={photo}
+                alt={`Property photo ${index + 1}`}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      {lightboxIndex !== null && (
+        <div 
+          className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center"
+          onClick={() => setLightboxIndex(null)}
+        >
+          <button
+            onClick={() => setLightboxIndex(null)}
+            className="absolute top-6 right-6 text-white p-2 hover:bg-white/10 rounded-full"
+          >
+            <X className="w-8 h-8" />
+          </button>
+          
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setLightboxIndex((lightboxIndex - 1 + photos.length) % photos.length);
+            }}
+            className="absolute left-6 text-white p-2 hover:bg-white/10 rounded-full"
+          >
+            <ChevronLeft className="w-8 h-8" />
+          </button>
+          
+          <img
+            src={photos[lightboxIndex]}
+            alt={`Property photo ${lightboxIndex + 1}`}
+            className="max-h-[90vh] max-w-[90vw] object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+          
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setLightboxIndex((lightboxIndex + 1) % photos.length);
+            }}
+            className="absolute right-6 text-white p-2 hover:bg-white/10 rounded-full"
+          >
+            <ChevronRight className="w-8 h-8" />
+          </button>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function SoapstoneFloorPlans({ site, theme }: { site: Site; theme?: Theme }) {
+  const floorPlans = ((site as any).soapstoneFloorPlans as string[]) || [];
+  const [activeIndex, setActiveIndex] = useState(0);
+  
+  if (floorPlans.length === 0) return null;
+
+  return (
+    <section 
+      id="floorplans" 
+      className="py-20 px-6 bg-white"
+      style={{ scrollMarginTop: '80px' }}
+    >
+      <div className="container mx-auto max-w-5xl">
+        <h2 
+          className="text-4xl md:text-5xl mb-8 text-center"
+          style={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: '400' }}
+        >
+          Floor Plans
+        </h2>
+        
+        {floorPlans.length > 1 && (
+          <div className="flex justify-center gap-2 mb-8">
+            {floorPlans.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setActiveIndex(index)}
+                className={`px-4 py-2 text-sm rounded transition-all ${
+                  activeIndex === index 
+                    ? 'bg-gray-800 text-white' 
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                Floor {index + 1}
+              </button>
+            ))}
+          </div>
+        )}
+        
+        <div className="flex justify-center">
+          <img
+            src={floorPlans[activeIndex]}
+            alt={`Floor plan ${activeIndex + 1}`}
+            className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-lg"
+          />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+interface SoapstoneAgentInfo {
+  name: string;
+  title: string;
+  phone: string;
+  email: string;
+  photoUrl?: string;
+  company?: string;
+}
+
+function SoapstoneContact({ site, theme, agentInfo }: { site: Site; theme?: Theme; agentInfo?: SoapstoneAgentInfo | null }) {
+  const [formData, setFormData] = useState({ name: '', email: '', phone: '', message: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const primaryColor = theme?.colors?.primary || '#558B73';
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    try {
+      const response = await fetch(`/api/sites/${site.id}/leads`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      
+      if (response.ok) {
+        setSubmitStatus('success');
+        setFormData({ name: '', email: '', phone: '', message: '' });
+      } else {
+        setSubmitStatus('error');
+      }
+    } catch {
+      setSubmitStatus('error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <section 
+      id="contact" 
+      className="py-20 px-6"
+      style={{ backgroundColor: '#2a2a2a', scrollMarginTop: '80px' }}
+    >
+      <div className="container mx-auto max-w-6xl">
+        <div className="grid md:grid-cols-2 gap-12">
+          <div>
+            <h2 
+              className="text-4xl md:text-5xl mb-6 text-white"
+              style={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: '400' }}
+            >
+              Get In Touch
+            </h2>
+            
+            {agentInfo && (
+              <div className="flex items-start gap-6 mb-8">
+                {agentInfo.photoUrl && (
+                  <img
+                    src={agentInfo.photoUrl}
+                    alt={agentInfo.name}
+                    className="w-24 h-24 rounded-full object-cover"
+                  />
+                )}
+                <div>
+                  <h3 className="text-xl text-white mb-1" style={{ fontFamily: '"Playfair Display", serif' }}>
+                    {agentInfo.name}
+                  </h3>
+                  <p className="text-gray-400 mb-3">{agentInfo.title}</p>
+                  {agentInfo.company && (
+                    <p className="text-gray-400 text-sm mb-3">{agentInfo.company}</p>
+                  )}
+                  <div className="flex flex-col gap-2 text-gray-300">
+                    {agentInfo.phone && (
+                      <a href={`tel:${agentInfo.phone}`} className="flex items-center gap-2 hover:text-white">
+                        <Phone className="w-4 h-4" />
+                        {agentInfo.phone}
+                      </a>
+                    )}
+                    {agentInfo.email && (
+                      <a href={`mailto:${agentInfo.email}`} className="flex items-center gap-2 hover:text-white">
+                        <Mail className="w-4 h-4" />
+                        {agentInfo.email}
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <Input
+                type="text"
+                placeholder="Your Name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                required
+              />
+            </div>
+            <div>
+              <Input
+                type="email"
+                placeholder="Your Email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                required
+              />
+            </div>
+            <div>
+              <Input
+                type="tel"
+                placeholder="Your Phone"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+              />
+            </div>
+            <div>
+              <Textarea
+                placeholder="Your Message"
+                value={formData.message}
+                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 min-h-[120px]"
+                required
+              />
+            </div>
+            
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full py-6 text-white"
+              style={{ backgroundColor: primaryColor }}
+            >
+              {isSubmitting ? 'Sending...' : 'Send Message'}
+            </Button>
+            
+            {submitStatus === 'success' && (
+              <p className="text-green-400 text-center">Message sent successfully!</p>
+            )}
+            {submitStatus === 'error' && (
+              <p className="text-red-400 text-center">Failed to send message. Please try again.</p>
+            )}
+          </form>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function SoapstoneMap({ site, theme }: { site: Site; theme?: Theme }) {
+  const primaryColor = theme?.colors?.primary || '#558B73';
+  
+  return (
+    <section 
+      id="map" 
+      className="relative"
+      style={{ scrollMarginTop: '80px' }}
+    >
+      <div className="h-[500px]">
+        <iframe
+          src={`https://www.google.com/maps?q=${encodeURIComponent(site.address)}&output=embed`}
+          className="w-full h-full border-0"
+          loading="lazy"
+          referrerPolicy="no-referrer-when-downgrade"
+          title="Property Location"
+        />
+      </div>
+      
+      <div 
+        className="absolute bottom-8 left-8 bg-white rounded-lg shadow-xl p-6 max-w-sm"
+        style={{ fontFamily: '"Open Sans", sans-serif' }}
+      >
+        <div className="flex items-start gap-3">
+          <MapPin className="w-5 h-5 flex-shrink-0 mt-1" style={{ color: primaryColor }} />
+          <div>
+            <p className="font-medium text-gray-800">{site.address}</p>
+            <p className="text-2xl mt-2" style={{ fontFamily: '"Playfair Display", serif', color: primaryColor }}>
+              {site.price}
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function SoapstoneFooter({ site, theme, footerLogo, invertLogo }: { site: Site; theme?: Theme; footerLogo?: string | null; invertLogo?: boolean }) {
+  const primaryColor = theme?.colors?.primary || '#558B73';
+  
+  return (
+    <footer className="py-12 px-6 bg-black">
+      <div className="container mx-auto max-w-6xl">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+          {footerLogo && (
+            <img 
+              src={footerLogo} 
+              alt="Logo" 
+              className={`h-12 w-auto object-contain ${invertLogo ? 'brightness-0 invert' : ''}`}
+            />
+          )}
+          
+          <p className="text-gray-500 text-sm" style={{ fontFamily: '"Open Sans", sans-serif' }}>
+            Property listing powered by AgentAssets
+          </p>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+// ==================== END SOAP STONE LAYOUT COMPONENTS ====================
+
 function PasswordGate({ 
   siteId, 
   site, 
@@ -4044,6 +4886,44 @@ export default function SiteView({ siteId: propSiteId, params: routeParams }: Si
 
         <MagazineContact site={site} theme={theme} agentInfo={agentInfo} />
         <MagazineFooter site={site} theme={theme} footerLogo={footerLogo} invertLogo={site.invertLogo} />
+      </div>
+    );
+  }
+
+  // Soap Stone Layout - elegant modern design with dot navigation, hamburger menu, and video/photo hero options
+  const isSoapStoneLayout = site.layoutId === 'layout-soapstone';
+  if (isSoapStoneLayout) {
+    return (
+      <div 
+        className="min-h-screen flex flex-col" 
+        style={{ 
+          ...combinedStyles,
+          backgroundColor: 'var(--theme-background)',
+          color: 'var(--theme-text)',
+          fontFamily: 'var(--font-body)'
+        }}
+      >
+        <SoapstoneHamburgerMenu 
+          site={site} 
+          theme={theme} 
+          hasPhotos={hasPhotos} 
+          effectiveLogo={effectiveLogo} 
+          invertLogo={site.invertLogo} 
+        />
+        <SoapstoneDotNavigation 
+          site={site} 
+          theme={theme} 
+          hasPhotos={hasPhotos} 
+          hasVideo={hasVideo} 
+        />
+        <SoapStoneHero site={site} theme={theme} heroImage={heroImage} />
+        <SoapstoneOverview site={site} theme={theme} />
+        <SoapstoneVideoTabs site={site} theme={theme} />
+        {hasPhotos && <SoapstoneGallery photos={site.photos!} theme={theme} />}
+        <SoapstoneFloorPlans site={site} theme={theme} />
+        <SoapstoneContact site={site} theme={theme} agentInfo={agentInfo} />
+        <SoapstoneMap site={site} theme={theme} />
+        <SoapstoneFooter site={site} theme={theme} footerLogo={footerLogo} invertLogo={site.invertLogo} />
       </div>
     );
   }
