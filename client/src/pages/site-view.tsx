@@ -3713,7 +3713,7 @@ function SoapstoneDotNavigation({ site, theme, hasPhotos, hasVideo }: { site: Si
 
   return (
     <nav 
-      className="fixed right-6 top-1/2 -translate-y-1/2 z-50 hidden md:flex flex-col gap-6 items-end"
+      className="fixed right-6 top-1/2 -translate-y-1/2 z-50 hidden md:flex flex-col gap-8 items-end"
       style={{ fontFamily: '"Open Sans", sans-serif' }}
     >
       {navLinks.map((link, index) => (
@@ -3723,15 +3723,17 @@ function SoapstoneDotNavigation({ site, theme, hasPhotos, hasVideo }: { site: Si
           onMouseEnter={() => setHoveredIndex(index)}
           onMouseLeave={() => setHoveredIndex(null)}
         >
-          {/* Label - appears on hover */}
+          {/* Label - appears on hover with white background */}
           <span 
-            className={`text-base uppercase tracking-widest transition-all duration-200 whitespace-nowrap ${
-              hoveredIndex === index ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-2'
+            className={`uppercase whitespace-nowrap transition-all duration-200 px-3 py-1 ${
+              hoveredIndex === index ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-2 pointer-events-none'
             }`}
             style={{ 
+              backgroundColor: 'white',
               color: '#333',
               fontWeight: '400',
-              letterSpacing: '0.12em'
+              fontSize: '25px',
+              letterSpacing: '2px'
             }}
           >
             {link.label}
@@ -3740,10 +3742,10 @@ function SoapstoneDotNavigation({ site, theme, hasPhotos, hasVideo }: { site: Si
           {/* Dot */}
           <button
             onClick={() => scrollToSection(link.id)}
-            className={`w-3 h-3 rounded-full border transition-all ${
+            className={`w-4 h-4 rounded-full border-2 transition-all ${
               activeSection === link.id 
                 ? 'bg-gray-700 border-gray-700' 
-                : 'bg-transparent border-gray-400 hover:border-gray-600'
+                : 'bg-transparent border-gray-500 hover:border-gray-700'
             }`}
             aria-label={`Go to ${link.label}`}
           />
