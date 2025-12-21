@@ -3536,10 +3536,10 @@ function SoapStoneHero({ site, theme, heroImage, hasPhotos, onOpenMenu, navLinks
             className="p-2 text-gray-800 hover:text-gray-600 transition-colors"
             aria-label="Open menu"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <line x1="3" y1="12" x2="21" y2="12" />
-              <line x1="3" y1="18" x2="21" y2="18" />
+            <svg width="28" height="20" viewBox="0 0 28 20" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="0" y1="2" x2="28" y2="2" />
+              <line x1="0" y1="10" x2="28" y2="10" />
+              <line x1="0" y1="18" x2="28" y2="18" />
             </svg>
           </button>
         </div>
@@ -3771,12 +3771,12 @@ function SoapstoneMenuOverlay({ site, isOpen, onClose, navItems, presentedBy }: 
   return (
     <div 
       className="fixed inset-0 z-[100] bg-[#f5f5f0]"
-      style={{ animation: 'soapstone-fadeIn 0.3s ease-out' }}
+      style={{ animation: 'soapstone-slideIn 0.4s ease-out' }}
     >
       <style>{`
-        @keyframes soapstone-fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
+        @keyframes soapstone-slideIn {
+          from { transform: translateX(-100%); }
+          to { transform: translateX(0); }
         }
         @keyframes soapstone-slideUp {
           from { transform: translateY(20px); opacity: 0; }
