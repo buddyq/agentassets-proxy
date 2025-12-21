@@ -134,6 +134,15 @@ export type OpenHouseEvent = {
   endTime: string;
 };
 
+// Video tab type for Soap Stone layout
+export type VideoTab = {
+  label: string; // e.g., "Agent Video", "Property Video"
+  url: string;
+};
+
+// Hero mode type for Soap Stone layout
+export type SoapstoneHeroMode = 'video' | 'slider';
+
 
 // Sites table
 export const sites = pgTable("sites", {
@@ -169,6 +178,11 @@ export const sites = pgTable("sites", {
   contentGridImage1: text("content_grid_image_1"), // Image for grid position 2 (top right)
   contentGridImage2: text("content_grid_image_2"), // Image for grid position 3 (bottom left)
   features: text("features").array().default([]), // Feature tags like "Pool", "Ocean Views", etc.
+  // Soap Stone layout specific fields
+  soapstoneHeroMode: text("soapstone_hero_mode").$type<SoapstoneHeroMode>().default('video'),
+  soapstoneVideoTabs: jsonb("soapstone_video_tabs").$type<VideoTab[]>().default([]),
+  soapstoneFloorPlans: text("soapstone_floor_plans").array().default([]),
+  soapstonePresentedBy: text("soapstone_presented_by"), // Override for "Presented by" text
   layoutId: text("layout_id"),
   templateId: text("template_id"),
   themeId: text("theme_id").notNull(),
@@ -216,6 +230,11 @@ const openHouseSchema = z.object({
   endTime: z.string(),
 });
 
+const videoTabSchema = z.object({
+  label: z.string().min(1).max(50),
+  url: z.string().min(1),
+});
+
 export const insertSiteSchema = createInsertSchema(sites).omit({ id: true, createdAt: true, updatedAt: true, expiresAt: true }).extend({
   templateId: z.string().nullable().optional(),
   customDetails: z.array(customDetailSchema).optional().default([]),
@@ -231,6 +250,11 @@ export const insertSiteSchema = createInsertSchema(sites).omit({ id: true, creat
   openHouses: z.array(openHouseSchema).optional().default([]),
   brochureUrl: z.string().nullable().optional(),
   features: z.array(z.string()).optional().default([]),
+  // Soap Stone layout fields
+  soapstoneHeroMode: z.enum(['video', 'slider']).optional().default('video'),
+  soapstoneVideoTabs: z.array(videoTabSchema).optional().default([]),
+  soapstoneFloorPlans: z.array(z.string()).optional().default([]),
+  soapstonePresentedBy: z.string().nullable().optional(),
 });
 export type InsertSite = z.infer<typeof insertSiteSchema>;
 export type Site = typeof sites.$inferSelect;

@@ -1,0 +1,25 @@
+I need to make another layout exactly like 410inwood.com. Name it "Soap Stone"
+
+I want the same navigation:
+Dotted menu on the right side of the page with labels when moving down the page to the difference sections.
+
+I want the same hamburger menu on the left side of the page. Clicking slides large menu from left side. When selection is made, is scrolls the page tot hat section while menu slides back in.
+
+- The top white bar appears only when on the hero section which is a video or hero slider section. The user should have this option in the "Layout settings" for this layout. Video or Slider. They should be allowed to insert a video url.
+- When the page scrolls, the title will animate slide up and dissapear but reappear when page is scrolled to the top.
+
+- Please not the bottom bar "Presented by" that appears in the hero section as well framing the video at the bottom that also animates slide down when the page is scrolled.
+
+- Please note the Price upon request box that floats a little when scrolled (parallax)
+- Please note the details (4 bed, bath, etc) on the right that also use parallax
+-The overview section has a background with a type of texture or design and is background colored that grey color.
+- Notice the "documents" link with icon for any documents at the bottom of the overview.
+- Video gallery section is next and allows for tabbed content "Agent Video, property video". We should allow the user to add multiple videos and allow them to add tabs and name the tabs and determine which video goes in which tab. This should also be in the layout options sections.
+- Then the photos section. They show 9 images and then a link to "See all x photos"
+- Then let's have a floor plan section. Allow the user to upload images for floorplan.
+- Contact section: style the contact section exactly like this one.
+- Style the map section like this one. Map on the right with a property card overlap.
+- At the bottom of the page, the footer "presented by" slides back up.
+
+Use this link as a test for the video:
+https://player.vimeo.com/video/1140104033?autoplay=1&badge=0&loop=1&title=0&player_id=vimeo-fullscreen&muted=1&background=1
