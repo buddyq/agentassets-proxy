@@ -3515,11 +3515,12 @@ function SoapStoneHero({ site, theme, heroImage, hasPhotos, onOpenMenu, navLinks
       {/* White top bar with centered title */}
       <header className="bg-white py-4 px-6 text-center z-50 relative">
         <h1 
-          className="text-lg md:text-xl lg:text-2xl uppercase tracking-widest"
+          className="uppercase"
           style={{ 
             fontFamily: '"Open Sans", sans-serif',
             fontWeight: '400',
-            letterSpacing: '0.15em',
+            fontSize: '25px',
+            letterSpacing: '2px',
             color: '#333'
           }}
         >
