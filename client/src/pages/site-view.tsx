@@ -3712,22 +3712,26 @@ function SoapstoneDotNavigation({ site, theme, hasPhotos, hasVideo }: { site: Si
 
   return (
     <nav 
-      className="fixed right-6 top-1/2 -translate-y-1/2 z-50 hidden md:flex flex-col gap-4 items-end"
+      className="fixed right-6 top-1/2 -translate-y-1/2 z-50 hidden md:flex flex-col gap-6 items-end"
       style={{ fontFamily: '"Open Sans", sans-serif' }}
     >
       {navLinks.map((link, index) => (
         <div
           key={link.id}
-          className="flex items-center gap-3"
+          className="flex items-center gap-4"
           onMouseEnter={() => setHoveredIndex(index)}
           onMouseLeave={() => setHoveredIndex(null)}
         >
           {/* Label - appears on hover */}
           <span 
-            className={`text-sm uppercase tracking-wider font-medium transition-all duration-200 whitespace-nowrap ${
+            className={`text-base uppercase tracking-widest transition-all duration-200 whitespace-nowrap ${
               hoveredIndex === index ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-2'
             }`}
-            style={{ color: activeSection === link.id ? '#333' : '#666' }}
+            style={{ 
+              color: '#333',
+              fontWeight: '400',
+              letterSpacing: '0.12em'
+            }}
           >
             {link.label}
           </span>
@@ -3735,9 +3739,9 @@ function SoapstoneDotNavigation({ site, theme, hasPhotos, hasVideo }: { site: Si
           {/* Dot */}
           <button
             onClick={() => scrollToSection(link.id)}
-            className={`w-2.5 h-2.5 rounded-full border-2 transition-all ${
+            className={`w-3 h-3 rounded-full border transition-all ${
               activeSection === link.id 
-                ? 'bg-gray-800 border-gray-800' 
+                ? 'bg-gray-700 border-gray-700' 
                 : 'bg-transparent border-gray-400 hover:border-gray-600'
             }`}
             aria-label={`Go to ${link.label}`}
