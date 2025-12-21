@@ -3452,8 +3452,17 @@ function getSoapstoneVideoEmbedUrl(url: string, autoplay = false, muted = false,
   return url;
 }
 
-function SoapStoneHero({ site, theme, heroImage, hasPhotos }: { site: Site; theme?: Theme; heroImage: string; hasPhotos: boolean }) {
+function SoapStoneHero({ site, theme, heroImage, hasPhotos, onOpenMenu, navLinks }: { 
+  site: Site; 
+  theme?: Theme; 
+  heroImage: string; 
+  hasPhotos: boolean;
+  onOpenMenu: () => void;
+  navLinks: { id: string; label: string }[];
+}) {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [hoveredDot, setHoveredDot] = useState<number | null>(null);
+  const [activeSection, setActiveSection] = useState('overview');
   const heroMode = (site as any).soapstoneHeroMode || 'video';
   const presentedBy = (site as any).soapstonePresentedBy || (site as any).brokerageName;
   
@@ -3474,6 +3483,28 @@ function SoapStoneHero({ site, theme, heroImage, hasPhotos }: { site: Site; them
       return () => clearInterval(interval);
     }
   }, [heroMode, heroPhotos.length]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const sections = navLinks.map(link => document.getElementById(link.id));
+      const scrollPos = window.scrollY + window.innerHeight / 3;
+      
+      for (let i = sections.length - 1; i >= 0; i--) {
+        const section = sections[i];
+        if (section && section.offsetTop <= scrollPos) {
+          setActiveSection(navLinks[i].id);
+          break;
+        }
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [navLinks]);
+
+  const scrollToSection = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   return (
     <>
@@ -3496,72 +3527,141 @@ function SoapStoneHero({ site, theme, heroImage, hasPhotos }: { site: Site; them
         </h1>
       </header>
       
-      {/* Hero section with video/photos */}
-      <section id="home" className="relative h-[calc(100vh-70px)] w-full overflow-hidden">
-        {hasVideo ? (
-          <div className="absolute inset-0">
-            <iframe
-              src={getSoapstoneVideoEmbedUrl(videoUrl, true, true, true)}
-              className="absolute top-1/2 left-1/2 min-w-full min-h-full w-auto h-auto -translate-x-1/2 -translate-y-1/2"
-              style={{ border: 'none', pointerEvents: 'none', aspectRatio: '16/9' }}
-              allow="autoplay; fullscreen"
-              title="Hero Video"
-            />
-          </div>
-        ) : (
-          <>
-            {heroPhotos.map((photo, index) => (
-              <div
-                key={index}
-                className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ${
-                  index === currentSlide ? 'opacity-100' : 'opacity-0'
-                }`}
-                style={{ backgroundImage: `url(${photo})` }}
-              />
-            ))}
-          </>
-        )}
-        
-        {/* City/State text on right side - vertical */}
-        <div 
-          className="absolute right-4 top-1/2 -translate-y-1/2 z-20 hidden md:block"
-          style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
-        >
-          <span 
-            className="text-white text-xs uppercase tracking-widest"
-            style={{ fontFamily: '"Open Sans", sans-serif' }}
+      {/* Hero section with three-column layout: left sidebar, video, right sidebar */}
+      <section id="home" className="relative h-[calc(100vh-70px)] w-full flex">
+        {/* Left white sidebar with hamburger */}
+        <div className="hidden md:flex w-12 lg:w-16 bg-white flex-shrink-0 items-center justify-center relative z-20">
+          <button
+            onClick={onOpenMenu}
+            className="p-2 text-gray-800 hover:text-gray-600 transition-colors"
+            aria-label="Open menu"
           >
-            {(site as any).city ? `${(site as any).city}, ${(site as any).state || 'TX'}` : 'Austin, TX'}
-          </span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
         </div>
         
-        {/* "Presented by" bar at bottom of hero */}
-        {presentedBy && (
-          <div className="absolute bottom-0 left-0 right-0 z-20 bg-white/95 py-3 text-center">
+        {/* Center hero content - video or photos */}
+        <div className="flex-1 relative overflow-hidden">
+          {hasVideo ? (
+            <div className="absolute inset-0">
+              <iframe
+                src={getSoapstoneVideoEmbedUrl(videoUrl, true, true, true)}
+                className="absolute top-1/2 left-1/2 min-w-full min-h-full w-auto h-auto -translate-x-1/2 -translate-y-1/2"
+                style={{ border: 'none', pointerEvents: 'none', aspectRatio: '16/9' }}
+                allow="autoplay; fullscreen"
+                title="Hero Video"
+              />
+            </div>
+          ) : (
+            <>
+              {heroPhotos.map((photo, index) => (
+                <div
+                  key={index}
+                  className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ${
+                    index === currentSlide ? 'opacity-100' : 'opacity-0'
+                  }`}
+                  style={{ backgroundImage: `url(${photo})` }}
+                />
+              ))}
+            </>
+          )}
+          
+          {/* "Presented by" bar at bottom */}
+          {presentedBy && (
+            <div className="absolute bottom-0 left-0 right-0 z-20 bg-white/95 py-3 text-center">
+              <span 
+                className="text-xs uppercase tracking-widest"
+                style={{ fontFamily: '"Open Sans", sans-serif', color: '#666' }}
+              >
+                PRESENTED BY: {presentedBy}
+              </span>
+            </div>
+          )}
+          
+          {/* Slider dots for photo mode */}
+          {heroMode === 'slider' && heroPhotos.length > 1 && (
+            <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+              {heroPhotos.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentSlide(index)}
+                  className={`w-2.5 h-2.5 rounded-full transition-all ${
+                    currentSlide === index ? 'bg-white' : 'bg-white/40 hover:bg-white/60'
+                  }`}
+                  aria-label={`Go to slide ${index + 1}`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+        
+        {/* Right white sidebar with dot navigation and city text */}
+        <div className="hidden md:flex w-12 lg:w-16 bg-white flex-shrink-0 flex-col items-center justify-between py-6 relative z-20">
+          {/* City/State text at top - vertical */}
+          <div 
+            style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+          >
             <span 
-              className="text-xs uppercase tracking-widest"
-              style={{ fontFamily: '"Open Sans", sans-serif', color: '#666' }}
+              className="text-xs uppercase tracking-widest text-gray-500"
+              style={{ fontFamily: '"Open Sans", sans-serif' }}
             >
-              PRESENTED BY: {presentedBy}
+              {(site as any).city ? `${(site as any).city}, ${(site as any).state || 'TX'}` : 'Austin, TX'}
             </span>
           </div>
-        )}
-        
-        {/* Slider dots for photo mode */}
-        {heroMode === 'slider' && heroPhotos.length > 1 && (
-          <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-20 flex gap-2">
-            {heroPhotos.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentSlide(index)}
-                className={`w-2.5 h-2.5 rounded-full transition-all ${
-                  currentSlide === index ? 'bg-white' : 'bg-white/40 hover:bg-white/60'
-                }`}
-                aria-label={`Go to slide ${index + 1}`}
-              />
+          
+          {/* Dot navigation */}
+          <nav className="flex flex-col gap-3 items-center">
+            {navLinks.map((link, index) => (
+              <div
+                key={link.id}
+                className="relative flex items-center"
+                onMouseEnter={() => setHoveredDot(index)}
+                onMouseLeave={() => setHoveredDot(null)}
+              >
+                {/* Label - appears on hover to the left */}
+                <span 
+                  className={`absolute right-6 text-xs uppercase tracking-wider font-medium whitespace-nowrap transition-all duration-200 ${
+                    hoveredDot === index ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-2'
+                  }`}
+                  style={{ color: '#333', fontFamily: '"Open Sans", sans-serif' }}
+                >
+                  {link.label}
+                </span>
+                
+                {/* Dot */}
+                <button
+                  onClick={() => scrollToSection(link.id)}
+                  className={`w-2 h-2 rounded-full border transition-all ${
+                    activeSection === link.id 
+                      ? 'bg-gray-800 border-gray-800' 
+                      : 'bg-transparent border-gray-400 hover:border-gray-600'
+                  }`}
+                  aria-label={`Go to ${link.label}`}
+                />
+              </div>
             ))}
-          </div>
-        )}
+          </nav>
+          
+          {/* Empty spacer for balance */}
+          <div className="h-4" />
+        </div>
+        
+        {/* Mobile hamburger - fixed on left for small screens */}
+        <button
+          onClick={onOpenMenu}
+          className="md:hidden fixed left-4 top-20 z-[60] p-2 bg-white/90 rounded shadow text-gray-800"
+          aria-label="Open menu"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
       </section>
     </>
   );
@@ -3644,14 +3744,14 @@ function SoapstoneDotNavigation({ site, theme, hasPhotos, hasVideo }: { site: Si
   );
 }
 
-// Left-side hamburger menu with full-screen overlay (400inwood.com style)
-function SoapstoneHamburgerMenu({ site, theme, hasPhotos, effectiveLogo, invertLogo }: { site: Site; theme?: Theme; hasPhotos: boolean; effectiveLogo?: string | null; invertLogo?: boolean }) {
-  const [isOpen, setIsOpen] = useState(false);
-  
-  const videoTabs = ((site as any).soapstoneVideoTabs as VideoTab[]) || [];
-  const floorPlans = ((site as any).soapstoneFloorPlans as string[]) || [];
-  const presentedBy = (site as any).soapstonePresentedBy || (site as any).brokerageName;
-  
+// Full-screen overlay menu (400inwood.com style)
+function SoapstoneMenuOverlay({ site, isOpen, onClose, navItems, presentedBy }: { 
+  site: Site; 
+  isOpen: boolean; 
+  onClose: () => void;
+  navItems: { href: string; label: string }[];
+  presentedBy?: string;
+}) {
   const heroImage = site.imageUrl || (site.photos && site.photos.length > 0 ? site.photos[0] : '');
 
   useEffect(() => {
@@ -3659,131 +3759,167 @@ function SoapstoneHamburgerMenu({ site, theme, hasPhotos, effectiveLogo, invertL
     return () => { document.body.style.overflow = ''; };
   }, [isOpen]);
 
-  const navItems = [
-    { href: '#overview', label: 'OVERVIEW' },
-    ...(videoTabs.length > 0 || site.videoUrl ? [{ href: '#videos', label: 'VIDEO' }] : []),
-    ...(hasPhotos ? [{ href: '#photos', label: 'PHOTOS' }] : []),
-    ...(floorPlans.length > 0 ? [{ href: '#floorplans', label: 'FLOOR PLAN' }] : []),
-    { href: '#contact', label: 'CONTACT' },
-    { href: '#map', label: 'MAP' },
-  ];
-
   const handleNavClick = (href: string) => {
-    setIsOpen(false);
+    onClose();
     setTimeout(() => {
       document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' });
     }, 100);
   };
 
+  if (!isOpen) return null;
+
   return (
-    <>
-      {/* Hamburger button - fixed LEFT side, vertically centered on hero */}
-      <button
-        onClick={() => setIsOpen(true)}
-        className="fixed left-6 top-1/2 -translate-y-1/2 z-[60] p-2 text-white hover:opacity-80 transition-opacity"
-        aria-label="Open menu"
-        style={{ marginTop: '35px' }}
+    <div 
+      className="fixed inset-0 z-[100] bg-[#f5f5f0]"
+      style={{ animation: 'soapstone-fadeIn 0.3s ease-out' }}
+    >
+      <style>{`
+        @keyframes soapstone-fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes soapstone-slideUp {
+          from { transform: translateY(20px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+      `}</style>
+      
+      {/* X close button - fixed left side */}
+      <button 
+        onClick={onClose} 
+        className="fixed left-6 top-1/2 -translate-y-1/2 z-[110] p-2 text-gray-800 hover:text-gray-600 transition-colors"
       >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <line x1="3" y1="6" x2="21" y2="6" />
-          <line x1="3" y1="12" x2="21" y2="12" />
-          <line x1="3" y1="18" x2="21" y2="18" />
-        </svg>
+        <X className="w-6 h-6" />
       </button>
       
-      {/* Full-screen overlay menu */}
-      {isOpen && (
-        <div 
-          className="fixed inset-0 z-[100] bg-[#f5f5f0]"
-          style={{ animation: 'soapstone-fadeIn 0.3s ease-out' }}
-        >
-          <style>{`
-            @keyframes soapstone-fadeIn {
-              from { opacity: 0; }
-              to { opacity: 1; }
-            }
-            @keyframes soapstone-slideUp {
-              from { transform: translateY(20px); opacity: 0; }
-              to { transform: translateY(0); opacity: 1; }
-            }
-          `}</style>
-          
-          {/* X close button - fixed left side */}
-          <button 
-            onClick={() => setIsOpen(false)} 
-            className="fixed left-6 top-1/2 -translate-y-1/2 z-[110] p-2 text-gray-800 hover:text-gray-600 transition-colors"
+      {/* Content container */}
+      <div className="h-full flex">
+        {/* Left side - Navigation */}
+        <div className="w-1/2 flex items-center px-16 lg:px-24">
+          <nav className="flex flex-col gap-6">
+            {navItems.map((item, index) => (
+              <a
+                key={item.href}
+                href={item.href}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNavClick(item.href);
+                }}
+                className="text-2xl md:text-3xl lg:text-4xl text-gray-800 hover:text-gray-500 transition-colors uppercase tracking-wider"
+                style={{ 
+                  fontFamily: '"Open Sans", sans-serif',
+                  fontWeight: '300',
+                  animation: `soapstone-slideUp 0.4s ease-out ${index * 0.05}s forwards`,
+                  opacity: 0
+                }}
+              >
+                {item.label}
+              </a>
+            ))}
+          </nav>
+        </div>
+        
+        {/* Right side - Property Image */}
+        <div className="w-1/2 flex items-center justify-center p-8 lg:p-16">
+          <div 
+            className="max-w-md w-full"
+            style={{ animation: 'soapstone-slideUp 0.5s ease-out 0.2s forwards', opacity: 0 }}
           >
-            <X className="w-6 h-6" />
-          </button>
-          
-          {/* Content container */}
-          <div className="h-full flex">
-            {/* Left side - Navigation */}
-            <div className="w-1/2 flex items-center px-16 lg:px-24">
-              <nav className="flex flex-col gap-6">
-                {navItems.map((item, index) => (
-                  <a
-                    key={item.href}
-                    href={item.href}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleNavClick(item.href);
-                    }}
-                    className="text-2xl md:text-3xl lg:text-4xl text-gray-800 hover:text-gray-500 transition-colors uppercase tracking-wider"
-                    style={{ 
-                      fontFamily: '"Open Sans", sans-serif',
-                      fontWeight: '300',
-                      animation: `soapstone-slideUp 0.4s ease-out ${index * 0.05}s forwards`,
-                      opacity: 0
-                    }}
-                  >
-                    {item.label}
-                  </a>
-                ))}
-              </nav>
-            </div>
-            
-            {/* Right side - Property Image */}
-            <div className="w-1/2 flex items-center justify-center p-8 lg:p-16">
-              <div 
-                className="max-w-md w-full"
-                style={{ animation: 'soapstone-slideUp 0.5s ease-out 0.2s forwards', opacity: 0 }}
-              >
-                {heroImage && (
-                  <>
-                    <div className="aspect-[4/3] overflow-hidden shadow-lg">
-                      <img 
-                        src={heroImage} 
-                        alt={site.address}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <p 
-                      className="mt-4 text-center text-sm uppercase tracking-widest text-gray-600"
-                      style={{ fontFamily: '"Open Sans", sans-serif' }}
-                    >
-                      {site.address}
-                    </p>
-                  </>
-                )}
-              </div>
-            </div>
+            {heroImage && (
+              <>
+                <div className="aspect-[4/3] overflow-hidden shadow-lg">
+                  <img 
+                    src={heroImage} 
+                    alt={site.address}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <p 
+                  className="mt-4 text-center text-sm uppercase tracking-widest text-gray-600"
+                  style={{ fontFamily: '"Open Sans", sans-serif' }}
+                >
+                  {site.address}
+                </p>
+              </>
+            )}
           </div>
-          
-          {/* "Presented by" bar at bottom */}
-          {presentedBy && (
-            <div className="absolute bottom-0 left-0 right-0 bg-white/95 py-3 text-center">
-              <span 
-                className="text-xs uppercase tracking-widest"
-                style={{ fontFamily: '"Open Sans", sans-serif', color: '#666' }}
-              >
-                PRESENTED BY: {presentedBy}
-              </span>
-            </div>
-          )}
+        </div>
+      </div>
+      
+      {/* "Presented by" bar at bottom */}
+      {presentedBy && (
+        <div className="absolute bottom-0 left-0 right-0 bg-white/95 py-3 text-center">
+          <span 
+            className="text-xs uppercase tracking-widest"
+            style={{ fontFamily: '"Open Sans", sans-serif', color: '#666' }}
+          >
+            PRESENTED BY: {presentedBy}
+          </span>
         </div>
       )}
-    </>
+    </div>
+  );
+}
+
+// Soap Stone Layout Wrapper - manages menu state and renders all components
+function SoapStoneLayoutWrapper({ 
+  site, 
+  theme, 
+  combinedStyles, 
+  heroImage, 
+  hasPhotos, 
+  navLinks, 
+  navItems, 
+  presentedBy, 
+  agentInfo, 
+  footerLogo 
+}: { 
+  site: Site; 
+  theme?: Theme; 
+  combinedStyles: React.CSSProperties;
+  heroImage: string;
+  hasPhotos: boolean;
+  navLinks: { id: string; label: string }[];
+  navItems: { href: string; label: string }[];
+  presentedBy?: string;
+  agentInfo?: any;
+  footerLogo?: string | null;
+}) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  
+  return (
+    <div 
+      className="min-h-screen flex flex-col" 
+      style={{ 
+        ...combinedStyles,
+        backgroundColor: 'var(--theme-background)',
+        color: 'var(--theme-text)',
+        fontFamily: 'var(--font-body)'
+      }}
+    >
+      <SoapstoneMenuOverlay 
+        site={site} 
+        isOpen={isMenuOpen} 
+        onClose={() => setIsMenuOpen(false)} 
+        navItems={navItems}
+        presentedBy={presentedBy}
+      />
+      <SoapStoneHero 
+        site={site} 
+        theme={theme} 
+        heroImage={heroImage} 
+        hasPhotos={hasPhotos}
+        onOpenMenu={() => setIsMenuOpen(true)}
+        navLinks={navLinks}
+      />
+      <SoapstoneOverview site={site} theme={theme} />
+      <SoapstoneVideoTabs site={site} theme={theme} />
+      {hasPhotos && <SoapstoneGallery photos={site.photos!} theme={theme} />}
+      <SoapstoneFloorPlans site={site} theme={theme} />
+      <SoapstoneContact site={site} theme={theme} agentInfo={agentInfo} />
+      <SoapstoneMap site={site} theme={theme} />
+      <SoapstoneFooter site={site} theme={theme} footerLogo={footerLogo} invertLogo={site.invertLogo ?? false} />
+    </div>
   );
 }
 
@@ -5076,38 +5212,34 @@ export default function SiteView({ siteId: propSiteId, params: routeParams }: Si
   // Soap Stone Layout - elegant modern design with dot navigation, hamburger menu, and video/photo hero options
   const isSoapStoneLayout = site.layoutId === 'layout-soapstone';
   if (isSoapStoneLayout) {
+    const videoTabs = ((site as any).soapstoneVideoTabs as VideoTab[]) || [];
+    const floorPlans = ((site as any).soapstoneFloorPlans as string[]) || [];
+    const presentedBy = (site as any).soapstonePresentedBy || (site as any).brokerageName;
+    
+    const soapstoneNavLinks = [
+      { id: 'overview', label: 'OVERVIEW' },
+      ...(videoTabs.length > 0 || site.videoUrl ? [{ id: 'videos', label: 'VIDEO' }] : []),
+      ...(hasPhotos ? [{ id: 'photos', label: 'PHOTOS' }] : []),
+      ...(floorPlans.length > 0 ? [{ id: 'floorplans', label: 'FLOOR PLAN' }] : []),
+      { id: 'contact', label: 'CONTACT' },
+      { id: 'map', label: 'MAP' },
+    ];
+    
+    const soapstoneNavItems = soapstoneNavLinks.map(link => ({ href: `#${link.id}`, label: link.label }));
+    
     return (
-      <div 
-        className="min-h-screen flex flex-col" 
-        style={{ 
-          ...combinedStyles,
-          backgroundColor: 'var(--theme-background)',
-          color: 'var(--theme-text)',
-          fontFamily: 'var(--font-body)'
-        }}
-      >
-        <SoapstoneHamburgerMenu 
-          site={site} 
-          theme={theme} 
-          hasPhotos={!!hasPhotos} 
-          effectiveLogo={effectiveLogo} 
-          invertLogo={site.invertLogo ?? false} 
-        />
-        <SoapstoneDotNavigation 
-          site={site} 
-          theme={theme} 
-          hasPhotos={!!hasPhotos} 
-          hasVideo={hasVideo} 
-        />
-        <SoapStoneHero site={site} theme={theme} heroImage={heroImage} hasPhotos={!!hasPhotos} />
-        <SoapstoneOverview site={site} theme={theme} />
-        <SoapstoneVideoTabs site={site} theme={theme} />
-        {hasPhotos && <SoapstoneGallery photos={site.photos!} theme={theme} />}
-        <SoapstoneFloorPlans site={site} theme={theme} />
-        <SoapstoneContact site={site} theme={theme} agentInfo={agentInfo} />
-        <SoapstoneMap site={site} theme={theme} />
-        <SoapstoneFooter site={site} theme={theme} footerLogo={footerLogo} invertLogo={site.invertLogo ?? false} />
-      </div>
+      <SoapStoneLayoutWrapper 
+        site={site} 
+        theme={theme} 
+        combinedStyles={combinedStyles}
+        heroImage={heroImage}
+        hasPhotos={!!hasPhotos}
+        navLinks={soapstoneNavLinks}
+        navItems={soapstoneNavItems}
+        presentedBy={presentedBy}
+        agentInfo={agentInfo}
+        footerLogo={footerLogo}
+      />
     );
   }
 
