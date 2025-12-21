@@ -3769,10 +3769,7 @@ function SoapstoneMenuOverlay({ site, isOpen, onClose, navItems, presentedBy }: 
   if (!isOpen) return null;
 
   return (
-    <div 
-      className="fixed inset-0 z-[100] bg-[#f5f5f0]"
-      style={{ animation: 'soapstone-slideIn 0.4s ease-out' }}
-    >
+    <>
       <style>{`
         @keyframes soapstone-slideIn {
           from { transform: translateX(-100%); }
@@ -3784,80 +3781,100 @@ function SoapstoneMenuOverlay({ site, isOpen, onClose, navItems, presentedBy }: 
         }
       `}</style>
       
-      {/* X close button - fixed left side */}
-      <button 
-        onClick={onClose} 
-        className="fixed left-6 top-1/2 -translate-y-1/2 z-[110] p-2 text-gray-800 hover:text-gray-600 transition-colors"
+      {/* Left sidebar - stays on top with shadow */}
+      <div 
+        className="fixed left-0 top-0 bottom-0 w-12 lg:w-16 bg-white z-[110] flex items-center justify-center"
+        style={{ 
+          boxShadow: '4px 0 12px rgba(0,0,0,0.15)'
+        }}
       >
-        <X className="w-6 h-6" />
-      </button>
-      
-      {/* Content container */}
-      <div className="h-full flex">
-        {/* Left side - Navigation */}
-        <div className="w-1/2 flex items-center px-16 lg:px-24">
-          <nav className="flex flex-col gap-6">
-            {navItems.map((item, index) => (
-              <a
-                key={item.href}
-                href={item.href}
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleNavClick(item.href);
-                }}
-                className="text-2xl md:text-3xl lg:text-4xl text-gray-800 hover:text-gray-500 transition-colors uppercase tracking-wider"
-                style={{ 
-                  fontFamily: '"Open Sans", sans-serif',
-                  fontWeight: '300',
-                  animation: `soapstone-slideUp 0.4s ease-out ${index * 0.05}s forwards`,
-                  opacity: 0
-                }}
-              >
-                {item.label}
-              </a>
-            ))}
-          </nav>
-        </div>
-        
-        {/* Right side - Property Image */}
-        <div className="w-1/2 flex items-center justify-center p-8 lg:p-16">
-          <div 
-            className="max-w-md w-full"
-            style={{ animation: 'soapstone-slideUp 0.5s ease-out 0.2s forwards', opacity: 0 }}
-          >
-            {heroImage && (
-              <>
-                <div className="aspect-[4/3] overflow-hidden shadow-lg">
-                  <img 
-                    src={heroImage} 
-                    alt={site.address}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <p 
-                  className="mt-4 text-center text-sm uppercase tracking-widest text-gray-600"
-                  style={{ fontFamily: '"Open Sans", sans-serif' }}
-                >
-                  {site.address}
-                </p>
-              </>
-            )}
-          </div>
-        </div>
+        <button 
+          onClick={onClose} 
+          className="p-2 text-gray-800 hover:text-gray-600 transition-colors"
+          aria-label="Close menu"
+        >
+          <X className="w-6 h-6" />
+        </button>
       </div>
       
-      {/* "Presented by" bar at bottom */}
-      {presentedBy && (
-        <div className="absolute bottom-0 left-0 right-0 bg-white/95 py-3 text-center">
-          <span 
-            className="text-xs uppercase tracking-widest"
-            style={{ fontFamily: '"Open Sans", sans-serif', color: '#666' }}
-          >
-            PRESENTED BY: {presentedBy}
-          </span>
+      {/* Menu content - slides under the sidebar */}
+      <div 
+        className="fixed top-0 bottom-0 right-0 z-[100] bg-[#f5f5f0]"
+        style={{ 
+          left: '48px',
+          animation: 'soapstone-slideIn 0.4s ease-out forwards'
+        }}
+      >
+        {/* Content container */}
+        <div className="h-full flex">
+          {/* Left side - Navigation */}
+          <div className="w-1/2 flex items-center px-12 lg:px-20">
+            <nav className="flex flex-col gap-6">
+              {navItems.map((item, index) => (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleNavClick(item.href);
+                  }}
+                  className="text-2xl md:text-3xl lg:text-4xl text-gray-800 hover:text-gray-500 transition-colors uppercase tracking-wider"
+                  style={{ 
+                    fontFamily: '"Open Sans", sans-serif',
+                    fontWeight: '300',
+                    animation: `soapstone-slideUp 0.4s ease-out ${index * 0.05}s forwards`,
+                    opacity: 0
+                  }}
+                >
+                  {item.label}
+                </a>
+              ))}
+            </nav>
+          </div>
+          
+          {/* Right side - Property Image */}
+          <div className="w-1/2 flex items-center justify-center p-8 lg:p-16">
+            <div 
+              className="max-w-md w-full"
+              style={{ 
+                animation: 'soapstone-slideUp 0.5s ease-out 0.2s forwards', 
+                opacity: 0 
+              }}
+            >
+              {heroImage && (
+                <>
+                  <div className="aspect-[4/3] overflow-hidden shadow-lg">
+                    <img 
+                      src={heroImage} 
+                      alt={site.address}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <p 
+                    className="mt-4 text-center text-sm uppercase tracking-widest text-gray-600"
+                    style={{ fontFamily: '"Open Sans", sans-serif' }}
+                  >
+                    {site.address}
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
         </div>
-      )}
-    </div>
+        
+        {/* "Presented by" bar at bottom */}
+        {presentedBy && (
+          <div className="absolute bottom-0 left-0 right-0 bg-white/95 py-3 text-center">
+            <span 
+              className="text-xs uppercase tracking-widest"
+              style={{ fontFamily: '"Open Sans", sans-serif', color: '#666' }}
+            >
+              PRESENTED BY: {presentedBy}
+            </span>
+          </div>
+        )}
+      </div>
+    </>
   );
 }
 
