@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { MapPin, Play, Home, Info, Video, Image, X, ChevronLeft, ChevronRight, ChevronDown, Bed, Bath, Square, Calendar, Building, Phone, Mail, User, Instagram, Facebook, Linkedin, Youtube, Twitter, FileText, Download, Package, Lock, Eye, EyeOff } from "lucide-react";
+import { MapPin, Play, Home, Info, Video, Image, X, ChevronLeft, ChevronRight, ChevronDown, Bed, Bath, Square, Calendar, Building, Phone, Mail, User, Instagram, Facebook, Linkedin, Youtube, Twitter, FileText, Download, Package, Lock, Eye, EyeOff, Grid } from "lucide-react";
 import heroImage from "@assets/generated_images/luxury_living_room_interior_for_hero_background.png";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import useEmblaCarousel from "embla-carousel-react";
@@ -3418,16 +3418,43 @@ function HeroSection({ site, theme, heroImage }: { site: Site; theme?: Theme; he
   );
 }
 
-// ==================== SOAP STONE LAYOUT COMPONENTS ====================
+// ==================== SOAP STONE LAYOUT COMPONENTS (400inwood.com style) ====================
 
 interface VideoTab {
   label: string;
   url: string;
 }
 
+// Helper function to get video embed URL
+function getSoapstoneVideoEmbedUrl(url: string, autoplay = false, muted = false, loop = false) {
+  if (url.includes('youtube.com/watch')) {
+    const videoId = url.split('v=')[1]?.split('&')[0];
+    const params = new URLSearchParams();
+    if (autoplay) params.set('autoplay', '1');
+    if (muted) params.set('mute', '1');
+    if (loop) { params.set('loop', '1'); params.set('playlist', videoId || ''); }
+    return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
+  } else if (url.includes('youtu.be/')) {
+    const videoId = url.split('youtu.be/')[1]?.split('?')[0];
+    const params = new URLSearchParams();
+    if (autoplay) params.set('autoplay', '1');
+    if (muted) params.set('mute', '1');
+    if (loop) { params.set('loop', '1'); params.set('playlist', videoId || ''); }
+    return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
+  } else if (url.includes('vimeo.com/')) {
+    const videoId = url.split('vimeo.com/')[1]?.split('?')[0];
+    const params = new URLSearchParams();
+    if (autoplay) params.set('autoplay', '1');
+    if (muted) params.set('muted', '1');
+    if (loop) params.set('loop', '1');
+    return `https://player.vimeo.com/video/${videoId}?${params.toString()}`;
+  }
+  return url;
+}
+
 function SoapStoneHero({ site, theme, heroImage }: { site: Site; theme?: Theme; heroImage: string }) {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const heroMode = (site as any).soapstoneHeroMode || 'slider';
+  const heroMode = (site as any).soapstoneHeroMode || 'video';
   
   const heroPhotos = site.heroPhotos && site.heroPhotos.length > 0 
     ? site.heroPhotos 
@@ -3447,56 +3474,32 @@ function SoapStoneHero({ site, theme, heroImage }: { site: Site; theme?: Theme; 
     }
   }, [heroMode, heroPhotos.length]);
 
-  const getVideoEmbedUrl = (url: string) => {
-    if (url.includes('youtube.com/watch')) {
-      const videoId = url.split('v=')[1]?.split('&')[0];
-      return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&showinfo=0&rel=0&modestbranding=1`;
-    } else if (url.includes('youtu.be/')) {
-      const videoId = url.split('youtu.be/')[1]?.split('?')[0];
-      return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&showinfo=0&rel=0&modestbranding=1`;
-    } else if (url.includes('vimeo.com/')) {
-      const videoId = url.split('vimeo.com/')[1]?.split('?')[0];
-      return `https://player.vimeo.com/video/${videoId}?autoplay=1&muted=1&loop=1&background=1`;
-    }
-    return url;
-  };
-
   return (
     <section id="home" className="relative h-screen w-full overflow-hidden">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Open+Sans:wght@300;400;500;600&display=swap');
         
-        @keyframes soapstone-title-slide {
-          from { transform: translateY(30px); opacity: 0; }
+        @keyframes soapstone-fade-up {
+          from { transform: translateY(20px); opacity: 0; }
           to { transform: translateY(0); opacity: 1; }
         }
         
-        @keyframes soapstone-fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        
-        .soapstone-title-animate {
-          animation: soapstone-title-slide 1.2s ease-out forwards;
-          animation-delay: 0.5s;
-          opacity: 0;
-        }
-        
-        .soapstone-subtitle-animate {
-          animation: soapstone-fade-in 1s ease-out forwards;
-          animation-delay: 1s;
+        .soapstone-animate-title {
+          animation: soapstone-fade-up 1s ease-out 0.3s forwards;
           opacity: 0;
         }
       `}</style>
       
       {hasVideo ? (
-        <iframe
-          src={getVideoEmbedUrl(videoUrl)}
-          className="absolute inset-0 w-full h-full object-cover"
-          style={{ border: 'none', pointerEvents: 'none' }}
-          allow="autoplay; fullscreen"
-          title="Hero Video"
-        />
+        <div className="absolute inset-0">
+          <iframe
+            src={getSoapstoneVideoEmbedUrl(videoUrl, true, true, true)}
+            className="absolute top-1/2 left-1/2 min-w-full min-h-full w-auto h-auto -translate-x-1/2 -translate-y-1/2"
+            style={{ border: 'none', pointerEvents: 'none', aspectRatio: '16/9' }}
+            allow="autoplay; fullscreen"
+            title="Hero Video"
+          />
+        </div>
       ) : (
         <>
           {heroPhotos.map((photo, index) => (
@@ -3511,38 +3514,34 @@ function SoapStoneHero({ site, theme, heroImage }: { site: Site; theme?: Theme; 
         </>
       )}
       
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/20 z-10" />
+      {/* Gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60 z-10" />
       
-      <div className="absolute bottom-0 left-0 right-0 p-8 md:p-16 z-20">
-        <div className="container mx-auto max-w-6xl">
-          <h1 
-            className="text-white text-4xl md:text-6xl lg:text-7xl mb-4 soapstone-title-animate"
-            style={{ 
-              fontFamily: '"Playfair Display", Georgia, serif',
-              fontWeight: '400',
-              letterSpacing: '-0.02em',
-              lineHeight: '1.1'
-            }}
-          >
-            {site.title || site.address}
-          </h1>
-          <p 
-            className="text-white/90 text-xl md:text-2xl soapstone-subtitle-animate"
-            style={{ fontFamily: '"Open Sans", sans-serif', fontWeight: '300' }}
-          >
-            {site.address}
-          </p>
-        </div>
+      {/* Title at top center - like 400inwood */}
+      <div className="absolute top-1/3 left-0 right-0 z-20 text-center px-4">
+        <h1 
+          className="text-white text-3xl md:text-5xl lg:text-6xl soapstone-animate-title"
+          style={{ 
+            fontFamily: '"Playfair Display", Georgia, serif',
+            fontWeight: '400',
+            letterSpacing: '-0.01em',
+            lineHeight: '1.2',
+            textShadow: '0 2px 20px rgba(0,0,0,0.5)'
+          }}
+        >
+          {site.title || site.address}
+        </h1>
       </div>
       
+      {/* Slider dots */}
       {heroMode === 'slider' && heroPhotos.length > 1 && (
-        <div className="absolute bottom-8 right-8 z-20 flex gap-2">
+        <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-20 flex gap-2">
           {heroPhotos.map((_, index) => (
             <button
               key={index}
               onClick={() => setCurrentSlide(index)}
-              className={`w-2 h-2 rounded-full transition-all ${
-                currentSlide === index ? 'bg-white w-6' : 'bg-white/50'
+              className={`w-2.5 h-2.5 rounded-full transition-all ${
+                currentSlide === index ? 'bg-white' : 'bg-white/40 hover:bg-white/60'
               }`}
               aria-label={`Go to slide ${index + 1}`}
             />
@@ -3553,85 +3552,86 @@ function SoapStoneHero({ site, theme, heroImage }: { site: Site; theme?: Theme; 
   );
 }
 
+// Horizontal sticky navigation bar (400inwood.com style)
 function SoapstoneDotNavigation({ site, theme, hasPhotos, hasVideo }: { site: Site; theme?: Theme; hasPhotos: boolean; hasVideo: boolean }) {
-  const [currentSection, setCurrentSection] = useState('home');
-  const [isVisible, setIsVisible] = useState(false);
+  const [isSticky, setIsSticky] = useState(false);
   
   const videoTabs = ((site as any).soapstoneVideoTabs as VideoTab[]) || [];
   const floorPlans = ((site as any).soapstoneFloorPlans as string[]) || [];
   
-  const sections = [
-    { id: 'home', label: 'Home' },
+  const navLinks = [
     { id: 'overview', label: 'Overview' },
-    ...(videoTabs.length > 0 ? [{ id: 'videos', label: 'Videos' }] : []),
+    ...(videoTabs.length > 0 || site.videoUrl ? [{ id: 'videos', label: 'Video' }] : []),
     ...(hasPhotos ? [{ id: 'photos', label: 'Photos' }] : []),
-    ...(floorPlans.length > 0 ? [{ id: 'floorplans', label: 'Floor Plans' }] : []),
+    ...(floorPlans.length > 0 ? [{ id: 'floorplans', label: 'Floor Plan' }] : []),
     { id: 'contact', label: 'Contact' },
     { id: 'map', label: 'Map' },
   ];
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsVisible(window.scrollY > 100);
-      
-      const scrollPosition = window.scrollY + window.innerHeight / 3;
-      for (let i = sections.length - 1; i >= 0; i--) {
-        const section = document.getElementById(sections[i].id);
-        if (section && section.offsetTop <= scrollPosition) {
-          setCurrentSection(sections[i].id);
-          break;
-        }
-      }
+      setIsSticky(window.scrollY > window.innerHeight - 100);
     };
-
     window.addEventListener('scroll', handleScroll);
     handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [sections]);
+  }, []);
 
   const scrollToSection = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  if (!isVisible) return null;
-
   return (
-    <nav className="fixed right-6 top-1/2 -translate-y-1/2 z-50 flex flex-col gap-4">
-      {sections.map((section) => (
-        <button
-          key={section.id}
-          onClick={() => scrollToSection(section.id)}
-          className="group relative flex items-center justify-end"
-          aria-label={section.label}
-        >
-          <span 
-            className="absolute right-6 px-2 py-1 text-sm text-white bg-black/70 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap"
-            style={{ fontFamily: '"Open Sans", sans-serif' }}
-          >
-            {section.label}
-          </span>
-          <div
-            className={`w-3 h-3 rounded-full border-2 transition-all ${
-              currentSection === section.id 
-                ? 'bg-white border-white' 
-                : 'bg-transparent border-white/50 hover:border-white'
-            }`}
-          />
-        </button>
-      ))}
+    <nav 
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        isSticky ? 'bg-[#1a1a1a] shadow-lg' : 'bg-transparent'
+      }`}
+      style={{ fontFamily: '"Open Sans", sans-serif' }}
+    >
+      <div className="container mx-auto px-4 md:px-8">
+        <div className="flex items-center justify-between h-16">
+          {/* Address on left */}
+          <div className="flex-shrink-0">
+            <span 
+              className={`text-sm md:text-base font-medium transition-colors ${
+                isSticky ? 'text-white' : 'text-white/90'
+              }`}
+            >
+              {site.address}
+            </span>
+          </div>
+          
+          {/* Nav links on right - hidden on mobile */}
+          <div className="hidden md:flex items-center gap-6 lg:gap-8">
+            {navLinks.map((link) => (
+              <button
+                key={link.id}
+                onClick={() => scrollToSection(link.id)}
+                className={`text-sm uppercase tracking-wider font-medium transition-colors hover:text-white ${
+                  isSticky ? 'text-gray-300' : 'text-white/80'
+                }`}
+              >
+                {link.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
     </nav>
   );
 }
 
+// Hamburger menu for documents/brochures (400inwood.com style)
 function SoapstoneHamburgerMenu({ site, theme, hasPhotos, effectiveLogo, invertLogo }: { site: Site; theme?: Theme; hasPhotos: boolean; effectiveLogo?: string | null; invertLogo?: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   
   const videoTabs = ((site as any).soapstoneVideoTabs as VideoTab[]) || [];
   const floorPlans = ((site as any).soapstoneFloorPlans as string[]) || [];
+  const hasDocuments = site.brochureUrl || (site.documents && site.documents.length > 0);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50);
+    const handleScroll = () => setScrolled(window.scrollY > window.innerHeight - 100);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -3642,11 +3642,10 @@ function SoapstoneHamburgerMenu({ site, theme, hasPhotos, effectiveLogo, invertL
   }, [isOpen]);
 
   const navItems = [
-    { href: '#home', label: 'Home' },
     { href: '#overview', label: 'Overview' },
-    ...(videoTabs.length > 0 ? [{ href: '#videos', label: 'Videos' }] : []),
+    ...(videoTabs.length > 0 || site.videoUrl ? [{ href: '#videos', label: 'Video' }] : []),
     ...(hasPhotos ? [{ href: '#photos', label: 'Photos' }] : []),
-    ...(floorPlans.length > 0 ? [{ href: '#floorplans', label: 'Floor Plans' }] : []),
+    ...(floorPlans.length > 0 ? [{ href: '#floorplans', label: 'Floor plans' }] : []),
     { href: '#contact', label: 'Contact' },
     { href: '#map', label: 'Map' },
   ];
@@ -3658,55 +3657,47 @@ function SoapstoneHamburgerMenu({ site, theme, hasPhotos, effectiveLogo, invertL
 
   return (
     <>
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white shadow-md' : ''}`}>
-        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            {(effectiveLogo || theme?.logoUrl) && (
-              <img 
-                src={effectiveLogo ?? theme?.logoUrl ?? ''} 
-                alt="Logo" 
-                className={`h-10 md:h-12 w-auto object-contain transition-all ${
-                  invertLogo && !scrolled ? 'brightness-0 invert' : ''
-                }`}
-              />
-            )}
-          </div>
-          
-          <button
-            onClick={() => setIsOpen(true)}
-            className={`p-2 transition-colors ${scrolled ? 'text-gray-800' : 'text-white'}`}
-            aria-label="Open menu"
-          >
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <line x1="3" y1="12" x2="21" y2="12" />
-              <line x1="3" y1="18" x2="21" y2="18" />
-            </svg>
-          </button>
-        </div>
-      </nav>
+      {/* Hamburger button - fixed top right */}
+      <button
+        onClick={() => setIsOpen(true)}
+        className={`fixed top-4 right-4 z-[60] p-2 rounded transition-colors ${
+          scrolled ? 'text-white' : 'text-white'
+        }`}
+        aria-label="Open menu"
+      >
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      </button>
       
+      {/* Slide-out panel */}
       {isOpen && (
         <div className="fixed inset-0 z-[100]">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setIsOpen(false)} />
+          <div className="absolute inset-0 bg-black/60" onClick={() => setIsOpen(false)} />
           <div 
-            className="absolute right-0 top-0 bottom-0 w-80 bg-white shadow-2xl"
-            style={{ animation: 'slideIn 0.3s ease-out' }}
+            className="absolute right-0 top-0 bottom-0 w-80 bg-white shadow-2xl overflow-y-auto"
+            style={{ animation: 'soapstone-slideIn 0.3s ease-out' }}
           >
             <style>{`
-              @keyframes slideIn {
+              @keyframes soapstone-slideIn {
                 from { transform: translateX(100%); }
                 to { transform: translateX(0); }
               }
             `}</style>
             
-            <div className="p-6 flex justify-end">
+            <div className="p-6 flex justify-between items-center border-b">
+              <span className="font-medium text-gray-800" style={{ fontFamily: '"Open Sans", sans-serif' }}>
+                Menu
+              </span>
               <button onClick={() => setIsOpen(false)} className="p-2 text-gray-600 hover:text-gray-800">
                 <X className="w-6 h-6" />
               </button>
             </div>
             
-            <nav className="px-8 py-4 flex flex-col gap-6">
+            {/* Navigation links */}
+            <nav className="px-6 py-6 flex flex-col gap-4 border-b">
               {navItems.map((item) => (
                 <a
                   key={item.href}
@@ -3715,13 +3706,58 @@ function SoapstoneHamburgerMenu({ site, theme, hasPhotos, effectiveLogo, invertL
                     e.preventDefault();
                     handleNavClick(item.href);
                   }}
-                  className="text-2xl text-gray-800 hover:text-gray-600 transition-colors"
-                  style={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: '400' }}
+                  className="text-lg text-gray-700 hover:text-gray-900 transition-colors"
+                  style={{ fontFamily: '"Open Sans", sans-serif' }}
                 >
                   {item.label}
                 </a>
               ))}
             </nav>
+            
+            {/* Documents section */}
+            {hasDocuments && (
+              <div className="px-6 py-6">
+                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+                  Documents
+                </h3>
+                <div className="space-y-3">
+                  {site.brochureUrl && (
+                    <a
+                      href={site.brochureUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 text-gray-700 hover:text-gray-900"
+                    >
+                      <FileText className="w-5 h-5" />
+                      <span>Property Brochure</span>
+                    </a>
+                  )}
+                  {site.documents?.map((doc: any, index: number) => (
+                    <a
+                      key={index}
+                      href={doc.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 text-gray-700 hover:text-gray-900"
+                    >
+                      <FileText className="w-5 h-5" />
+                      <span>{doc.name || `Document ${index + 1}`}</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Logo at bottom */}
+            {(effectiveLogo || theme?.logoUrl) && (
+              <div className="px-6 py-8 mt-auto border-t">
+                <img 
+                  src={effectiveLogo ?? theme?.logoUrl ?? ''} 
+                  alt="Logo" 
+                  className="h-12 w-auto object-contain"
+                />
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -3729,162 +3765,219 @@ function SoapstoneHamburgerMenu({ site, theme, hasPhotos, effectiveLogo, invertL
   );
 }
 
+// Overview section with "Presented by" bar and stats (400inwood.com style)
 function SoapstoneOverview({ site, theme }: { site: Site; theme?: Theme }) {
   const presentedBy = (site as any).soapstonePresentedBy;
   const primaryColor = theme?.colors?.primary || '#558B73';
   
+  // Parse bathrooms to show full/half if available
+  const bathroomsDisplay = site.bathrooms || '';
+  
   return (
-    <section 
-      id="overview" 
-      className="py-20 px-6 relative"
-      style={{ 
-        backgroundColor: '#e8e8e8',
-        scrollMarginTop: '80px'
-      }}
-    >
-      <div 
-        className="absolute inset-0 opacity-10"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-        }}
-      />
-      
-      <div className="container mx-auto max-w-4xl relative z-10">
-        {presentedBy && (
-          <div 
-            className="mb-12 py-3 px-6 inline-block"
-            style={{ backgroundColor: primaryColor }}
-          >
+    <>
+      {/* "Presented by" bar with checkered pattern */}
+      {presentedBy && (
+        <div 
+          className="relative py-4 px-6"
+          style={{ 
+            backgroundColor: '#2a2a2a',
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='10' height='10' fill='%23333'/%3E%3Crect x='10' y='10' width='10' height='10' fill='%23333'/%3E%3C/svg%3E")`,
+          }}
+        >
+          <div className="container mx-auto text-center">
             <span 
-              className="text-white text-sm tracking-widest uppercase"
-              style={{ fontFamily: '"Open Sans", sans-serif', fontWeight: '500' }}
+              className="text-white/90 text-sm tracking-wider"
+              style={{ fontFamily: '"Open Sans", sans-serif' }}
             >
               {presentedBy}
             </span>
           </div>
-        )}
-        
-        <h2 
-          className="text-4xl md:text-5xl mb-8"
-          style={{ 
-            fontFamily: '"Playfair Display", Georgia, serif',
-            fontWeight: '400',
-            color: '#1a1a1a'
-          }}
-        >
-          Property Overview
-        </h2>
-        
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
-          {site.bedrooms && (
-            <div className="text-center p-6 bg-white rounded-lg shadow-sm">
-              <Bed className="w-8 h-8 mx-auto mb-3" style={{ color: primaryColor }} />
-              <p className="text-3xl font-light mb-1" style={{ fontFamily: '"Playfair Display", serif' }}>{site.bedrooms}</p>
-              <p className="text-sm text-gray-500 uppercase tracking-wide">Bedrooms</p>
+        </div>
+      )}
+      
+      {/* Stats bar - dark background with property stats */}
+      <div className="bg-[#1a1a1a] py-6 px-4">
+        <div className="container mx-auto">
+          <div className="flex flex-wrap justify-center items-center gap-6 md:gap-12">
+            {/* Price */}
+            <div className="text-center">
+              <p className="text-white text-2xl md:text-3xl font-light" style={{ fontFamily: '"Playfair Display", serif' }}>
+                {site.price || 'Price Upon Request'}
+              </p>
             </div>
-          )}
-          {site.bathrooms && (
-            <div className="text-center p-6 bg-white rounded-lg shadow-sm">
-              <Bath className="w-8 h-8 mx-auto mb-3" style={{ color: primaryColor }} />
-              <p className="text-3xl font-light mb-1" style={{ fontFamily: '"Playfair Display", serif' }}>{site.bathrooms}</p>
-              <p className="text-sm text-gray-500 uppercase tracking-wide">Bathrooms</p>
-            </div>
-          )}
-          {site.sqft && (
-            <div className="text-center p-6 bg-white rounded-lg shadow-sm">
-              <Square className="w-8 h-8 mx-auto mb-3" style={{ color: primaryColor }} />
-              <p className="text-3xl font-light mb-1" style={{ fontFamily: '"Playfair Display", serif' }}>{site.sqft.toLocaleString()}</p>
-              <p className="text-sm text-gray-500 uppercase tracking-wide">Sq Ft</p>
-            </div>
-          )}
-          <div className="text-center p-6 bg-white rounded-lg shadow-sm">
-            <Building className="w-8 h-8 mx-auto mb-3" style={{ color: primaryColor }} />
-            <p className="text-3xl font-light mb-1" style={{ fontFamily: '"Playfair Display", serif' }}>{site.price || 'Call'}</p>
-            <p className="text-sm text-gray-500 uppercase tracking-wide">Price</p>
+            
+            {/* Divider */}
+            {site.bedrooms && <div className="hidden md:block w-px h-10 bg-gray-600" />}
+            
+            {/* Beds */}
+            {site.bedrooms && (
+              <div className="text-center">
+                <p className="text-white text-2xl md:text-3xl font-light" style={{ fontFamily: '"Playfair Display", serif' }}>
+                  {site.bedrooms}
+                </p>
+                <p className="text-gray-400 text-xs uppercase tracking-wider mt-1">beds</p>
+              </div>
+            )}
+            
+            {/* Divider */}
+            {site.bathrooms && <div className="hidden md:block w-px h-10 bg-gray-600" />}
+            
+            {/* Baths */}
+            {site.bathrooms && (
+              <div className="text-center">
+                <p className="text-white text-2xl md:text-3xl font-light" style={{ fontFamily: '"Playfair Display", serif' }}>
+                  {bathroomsDisplay}
+                </p>
+                <p className="text-gray-400 text-xs uppercase tracking-wider mt-1">baths</p>
+              </div>
+            )}
+            
+            {/* Divider */}
+            {site.sqft && <div className="hidden md:block w-px h-10 bg-gray-600" />}
+            
+            {/* Sqft */}
+            {site.sqft && (
+              <div className="text-center">
+                <p className="text-white text-2xl md:text-3xl font-light" style={{ fontFamily: '"Playfair Display", serif' }}>
+                  {site.sqft.toLocaleString()}
+                </p>
+                <p className="text-gray-400 text-xs uppercase tracking-wider mt-1">sqft</p>
+              </div>
+            )}
+            
+            {/* Divider */}
+            {(site as any).lotSize && <div className="hidden md:block w-px h-10 bg-gray-600" />}
+            
+            {/* Lot size (if available) */}
+            {(site as any).lotSize && (
+              <div className="text-center">
+                <p className="text-white text-2xl md:text-3xl font-light" style={{ fontFamily: '"Playfair Display", serif' }}>
+                  {(site as any).lotSize}
+                </p>
+                <p className="text-gray-400 text-xs uppercase tracking-wider mt-1">lot</p>
+              </div>
+            )}
           </div>
         </div>
-        
-        {site.description && (
-          <div 
-            className="prose prose-lg max-w-none"
-            style={{ fontFamily: '"Open Sans", sans-serif', lineHeight: '1.8' }}
-          >
-            {site.description.split('\n').map((paragraph, index) => (
-              <p key={index} className="text-gray-700 mb-4">{paragraph}</p>
-            ))}
-          </div>
-        )}
       </div>
-    </section>
+      
+      {/* Overview text section - white background */}
+      <section 
+        id="overview" 
+        className="py-16 md:py-24 px-6 bg-white"
+        style={{ scrollMarginTop: '64px' }}
+      >
+        <div className="container mx-auto max-w-4xl">
+          <h2 
+            className="text-3xl md:text-4xl mb-8"
+            style={{ 
+              fontFamily: '"Playfair Display", Georgia, serif',
+              fontWeight: '400',
+              color: '#1a1a1a'
+            }}
+          >
+            Overview
+          </h2>
+          
+          {site.description && (
+            <div 
+              className="prose prose-lg max-w-none"
+              style={{ fontFamily: '"Open Sans", sans-serif', lineHeight: '1.9' }}
+            >
+              {site.description.split('\n\n').map((paragraph, index) => (
+                <p key={index} className="text-gray-600 mb-6 text-base md:text-lg">
+                  {paragraph}
+                </p>
+              ))}
+            </div>
+          )}
+          
+          {/* Documents link if available */}
+          {site.brochureUrl && (
+            <div className="mt-8 pt-8 border-t">
+              <a
+                href={site.brochureUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm uppercase tracking-wider hover:underline"
+                style={{ color: primaryColor, fontFamily: '"Open Sans", sans-serif', fontWeight: '500' }}
+              >
+                <FileText className="w-4 h-4" />
+                Documents
+              </a>
+            </div>
+          )}
+        </div>
+      </section>
+    </>
   );
 }
 
+// Video Gallery with tabs (400inwood.com style)
 function SoapstoneVideoTabs({ site, theme }: { site: Site; theme?: Theme }) {
   const videoTabs = ((site as any).soapstoneVideoTabs as VideoTab[]) || [];
   const [activeTab, setActiveTab] = useState(0);
   const primaryColor = theme?.colors?.primary || '#558B73';
   
-  if (videoTabs.length === 0) return null;
-
-  const getVideoEmbedUrl = (url: string) => {
-    if (url.includes('youtube.com/watch')) {
-      const videoId = url.split('v=')[1]?.split('&')[0];
-      return `https://www.youtube.com/embed/${videoId}`;
-    } else if (url.includes('youtu.be/')) {
-      const videoId = url.split('youtu.be/')[1]?.split('?')[0];
-      return `https://www.youtube.com/embed/${videoId}`;
-    } else if (url.includes('vimeo.com/')) {
-      const videoId = url.split('vimeo.com/')[1]?.split('?')[0];
-      return `https://player.vimeo.com/video/${videoId}`;
-    }
-    return url;
-  };
+  // If no video tabs but has main video URL, create a default tab
+  const effectiveTabs = videoTabs.length > 0 
+    ? videoTabs 
+    : site.videoUrl 
+      ? [{ label: 'PROPERTY VIDEO', url: site.videoUrl }]
+      : [];
+  
+  if (effectiveTabs.length === 0) return null;
 
   return (
     <section 
       id="videos" 
-      className="py-20 px-6 bg-white"
-      style={{ scrollMarginTop: '80px' }}
+      className="py-16 md:py-20 px-6 bg-gray-100"
+      style={{ scrollMarginTop: '64px' }}
     >
       <div className="container mx-auto max-w-5xl">
         <h2 
-          className="text-4xl md:text-5xl mb-8 text-center"
-          style={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: '400' }}
+          className="text-2xl md:text-3xl mb-8 text-center"
+          style={{ 
+            fontFamily: '"Open Sans", sans-serif', 
+            fontWeight: '400',
+            color: '#1a1a1a',
+            letterSpacing: '0.05em'
+          }}
         >
-          Property Videos
+          Video Gallery
         </h2>
         
-        {videoTabs.length > 1 && (
-          <div className="flex justify-center gap-4 mb-8">
-            {videoTabs.map((tab, index) => (
-              <button
-                key={index}
-                onClick={() => setActiveTab(index)}
-                className={`px-6 py-3 text-sm uppercase tracking-widest transition-all ${
-                  activeTab === index 
-                    ? 'text-white' 
-                    : 'text-gray-600 hover:text-gray-800 bg-gray-100'
-                }`}
-                style={{ 
-                  backgroundColor: activeTab === index ? primaryColor : undefined,
-                  fontFamily: '"Open Sans", sans-serif',
-                  fontWeight: '500'
-                }}
-              >
-                {tab.label}
-              </button>
-            ))}
+        {/* Video tabs - styled like 400inwood */}
+        {effectiveTabs.length > 1 && (
+          <div className="flex justify-center mb-6">
+            <div className="inline-flex bg-white rounded overflow-hidden shadow-sm">
+              {effectiveTabs.map((tab, index) => (
+                <button
+                  key={index}
+                  onClick={() => setActiveTab(index)}
+                  className={`px-6 py-3 text-xs uppercase tracking-widest font-medium transition-all ${
+                    activeTab === index 
+                      ? 'bg-[#1a1a1a] text-white' 
+                      : 'bg-white text-gray-600 hover:bg-gray-50'
+                  }`}
+                  style={{ fontFamily: '"Open Sans", sans-serif' }}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
           </div>
         )}
         
-        <div className="aspect-video rounded-lg overflow-hidden shadow-lg">
+        {/* Video player */}
+        <div className="aspect-video overflow-hidden shadow-lg bg-black">
           <iframe
             key={activeTab}
-            src={getVideoEmbedUrl(videoTabs[activeTab].url)}
+            src={getSoapstoneVideoEmbedUrl(effectiveTabs[activeTab].url)}
             className="w-full h-full"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
-            title={videoTabs[activeTab].label}
+            title={effectiveTabs[activeTab].label}
           />
         </div>
       </div>
@@ -3892,98 +3985,146 @@ function SoapstoneVideoTabs({ site, theme }: { site: Site; theme?: Theme }) {
   );
 }
 
+// Photo Gallery (400inwood.com style - 3x3 grid with "View X Photos" button)
 function SoapstoneGallery({ photos, theme }: { photos: string[]; theme?: Theme }) {
-  const [showAll, setShowAll] = useState(false);
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const displayPhotos = showAll ? photos : photos.slice(0, 6);
-  const primaryColor = theme?.colors?.primary || '#558B73';
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+  
+  // Show first 9 photos in grid (3x3)
+  const gridPhotos = photos.slice(0, 9);
+
+  const openLightbox = (index: number) => {
+    setLightboxIndex(index);
+    setLightboxOpen(true);
+  };
 
   return (
     <section 
       id="photos" 
-      className="py-20 px-6 bg-gray-50"
-      style={{ scrollMarginTop: '80px' }}
+      className="py-16 md:py-20 px-6 bg-white"
+      style={{ scrollMarginTop: '64px' }}
     >
       <div className="container mx-auto max-w-6xl">
-        <div className="flex items-center justify-between mb-8">
-          <h2 
-            className="text-4xl md:text-5xl"
-            style={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: '400' }}
-          >
-            Photo Gallery
-          </h2>
-          {photos.length > 6 && (
-            <button
-              onClick={() => setShowAll(!showAll)}
-              className="text-sm uppercase tracking-widest hover:underline"
-              style={{ color: primaryColor, fontFamily: '"Open Sans", sans-serif', fontWeight: '500' }}
-            >
-              {showAll ? 'Show Less' : `See All ${photos.length} Photos`}
-            </button>
-          )}
-        </div>
-        
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {displayPhotos.map((photo, index) => (
+        {/* Photo grid - 3x3 */}
+        <div className="grid grid-cols-3 gap-1 md:gap-2">
+          {gridPhotos.map((photo, index) => (
             <div 
               key={index} 
-              className="aspect-[4/3] rounded-lg overflow-hidden cursor-pointer group"
-              onClick={() => setLightboxIndex(index)}
+              className="aspect-square overflow-hidden cursor-pointer group relative"
+              onClick={() => openLightbox(index)}
             >
               <img
                 src={photo}
                 alt={`Property photo ${index + 1}`}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
+              {/* Overlay text on each photo */}
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center">
+                <span className="text-white text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity tracking-wider">
+                  View photo gallery
+                </span>
+              </div>
             </div>
           ))}
         </div>
+        
+        {/* "View X Photos" button */}
+        <div className="text-center mt-8">
+          <button
+            onClick={() => openLightbox(0)}
+            className="inline-flex items-center gap-2 px-8 py-3 bg-[#1a1a1a] text-white text-sm uppercase tracking-widest hover:bg-[#333] transition-colors"
+            style={{ fontFamily: '"Open Sans", sans-serif' }}
+          >
+            View {photos.length} Photos
+          </button>
+        </div>
       </div>
       
-      {lightboxIndex !== null && (
+      {/* Lightbox */}
+      {lightboxOpen && (
         <div 
-          className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center"
-          onClick={() => setLightboxIndex(null)}
+          className="fixed inset-0 z-[100] bg-black flex flex-col"
+          onClick={() => setLightboxOpen(false)}
         >
-          <button
-            onClick={() => setLightboxIndex(null)}
-            className="absolute top-6 right-6 text-white p-2 hover:bg-white/10 rounded-full"
-          >
-            <X className="w-8 h-8" />
-          </button>
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 bg-black/80">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={(e) => { e.stopPropagation(); setLightboxOpen(false); }}
+                className="text-white/70 hover:text-white text-sm uppercase tracking-wider flex items-center gap-2"
+              >
+                <Grid className="w-4 h-4" />
+                Photo Grid
+              </button>
+            </div>
+            <span className="text-white/70 text-sm">
+              {lightboxIndex + 1} / {photos.length}
+            </span>
+            <button
+              onClick={(e) => { e.stopPropagation(); setLightboxOpen(false); }}
+              className="text-white/70 hover:text-white p-2"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
           
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setLightboxIndex((lightboxIndex - 1 + photos.length) % photos.length);
-            }}
-            className="absolute left-6 text-white p-2 hover:bg-white/10 rounded-full"
-          >
-            <ChevronLeft className="w-8 h-8" />
-          </button>
+          {/* Main image area */}
+          <div className="flex-1 flex items-center justify-center relative px-4">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setLightboxIndex((lightboxIndex - 1 + photos.length) % photos.length);
+              }}
+              className="absolute left-4 text-white/70 hover:text-white p-3 rounded-full hover:bg-white/10"
+            >
+              <ChevronLeft className="w-10 h-10" />
+            </button>
+            
+            <img
+              src={photos[lightboxIndex]}
+              alt={`Property photo ${lightboxIndex + 1}`}
+              className="max-h-[80vh] max-w-[85vw] object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+            
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setLightboxIndex((lightboxIndex + 1) % photos.length);
+              }}
+              className="absolute right-4 text-white/70 hover:text-white p-3 rounded-full hover:bg-white/10"
+            >
+              <ChevronRight className="w-10 h-10" />
+            </button>
+          </div>
           
-          <img
-            src={photos[lightboxIndex]}
-            alt={`Property photo ${lightboxIndex + 1}`}
-            className="max-h-[90vh] max-w-[90vw] object-contain"
-            onClick={(e) => e.stopPropagation()}
-          />
-          
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setLightboxIndex((lightboxIndex + 1) % photos.length);
-            }}
-            className="absolute right-6 text-white p-2 hover:bg-white/10 rounded-full"
-          >
-            <ChevronRight className="w-8 h-8" />
-          </button>
+          {/* Thumbnails */}
+          <div className="p-4 bg-black/80 overflow-x-auto">
+            <div className="flex gap-2 justify-center">
+              {photos.map((photo, index) => (
+                <button
+                  key={index}
+                  onClick={(e) => { e.stopPropagation(); setLightboxIndex(index); }}
+                  className={`w-16 h-16 flex-shrink-0 overflow-hidden rounded ${
+                    index === lightboxIndex ? 'ring-2 ring-white' : 'opacity-50 hover:opacity-100'
+                  }`}
+                >
+                  <img
+                    src={photo}
+                    alt={`Thumbnail ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </section>
   );
 }
 
+// Floor Plans with tabs (400inwood.com style)
 function SoapstoneFloorPlans({ site, theme }: { site: Site; theme?: Theme }) {
   const floorPlans = ((site as any).soapstoneFloorPlans as string[]) || [];
   const [activeIndex, setActiveIndex] = useState(0);
@@ -3993,40 +4134,38 @@ function SoapstoneFloorPlans({ site, theme }: { site: Site; theme?: Theme }) {
   return (
     <section 
       id="floorplans" 
-      className="py-20 px-6 bg-white"
-      style={{ scrollMarginTop: '80px' }}
+      className="py-16 md:py-20 px-6 bg-gray-100"
+      style={{ scrollMarginTop: '64px' }}
     >
-      <div className="container mx-auto max-w-5xl">
-        <h2 
-          className="text-4xl md:text-5xl mb-8 text-center"
-          style={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: '400' }}
-        >
-          Floor Plans
-        </h2>
-        
+      <div className="container mx-auto max-w-4xl">
+        {/* Floor tabs - styled like 400inwood */}
         {floorPlans.length > 1 && (
-          <div className="flex justify-center gap-2 mb-8">
-            {floorPlans.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setActiveIndex(index)}
-                className={`px-4 py-2 text-sm rounded transition-all ${
-                  activeIndex === index 
-                    ? 'bg-gray-800 text-white' 
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                Floor {index + 1}
-              </button>
-            ))}
+          <div className="flex justify-center mb-6">
+            <div className="inline-flex border-b border-gray-300">
+              {floorPlans.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setActiveIndex(index)}
+                  className={`px-6 py-3 text-sm tracking-wider transition-all border-b-2 -mb-px ${
+                    activeIndex === index 
+                      ? 'border-[#1a1a1a] text-[#1a1a1a]' 
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                  style={{ fontFamily: '"Open Sans", sans-serif' }}
+                >
+                  Floor {index + 1}
+                </button>
+              ))}
+            </div>
           </div>
         )}
         
-        <div className="flex justify-center">
+        {/* Floor plan image */}
+        <div className="flex justify-center bg-white p-4 md:p-8">
           <img
             src={floorPlans[activeIndex]}
             alt={`Floor plan ${activeIndex + 1}`}
-            className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-lg"
+            className="max-w-full max-h-[60vh] object-contain"
           />
         </div>
       </div>
@@ -4043,8 +4182,9 @@ interface SoapstoneAgentInfo {
   company?: string;
 }
 
+// Contact section with agent card (400inwood.com style)
 function SoapstoneContact({ site, theme, agentInfo }: { site: Site; theme?: Theme; agentInfo?: SoapstoneAgentInfo | null }) {
-  const [formData, setFormData] = useState({ name: '', email: '', phone: '', message: '' });
+  const [formData, setFormData] = useState({ firstName: '', lastName: '', email: '', phone: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const primaryColor = theme?.colors?.primary || '#558B73';
@@ -4057,12 +4197,17 @@ function SoapstoneContact({ site, theme, agentInfo }: { site: Site; theme?: Them
       const response = await fetch(`/api/sites/${site.id}/leads`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          name: `${formData.firstName} ${formData.lastName}`.trim(),
+          email: formData.email,
+          phone: formData.phone,
+          message: formData.message,
+        }),
       });
       
       if (response.ok) {
         setSubmitStatus('success');
-        setFormData({ name: '', email: '', phone: '', message: '' });
+        setFormData({ firstName: '', lastName: '', email: '', phone: '', message: '' });
       } else {
         setSubmitStatus('error');
       }
@@ -4076,91 +4221,117 @@ function SoapstoneContact({ site, theme, agentInfo }: { site: Site; theme?: Them
   return (
     <section 
       id="contact" 
-      className="py-20 px-6"
-      style={{ backgroundColor: '#2a2a2a', scrollMarginTop: '80px' }}
+      className="py-16 md:py-20 px-6 bg-white"
+      style={{ scrollMarginTop: '64px' }}
     >
-      <div className="container mx-auto max-w-6xl">
-        <div className="grid md:grid-cols-2 gap-12">
-          <div>
-            <h2 
-              className="text-4xl md:text-5xl mb-6 text-white"
-              style={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: '400' }}
-            >
-              Get In Touch
-            </h2>
+      <div className="container mx-auto max-w-5xl">
+        <div className="grid md:grid-cols-2 gap-12 items-start">
+          {/* Agent card */}
+          <div className="bg-gray-50 p-6 md:p-8">
+            {/* Logo */}
+            {theme?.logoUrl && (
+              <img
+                src={theme.logoUrl}
+                alt="Company logo"
+                className="h-10 w-auto object-contain mb-6"
+              />
+            )}
             
+            {/* Agent photo and info */}
             {agentInfo && (
-              <div className="flex items-start gap-6 mb-8">
+              <div className="flex flex-col items-center text-center">
                 {agentInfo.photoUrl && (
                   <img
                     src={agentInfo.photoUrl}
                     alt={agentInfo.name}
-                    className="w-24 h-24 rounded-full object-cover"
+                    className="w-32 h-32 rounded object-cover mb-4"
                   />
                 )}
-                <div>
-                  <h3 className="text-xl text-white mb-1" style={{ fontFamily: '"Playfair Display", serif' }}>
-                    {agentInfo.name}
-                  </h3>
-                  <p className="text-gray-400 mb-3">{agentInfo.title}</p>
-                  {agentInfo.company && (
-                    <p className="text-gray-400 text-sm mb-3">{agentInfo.company}</p>
+                <h3 
+                  className="text-xl mb-1"
+                  style={{ fontFamily: '"Playfair Display", serif', color: '#1a1a1a' }}
+                >
+                  {agentInfo.name}
+                </h3>
+                <p className="text-gray-500 text-sm mb-2">{agentInfo.title}</p>
+                {agentInfo.company && (
+                  <p className="text-gray-500 text-sm mb-4">{agentInfo.company}</p>
+                )}
+                
+                <div className="flex flex-col gap-2 text-sm">
+                  {agentInfo.phone && (
+                    <a 
+                      href={`tel:${agentInfo.phone}`} 
+                      className="text-gray-600 hover:text-gray-800"
+                      style={{ fontFamily: '"Open Sans", sans-serif' }}
+                    >
+                      {agentInfo.phone}
+                    </a>
                   )}
-                  <div className="flex flex-col gap-2 text-gray-300">
-                    {agentInfo.phone && (
-                      <a href={`tel:${agentInfo.phone}`} className="flex items-center gap-2 hover:text-white">
-                        <Phone className="w-4 h-4" />
-                        {agentInfo.phone}
-                      </a>
-                    )}
-                    {agentInfo.email && (
-                      <a href={`mailto:${agentInfo.email}`} className="flex items-center gap-2 hover:text-white">
-                        <Mail className="w-4 h-4" />
-                        {agentInfo.email}
-                      </a>
-                    )}
-                  </div>
+                  {agentInfo.email && (
+                    <a 
+                      href={`mailto:${agentInfo.email}`} 
+                      className="text-gray-600 hover:text-gray-800"
+                      style={{ fontFamily: '"Open Sans", sans-serif' }}
+                    >
+                      {agentInfo.email}
+                    </a>
+                  )}
                 </div>
               </div>
             )}
           </div>
           
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <Input
-                type="text"
-                placeholder="Your Name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
-                required
-              />
+          {/* Contact form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">First Name *</label>
+                <Input
+                  type="text"
+                  value={formData.firstName}
+                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                  className="bg-white border-gray-300"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Last Name *</label>
+                <Input
+                  type="text"
+                  value={formData.lastName}
+                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                  className="bg-white border-gray-300"
+                  required
+                />
+              </div>
             </div>
             <div>
+              <label className="block text-sm text-gray-600 mb-1">Email *</label>
               <Input
                 type="email"
-                placeholder="Your Email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                className="bg-white border-gray-300"
                 required
               />
             </div>
             <div>
+              <label className="block text-sm text-gray-600 mb-1">Phone *</label>
               <Input
                 type="tel"
-                placeholder="Your Phone"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                className="bg-white border-gray-300"
+                required
               />
             </div>
             <div>
+              <label className="block text-sm text-gray-600 mb-1">Comment *</label>
               <Textarea
-                placeholder="Your Message"
                 value={formData.message}
                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 min-h-[120px]"
+                className="bg-white border-gray-300 min-h-[100px]"
                 required
               />
             </div>
@@ -4168,17 +4339,17 @@ function SoapstoneContact({ site, theme, agentInfo }: { site: Site; theme?: Them
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-6 text-white"
-              style={{ backgroundColor: primaryColor }}
+              className="w-full py-3 text-white uppercase tracking-wider text-sm"
+              style={{ backgroundColor: '#1a1a1a', fontFamily: '"Open Sans", sans-serif' }}
             >
-              {isSubmitting ? 'Sending...' : 'Send Message'}
+              {isSubmitting ? 'Sending...' : 'Send Inquiry'}
             </Button>
             
             {submitStatus === 'success' && (
-              <p className="text-green-400 text-center">Message sent successfully!</p>
+              <p className="text-green-600 text-center text-sm">Message sent successfully!</p>
             )}
             {submitStatus === 'error' && (
-              <p className="text-red-400 text-center">Failed to send message. Please try again.</p>
+              <p className="text-red-600 text-center text-sm">Failed to send. Please try again.</p>
             )}
           </form>
         </div>
@@ -4187,16 +4358,34 @@ function SoapstoneContact({ site, theme, agentInfo }: { site: Site; theme?: Them
   );
 }
 
+// Map section (400inwood.com style)
 function SoapstoneMap({ site, theme }: { site: Site; theme?: Theme }) {
-  const primaryColor = theme?.colors?.primary || '#558B73';
-  
   return (
     <section 
       id="map" 
-      className="relative"
-      style={{ scrollMarginTop: '80px' }}
+      className="bg-gray-100"
+      style={{ scrollMarginTop: '64px' }}
     >
-      <div className="h-[500px]">
+      {/* Address header */}
+      <div className="py-6 px-6 bg-white border-b">
+        <div className="container mx-auto max-w-5xl">
+          <h3 
+            className="text-lg"
+            style={{ fontFamily: '"Open Sans", sans-serif', fontWeight: '400', color: '#1a1a1a' }}
+          >
+            Address
+          </h3>
+          <p 
+            className="text-gray-600 mt-1"
+            style={{ fontFamily: '"Open Sans", sans-serif' }}
+          >
+            {site.address}
+          </p>
+        </div>
+      </div>
+      
+      {/* Map */}
+      <div className="h-[400px] md:h-[500px]">
         <iframe
           src={`https://www.google.com/maps?q=${encodeURIComponent(site.address)}&output=embed`}
           className="w-full h-full border-0"
@@ -4205,43 +4394,36 @@ function SoapstoneMap({ site, theme }: { site: Site; theme?: Theme }) {
           title="Property Location"
         />
       </div>
-      
-      <div 
-        className="absolute bottom-8 left-8 bg-white rounded-lg shadow-xl p-6 max-w-sm"
-        style={{ fontFamily: '"Open Sans", sans-serif' }}
-      >
-        <div className="flex items-start gap-3">
-          <MapPin className="w-5 h-5 flex-shrink-0 mt-1" style={{ color: primaryColor }} />
-          <div>
-            <p className="font-medium text-gray-800">{site.address}</p>
-            <p className="text-2xl mt-2" style={{ fontFamily: '"Playfair Display", serif', color: primaryColor }}>
-              {site.price}
-            </p>
-          </div>
-        </div>
-      </div>
     </section>
   );
 }
 
+// Footer (400inwood.com / Rela style)
 function SoapstoneFooter({ site, theme, footerLogo, invertLogo }: { site: Site; theme?: Theme; footerLogo?: string | null; invertLogo?: boolean }) {
-  const primaryColor = theme?.colors?.primary || '#558B73';
-  
   return (
-    <footer className="py-12 px-6 bg-black">
-      <div className="container mx-auto max-w-6xl">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-          {footerLogo && (
-            <img 
-              src={footerLogo} 
-              alt="Logo" 
-              className={`h-12 w-auto object-contain ${invertLogo ? 'brightness-0 invert' : ''}`}
-            />
-          )}
+    <footer className="py-6 px-6 bg-white border-t">
+      <div className="container mx-auto max-w-5xl">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          {/* Powered by */}
+          <a 
+            href="https://agentassets.com" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-gray-400 text-sm hover:text-gray-600 flex items-center gap-2"
+            style={{ fontFamily: '"Open Sans", sans-serif' }}
+          >
+            Powered by <span className="font-semibold">AgentAssets</span>
+          </a>
           
-          <p className="text-gray-500 text-sm" style={{ fontFamily: '"Open Sans", sans-serif' }}>
-            Property listing powered by AgentAssets
-          </p>
+          {/* Company copyright */}
+          {theme?.name && (
+            <p 
+              className="text-gray-400 text-xs"
+              style={{ fontFamily: '"Open Sans", sans-serif' }}
+            >
+              {theme.name}
+            </p>
+          )}
         </div>
       </div>
     </footer>
@@ -4906,14 +5088,14 @@ export default function SiteView({ siteId: propSiteId, params: routeParams }: Si
         <SoapstoneHamburgerMenu 
           site={site} 
           theme={theme} 
-          hasPhotos={hasPhotos} 
+          hasPhotos={!!hasPhotos} 
           effectiveLogo={effectiveLogo} 
-          invertLogo={site.invertLogo} 
+          invertLogo={site.invertLogo ?? false} 
         />
         <SoapstoneDotNavigation 
           site={site} 
           theme={theme} 
-          hasPhotos={hasPhotos} 
+          hasPhotos={!!hasPhotos} 
           hasVideo={hasVideo} 
         />
         <SoapStoneHero site={site} theme={theme} heroImage={heroImage} />
@@ -4923,7 +5105,7 @@ export default function SiteView({ siteId: propSiteId, params: routeParams }: Si
         <SoapstoneFloorPlans site={site} theme={theme} />
         <SoapstoneContact site={site} theme={theme} agentInfo={agentInfo} />
         <SoapstoneMap site={site} theme={theme} />
-        <SoapstoneFooter site={site} theme={theme} footerLogo={footerLogo} invertLogo={site.invertLogo} />
+        <SoapstoneFooter site={site} theme={theme} footerLogo={footerLogo} invertLogo={site.invertLogo ?? false} />
       </div>
     );
   }
