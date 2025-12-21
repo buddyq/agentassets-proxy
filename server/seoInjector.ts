@@ -23,14 +23,10 @@ export async function getSiteMetaData(host: string, path: string): Promise<SiteM
     const agentAssetsDomains = ['agentassets.com', 'replit.dev', 'replit.app'];
     const isAgentAssetsDomain = agentAssetsDomains.some(domain => hostNormalized.includes(domain));
     
-    console.log('[SEO] Normalized host:', hostNormalized, '| isAgentAssets:', isAgentAssetsDomain);
-    
     if (!isAgentAssetsDomain) {
       site = await storage.getSiteByHost(hostNormalized);
-      console.log('[SEO] Custom domain lookup result:', site ? site.subdomain : 'null');
       if (!site) {
         site = await storage.getSiteByHost(`www.${hostNormalized}`);
-        console.log('[SEO] Fallback www lookup result:', site ? site.subdomain : 'null');
       }
     } else {
       for (const domain of agentAssetsDomains) {
@@ -75,8 +71,6 @@ export async function getSiteMetaData(host: string, path: string): Promise<SiteM
       const baseUrl = 'https://agentassets.com';
       seoImage = seoImage.startsWith('/') ? `${baseUrl}${seoImage}` : `${baseUrl}/${seoImage}`;
     }
-    
-    console.log('[SEO] Resolved image URL:', seoImage);
     
     return {
       title: seoTitle,

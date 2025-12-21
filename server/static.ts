@@ -34,12 +34,8 @@ export function serveStatic(app: Express) {
       const host = req.headers.host || req.hostname || '';
       const requestPath = req.originalUrl || req.path || '';
       
-      console.log('[SEO] Crawler detected:', userAgent.substring(0, 50));
-      console.log('[SEO] Host:', host, '| Path:', requestPath);
-      
       // Try to get site-specific meta data
       const siteMeta = await getSiteMetaData(host, requestPath);
-      console.log('[SEO] Site meta found:', siteMeta ? 'yes' : 'no');
       
       if (siteMeta) {
         // Read HTML and inject meta tags
