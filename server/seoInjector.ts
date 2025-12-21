@@ -67,8 +67,16 @@ export async function getSiteMetaData(host: string, path: string): Promise<SiteM
     }
     
     const siteUrl = site.customDomain 
-      ? `https://${site.customDomain}`
+      ? `https://${site.customDomain.replace(/^www\./, '')}`
       : `https://agentassets.com/p/${site.subdomain || site.id}`;
+    
+    // Convert relative image paths to absolute URLs
+    if (seoImage && !seoImage.startsWith('http')) {
+      const baseUrl = 'https://agentassets.com';
+      seoImage = seoImage.startsWith('/') ? `${baseUrl}${seoImage}` : `${baseUrl}/${seoImage}`;
+    }
+    
+    console.log('[SEO] Resolved image URL:', seoImage);
     
     return {
       title: seoTitle,
