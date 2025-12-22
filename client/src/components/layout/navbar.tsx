@@ -158,13 +158,13 @@ export function Navbar() {
           
           {/* Mobile Menu Button - Always visible on mobile */}
           <Button 
-            variant="ghost" 
-            size="icon" 
-            className="md:hidden text-white hover:bg-white/20" 
+            variant="outline" 
+            className="md:hidden gap-2 text-white border-white/40 bg-white/10 hover:bg-white/20 hover:text-white px-3 py-2" 
             onClick={() => setMobileMenuOpen(true)}
             data-testid="button-mobile-menu"
           >
-            <Menu className="h-6 w-6" />
+            <Menu className="h-5 w-5" />
+            <span className="font-medium">Menu</span>
           </Button>
           
           {/* Single Mobile Menu Sheet */}
