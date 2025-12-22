@@ -986,7 +986,7 @@ export default function CreateSite() {
                 </CardHeader>
                 <CardContent>
                   <Tabs defaultValue="branding" className="w-full">
-                    <TabsList className="grid w-full grid-cols-5 mb-6 bg-[#f3faf9] p-1 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.06)]">
+                    <TabsList className="grid w-full grid-cols-4 mb-6 bg-[#f3faf9] p-1 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.06)]">
                       <TabsTrigger 
                         value="branding" 
                         data-testid="tab-branding"
@@ -1010,14 +1010,6 @@ export default function CreateSite() {
                       >
                         <Search className="h-4 w-4 mr-2" />
                         SEO
-                      </TabsTrigger>
-                      <TabsTrigger 
-                        value="documents" 
-                        data-testid="tab-documents"
-                        className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-lg"
-                      >
-                        <FileText className="h-4 w-4 mr-2" />
-                        Documents {documents.length > 0 && `(${documents.length})`}
                       </TabsTrigger>
                       <TabsTrigger 
                         value="password" 
