@@ -3619,13 +3619,14 @@ function SoapStoneHero({ site, theme, heroImage, hasPhotos, onOpenMenu, navLinks
           </div>
           
           {/* Dot navigation */}
-          <nav className="flex flex-col gap-6 items-center">
+          <nav className="flex flex-col gap-4 items-center">
             {navLinks.map((link, index) => (
               <div
                 key={link.id}
-                className="relative flex items-center"
+                className="relative flex items-center justify-center cursor-pointer p-3"
                 onMouseEnter={() => setHoveredDot(index)}
                 onMouseLeave={() => setHoveredDot(null)}
+                onClick={() => scrollToSection(link.id)}
               >
                 {/* Label - appears on hover to the left with white background */}
                 <div 
