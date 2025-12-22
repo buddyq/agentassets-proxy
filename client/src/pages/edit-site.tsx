@@ -238,7 +238,13 @@ export default function EditSite() {
         soapstonePresentedBy: (site as any).soapstonePresentedBy || "",
       });
       setCustomDetails(site.customDetails || []);
-      setDocuments(site.documents || []);
+      const siteDocuments = site.documents || [];
+      setDocuments(siteDocuments);
+      
+      // Auto-enable documents feature if site has existing documents
+      if (siteDocuments.length > 0) {
+        setEnabledFeatures(prev => ({ ...prev, documents: true }));
+      }
     }
   }, [site, themes, layouts]);
 
@@ -2002,149 +2008,130 @@ export default function EditSite() {
 
                     </TabsContent>
 
-                    <TabsContent value="documents" className="space-y-6">
-                      {/* ===== DOCUMENTS SECTION ===== */}
-                      <div className="rounded-xl border p-6 space-y-4 bg-[#ffffff]">
-                        <div className="flex items-center gap-2 pb-2 border-b">
-                          <FileText className="h-5 w-5 text-primary" />
-                          <h3 className="font-semibold text-lg">Property Documents</h3>
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          Upload documents like floor plans, disclosures, or brochures. Visitors can download these from your property site.
-                        </p>
-
-                        <div className="bg-[#f3faf9] rounded-xl p-4 space-y-4">
-                          {/* Document Upload */}
-                          <div className="flex gap-3">
-                            <Input
-                              placeholder="Document name (e.g., Floor Plan, Property Disclosure)"
-                              value={newDocName}
-                              onChange={(e) => setNewDocName(e.target.value)}
-                              className="flex-1 bg-[#ffffff]"
-                              data-testid="input-document-name"
-                            />
-                            <ObjectUploader
-                              maxNumberOfFiles={1}
-                              maxFileSize={52428800}
-                              allowedFileTypes={['application/pdf', 'image/*']}
-                              onGetUploadParameters={async () => {
-                                const { url } = await getUploadUrl();
-                                return { method: 'PUT' as const, url };
-                              }}
-                              onComplete={(result) => {
-                                if (result.successful && result.successful.length > 0) {
-                                  const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
-                                  if (newDocName.trim()) {
-                                    setDocuments([...documents, { name: newDocName.trim(), url: normalizedUrl }]);
-                                    setNewDocName("");
-                                    toast({
-                                      title: "Document Uploaded",
-                                      description: `"${newDocName.trim()}" has been added.`,
-                                    });
-                                  } else {
-                                    setPendingDocUrl(normalizedUrl);
-                                    toast({
-                                      title: "Enter Document Name",
-                                      description: "Please enter a name for the document, then click Add.",
-                                    });
-                                  }
-                                }
-                              }}
-                              buttonClassName="gap-2 bg-primary text-white hover:bg-primary/90"
-                            >
-                              <Plus className="h-4 w-4" />
-                              Upload Document
-                            </ObjectUploader>
-                          </div>
-
-                          {pendingDocUrl && (
-                            <div className="flex gap-3 items-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                              <FileText className="h-5 w-5 text-yellow-600" />
-                              <span className="text-sm flex-1">Document uploaded. Enter a name:</span>
-                              <Input
-                                placeholder="Document name"
-                                value={newDocName}
-                                onChange={(e) => setNewDocName(e.target.value)}
-                                className="w-48 bg-[#ffffff]"
-                                data-testid="input-pending-document-name"
-                              />
-                              <Button
-                                size="sm"
-                                onClick={() => {
-                                  if (newDocName.trim() && pendingDocUrl) {
-                                    setDocuments([...documents, { name: newDocName.trim(), url: pendingDocUrl }]);
-                                    setNewDocName("");
-                                    setPendingDocUrl(null);
-                                  }
-                                }}
-                                disabled={!newDocName.trim()}
-                                data-testid="button-add-pending-document"
-                              >
-                                Add
-                              </Button>
-                            </div>
-                          )}
-
-                          {/* Document List */}
-                          {documents.length > 0 ? (
-                            <div className="space-y-2">
-                              <Label className="text-sm text-muted-foreground">Uploaded Documents ({documents.length})</Label>
-                              <div className="border rounded-lg divide-y bg-white">
-                                {documents.map((doc, index) => (
-                                  <div key={index} className="flex items-center justify-between p-3 hover:bg-muted/30" data-testid={`document-item-${index}`}>
-                                    <div className="flex items-center gap-3">
-                                      <FileText className="h-5 w-5 text-primary" />
-                                      <span className="font-medium">{doc.name}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        asChild
-                                      >
-                                        <a href={doc.url} target="_blank" rel="noopener noreferrer" data-testid={`button-download-document-${index}`}>
-                                          <Download className="h-4 w-4" />
-                                        </a>
-                                      </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="text-destructive hover:text-destructive"
-                                        onClick={() => {
-                                          setDocuments(documents.filter((_, i) => i !== index));
-                                          toast({
-                                            title: "Document Removed",
-                                            description: `"${doc.name}" has been removed.`,
-                                          });
-                                        }}
-                                        data-testid={`button-remove-document-${index}`}
-                                      >
-                                        <Trash2 className="h-4 w-4" />
-                                      </Button>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="border-2 border-dashed border-muted rounded-lg p-8 text-center bg-white">
-                              <FileText className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
-                              <p className="text-muted-foreground text-sm">No documents uploaded yet.</p>
-                              <p className="text-muted-foreground text-xs mt-1">Enter a document name and click Upload to add one.</p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </TabsContent>
-
                     <TabsContent value="features" className="space-y-6">
                       <UniversalLayoutFeatures
                         enabledFeatures={enabledFeatures}
                         onFeatureToggle={handleFeatureToggle}
                         children={{
                           documents: (
-                            <div className="text-center py-8 text-muted-foreground">
-                              <p>Documents options will appear here when configured.</p>
+                            <div className="space-y-4">
+                              <div className="flex gap-3">
+                                <Input
+                                  placeholder="Document name (e.g., Floor Plan, Property Disclosure)"
+                                  value={newDocName}
+                                  onChange={(e) => setNewDocName(e.target.value)}
+                                  className="flex-1 bg-[#ffffff]"
+                                  data-testid="input-document-name"
+                                />
+                                <ObjectUploader
+                                  maxNumberOfFiles={1}
+                                  maxFileSize={52428800}
+                                  allowedFileTypes={['application/pdf', 'image/*']}
+                                  onGetUploadParameters={async () => {
+                                    const { url } = await getUploadUrl();
+                                    return { method: 'PUT' as const, url };
+                                  }}
+                                  onComplete={(result) => {
+                                    if (result.successful && result.successful.length > 0) {
+                                      const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
+                                      if (newDocName.trim()) {
+                                        setDocuments([...documents, { name: newDocName.trim(), url: normalizedUrl }]);
+                                        setNewDocName("");
+                                        toast({
+                                          title: "Document Uploaded",
+                                          description: `"${newDocName.trim()}" has been added.`,
+                                        });
+                                      } else {
+                                        setPendingDocUrl(normalizedUrl);
+                                        toast({
+                                          title: "Enter Document Name",
+                                          description: "Please enter a name for the document, then click Add.",
+                                        });
+                                      }
+                                    }
+                                  }}
+                                  buttonClassName="gap-2 bg-primary text-white hover:bg-primary/90"
+                                >
+                                  <Plus className="h-4 w-4" />
+                                  Upload Document
+                                </ObjectUploader>
+                              </div>
+
+                              {pendingDocUrl && (
+                                <div className="flex gap-3 items-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                  <FileText className="h-5 w-5 text-yellow-600" />
+                                  <span className="text-sm flex-1">Document uploaded. Enter a name:</span>
+                                  <Input
+                                    placeholder="Document name"
+                                    value={newDocName}
+                                    onChange={(e) => setNewDocName(e.target.value)}
+                                    className="w-48 bg-[#ffffff]"
+                                    data-testid="input-pending-document-name"
+                                  />
+                                  <Button
+                                    size="sm"
+                                    onClick={() => {
+                                      if (newDocName.trim() && pendingDocUrl) {
+                                        setDocuments([...documents, { name: newDocName.trim(), url: pendingDocUrl }]);
+                                        setNewDocName("");
+                                        setPendingDocUrl(null);
+                                      }
+                                    }}
+                                    disabled={!newDocName.trim()}
+                                    data-testid="button-add-pending-document"
+                                  >
+                                    Add
+                                  </Button>
+                                </div>
+                              )}
+
+                              {documents.length > 0 ? (
+                                <div className="space-y-2">
+                                  <Label className="text-sm text-muted-foreground">Uploaded Documents ({documents.length})</Label>
+                                  <div className="border rounded-lg divide-y bg-white">
+                                    {documents.map((doc, index) => (
+                                      <div key={index} className="flex items-center justify-between p-3 hover:bg-muted/30" data-testid={`document-item-${index}`}>
+                                        <div className="flex items-center gap-3">
+                                          <FileText className="h-5 w-5 text-primary" />
+                                          <span className="font-medium">{doc.name}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            asChild
+                                          >
+                                            <a href={doc.url} target="_blank" rel="noopener noreferrer" data-testid={`button-download-document-${index}`}>
+                                              <Download className="h-4 w-4" />
+                                            </a>
+                                          </Button>
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="text-destructive hover:text-destructive"
+                                            onClick={() => {
+                                              setDocuments(documents.filter((_, i) => i !== index));
+                                              toast({
+                                                title: "Document Removed",
+                                                description: `"${doc.name}" has been removed.`,
+                                              });
+                                            }}
+                                            data-testid={`button-remove-document-${index}`}
+                                          >
+                                            <Trash2 className="h-4 w-4" />
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="border-2 border-dashed border-muted rounded-lg p-8 text-center bg-white">
+                                  <FileText className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
+                                  <p className="text-muted-foreground text-sm">No documents uploaded yet.</p>
+                                  <p className="text-muted-foreground text-xs mt-1">Enter a document name and click Upload to add one.</p>
+                                </div>
+                              )}
                             </div>
                           ),
                           floorPlans: (
