@@ -3871,10 +3871,12 @@ function SoapstoneMenuOverlay({ site, isOpen, onClose, navItems, presentedBy }: 
                     e.preventDefault();
                     handleNavClick(item.href);
                   }}
-                  className="text-2xl md:text-3xl lg:text-4xl text-gray-800 hover:text-gray-500 transition-colors uppercase tracking-wider"
+                  className="text-gray-800 hover:text-gray-500 transition-all duration-300 uppercase hover:tracking-[1px]"
                   style={{ 
-                    fontFamily: '"Open Sans", sans-serif',
-                    fontWeight: '300',
+                    fontFamily: '"Raleway", sans-serif',
+                    fontSize: '35px',
+                    fontWeight: 600,
+                    letterSpacing: '0px',
                     animation: `soapstone-slideUp 0.4s ease-out ${index * 0.05}s forwards`,
                     opacity: 0
                   }}
