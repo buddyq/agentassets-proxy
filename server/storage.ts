@@ -1179,10 +1179,16 @@ export class DatabaseStorage implements IStorage {
     // Filter out brokerage-assigned themes from public results
     publicThemes = publicThemes.filter(t => !brokerageThemeIds.includes(t.id));
     
+    // Get user's own custom themes
+    const userCustomThemes = await db
+      .select()
+      .from(themes)
+      .where(eq(themes.userId, userId));
+    
     // Check if user is in a brokerage
     const membership = await this.getBrokerageMembership(userId);
     if (!membership) {
-      return { layouts: publicLayouts, themes: publicThemes };
+      return { layouts: publicLayouts, themes: [...publicThemes, ...userCustomThemes] };
     }
     
     // Get all templates for this brokerage
@@ -1227,7 +1233,7 @@ export class DatabaseStorage implements IStorage {
       .from(themes)
       .where(sql`${themes.id} IN (${sql.join(accessibleTemplateIds.map(id => sql`${id}`), sql`, `)})`);
     
-    // Combine public and assigned templates (deduplicated)
+    // Combine public, assigned, and user custom templates (deduplicated)
     const allLayouts = [...publicLayouts];
     for (const layout of assignedLayouts) {
       if (!allLayouts.find(l => l.id === layout.id)) {
@@ -1235,7 +1241,7 @@ export class DatabaseStorage implements IStorage {
       }
     }
     
-    const allThemes = [...publicThemes];
+    const allThemes = [...publicThemes, ...userCustomThemes];
     for (const theme of assignedThemes) {
       if (!allThemes.find(t => t.id === theme.id)) {
         allThemes.push(theme);
