@@ -3621,8 +3621,8 @@ function SoapStoneHero({ site, theme, heroImage, hasPhotos, onOpenMenu, navLinks
           )}
         </div>
         
-        {/* Right white sidebar with dot navigation and city text */}
-        <div className="hidden md:flex w-12 lg:w-16 bg-white flex-shrink-0 flex-col items-center justify-between py-6 relative z-20">
+        {/* Right white sidebar with dot navigation and city text - FIXED position */}
+        <div className="hidden md:flex w-12 lg:w-16 bg-white flex-shrink-0 flex-col items-center justify-between py-6 fixed right-0 top-0 bottom-0 z-50">
           {/* City/State text at top - vertical */}
           <div 
             style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
