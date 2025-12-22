@@ -1197,8 +1197,8 @@ export default function EditSite() {
                           </div>
                         </div>
 
-                        {/* Hero Transition Effect - Hide for Soap Stone video mode */}
-                        {!(formData.layoutId === 'layout-soapstone' && formData.soapstoneHeroMode === 'video') && (
+                        {/* Hero Transition Effect - Hide for Soap Stone layout (it has its own) */}
+                        {formData.layoutId !== 'layout-soapstone' && (
                           <div className="grid gap-2 pt-4 border-t">
                             <Label>Hero Transition Effect</Label>
                             <p className="text-sm text-muted-foreground mb-2">
@@ -1774,6 +1774,44 @@ export default function EditSite() {
                             <span>Video Background (uses Video URL)</span>
                           </label>
                         </div>
+
+                        {/* Hero Transition Effect - Only show for Photo Slider */}
+                        {formData.soapstoneHeroMode === 'slider' && (
+                          <div className="pt-4 mt-3 border-t border-gray-200 space-y-3">
+                            <Label className="text-sm font-medium">Transition Effect</Label>
+                            <p className="text-sm text-muted-foreground">
+                              Choose how your hero images transition between slides.
+                            </p>
+                            <RadioGroup
+                              value={formData.heroTransition}
+                              onValueChange={(value) => setFormData({...formData, heroTransition: value as HeroTransitionType})}
+                              className="grid grid-cols-2 gap-3"
+                            >
+                              {[
+                                { value: 'slide', label: 'Slide', description: 'Classic horizontal sliding effect' },
+                                { value: 'crossfade', label: 'Crossfade', description: 'Smooth fade between images' },
+                                { value: 'kenburns', label: 'Ken Burns', description: 'Gentle zoom with fade transition' },
+                                { value: 'liquid-webgl', label: 'Liquid Wipe', description: 'Premium WebGL distortion effect' },
+                              ].map((option) => (
+                                <Label
+                                  key={option.value}
+                                  htmlFor={`soapstone-transition-${option.value}`}
+                                  className={`flex flex-col cursor-pointer rounded-lg border-2 p-3 transition-all bg-white ${
+                                    formData.heroTransition === option.value
+                                      ? 'border-primary bg-primary/5'
+                                      : 'border-muted hover:border-muted-foreground/50'
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <RadioGroupItem value={option.value} id={`soapstone-transition-${option.value}`} />
+                                    <span className="font-medium text-sm">{option.label}</span>
+                                  </div>
+                                  <span className="text-xs text-muted-foreground mt-1 ml-6">{option.description}</span>
+                                </Label>
+                              ))}
+                            </RadioGroup>
+                          </div>
+                        )}
                       </div>
 
                       {/* Presented By */}
