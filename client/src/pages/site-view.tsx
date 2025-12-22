@@ -3696,12 +3696,12 @@ function SoapStoneHero({ site, theme, heroImage, hasPhotos, onOpenMenu, navLinks
         </button>
       </section>
       
-      {/* Fixed "Presented by" bar at bottom of viewport - visible at top and bottom of page */}
+      {/* Fixed "Presented by" bar - visible at top, hidden when scrolling, hidden at bottom to show footer */}
       {presentedBy && (
         <div 
-          className="fixed bottom-0 left-0 right-0 z-[55] bg-white py-5 text-center transition-transform duration-500 ease-out md:left-12 lg:left-16"
+          className="fixed bottom-0 left-0 right-0 z-[65] bg-white py-5 text-center transition-transform duration-500 ease-out md:left-12 lg:left-16"
           style={{ 
-            transform: (!isScrolled || isAtBottom) ? 'translateY(0)' : 'translateY(100%)',
+            transform: (!isScrolled && !isAtBottom) ? 'translateY(0)' : 'translateY(100%)',
             boxShadow: '0 -4px 12px rgba(0,0,0,0.1)'
           }}
         >
