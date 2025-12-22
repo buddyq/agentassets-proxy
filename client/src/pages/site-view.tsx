@@ -3487,7 +3487,6 @@ function SoapStoneHero({ site, theme, heroImage, hasPhotos, onOpenMenu, navLinks
   }, [heroMode, heroPhotos.length]);
 
   useEffect(() => {
-    let scrollTimeout: NodeJS.Timeout;
     const handleScroll = () => {
       const sections = navLinks.map(link => document.getElementById(link.id));
       const scrollPos = window.scrollY + window.innerHeight / 3;
@@ -3500,12 +3499,9 @@ function SoapStoneHero({ site, theme, heroImage, hasPhotos, onOpenMenu, navLinks
         }
       }
       
-      // Hide title bar and presented by bar on scroll with delay
+      // Hide title bar and presented by bar on scroll
       if (window.scrollY > 50) {
-        clearTimeout(scrollTimeout);
-        scrollTimeout = setTimeout(() => {
-          setIsScrolled(true);
-        }, 100);
+        setIsScrolled(true);
       } else {
         setIsScrolled(false);
       }
@@ -3519,10 +3515,7 @@ function SoapStoneHero({ site, theme, heroImage, hasPhotos, onOpenMenu, navLinks
     };
     window.addEventListener('scroll', handleScroll);
     handleScroll();
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      clearTimeout(scrollTimeout);
-    };
+    return () => window.removeEventListener('scroll', handleScroll);
   }, [navLinks]);
 
   const scrollToSection = (id: string) => {
@@ -3556,8 +3549,6 @@ function SoapStoneHero({ site, theme, heroImage, hasPhotos, onOpenMenu, navLinks
         </h1>
       </header>
       
-      {/* Spacer for fixed header */}
-      <div className="h-[60px]" />
       
       {/* Fixed left white sidebar with hamburger - always on top with shadow */}
       <div 
@@ -3577,8 +3568,8 @@ function SoapStoneHero({ site, theme, heroImage, hasPhotos, onOpenMenu, navLinks
         </button>
       </div>
       
-      {/* Hero section with layout adjusted for fixed left sidebar */}
-      <section id="home" className="relative h-[calc(100vh-70px)] w-full flex md:pl-12 lg:pl-16">
+      {/* Hero section - full viewport height */}
+      <section id="home" className="relative h-screen w-full flex md:pl-12 lg:pl-16">
         
         {/* Center hero content - video or photos */}
         <div className="flex-1 relative overflow-hidden">
@@ -3606,22 +3597,6 @@ function SoapStoneHero({ site, theme, heroImage, hasPhotos, onOpenMenu, navLinks
             </>
           )}
           
-          {/* "Presented by" bar at bottom - slides down on scroll, up at page bottom */}
-          {presentedBy && (
-            <div 
-              className="absolute bottom-0 left-0 right-0 z-20 bg-white py-5 text-center transition-transform duration-500 ease-out"
-              style={{ 
-                transform: (!isScrolled || isAtBottom) ? 'translateY(0)' : 'translateY(100%)'
-              }}
-            >
-              <span 
-                className="text-xs uppercase tracking-widest"
-                style={{ fontFamily: '"Open Sans", sans-serif', color: '#666' }}
-              >
-                {presentedBy}
-              </span>
-            </div>
-          )}
           
           {/* Slider dots for photo mode */}
           {heroMode === 'slider' && heroPhotos.length > 1 && (
@@ -3720,6 +3695,24 @@ function SoapStoneHero({ site, theme, heroImage, hasPhotos, onOpenMenu, navLinks
           </svg>
         </button>
       </section>
+      
+      {/* Fixed "Presented by" bar at bottom of viewport - visible at top and bottom of page */}
+      {presentedBy && (
+        <div 
+          className="fixed bottom-0 left-0 right-0 z-[55] bg-white py-5 text-center transition-transform duration-500 ease-out md:left-12 lg:left-16"
+          style={{ 
+            transform: (!isScrolled || isAtBottom) ? 'translateY(0)' : 'translateY(100%)',
+            boxShadow: '0 -4px 12px rgba(0,0,0,0.1)'
+          }}
+        >
+          <span 
+            className="text-xs uppercase tracking-widest"
+            style={{ fontFamily: '"Open Sans", sans-serif', color: '#666' }}
+          >
+            {presentedBy}
+          </span>
+        </div>
+      )}
     </>
   );
 }
