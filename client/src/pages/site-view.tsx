@@ -3619,7 +3619,7 @@ function SoapStoneHero({ site, theme, heroImage, hasPhotos, onOpenMenu, navLinks
           </div>
           
           {/* Dot navigation */}
-          <nav className="flex flex-col gap-3 items-center">
+          <nav className="flex flex-col gap-6 items-center">
             {navLinks.map((link, index) => (
               <div
                 key={link.id}
@@ -3627,23 +3627,38 @@ function SoapStoneHero({ site, theme, heroImage, hasPhotos, onOpenMenu, navLinks
                 onMouseEnter={() => setHoveredDot(index)}
                 onMouseLeave={() => setHoveredDot(null)}
               >
-                {/* Label - appears on hover to the left */}
-                <span 
-                  className={`absolute right-6 text-xs uppercase tracking-wider font-medium whitespace-nowrap transition-all duration-200 ${
-                    hoveredDot === index ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-2'
+                {/* Label - appears on hover to the left with white background */}
+                <div 
+                  className={`absolute right-8 top-1/2 -translate-y-1/2 transition-all duration-200 ${
+                    hoveredDot === index ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4 pointer-events-none'
                   }`}
-                  style={{ color: '#333', fontFamily: '"Open Sans", sans-serif' }}
+                  style={{ 
+                    backgroundColor: '#ffffff',
+                    padding: '8px 16px',
+                    whiteSpace: 'nowrap'
+                  }}
                 >
-                  {link.label}
-                </span>
+                  <span
+                    style={{ 
+                      color: '#333',
+                      fontWeight: '400',
+                      fontSize: '25px',
+                      letterSpacing: '2px',
+                      textTransform: 'uppercase',
+                      fontFamily: '"Open Sans", sans-serif'
+                    }}
+                  >
+                    {link.label}
+                  </span>
+                </div>
                 
                 {/* Dot */}
                 <button
                   onClick={() => scrollToSection(link.id)}
-                  className={`w-2 h-2 rounded-full border transition-all ${
+                  className={`w-3 h-3 rounded-full border transition-all ${
                     activeSection === link.id 
-                      ? 'bg-gray-800 border-gray-800' 
-                      : 'bg-transparent border-gray-400 hover:border-gray-600'
+                      ? 'bg-gray-700 border-gray-700' 
+                      : 'bg-transparent border-gray-500 hover:border-gray-600'
                   }`}
                   aria-label={`Go to ${link.label}`}
                 />
@@ -3713,36 +3728,44 @@ function SoapstoneDotNavigation({ site, theme, hasPhotos, hasVideo }: { site: Si
 
   return (
     <nav 
-      className="fixed right-6 top-1/2 -translate-y-1/2 z-50 hidden md:flex flex-col gap-8 items-end"
+      className="fixed right-6 top-1/2 -translate-y-1/2 z-50 hidden md:flex flex-col gap-10 items-end"
       style={{ fontFamily: '"Open Sans", sans-serif' }}
     >
       {navLinks.map((link, index) => (
         <div
           key={link.id}
-          className="flex items-center gap-4"
+          className="flex items-center gap-4 relative"
           onMouseEnter={() => setHoveredIndex(index)}
           onMouseLeave={() => setHoveredIndex(null)}
         >
           {/* Label - appears on hover with white background */}
-          <span 
-            className={`uppercase whitespace-nowrap transition-all duration-200 px-3 py-1 ${
-              hoveredIndex === index ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-2 pointer-events-none'
+          <div 
+            className={`absolute right-8 top-1/2 -translate-y-1/2 transition-all duration-200 ${
+              hoveredIndex === index ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4 pointer-events-none'
             }`}
             style={{ 
-              backgroundColor: 'white',
-              color: '#333',
-              fontWeight: '400',
-              fontSize: '25px',
-              letterSpacing: '2px'
+              backgroundColor: '#ffffff',
+              padding: '8px 16px',
+              whiteSpace: 'nowrap'
             }}
           >
-            {link.label}
-          </span>
+            <span
+              style={{ 
+                color: '#333',
+                fontWeight: '400',
+                fontSize: '25px',
+                letterSpacing: '2px',
+                textTransform: 'uppercase'
+              }}
+            >
+              {link.label}
+            </span>
+          </div>
           
           {/* Dot */}
           <button
             onClick={() => scrollToSection(link.id)}
-            className={`w-4 h-4 rounded-full border-2 transition-all ${
+            className={`w-3.5 h-3.5 rounded-full border transition-all ${
               activeSection === link.id 
                 ? 'bg-gray-700 border-gray-700' 
                 : 'bg-transparent border-gray-500 hover:border-gray-700'
