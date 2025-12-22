@@ -3464,6 +3464,7 @@ function SoapStoneHero({ site, theme, heroImage, hasPhotos, onOpenMenu, navLinks
   const [hoveredDot, setHoveredDot] = useState<number | null>(null);
   const [activeSection, setActiveSection] = useState('overview');
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isAtBottom, setIsAtBottom] = useState(false);
   const heroMode = (site as any).soapstoneHeroMode || 'video';
   const presentedBy = (site as any).soapstonePresentedBy || (site as any).brokerageName;
   
@@ -3499,7 +3500,7 @@ function SoapStoneHero({ site, theme, heroImage, hasPhotos, onOpenMenu, navLinks
         }
       }
       
-      // Hide title bar on scroll with delay
+      // Hide title bar and presented by bar on scroll with delay
       if (window.scrollY > 50) {
         clearTimeout(scrollTimeout);
         scrollTimeout = setTimeout(() => {
@@ -3508,6 +3509,13 @@ function SoapStoneHero({ site, theme, heroImage, hasPhotos, onOpenMenu, navLinks
       } else {
         setIsScrolled(false);
       }
+      
+      // Check if at bottom of page
+      const scrollHeight = document.documentElement.scrollHeight;
+      const scrollTop = window.scrollY;
+      const clientHeight = window.innerHeight;
+      const atBottom = scrollHeight - scrollTop - clientHeight < 100;
+      setIsAtBottom(atBottom);
     };
     window.addEventListener('scroll', handleScroll);
     handleScroll();
@@ -3598,14 +3606,19 @@ function SoapStoneHero({ site, theme, heroImage, hasPhotos, onOpenMenu, navLinks
             </>
           )}
           
-          {/* "Presented by" bar at bottom */}
+          {/* "Presented by" bar at bottom - slides down on scroll, up at page bottom */}
           {presentedBy && (
-            <div className="absolute bottom-0 left-0 right-0 z-20 bg-white/95 py-3 text-center">
+            <div 
+              className="absolute bottom-0 left-0 right-0 z-20 bg-white py-5 text-center transition-transform duration-500 ease-out"
+              style={{ 
+                transform: (!isScrolled || isAtBottom) ? 'translateY(0)' : 'translateY(100%)'
+              }}
+            >
               <span 
                 className="text-xs uppercase tracking-widest"
                 style={{ fontFamily: '"Open Sans", sans-serif', color: '#666' }}
               >
-                PRESENTED BY: {presentedBy}
+                {presentedBy}
               </span>
             </div>
           )}
