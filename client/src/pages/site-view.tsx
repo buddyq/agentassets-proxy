@@ -4121,66 +4121,46 @@ function SoapstoneOverview({ site, theme }: { site: Site; theme?: Theme }) {
         </div>
       </div>
       
-      {/* Overview text section - with decorative SVG background */}
+      {/* Overview text section - with subtle SVG background */}
       <section 
         id="overview" 
         className="py-16 md:py-24 px-6 relative overflow-hidden"
         style={{ 
           scrollMarginTop: '64px',
-          backgroundColor: `${primaryColor}0A`
+          backgroundColor: `${primaryColor}08`
         }}
       >
-        {/* Decorative SVG Background Pattern */}
+        {/* Subtle topography-style SVG background */}
         <svg 
           className="absolute inset-0 w-full h-full pointer-events-none"
           preserveAspectRatio="xMidYMid slice"
         >
           <defs>
-            <pattern id="overview-pattern" x="0" y="0" width="600" height="600" patternUnits="userSpaceOnUse">
-              {/* Large filled organic shapes */}
-              <ellipse cx="100" cy="150" rx="120" ry="180" fill={primaryColor} opacity="0.08" />
-              <ellipse cx="500" cy="100" rx="150" ry="100" fill={primaryColor} opacity="0.06" />
-              <ellipse cx="450" cy="450" rx="180" ry="140" fill={primaryColor} opacity="0.07" />
-              <ellipse cx="80" cy="500" rx="100" ry="120" fill={primaryColor} opacity="0.05" />
-              <ellipse cx="300" cy="300" rx="200" ry="150" fill={primaryColor} opacity="0.04" />
-              
-              {/* Curved flowing lines with thicker strokes */}
+            <pattern id="topo-pattern" x="0" y="0" width="100%" height="100%" patternUnits="userSpaceOnUse">
               <path 
-                d="M0 200 Q150 80 300 200 T600 200" 
-                fill="none" 
-                stroke={primaryColor}
-                strokeWidth="2"
-                opacity="0.15"
-              />
-              <path 
-                d="M0 350 Q200 220 350 350 T600 350" 
-                fill="none" 
-                stroke={primaryColor}
-                strokeWidth="1.5"
-                opacity="0.12"
-              />
-              <path 
-                d="M0 100 Q100 20 200 100 T600 100" 
-                fill="none" 
-                stroke={primaryColor}
-                strokeWidth="1.5"
-                opacity="0.1"
-              />
-              <path 
-                d="M0 500 Q180 380 320 500 T600 500" 
+                d="M0 50 C 150 30, 350 70, 500 50 S 800 30, 1000 50 S 1300 70, 1500 50" 
                 fill="none" 
                 stroke={primaryColor}
                 strokeWidth="1"
-                opacity="0.1"
+                opacity="0.08"
               />
-              
-              {/* Filled circles */}
-              <circle cx="150" cy="450" r="50" fill={primaryColor} opacity="0.06" />
-              <circle cx="500" cy="280" r="70" fill={primaryColor} opacity="0.05" />
-              <circle cx="300" cy="80" r="40" fill={primaryColor} opacity="0.07" />
+              <path 
+                d="M0 120 C 200 100, 400 140, 600 120 S 900 100, 1100 120 S 1400 140, 1600 120" 
+                fill="none" 
+                stroke={primaryColor}
+                strokeWidth="1"
+                opacity="0.06"
+              />
+              <path 
+                d="M0 190 C 180 170, 380 210, 560 190 S 860 170, 1060 190 S 1360 210, 1560 190" 
+                fill="none" 
+                stroke={primaryColor}
+                strokeWidth="1"
+                opacity="0.05"
+              />
             </pattern>
           </defs>
-          <rect width="100%" height="100%" fill="url(#overview-pattern)" />
+          <rect width="100%" height="100%" fill="url(#topo-pattern)" />
         </svg>
         
         <div className="container mx-auto max-w-4xl relative z-10">
