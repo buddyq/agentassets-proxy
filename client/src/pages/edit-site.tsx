@@ -1743,12 +1743,12 @@ export default function EditSite() {
                       </div>
                       
                       {/* Hero Mode Selection */}
-                      <div className="grid gap-2">
-                        <Label>Hero Section Style</Label>
-                        <p className="text-sm text-muted-foreground mb-2">
+                      <div className="bg-[#f3faf9] rounded-xl p-4 space-y-3">
+                        <Label className="text-base font-medium">Hero Section Style</Label>
+                        <p className="text-sm text-muted-foreground">
                           Choose between a video background or photo slider for the hero section.
                         </p>
-                        <div className="flex gap-4">
+                        <div className="flex gap-4 pt-1">
                           <label className="flex items-center gap-2 cursor-pointer">
                             <input
                               type="radio"
@@ -1775,13 +1775,14 @@ export default function EditSite() {
                       </div>
 
                       {/* Presented By */}
-                      <div className="grid gap-2">
-                        <Label htmlFor="edit-soapstonePresentedBy">Presented By (Optional)</Label>
-                        <p className="text-sm text-muted-foreground mb-2">
+                      <div className="bg-[#f3faf9] rounded-xl p-4 space-y-3">
+                        <Label htmlFor="edit-soapstonePresentedBy" className="text-base font-medium">Presented By (Optional)</Label>
+                        <p className="text-sm text-muted-foreground">
                           Text displayed in the colored bar above the overview section, e.g., "Presented by Smith Realty"
                         </p>
                         <Input
                           id="edit-soapstonePresentedBy"
+                          className="bg-white"
                           placeholder="e.g., Presented by Smith Realty"
                           value={formData.soapstonePresentedBy}
                           onChange={(e) => setFormData({...formData, soapstonePresentedBy: e.target.value})}
@@ -1790,10 +1791,10 @@ export default function EditSite() {
                       </div>
 
                       {/* Video Tabs */}
-                      <div className="grid gap-4">
+                      <div className="bg-[#f3faf9] rounded-xl p-4 space-y-4">
                         <div className="flex items-center justify-between">
                           <div>
-                            <Label>Video Gallery Tabs</Label>
+                            <Label className="text-base font-medium">Video Gallery Tabs</Label>
                             <p className="text-sm text-muted-foreground">
                               Add tabbed video sections (e.g., Tour, Aerial, Neighborhood)
                             </p>
@@ -1814,7 +1815,7 @@ export default function EditSite() {
                         </div>
 
                         {formData.soapstoneVideoTabs.length === 0 && (
-                          <div className="border-2 border-dashed border-muted rounded-lg p-6 text-center">
+                          <div className="border-2 border-dashed border-muted rounded-lg p-6 text-center bg-white">
                             <p className="text-muted-foreground mb-4">No video tabs added yet</p>
                             <Button
                               type="button"
@@ -1832,7 +1833,7 @@ export default function EditSite() {
                         )}
 
                         {formData.soapstoneVideoTabs.map((tab, index) => (
-                          <div key={index} className="border rounded-lg p-4 bg-[#f3faf9]">
+                          <div key={index} className="border rounded-lg p-4 bg-white">
                             <div className="flex items-center justify-between mb-4">
                               <span className="font-medium text-sm">Video Tab {index + 1}</span>
                               <Button
@@ -1855,6 +1856,7 @@ export default function EditSite() {
                                 <Label htmlFor={`edit-video-tab-label-${index}`}>Tab Label</Label>
                                 <Input
                                   id={`edit-video-tab-label-${index}`}
+                                  className="bg-white"
                                   placeholder="e.g., Property Tour"
                                   value={tab.label}
                                   onChange={(e) => {
@@ -1869,6 +1871,7 @@ export default function EditSite() {
                                 <Label htmlFor={`edit-video-tab-url-${index}`}>Video URL (YouTube/Vimeo)</Label>
                                 <Input
                                   id={`edit-video-tab-url-${index}`}
+                                  className="bg-white"
                                   placeholder="https://youtube.com/watch?v=..."
                                   value={tab.url}
                                   onChange={(e) => {
@@ -1885,14 +1888,12 @@ export default function EditSite() {
                       </div>
 
                       {/* Floor Plans */}
-                      <div className="grid gap-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <Label>Floor Plans</Label>
-                            <p className="text-sm text-muted-foreground">
-                              Upload floor plan images for each level of the property.
-                            </p>
-                          </div>
+                      <div className="bg-[#f3faf9] rounded-xl p-4 space-y-4">
+                        <div>
+                          <Label className="text-base font-medium">Floor Plans</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Upload floor plan images for each level of the property.
+                          </p>
                         </div>
 
                         <ObjectUploader
@@ -1909,7 +1910,7 @@ export default function EditSite() {
                               setFormData({...formData, soapstoneFloorPlans: [...formData.soapstoneFloorPlans, ...newPlans]});
                             }
                           }}
-                          buttonClassName="gap-2"
+                          buttonClassName="gap-2 bg-primary text-white hover:bg-primary/90"
                         >
                           <Plus className="h-4 w-4" />
                           Upload Floor Plan
