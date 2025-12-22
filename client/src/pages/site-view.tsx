@@ -320,7 +320,13 @@ function ShoalwoodNavigation({ site, theme, hasPhotos, hasVideo, effectiveLogo, 
                   <button
                     key={link.href}
                     onClick={() => handleNavClick(link.href)}
-                    className="block w-full text-left px-4 py-4 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors border-b border-gray-50"
+                    className="block w-full text-left px-4 py-4 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-all duration-300 border-b border-gray-50 hover:tracking-[1px]"
+                    style={{
+                      fontFamily: '"Raleway", sans-serif',
+                      fontSize: '35px',
+                      fontWeight: 600,
+                      letterSpacing: '0px'
+                    }}
                     data-testid={`link-nav-${link.label.toLowerCase().replace(/\s+/g, '-')}`}
                   >
                     {link.label}
