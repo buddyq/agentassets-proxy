@@ -3463,6 +3463,7 @@ function SoapStoneHero({ site, theme, heroImage, hasPhotos, onOpenMenu, navLinks
   const [currentSlide, setCurrentSlide] = useState(0);
   const [hoveredDot, setHoveredDot] = useState<number | null>(null);
   const [activeSection, setActiveSection] = useState('overview');
+  const [isScrolled, setIsScrolled] = useState(false);
   const heroMode = (site as any).soapstoneHeroMode || 'video';
   const presentedBy = (site as any).soapstonePresentedBy || (site as any).brokerageName;
   
@@ -3485,6 +3486,7 @@ function SoapStoneHero({ site, theme, heroImage, hasPhotos, onOpenMenu, navLinks
   }, [heroMode, heroPhotos.length]);
 
   useEffect(() => {
+    let scrollTimeout: NodeJS.Timeout;
     const handleScroll = () => {
       const sections = navLinks.map(link => document.getElementById(link.id));
       const scrollPos = window.scrollY + window.innerHeight / 3;
@@ -3496,10 +3498,23 @@ function SoapStoneHero({ site, theme, heroImage, hasPhotos, onOpenMenu, navLinks
           break;
         }
       }
+      
+      // Hide title bar on scroll with delay
+      if (window.scrollY > 50) {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          setIsScrolled(true);
+        }, 100);
+      } else {
+        setIsScrolled(false);
+      }
     };
     window.addEventListener('scroll', handleScroll);
     handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      clearTimeout(scrollTimeout);
+    };
   }, [navLinks]);
 
   const scrollToSection = (id: string) => {
@@ -3512,8 +3527,13 @@ function SoapStoneHero({ site, theme, heroImage, hasPhotos, onOpenMenu, navLinks
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Open+Sans:wght@300;400;500;600&display=swap');
       `}</style>
       
-      {/* White top bar with centered title */}
-      <header className="bg-white py-4 px-6 text-center z-50 relative">
+      {/* White top bar with centered title - slides up on scroll */}
+      <header 
+        className="bg-white py-4 px-6 text-center z-50 fixed top-0 left-0 right-0 transition-transform duration-500 ease-out md:left-12 lg:left-16"
+        style={{ 
+          transform: isScrolled ? 'translateY(-100%)' : 'translateY(0)'
+        }}
+      >
         <h1 
           className="uppercase"
           style={{ 
@@ -3527,6 +3547,9 @@ function SoapStoneHero({ site, theme, heroImage, hasPhotos, onOpenMenu, navLinks
           {site.title || site.address}
         </h1>
       </header>
+      
+      {/* Spacer for fixed header */}
+      <div className="h-[60px]" />
       
       {/* Fixed left white sidebar with hamburger - always on top with shadow */}
       <div 
