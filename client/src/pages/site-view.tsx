@@ -4127,57 +4127,57 @@ function SoapstoneOverview({ site, theme }: { site: Site; theme?: Theme }) {
         className="py-16 md:py-24 px-6 relative overflow-hidden"
         style={{ 
           scrollMarginTop: '64px',
-          backgroundColor: `${primaryColor}08`
+          backgroundColor: `${primaryColor}0A`
         }}
       >
         {/* Decorative SVG Background Pattern */}
         <svg 
           className="absolute inset-0 w-full h-full pointer-events-none"
           preserveAspectRatio="xMidYMid slice"
-          style={{ opacity: 0.4 }}
         >
           <defs>
-            <pattern id="overview-pattern" x="0" y="0" width="400" height="400" patternUnits="userSpaceOnUse">
-              {/* Abstract curved lines */}
+            <pattern id="overview-pattern" x="0" y="0" width="600" height="600" patternUnits="userSpaceOnUse">
+              {/* Large filled organic shapes */}
+              <ellipse cx="100" cy="150" rx="120" ry="180" fill={primaryColor} opacity="0.08" />
+              <ellipse cx="500" cy="100" rx="150" ry="100" fill={primaryColor} opacity="0.06" />
+              <ellipse cx="450" cy="450" rx="180" ry="140" fill={primaryColor} opacity="0.07" />
+              <ellipse cx="80" cy="500" rx="100" ry="120" fill={primaryColor} opacity="0.05" />
+              <ellipse cx="300" cy="300" rx="200" ry="150" fill={primaryColor} opacity="0.04" />
+              
+              {/* Curved flowing lines with thicker strokes */}
               <path 
-                d="M0 200 Q100 100 200 200 T400 200" 
+                d="M0 200 Q150 80 300 200 T600 200" 
                 fill="none" 
                 stroke={primaryColor}
-                strokeWidth="1"
+                strokeWidth="2"
                 opacity="0.15"
               />
               <path 
-                d="M0 250 Q150 150 250 250 T400 250" 
+                d="M0 350 Q200 220 350 350 T600 350" 
                 fill="none" 
                 stroke={primaryColor}
-                strokeWidth="0.8"
+                strokeWidth="1.5"
                 opacity="0.12"
               />
               <path 
-                d="M0 150 Q80 80 180 150 T400 150" 
+                d="M0 100 Q100 20 200 100 T600 100" 
                 fill="none" 
                 stroke={primaryColor}
-                strokeWidth="0.6"
+                strokeWidth="1.5"
                 opacity="0.1"
               />
               <path 
-                d="M0 300 Q120 200 220 300 T400 300" 
+                d="M0 500 Q180 380 320 500 T600 500" 
                 fill="none" 
                 stroke={primaryColor}
-                strokeWidth="0.5"
-                opacity="0.08"
+                strokeWidth="1"
+                opacity="0.1"
               />
-              <path 
-                d="M0 100 Q60 40 160 100 T400 100" 
-                fill="none" 
-                stroke={primaryColor}
-                strokeWidth="0.5"
-                opacity="0.08"
-              />
-              {/* Subtle circles */}
-              <circle cx="50" cy="80" r="40" fill="none" stroke={primaryColor} strokeWidth="0.5" opacity="0.06" />
-              <circle cx="350" cy="320" r="60" fill="none" stroke={primaryColor} strokeWidth="0.5" opacity="0.06" />
-              <circle cx="200" cy="200" r="80" fill="none" stroke={primaryColor} strokeWidth="0.3" opacity="0.04" />
+              
+              {/* Filled circles */}
+              <circle cx="150" cy="450" r="50" fill={primaryColor} opacity="0.06" />
+              <circle cx="500" cy="280" r="70" fill={primaryColor} opacity="0.05" />
+              <circle cx="300" cy="80" r="40" fill={primaryColor} opacity="0.07" />
             </pattern>
           </defs>
           <rect width="100%" height="100%" fill="url(#overview-pattern)" />
