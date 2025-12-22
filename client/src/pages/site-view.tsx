@@ -4301,27 +4301,31 @@ function SoapstoneGallery({ photos, theme }: { photos: string[]; theme?: Theme }
       style={{ scrollMarginTop: '64px' }}
     >
       <div className="container mx-auto max-w-6xl">
-        {/* Photo grid - 3x3 */}
-        <div className="grid grid-cols-3 gap-1 md:gap-2">
-          {gridPhotos.map((photo, index) => (
-            <div 
-              key={index} 
-              className="aspect-square overflow-hidden cursor-pointer group relative"
-              onClick={() => openLightbox(index)}
-            >
-              <img
-                src={photo}
-                alt={`Property photo ${index + 1}`}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-              {/* Overlay text on each photo */}
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center">
-                <span className="text-white text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity tracking-wider">
-                  View photo gallery
-                </span>
+        {/* Masonry Photo Gallery */}
+        <div className="columns-2 md:columns-3 gap-2 md:gap-3">
+          {gridPhotos.map((photo, index) => {
+            const heights = ['h-48 md:h-64', 'h-56 md:h-80', 'h-44 md:h-56', 'h-64 md:h-72', 'h-52 md:h-60', 'h-48 md:h-68', 'h-60 md:h-76', 'h-44 md:h-52', 'h-56 md:h-64'];
+            return (
+              <div 
+                key={index} 
+                className={`break-inside-avoid mb-2 md:mb-3 overflow-hidden cursor-pointer group relative rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300`}
+                onClick={() => openLightbox(index)}
+              >
+                <div className={`${heights[index % heights.length]} w-full overflow-hidden`}>
+                  <img
+                    src={photo}
+                    alt={`Property photo ${index + 1}`}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-end justify-center pb-4">
+                  <span className="text-white text-sm font-medium tracking-wider">
+                    View photo gallery
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
         
         {/* "View X Photos" button */}
@@ -5746,27 +5750,20 @@ function PhotoGallery({ photos, themeColors, galleryStyle = 'grid' }: {
       case 'lightbox':
       case 'grid':
       default:
-        const getImageHeight = (index: number) => {
-          const heights = ['h-48', 'h-64', 'h-56', 'h-72', 'h-52', 'h-60', 'h-68', 'h-44', 'h-58'];
-          return heights[index % heights.length];
-        };
         return (
-          <div className="columns-2 md:columns-3 gap-3 md:gap-4 space-y-3 md:space-y-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
             {photos.map((photo, index) => (
               <div 
                 key={index}
-                className={`break-inside-avoid rounded-xl overflow-hidden shadow-lg cursor-pointer hover:scale-[1.02] hover:shadow-xl transition-all duration-300 group relative`}
+                className="aspect-square rounded-xl overflow-hidden shadow-lg cursor-pointer hover:scale-[1.02] hover:shadow-xl transition-all duration-300"
                 onClick={() => setSelectedIndex(index)}
                 data-testid={`photo-${index}`}
               >
-                <div className={`${getImageHeight(index)} w-full overflow-hidden`}>
-                  <img 
-                    src={photo} 
-                    alt={`Property photo ${index + 1}`}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <img 
+                  src={photo} 
+                  alt={`Property photo ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
               </div>
             ))}
           </div>
