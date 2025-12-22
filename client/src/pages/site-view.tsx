@@ -3832,6 +3832,13 @@ function SoapstoneMenuOverlay({ site, isOpen, onClose, navItems, presentedBy }: 
           from { transform: translateY(20px); opacity: 0; }
           to { transform: translateY(0); opacity: 1; }
         }
+        .soapstone-nav-link {
+          letter-spacing: 2px;
+          transition: letter-spacing 0.3s ease, color 0.3s ease;
+        }
+        .soapstone-nav-link:hover {
+          letter-spacing: 1px;
+        }
       `}</style>
       
       {/* Left sidebar - stays on top with shadow */}
@@ -3871,12 +3878,11 @@ function SoapstoneMenuOverlay({ site, isOpen, onClose, navItems, presentedBy }: 
                     e.preventDefault();
                     handleNavClick(item.href);
                   }}
-                  className="text-gray-800 hover:text-gray-500 transition-all duration-300 uppercase hover:tracking-[1px]"
+                  className="soapstone-nav-link text-gray-800 hover:text-gray-500 uppercase"
                   style={{ 
                     fontFamily: '"Raleway", sans-serif',
                     fontSize: '35px',
                     fontWeight: 500,
-                    letterSpacing: '2px',
                     animation: `soapstone-slideUp 0.4s ease-out ${index * 0.05}s forwards`,
                     opacity: 0
                   }}
