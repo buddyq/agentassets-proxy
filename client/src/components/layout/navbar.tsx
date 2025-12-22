@@ -1,8 +1,9 @@
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useBrokerage } from "@/lib/api";
-import { LayoutDashboard, CreditCard, Palette, User, Settings, LogOut as LogOutIcon, Infinity } from "lucide-react";
+import { LayoutDashboard, CreditCard, Palette, User, Settings, LogOut as LogOutIcon, Infinity, Menu, Home } from "lucide-react";
 import logoUrl from "@assets/agentassets_logo_white_1765568440271.png";
 import {
   DropdownMenu,
@@ -10,17 +11,35 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetClose,
+} from "@/components/ui/sheet";
 
 export function Navbar() {
   const [location, setLocation] = useLocation();
   const { user, isLoading, logoutMutation } = useAuth();
   const { data: brokerageData } = useBrokerage();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   // Check if user is a brokerage member (agent role, not admin)
   const isBrokerageAgent = brokerageData?.membership?.role === 'agent';
 
+  // Close mobile menu when auth state changes
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [user]);
+
   const handleLogout = () => {
     logoutMutation.mutate();
+    setMobileMenuOpen(false);
+  };
+  
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false);
   };
 
   const scrollToPricing = (e: React.MouseEvent) => {
@@ -51,6 +70,7 @@ export function Navbar() {
         <div className="flex items-center gap-4">
           {user ? (
             <>
+              {/* Desktop Navigation */}
               <div className="hidden md:flex items-center gap-1 mr-4">
                 <Link href="/dashboard">
                   <Button variant={location === "/dashboard" ? "secondary" : "ghost"} size="sm" className="gap-2 text-white hover:text-white hover:bg-white/20">
@@ -79,10 +99,11 @@ export function Navbar() {
                 )}
               </div>
               
+              {/* Desktop Profile Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button 
-                    className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center border border-white/30 hover:opacity-80 transition-opacity hover:bg-white/20 cursor-pointer"
+                    className="hidden md:flex w-8 h-8 rounded-full overflow-hidden items-center justify-center border border-white/30 hover:opacity-80 transition-opacity hover:bg-white/20 cursor-pointer"
                     data-testid="button-profile"
                   >
                     {user.profileImageUrl ? (
@@ -118,6 +139,7 @@ export function Navbar() {
             </>
           ) : (
             <>
+              {/* Desktop Navigation for guests */}
               <Link href="/">
                 <Button variant="ghost" className="hidden md:inline-flex text-white hover:text-white hover:bg-white/20">Home</Button>
               </Link>
@@ -129,10 +151,132 @@ export function Navbar() {
                 Pricing
               </Button>
               <Link href="/auth">
-                <Button className="bg-white text-[#1a4a4a] hover:bg-white/90">{isLoading ? "Loading..." : "Login / Sign Up"}</Button>
+                <Button className="hidden md:inline-flex bg-white text-[#1a4a4a] hover:bg-white/90">{isLoading ? "Loading..." : "Login / Sign Up"}</Button>
               </Link>
             </>
           )}
+          
+          {/* Mobile Menu Button - Always visible on mobile */}
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="md:hidden text-white hover:bg-white/20" 
+            onClick={() => setMobileMenuOpen(true)}
+            data-testid="button-mobile-menu"
+          >
+            <Menu className="h-6 w-6" />
+          </Button>
+          
+          {/* Single Mobile Menu Sheet */}
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetContent side="right" className="w-72 bg-[#166e73] border-l-white/20">
+              <SheetHeader>
+                <SheetTitle className="text-white text-left">Menu</SheetTitle>
+              </SheetHeader>
+              <div className="flex flex-col gap-2 mt-6">
+                {user ? (
+                  <>
+                    {/* Logged-in user menu items */}
+                    <SheetClose asChild>
+                      <Link href="/dashboard">
+                        <Button 
+                          variant={location === "/dashboard" ? "secondary" : "ghost"} 
+                          className="w-full justify-start gap-3 text-white hover:text-white hover:bg-white/20"
+                        >
+                          <LayoutDashboard className="h-5 w-5" />
+                          Dashboard
+                        </Button>
+                      </Link>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <Link href="/themes">
+                        <Button 
+                          variant={location === "/themes" ? "secondary" : "ghost"} 
+                          className="w-full justify-start gap-3 text-white hover:text-white hover:bg-white/20"
+                        >
+                          <Palette className="h-5 w-5" />
+                          Themes
+                        </Button>
+                      </Link>
+                    </SheetClose>
+                    {isBrokerageAgent ? (
+                      <div className="flex items-center gap-3 px-4 py-2 text-white/90">
+                        <Infinity className="h-5 w-5" />
+                        Unlimited Credits
+                      </div>
+                    ) : (
+                      <SheetClose asChild>
+                        <Link href="/credits">
+                          <Button 
+                            variant={location === "/credits" ? "secondary" : "ghost"} 
+                            className="w-full justify-start gap-3 text-white hover:text-white hover:bg-white/20"
+                          >
+                            <CreditCard className="h-5 w-5" />
+                            Credits: {user.credits ?? 0}
+                          </Button>
+                        </Link>
+                      </SheetClose>
+                    )}
+                    <div className="border-t border-white/20 my-2" />
+                    <SheetClose asChild>
+                      <Link href="/profile">
+                        <Button 
+                          variant={location === "/profile" ? "secondary" : "ghost"} 
+                          className="w-full justify-start gap-3 text-white hover:text-white hover:bg-white/20"
+                        >
+                          <Settings className="h-5 w-5" />
+                          My Profile
+                        </Button>
+                      </Link>
+                    </SheetClose>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start gap-3 text-white hover:text-white hover:bg-white/20"
+                      onClick={handleLogout}
+                      disabled={logoutMutation.isPending}
+                    >
+                      <LogOutIcon className="h-5 w-5" />
+                      Logout
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    {/* Guest menu items */}
+                    <SheetClose asChild>
+                      <Link href="/">
+                        <Button 
+                          variant={location === "/" ? "secondary" : "ghost"} 
+                          className="w-full justify-start gap-3 text-white hover:text-white hover:bg-white/20"
+                        >
+                          <Home className="h-5 w-5" />
+                          Home
+                        </Button>
+                      </Link>
+                    </SheetClose>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start gap-3 text-white hover:text-white hover:bg-white/20"
+                      onClick={(e) => {
+                        scrollToPricing(e);
+                        closeMobileMenu();
+                      }}
+                    >
+                      <CreditCard className="h-5 w-5" />
+                      Pricing
+                    </Button>
+                    <div className="border-t border-white/20 my-2" />
+                    <SheetClose asChild>
+                      <Link href="/auth">
+                        <Button className="w-full bg-white text-[#1a4a4a] hover:bg-white/90">
+                          Login / Sign Up
+                        </Button>
+                      </Link>
+                    </SheetClose>
+                  </>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </nav>
