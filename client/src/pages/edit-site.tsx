@@ -1197,41 +1197,43 @@ export default function EditSite() {
                           </div>
                         </div>
 
-                        {/* Hero Transition Effect */}
-                        <div className="grid gap-2 pt-4 border-t">
-                          <Label>Hero Transition Effect</Label>
-                          <p className="text-sm text-muted-foreground mb-2">
-                            Choose how your hero images transition between slides.
-                          </p>
-                          <RadioGroup
-                            value={formData.heroTransition}
-                            onValueChange={(value) => setFormData({...formData, heroTransition: value as HeroTransitionType})}
-                            className="grid grid-cols-2 gap-3"
-                          >
-                            {[
-                              { value: 'slide', label: 'Slide', description: 'Classic horizontal sliding effect' },
-                              { value: 'crossfade', label: 'Crossfade', description: 'Smooth fade between images' },
-                              { value: 'kenburns', label: 'Ken Burns', description: 'Gentle zoom with fade transition' },
-                              { value: 'liquid-webgl', label: 'Liquid Wipe', description: 'Premium WebGL distortion effect' },
-                            ].map((option) => (
-                              <Label
-                                key={option.value}
-                                htmlFor={`transition-${option.value}`}
-                                className={`flex flex-col cursor-pointer rounded-lg border-2 p-4 transition-all ${
-                                  formData.heroTransition === option.value
-                                    ? 'border-primary bg-primary/5'
-                                    : 'border-muted bg-gray-50 hover:border-muted-foreground/50'
-                                }`}
-                              >
-                                <div className="flex items-center gap-2">
-                                  <RadioGroupItem value={option.value} id={`transition-${option.value}`} />
-                                  <span className="font-medium">{option.label}</span>
-                                </div>
-                                <span className="text-xs text-muted-foreground mt-1 ml-6">{option.description}</span>
-                              </Label>
-                            ))}
-                          </RadioGroup>
-                        </div>
+                        {/* Hero Transition Effect - Hide for Soap Stone video mode */}
+                        {!(formData.layoutId === 'layout-soapstone' && formData.soapstoneHeroMode === 'video') && (
+                          <div className="grid gap-2 pt-4 border-t">
+                            <Label>Hero Transition Effect</Label>
+                            <p className="text-sm text-muted-foreground mb-2">
+                              Choose how your hero images transition between slides.
+                            </p>
+                            <RadioGroup
+                              value={formData.heroTransition}
+                              onValueChange={(value) => setFormData({...formData, heroTransition: value as HeroTransitionType})}
+                              className="grid grid-cols-2 gap-3"
+                            >
+                              {[
+                                { value: 'slide', label: 'Slide', description: 'Classic horizontal sliding effect' },
+                                { value: 'crossfade', label: 'Crossfade', description: 'Smooth fade between images' },
+                                { value: 'kenburns', label: 'Ken Burns', description: 'Gentle zoom with fade transition' },
+                                { value: 'liquid-webgl', label: 'Liquid Wipe', description: 'Premium WebGL distortion effect' },
+                              ].map((option) => (
+                                <Label
+                                  key={option.value}
+                                  htmlFor={`transition-${option.value}`}
+                                  className={`flex flex-col cursor-pointer rounded-lg border-2 p-4 transition-all ${
+                                    formData.heroTransition === option.value
+                                      ? 'border-primary bg-primary/5'
+                                      : 'border-muted bg-gray-50 hover:border-muted-foreground/50'
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <RadioGroupItem value={option.value} id={`transition-${option.value}`} />
+                                    <span className="font-medium">{option.label}</span>
+                                  </div>
+                                  <span className="text-xs text-muted-foreground mt-1 ml-6">{option.description}</span>
+                                </Label>
+                              ))}
+                            </RadioGroup>
+                          </div>
+                        )}
 
                         {/* Hero Slides - for Modern Layout */}
                         {formData.layoutId === 'layout-modern' && (
