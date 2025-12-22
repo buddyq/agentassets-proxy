@@ -4302,8 +4302,8 @@ function SoapstoneGallery({ photos, theme }: { photos: string[]; theme?: Theme }
     >
       <div className="container mx-auto max-w-6xl">
         {/* Masonry Photo Gallery - Custom asymmetric grid */}
-        <div className="grid grid-cols-4 gap-1 md:gap-2">
-          {/* Large featured image - left side spanning 2 rows */}
+        <div className="grid grid-cols-4 auto-rows-auto gap-1 md:gap-2">
+          {/* Row 1: Large left (2 cols), 2 small top right */}
           <div 
             className="col-span-2 row-span-2 overflow-hidden cursor-pointer group relative"
             onClick={() => openLightbox(0)}
@@ -4316,25 +4316,45 @@ function SoapstoneGallery({ photos, theme }: { photos: string[]; theme?: Theme }
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all" />
           </div>
           
-          {/* Top right - 3 small images */}
-          {[1, 2, 3].map((i) => (
-            <div 
-              key={i}
-              className="col-span-1 overflow-hidden cursor-pointer group relative aspect-[4/3]"
-              onClick={() => openLightbox(i)}
-            >
-              <img
-                src={gridPhotos[i]}
-                alt={`Property photo ${i + 1}`}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all" />
-            </div>
-          ))}
-          
-          {/* Middle row - 1 image center */}
           <div 
             className="col-span-1 overflow-hidden cursor-pointer group relative aspect-[4/3]"
+            onClick={() => openLightbox(1)}
+          >
+            <img
+              src={gridPhotos[1]}
+              alt="Property photo 2"
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all" />
+          </div>
+          
+          <div 
+            className="col-span-1 overflow-hidden cursor-pointer group relative aspect-[4/3]"
+            onClick={() => openLightbox(2)}
+          >
+            <img
+              src={gridPhotos[2]}
+              alt="Property photo 3"
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all" />
+          </div>
+          
+          {/* Row 2: continues large left, 1 small center, large right starts (2 rows) */}
+          <div 
+            className="col-span-1 overflow-hidden cursor-pointer group relative aspect-[4/3]"
+            onClick={() => openLightbox(3)}
+          >
+            <img
+              src={gridPhotos[3]}
+              alt="Property photo 4"
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all" />
+          </div>
+          
+          <div 
+            className="col-span-1 row-span-2 overflow-hidden cursor-pointer group relative"
             onClick={() => openLightbox(4)}
           >
             <img
@@ -4345,9 +4365,9 @@ function SoapstoneGallery({ photos, theme }: { photos: string[]; theme?: Theme }
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all" />
           </div>
           
-          {/* Large image right spanning 2 rows */}
+          {/* Row 3: 3 small images left/center, continues large right */}
           <div 
-            className="col-span-1 row-span-2 overflow-hidden cursor-pointer group relative"
+            className="col-span-1 overflow-hidden cursor-pointer group relative aspect-[4/3]"
             onClick={() => openLightbox(5)}
           >
             <img
@@ -4358,21 +4378,29 @@ function SoapstoneGallery({ photos, theme }: { photos: string[]; theme?: Theme }
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all" />
           </div>
           
-          {/* Bottom row - 3 small images */}
-          {[6, 7, 8].map((i) => (
-            <div 
-              key={i}
-              className="col-span-1 overflow-hidden cursor-pointer group relative aspect-[4/3]"
-              onClick={() => openLightbox(i)}
-            >
-              <img
-                src={gridPhotos[i] || gridPhotos[0]}
-                alt={`Property photo ${i + 1}`}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all" />
-            </div>
-          ))}
+          <div 
+            className="col-span-1 overflow-hidden cursor-pointer group relative aspect-[4/3]"
+            onClick={() => openLightbox(6)}
+          >
+            <img
+              src={gridPhotos[6]}
+              alt="Property photo 7"
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all" />
+          </div>
+          
+          <div 
+            className="col-span-1 overflow-hidden cursor-pointer group relative aspect-[4/3]"
+            onClick={() => openLightbox(7)}
+          >
+            <img
+              src={gridPhotos[7]}
+              alt="Property photo 8"
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all" />
+          </div>
         </div>
         
         {/* "View X Photos" button */}
