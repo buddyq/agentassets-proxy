@@ -3875,8 +3875,8 @@ function SoapstoneMenuOverlay({ site, isOpen, onClose, navItems, presentedBy }: 
                   style={{ 
                     fontFamily: '"Raleway", sans-serif',
                     fontSize: '35px',
-                    fontWeight: 600,
-                    letterSpacing: '0px',
+                    fontWeight: 500,
+                    letterSpacing: '2px',
                     animation: `soapstone-slideUp 0.4s ease-out ${index * 0.05}s forwards`,
                     opacity: 0
                   }}
