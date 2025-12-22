@@ -4302,10 +4302,10 @@ function SoapstoneGallery({ photos, theme }: { photos: string[]; theme?: Theme }
     >
       <div className="container mx-auto max-w-6xl">
         {/* Masonry Photo Gallery - Custom asymmetric grid */}
-        <div className="grid grid-cols-4 grid-rows-3 gap-2 md:gap-3" style={{ height: 'auto', aspectRatio: '16/10' }}>
+        <div className="grid grid-cols-4 gap-1 md:gap-2">
           {/* Large featured image - left side spanning 2 rows */}
           <div 
-            className="col-span-2 row-span-2 overflow-hidden cursor-pointer group relative rounded-lg"
+            className="col-span-2 row-span-2 overflow-hidden cursor-pointer group relative"
             onClick={() => openLightbox(0)}
           >
             <img
@@ -4320,7 +4320,7 @@ function SoapstoneGallery({ photos, theme }: { photos: string[]; theme?: Theme }
           {[1, 2, 3].map((i) => (
             <div 
               key={i}
-              className="col-span-1 row-span-1 overflow-hidden cursor-pointer group relative rounded-lg"
+              className="col-span-1 overflow-hidden cursor-pointer group relative aspect-[4/3]"
               onClick={() => openLightbox(i)}
             >
               <img
@@ -4332,9 +4332,9 @@ function SoapstoneGallery({ photos, theme }: { photos: string[]; theme?: Theme }
             </div>
           ))}
           
-          {/* Middle row - 1 image center, large image right spanning 2 rows */}
+          {/* Middle row - 1 image center */}
           <div 
-            className="col-span-1 row-span-1 overflow-hidden cursor-pointer group relative rounded-lg"
+            className="col-span-1 overflow-hidden cursor-pointer group relative aspect-[4/3]"
             onClick={() => openLightbox(4)}
           >
             <img
@@ -4345,8 +4345,9 @@ function SoapstoneGallery({ photos, theme }: { photos: string[]; theme?: Theme }
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all" />
           </div>
           
+          {/* Large image right spanning 2 rows */}
           <div 
-            className="col-span-1 row-span-2 overflow-hidden cursor-pointer group relative rounded-lg"
+            className="col-span-1 row-span-2 overflow-hidden cursor-pointer group relative"
             onClick={() => openLightbox(5)}
           >
             <img
@@ -4361,7 +4362,7 @@ function SoapstoneGallery({ photos, theme }: { photos: string[]; theme?: Theme }
           {[6, 7, 8].map((i) => (
             <div 
               key={i}
-              className="col-span-1 row-span-1 overflow-hidden cursor-pointer group relative rounded-lg"
+              className="col-span-1 overflow-hidden cursor-pointer group relative aspect-[4/3]"
               onClick={() => openLightbox(i)}
             >
               <img
