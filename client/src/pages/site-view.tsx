@@ -4301,31 +4301,77 @@ function SoapstoneGallery({ photos, theme }: { photos: string[]; theme?: Theme }
       style={{ scrollMarginTop: '64px' }}
     >
       <div className="container mx-auto max-w-6xl">
-        {/* Masonry Photo Gallery */}
-        <div className="columns-2 md:columns-3 gap-2 md:gap-3">
-          {gridPhotos.map((photo, index) => {
-            const heights = ['h-48 md:h-64', 'h-56 md:h-80', 'h-44 md:h-56', 'h-64 md:h-72', 'h-52 md:h-60', 'h-48 md:h-68', 'h-60 md:h-76', 'h-44 md:h-52', 'h-56 md:h-64'];
-            return (
-              <div 
-                key={index} 
-                className={`break-inside-avoid mb-2 md:mb-3 overflow-hidden cursor-pointer group relative rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300`}
-                onClick={() => openLightbox(index)}
-              >
-                <div className={`${heights[index % heights.length]} w-full overflow-hidden`}>
-                  <img
-                    src={photo}
-                    alt={`Property photo ${index + 1}`}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-end justify-center pb-4">
-                  <span className="text-white text-sm font-medium tracking-wider">
-                    View photo gallery
-                  </span>
-                </div>
-              </div>
-            );
-          })}
+        {/* Masonry Photo Gallery - Custom asymmetric grid */}
+        <div className="grid grid-cols-4 grid-rows-3 gap-2 md:gap-3" style={{ height: 'auto', aspectRatio: '16/10' }}>
+          {/* Large featured image - left side spanning 2 rows */}
+          <div 
+            className="col-span-2 row-span-2 overflow-hidden cursor-pointer group relative rounded-lg"
+            onClick={() => openLightbox(0)}
+          >
+            <img
+              src={gridPhotos[0]}
+              alt="Property photo 1"
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all" />
+          </div>
+          
+          {/* Top right - 3 small images */}
+          {[1, 2, 3].map((i) => (
+            <div 
+              key={i}
+              className="col-span-1 row-span-1 overflow-hidden cursor-pointer group relative rounded-lg"
+              onClick={() => openLightbox(i)}
+            >
+              <img
+                src={gridPhotos[i]}
+                alt={`Property photo ${i + 1}`}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all" />
+            </div>
+          ))}
+          
+          {/* Middle row - 1 image center, large image right spanning 2 rows */}
+          <div 
+            className="col-span-1 row-span-1 overflow-hidden cursor-pointer group relative rounded-lg"
+            onClick={() => openLightbox(4)}
+          >
+            <img
+              src={gridPhotos[4]}
+              alt="Property photo 5"
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all" />
+          </div>
+          
+          <div 
+            className="col-span-1 row-span-2 overflow-hidden cursor-pointer group relative rounded-lg"
+            onClick={() => openLightbox(5)}
+          >
+            <img
+              src={gridPhotos[5]}
+              alt="Property photo 6"
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all" />
+          </div>
+          
+          {/* Bottom row - 3 small images */}
+          {[6, 7, 8].map((i) => (
+            <div 
+              key={i}
+              className="col-span-1 row-span-1 overflow-hidden cursor-pointer group relative rounded-lg"
+              onClick={() => openLightbox(i)}
+            >
+              <img
+                src={gridPhotos[i] || gridPhotos[0]}
+                alt={`Property photo ${i + 1}`}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all" />
+            </div>
+          ))}
         </div>
         
         {/* "View X Photos" button */}
