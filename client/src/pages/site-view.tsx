@@ -3696,23 +3696,6 @@ function SoapStoneHero({ site, theme, heroImage, hasPhotos, onOpenMenu, navLinks
         </button>
       </section>
       
-      {/* Fixed "Presented by" bar - visible at top, hidden when scrolling, hidden at bottom to show footer */}
-      {presentedBy && (
-        <div 
-          className="fixed bottom-0 left-0 right-0 z-[65] bg-white py-5 text-center transition-transform duration-500 ease-out md:left-12 lg:left-16"
-          style={{ 
-            transform: (!isScrolled && !isAtBottom) ? 'translateY(0)' : 'translateY(100%)',
-            boxShadow: '0 -4px 12px rgba(0,0,0,0.1)'
-          }}
-        >
-          <span 
-            className="text-xs uppercase tracking-widest"
-            style={{ fontFamily: '"Open Sans", sans-serif', color: '#666' }}
-          >
-            {presentedBy}
-          </span>
-        </div>
-      )}
     </>
   );
 }
@@ -3967,6 +3950,30 @@ function SoapStoneLayoutWrapper({
   footerLogo?: string | null;
 }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isAtBottom, setIsAtBottom] = useState(false);
+  
+  // Track scroll position for presented by bar animation
+  useEffect(() => {
+    const handleScroll = () => {
+      // Hide bar when scrolling down
+      if (window.scrollY > 50) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+      
+      // Show bar when at bottom of page
+      const scrollHeight = document.documentElement.scrollHeight;
+      const scrollTop = window.scrollY;
+      const clientHeight = window.innerHeight;
+      const atBottom = scrollHeight - scrollTop - clientHeight < 100;
+      setIsAtBottom(atBottom);
+    };
+    window.addEventListener('scroll', handleScroll);
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
   
   return (
     <div 
@@ -4000,6 +4007,27 @@ function SoapStoneLayoutWrapper({
       <SoapstoneContact site={site} theme={theme} agentInfo={agentInfo} />
       <SoapstoneMap site={site} theme={theme} />
       <SoapstoneFooter site={site} theme={theme} footerLogo={footerLogo} invertLogo={site.invertLogo ?? false} />
+      
+      {/* Spacer for presented by bar to slide up into at bottom */}
+      {presentedBy && <div className="h-16 bg-white" />}
+      
+      {/* Fixed "Presented by" bar - full viewport width, above all sidebars */}
+      {presentedBy && (
+        <div 
+          className="fixed bottom-0 left-0 right-0 z-[70] bg-white py-5 text-center transition-transform duration-500 ease-out"
+          style={{ 
+            transform: (!isScrolled || isAtBottom) ? 'translateY(0)' : 'translateY(100%)',
+            boxShadow: '0 -4px 12px rgba(0,0,0,0.1)'
+          }}
+        >
+          <span 
+            className="text-xs uppercase tracking-widest"
+            style={{ fontFamily: '"Open Sans", sans-serif', color: '#666' }}
+          >
+            {presentedBy}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
