@@ -4121,13 +4121,69 @@ function SoapstoneOverview({ site, theme }: { site: Site; theme?: Theme }) {
         </div>
       </div>
       
-      {/* Overview text section - white background */}
+      {/* Overview text section - with decorative SVG background */}
       <section 
         id="overview" 
-        className="py-16 md:py-24 px-6 bg-white"
-        style={{ scrollMarginTop: '64px' }}
+        className="py-16 md:py-24 px-6 relative overflow-hidden"
+        style={{ 
+          scrollMarginTop: '64px',
+          backgroundColor: `${primaryColor}08`
+        }}
       >
-        <div className="container mx-auto max-w-4xl">
+        {/* Decorative SVG Background Pattern */}
+        <svg 
+          className="absolute inset-0 w-full h-full pointer-events-none"
+          preserveAspectRatio="xMidYMid slice"
+          style={{ opacity: 0.4 }}
+        >
+          <defs>
+            <pattern id="overview-pattern" x="0" y="0" width="400" height="400" patternUnits="userSpaceOnUse">
+              {/* Abstract curved lines */}
+              <path 
+                d="M0 200 Q100 100 200 200 T400 200" 
+                fill="none" 
+                stroke={primaryColor}
+                strokeWidth="1"
+                opacity="0.15"
+              />
+              <path 
+                d="M0 250 Q150 150 250 250 T400 250" 
+                fill="none" 
+                stroke={primaryColor}
+                strokeWidth="0.8"
+                opacity="0.12"
+              />
+              <path 
+                d="M0 150 Q80 80 180 150 T400 150" 
+                fill="none" 
+                stroke={primaryColor}
+                strokeWidth="0.6"
+                opacity="0.1"
+              />
+              <path 
+                d="M0 300 Q120 200 220 300 T400 300" 
+                fill="none" 
+                stroke={primaryColor}
+                strokeWidth="0.5"
+                opacity="0.08"
+              />
+              <path 
+                d="M0 100 Q60 40 160 100 T400 100" 
+                fill="none" 
+                stroke={primaryColor}
+                strokeWidth="0.5"
+                opacity="0.08"
+              />
+              {/* Subtle circles */}
+              <circle cx="50" cy="80" r="40" fill="none" stroke={primaryColor} strokeWidth="0.5" opacity="0.06" />
+              <circle cx="350" cy="320" r="60" fill="none" stroke={primaryColor} strokeWidth="0.5" opacity="0.06" />
+              <circle cx="200" cy="200" r="80" fill="none" stroke={primaryColor} strokeWidth="0.3" opacity="0.04" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#overview-pattern)" />
+        </svg>
+        
+        <div className="container mx-auto max-w-4xl relative z-10">
           <h2 
             className="text-3xl md:text-4xl mb-8"
             style={{ 
@@ -4154,7 +4210,7 @@ function SoapstoneOverview({ site, theme }: { site: Site; theme?: Theme }) {
           
           {/* Documents link if available */}
           {site.brochureUrl && (
-            <div className="mt-8 pt-8 border-t">
+            <div className="mt-8 pt-8 border-t border-gray-200/50">
               <a
                 href={site.brochureUrl}
                 target="_blank"
