@@ -5746,20 +5746,27 @@ function PhotoGallery({ photos, themeColors, galleryStyle = 'grid' }: {
       case 'lightbox':
       case 'grid':
       default:
+        const getImageHeight = (index: number) => {
+          const heights = ['h-48', 'h-64', 'h-56', 'h-72', 'h-52', 'h-60', 'h-68', 'h-44', 'h-58'];
+          return heights[index % heights.length];
+        };
         return (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+          <div className="columns-2 md:columns-3 gap-3 md:gap-4 space-y-3 md:space-y-4">
             {photos.map((photo, index) => (
               <div 
                 key={index}
-                className="aspect-square rounded-xl overflow-hidden shadow-lg cursor-pointer hover:scale-[1.02] hover:shadow-xl transition-all duration-300"
+                className={`break-inside-avoid rounded-xl overflow-hidden shadow-lg cursor-pointer hover:scale-[1.02] hover:shadow-xl transition-all duration-300 group relative`}
                 onClick={() => setSelectedIndex(index)}
                 data-testid={`photo-${index}`}
               >
-                <img 
-                  src={photo} 
-                  alt={`Property photo ${index + 1}`}
-                  className="w-full h-full object-cover"
-                />
+                <div className={`${getImageHeight(index)} w-full overflow-hidden`}>
+                  <img 
+                    src={photo} 
+                    alt={`Property photo ${index + 1}`}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </div>
             ))}
           </div>
