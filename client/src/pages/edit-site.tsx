@@ -9,7 +9,7 @@ import { useSite, useUpdateSite, useThemes, useLayouts, useAddPhotoToSite, useRe
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useParams } from "wouter";
-import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, Save, Image, X, GripVertical, Star, LayoutGrid, Plus, Settings, Lock, Eye, EyeOff, ExternalLink, Search, BarChart3, Upload } from "lucide-react";
+import { Check, ChevronRight, ChevronLeft, Layout, PaintBucket, Save, Image, X, GripVertical, Star, LayoutGrid, Plus, Settings, Lock, Eye, EyeOff, ExternalLink, Search, BarChart3, Upload, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -21,6 +21,7 @@ import type { CustomDetail, HeroSlide, SiteDocument, OpenHouseEvent, HeroTransit
 import { heroTransitionTypes } from "@shared/schema";
 import { parseVideoUrl } from "@/lib/utils";
 import { FileText, Download, Trash2 } from "lucide-react";
+import { UniversalLayoutFeatures, type LayoutFeatureConfig, type LayoutFeatureKey } from "@/components/UniversalLayoutFeatures";
 
 const FEATURE_SUGGESTIONS = [
   'Community Clubhouse',
@@ -119,6 +120,19 @@ export default function EditSite() {
   const [documents, setDocuments] = useState<SiteDocument[]>([]);
   const [newDocName, setNewDocName] = useState("");
   const [pendingDocUrl, setPendingDocUrl] = useState<string | null>(null);
+  
+  // Universal layout features state
+  const [enabledFeatures, setEnabledFeatures] = useState<LayoutFeatureConfig>({
+    documents: false,
+    floorPlans: false,
+    photoGalleries: false,
+    additionalAgent: false,
+  });
+  
+  const handleFeatureToggle = (feature: LayoutFeatureKey, enabled: boolean) => {
+    setEnabledFeatures(prev => ({ ...prev, [feature]: enabled }));
+  };
+  
   const [draggedPhoto, setDraggedPhoto] = useState<number | null>(null);
   const [dropTarget, setDropTarget] = useState<number | null>(null);
   const scrollIntervalRef = useRef<number | null>(null);
@@ -1020,7 +1034,7 @@ export default function EditSite() {
                 </CardHeader>
                 <CardContent>
                   <Tabs defaultValue="branding" className="w-full">
-                    <TabsList className="grid w-full grid-cols-4 mb-6 bg-[#f3faf9] p-1 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.06)]">
+                    <TabsList className="grid w-full grid-cols-5 mb-6 bg-[#f3faf9] p-1 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.06)]">
                       <TabsTrigger 
                         value="branding" 
                         data-testid="tab-branding"
@@ -1028,6 +1042,14 @@ export default function EditSite() {
                       >
                         <Settings className="h-4 w-4 mr-2" />
                         Branding
+                      </TabsTrigger>
+                      <TabsTrigger 
+                        value="features" 
+                        data-testid="tab-features"
+                        className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-lg"
+                      >
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        Features
                       </TabsTrigger>
                       <TabsTrigger 
                         value="seo" 
@@ -2121,6 +2143,35 @@ export default function EditSite() {
                           )}
                         </div>
                       </div>
+                    </TabsContent>
+
+                    <TabsContent value="features" className="space-y-6">
+                      <UniversalLayoutFeatures
+                        enabledFeatures={enabledFeatures}
+                        onFeatureToggle={handleFeatureToggle}
+                        children={{
+                          documents: (
+                            <div className="text-center py-8 text-muted-foreground">
+                              <p>Documents options will appear here when configured.</p>
+                            </div>
+                          ),
+                          floorPlans: (
+                            <div className="text-center py-8 text-muted-foreground">
+                              <p>Floor plan options will appear here when configured.</p>
+                            </div>
+                          ),
+                          photoGalleries: (
+                            <div className="text-center py-8 text-muted-foreground">
+                              <p>Photo gallery options will appear here when configured.</p>
+                            </div>
+                          ),
+                          additionalAgent: (
+                            <div className="text-center py-8 text-muted-foreground">
+                              <p>Additional agent options will appear here when configured.</p>
+                            </div>
+                          ),
+                        }}
+                      />
                     </TabsContent>
 
                     <TabsContent value="seo" className="space-y-6">
