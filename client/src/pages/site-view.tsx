@@ -4055,8 +4055,8 @@ function SoapstoneOverview({ site, theme }: { site: Site; theme?: Theme }) {
   useEffect(() => {
     const handleScroll = () => {
       // Calculate parallax offset - boxes float UP into hero as user scrolls
-      const maxParallax = 120; // Maximum pixels to move up
-      const scrollPercent = Math.min(window.scrollY / (window.innerHeight * 0.6), 1);
+      const maxParallax = 60; // Maximum pixels to move up (half as high)
+      const scrollPercent = Math.min(window.scrollY / (window.innerHeight * 1.2), 1); // Twice as slow
       setParallaxOffset(scrollPercent * maxParallax);
     };
     window.addEventListener('scroll', handleScroll);
