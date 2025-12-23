@@ -4074,10 +4074,10 @@ function SoapstoneOverview({ site, theme }: { site: Site; theme?: Theme }) {
       {/* Floating Price and Details Boxes with Parallax - positioned at top of overview, float up into hero */}
       <div 
         className="relative z-30 bg-white"
-        style={{ marginTop: '-1px' }}
+        style={{ marginTop: '20px' }}
       >
         <div 
-          className="container mx-auto px-4 md:px-20 lg:px-32 py-6"
+          className="w-full px-[10px] py-6"
           style={{ transform: `translateY(-${parallaxOffset}px)` }}
         >
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
