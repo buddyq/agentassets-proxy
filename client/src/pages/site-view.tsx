@@ -3474,7 +3474,8 @@ function SoapStoneHero({ site, theme, heroImage, hasPhotos, onOpenMenu, navLinks
 }) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [hoveredDot, setHoveredDot] = useState<number | null>(null);
-  const [activeSection, setActiveSection] = useState('overview');
+  const [activeSection, setActiveSection] = useState<string | null>(null);
+  const [isInHero, setIsInHero] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isAtBottom, setIsAtBottom] = useState(false);
   const heroMode = (site as any).soapstoneHeroMode || 'video';
@@ -3500,14 +3501,27 @@ function SoapStoneHero({ site, theme, heroImage, hasPhotos, onOpenMenu, navLinks
 
   useEffect(() => {
     const handleScroll = () => {
-      const sections = navLinks.map(link => document.getElementById(link.id));
+      const overviewSection = document.getElementById('overview');
       const scrollPos = window.scrollY + window.innerHeight / 3;
       
-      for (let i = sections.length - 1; i >= 0; i--) {
-        const section = sections[i];
-        if (section && section.offsetTop <= scrollPos) {
-          setActiveSection(navLinks[i].id);
-          break;
+      // Check if we're still in the hero section (before overview starts)
+      if (overviewSection) {
+        const inHero = scrollPos < overviewSection.offsetTop;
+        setIsInHero(inHero);
+        
+        // If in hero, no section is active
+        if (inHero) {
+          setActiveSection(null);
+        } else {
+          // Find active section when not in hero
+          const sections = navLinks.map(link => document.getElementById(link.id));
+          for (let i = sections.length - 1; i >= 0; i--) {
+            const section = sections[i];
+            if (section && section.offsetTop <= scrollPos) {
+              setActiveSection(navLinks[i].id);
+              break;
+            }
+          }
         }
       }
       
@@ -3643,51 +3657,56 @@ function SoapStoneHero({ site, theme, heroImage, hasPhotos, onOpenMenu, navLinks
           
           {/* Dot navigation */}
           <nav className="flex flex-col gap-4 items-center">
-            {navLinks.map((link, index) => (
-              <div
-                key={link.id}
-                className="relative flex items-center justify-center cursor-pointer p-3"
-                onMouseEnter={() => setHoveredDot(index)}
-                onMouseLeave={() => setHoveredDot(null)}
-                onClick={() => scrollToSection(link.id)}
-              >
-                {/* Label - appears on hover to the left with white background */}
-                <div 
-                  className={`absolute right-8 top-1/2 -translate-y-1/2 transition-all duration-200 ${
-                    hoveredDot === index ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4 pointer-events-none'
-                  }`}
-                  style={{ 
-                    backgroundColor: '#ffffff',
-                    padding: '8px 16px',
-                    whiteSpace: 'nowrap'
-                  }}
+            {navLinks.map((link, index) => {
+              const isActive = activeSection === link.id;
+              const showLabel = !isInHero && (isActive || hoveredDot === index);
+              
+              return (
+                <div
+                  key={link.id}
+                  className="relative flex items-center justify-center cursor-pointer p-3"
+                  onMouseEnter={() => setHoveredDot(index)}
+                  onMouseLeave={() => setHoveredDot(null)}
+                  onClick={() => scrollToSection(link.id)}
                 >
-                  <span
+                  {/* Label - visible when active (not in hero) or hovered */}
+                  <div 
+                    className={`absolute right-8 top-1/2 -translate-y-1/2 transition-all duration-200 ${
+                      showLabel ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4 pointer-events-none'
+                    }`}
                     style={{ 
-                      color: '#333',
-                      fontWeight: '400',
-                      fontSize: '25px',
-                      letterSpacing: '2px',
-                      textTransform: 'uppercase',
-                      fontFamily: '"Open Sans", sans-serif'
+                      backgroundColor: '#ffffff',
+                      padding: '8px 16px',
+                      whiteSpace: 'nowrap'
                     }}
                   >
-                    {link.label}
-                  </span>
+                    <span
+                      style={{ 
+                        color: '#333',
+                        fontWeight: '400',
+                        fontSize: '25px',
+                        letterSpacing: '2px',
+                        textTransform: 'uppercase',
+                        fontFamily: '"Open Sans", sans-serif'
+                      }}
+                    >
+                      {link.label}
+                    </span>
+                  </div>
+                  
+                  {/* Dot - only filled when active and not in hero */}
+                  <button
+                    onClick={() => scrollToSection(link.id)}
+                    className={`w-3 h-3 rounded-full border transition-all ${
+                      isActive
+                        ? 'bg-gray-700 border-gray-700' 
+                        : 'bg-transparent border-gray-500 hover:border-gray-600'
+                    }`}
+                    aria-label={`Go to ${link.label}`}
+                  />
                 </div>
-                
-                {/* Dot */}
-                <button
-                  onClick={() => scrollToSection(link.id)}
-                  className={`w-3 h-3 rounded-full border transition-all ${
-                    activeSection === link.id 
-                      ? 'bg-gray-700 border-gray-700' 
-                      : 'bg-transparent border-gray-500 hover:border-gray-600'
-                  }`}
-                  aria-label={`Go to ${link.label}`}
-                />
-              </div>
-            ))}
+              );
+            })}
           </nav>
           
           {/* Empty spacer for balance */}
