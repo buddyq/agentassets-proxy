@@ -4891,8 +4891,49 @@ function SoapstoneMap({ site, theme }: { site: Site; theme?: Theme }) {
       className="bg-white relative w-full"
       style={{ scrollMarginTop: '64px' }}
     >
+      {/* Mobile layout - stacked */}
+      <div className="md:hidden">
+        {/* Address box - full width on mobile */}
+        <div 
+          className="bg-white p-6 mx-4"
+          style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}
+        >
+          <h3 
+            className="text-sm uppercase tracking-widest mb-3"
+            style={{ 
+              fontFamily: '"Noto Sans", sans-serif', 
+              fontWeight: 400, 
+              color: '#1a1a1a',
+              letterSpacing: '0.15em'
+            }}
+          >
+            ADDRESS
+          </h3>
+          <p 
+            className="text-gray-700 text-base"
+            style={{ fontFamily: '"Noto Sans", sans-serif', fontWeight: 300, lineHeight: 1.6 }}
+          >
+            {streetAddress}
+          </p>
+          {cityStateZip && (
+            <p 
+              className="text-gray-700 text-base"
+              style={{ fontFamily: '"Noto Sans", sans-serif', fontWeight: 300, lineHeight: 1.6 }}
+            >
+              {cityStateZip}
+            </p>
+          )}
+        </div>
+        
+        {/* Map - full width on mobile */}
+        <div className="h-[300px] mt-4">
+          <SoapstoneGoogleMap address={site.address} />
+        </div>
+      </div>
+      
+      {/* Desktop layout - overlapping */}
       <div 
-        className="relative h-[450px] md:h-[500px]"
+        className="hidden md:block relative h-[500px]"
         style={{ 
           marginLeft: '140px',
           marginRight: '140px'
@@ -4911,7 +4952,7 @@ function SoapstoneMap({ site, theme }: { site: Site; theme?: Theme }) {
         
         {/* Address box - floating, half over map */}
         <div 
-          className="absolute z-10 bg-white p-8 md:p-10"
+          className="absolute z-10 bg-white p-10"
           style={{ 
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
             left: '0',
