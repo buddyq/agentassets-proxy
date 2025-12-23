@@ -4634,137 +4634,240 @@ function SoapstoneContact({ site, theme, agentInfo }: { site: Site; theme?: Them
   return (
     <section 
       id="contact" 
-      className="py-16 md:py-20 px-6 bg-white"
-      style={{ scrollMarginTop: '64px' }}
+      className="py-20 md:py-28 px-6"
+      style={{ 
+        scrollMarginTop: '64px',
+        backgroundColor: '#f8f8f8'
+      }}
     >
-      <div className="container mx-auto max-w-5xl">
-        <div className="grid md:grid-cols-2 gap-12 items-start">
-          {/* Agent card */}
-          <div className="bg-gray-50 p-6 md:p-8">
-            {/* Logo */}
+      <div className="container mx-auto max-w-6xl">
+        <div className="grid md:grid-cols-2 gap-0 bg-white shadow-xl overflow-hidden">
+          {/* Agent card - left side with image */}
+          <div className="relative">
+            {/* Company logo - top left corner */}
             {theme?.logoUrl && (
-              <img
-                src={theme.logoUrl}
-                alt="Company logo"
-                className="h-10 w-auto object-contain mb-6"
-              />
+              <div className="absolute top-6 left-6 z-10 bg-white/90 p-3 rounded">
+                <img
+                  src={theme.logoUrl}
+                  alt="Company logo"
+                  className="h-8 w-auto object-contain"
+                />
+              </div>
             )}
             
-            {/* Agent photo and info */}
-            {agentInfo && (
-              <div className="flex flex-col items-center text-center">
-                {agentInfo.photoUrl && (
-                  <img
-                    src={agentInfo.photoUrl}
-                    alt={agentInfo.name}
-                    className="w-32 h-32 rounded object-cover mb-4"
-                  />
-                )}
-                <h3 
-                  className="text-xl mb-1"
-                  style={{ fontFamily: '"Playfair Display", serif', color: '#1a1a1a' }}
-                >
-                  {agentInfo.name}
-                </h3>
-                <p className="text-gray-500 text-sm mb-2">{agentInfo.title}</p>
-                {agentInfo.company && (
-                  <p className="text-gray-500 text-sm mb-4">{agentInfo.company}</p>
-                )}
+            {/* Agent photo - full height */}
+            {agentInfo?.photoUrl ? (
+              <div className="h-full min-h-[400px] md:min-h-[500px] relative">
+                <img
+                  src={agentInfo.photoUrl}
+                  alt={agentInfo.name}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+                {/* Gradient overlay for text readability */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
                 
-                <div className="flex flex-col gap-2 text-sm">
-                  {agentInfo.phone && (
-                    <a 
-                      href={`tel:${agentInfo.phone}`} 
-                      className="text-gray-600 hover:text-gray-800"
-                      style={{ fontFamily: '"Open Sans", sans-serif' }}
+                {/* Agent info overlay at bottom */}
+                <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 text-white">
+                  <h3 
+                    className="text-2xl md:text-3xl mb-1"
+                    style={{ fontFamily: '"Playfair Display", serif' }}
+                  >
+                    {agentInfo.name}
+                  </h3>
+                  <p 
+                    className="text-white/80 text-sm uppercase tracking-wider mb-1"
+                    style={{ fontFamily: '"Noto Sans", sans-serif', fontWeight: 300 }}
+                  >
+                    {agentInfo.title}
+                  </p>
+                  {agentInfo.company && (
+                    <p 
+                      className="text-white/70 text-sm mb-4"
+                      style={{ fontFamily: '"Noto Sans", sans-serif', fontWeight: 300 }}
                     >
-                      {agentInfo.phone}
-                    </a>
+                      {agentInfo.company}
+                    </p>
                   )}
-                  {agentInfo.email && (
-                    <a 
-                      href={`mailto:${agentInfo.email}`} 
-                      className="text-gray-600 hover:text-gray-800"
-                      style={{ fontFamily: '"Open Sans", sans-serif' }}
-                    >
-                      {agentInfo.email}
-                    </a>
-                  )}
+                  
+                  <div className="flex flex-col gap-1 text-sm">
+                    {agentInfo.phone && (
+                      <a 
+                        href={`tel:${agentInfo.phone}`} 
+                        className="text-white/90 hover:text-white transition-colors"
+                        style={{ fontFamily: '"Noto Sans", sans-serif', fontWeight: 300 }}
+                      >
+                        {agentInfo.phone}
+                      </a>
+                    )}
+                    {agentInfo.email && (
+                      <a 
+                        href={`mailto:${agentInfo.email}`} 
+                        className="text-white/90 hover:text-white transition-colors"
+                        style={{ fontFamily: '"Noto Sans", sans-serif', fontWeight: 300 }}
+                      >
+                        {agentInfo.email}
+                      </a>
+                    )}
+                  </div>
                 </div>
+              </div>
+            ) : (
+              /* Fallback when no agent photo */
+              <div 
+                className="h-full min-h-[400px] flex flex-col items-center justify-center p-8"
+                style={{ backgroundColor: primaryColor }}
+              >
+                {agentInfo && (
+                  <div className="text-center text-white">
+                    <div 
+                      className="w-24 h-24 rounded-full bg-white/20 flex items-center justify-center mb-6 mx-auto"
+                      style={{ fontFamily: '"Playfair Display", serif', fontSize: '2.5rem' }}
+                    >
+                      {agentInfo.name.charAt(0)}
+                    </div>
+                    <h3 
+                      className="text-2xl md:text-3xl mb-1"
+                      style={{ fontFamily: '"Playfair Display", serif' }}
+                    >
+                      {agentInfo.name}
+                    </h3>
+                    <p className="text-white/80 text-sm uppercase tracking-wider mb-1">
+                      {agentInfo.title}
+                    </p>
+                    {agentInfo.company && (
+                      <p className="text-white/70 text-sm mb-4">{agentInfo.company}</p>
+                    )}
+                    <div className="flex flex-col gap-1 text-sm">
+                      {agentInfo.phone && (
+                        <a href={`tel:${agentInfo.phone}`} className="text-white/90 hover:text-white">
+                          {agentInfo.phone}
+                        </a>
+                      )}
+                      {agentInfo.email && (
+                        <a href={`mailto:${agentInfo.email}`} className="text-white/90 hover:text-white">
+                          {agentInfo.email}
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
           
-          {/* Contact form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">First Name *</label>
-                <Input
-                  type="text"
-                  value={formData.firstName}
-                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                  className="bg-white border-gray-300"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Last Name *</label>
-                <Input
-                  type="text"
-                  value={formData.lastName}
-                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                  className="bg-white border-gray-300"
-                  required
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Email *</label>
-              <Input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="bg-white border-gray-300"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Phone *</label>
-              <Input
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="bg-white border-gray-300"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Comment *</label>
-              <Textarea
-                value={formData.message}
-                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                className="bg-white border-gray-300 min-h-[100px]"
-                required
-              />
-            </div>
-            
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full py-3 text-white uppercase tracking-wider text-sm"
-              style={{ backgroundColor: '#1a1a1a', fontFamily: '"Open Sans", sans-serif' }}
+          {/* Contact form - right side */}
+          <div className="p-8 md:p-12 flex flex-col justify-center">
+            <h2 
+              className="text-2xl md:text-3xl mb-8"
+              style={{ fontFamily: '"Playfair Display", serif', color: '#1a1a1a' }}
             >
-              {isSubmitting ? 'Sending...' : 'Send Inquiry'}
-            </Button>
+              Get In Touch
+            </h2>
             
-            {submitStatus === 'success' && (
-              <p className="text-green-600 text-center text-sm">Message sent successfully!</p>
-            )}
-            {submitStatus === 'error' && (
-              <p className="text-red-600 text-center text-sm">Failed to send. Please try again.</p>
-            )}
-          </form>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label 
+                    className="block text-xs uppercase tracking-wider text-gray-500 mb-2"
+                    style={{ fontFamily: '"Noto Sans", sans-serif', fontWeight: 400 }}
+                  >
+                    First Name *
+                  </label>
+                  <Input
+                    type="text"
+                    value={formData.firstName}
+                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                    className="bg-gray-50 border-gray-200 focus:border-gray-400 focus:ring-0"
+                    style={{ fontFamily: '"Noto Sans", sans-serif' }}
+                    required
+                  />
+                </div>
+                <div>
+                  <label 
+                    className="block text-xs uppercase tracking-wider text-gray-500 mb-2"
+                    style={{ fontFamily: '"Noto Sans", sans-serif', fontWeight: 400 }}
+                  >
+                    Last Name *
+                  </label>
+                  <Input
+                    type="text"
+                    value={formData.lastName}
+                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                    className="bg-gray-50 border-gray-200 focus:border-gray-400 focus:ring-0"
+                    style={{ fontFamily: '"Noto Sans", sans-serif' }}
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label 
+                  className="block text-xs uppercase tracking-wider text-gray-500 mb-2"
+                  style={{ fontFamily: '"Noto Sans", sans-serif', fontWeight: 400 }}
+                >
+                  Email *
+                </label>
+                <Input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="bg-gray-50 border-gray-200 focus:border-gray-400 focus:ring-0"
+                  style={{ fontFamily: '"Noto Sans", sans-serif' }}
+                  required
+                />
+              </div>
+              <div>
+                <label 
+                  className="block text-xs uppercase tracking-wider text-gray-500 mb-2"
+                  style={{ fontFamily: '"Noto Sans", sans-serif', fontWeight: 400 }}
+                >
+                  Phone *
+                </label>
+                <Input
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="bg-gray-50 border-gray-200 focus:border-gray-400 focus:ring-0"
+                  style={{ fontFamily: '"Noto Sans", sans-serif' }}
+                  required
+                />
+              </div>
+              <div>
+                <label 
+                  className="block text-xs uppercase tracking-wider text-gray-500 mb-2"
+                  style={{ fontFamily: '"Noto Sans", sans-serif', fontWeight: 400 }}
+                >
+                  Message *
+                </label>
+                <Textarea
+                  value={formData.message}
+                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                  className="bg-gray-50 border-gray-200 focus:border-gray-400 focus:ring-0 min-h-[120px] resize-none"
+                  style={{ fontFamily: '"Noto Sans", sans-serif' }}
+                  required
+                />
+              </div>
+              
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full py-4 text-white uppercase tracking-widest text-sm transition-all hover:opacity-90"
+                style={{ 
+                  backgroundColor: '#1a1a1a', 
+                  fontFamily: '"Noto Sans", sans-serif',
+                  fontWeight: 400
+                }}
+              >
+                {isSubmitting ? 'Sending...' : 'Send Inquiry'}
+              </Button>
+              
+              {submitStatus === 'success' && (
+                <p className="text-green-600 text-center text-sm mt-4">Message sent successfully!</p>
+              )}
+              {submitStatus === 'error' && (
+                <p className="text-red-600 text-center text-sm mt-4">Failed to send. Please try again.</p>
+              )}
+            </form>
+          </div>
         </div>
       </div>
     </section>
