@@ -4844,18 +4844,24 @@ function SoapstoneMap({ site, theme }: { site: Site; theme?: Theme }) {
   return (
     <section 
       id="map" 
-      className="bg-white relative"
-      style={{ 
-        scrollMarginTop: '64px',
-        marginLeft: '140px',
-        marginRight: '140px'
-      }}
+      className="bg-white relative w-full"
+      style={{ scrollMarginTop: '64px' }}
     >
-      <div className="relative h-[450px] md:h-[500px]">
+      <div 
+        className="relative h-[450px] md:h-[500px]"
+        style={{ 
+          marginLeft: '140px',
+          marginRight: '140px'
+        }}
+      >
         {/* Map - right side, 75% width */}
         <div 
-          className="absolute right-0 top-0 bottom-0"
-          style={{ filter: 'grayscale(100%)', width: '75%' }}
+          className="absolute top-0 bottom-0"
+          style={{ 
+            filter: 'grayscale(100%)', 
+            width: '75%',
+            right: '0'
+          }}
         >
           <iframe
             src={`https://www.google.com/maps?q=${encodeURIComponent(site.address)}&output=embed`}
