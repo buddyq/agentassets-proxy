@@ -3930,7 +3930,7 @@ function SoapStoneLayoutWrapper({
       className="min-h-screen flex flex-col" 
       style={{ 
         ...combinedStyles,
-        backgroundColor: 'var(--theme-background)',
+        backgroundColor: '#ffffff',
         color: 'var(--theme-text)',
         fontFamily: 'var(--font-body)'
       }}
