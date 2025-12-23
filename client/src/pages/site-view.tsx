@@ -4756,115 +4756,70 @@ function SoapstoneContact({ site, theme, agentInfo }: { site: Site; theme?: Them
           </div>
           
           {/* Contact form - right side */}
-          <div className="p-8 md:p-12 flex flex-col justify-center">
-            <h2 
-              className="text-2xl md:text-3xl mb-8"
-              style={{ fontFamily: '"Playfair Display", serif', color: '#1a1a1a' }}
-            >
-              Get In Touch
-            </h2>
-            
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label 
-                    className="block text-xs uppercase tracking-wider text-gray-500 mb-2"
-                    style={{ fontFamily: '"Noto Sans", sans-serif', fontWeight: 400 }}
-                  >
-                    First Name *
-                  </label>
-                  <Input
-                    type="text"
-                    value={formData.firstName}
-                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                    className="bg-gray-50 border-gray-200 focus:border-gray-400 focus:ring-0"
-                    style={{ fontFamily: '"Noto Sans", sans-serif' }}
-                    required
-                  />
-                </div>
-                <div>
-                  <label 
-                    className="block text-xs uppercase tracking-wider text-gray-500 mb-2"
-                    style={{ fontFamily: '"Noto Sans", sans-serif', fontWeight: 400 }}
-                  >
-                    Last Name *
-                  </label>
-                  <Input
-                    type="text"
-                    value={formData.lastName}
-                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                    className="bg-gray-50 border-gray-200 focus:border-gray-400 focus:ring-0"
-                    style={{ fontFamily: '"Noto Sans", sans-serif' }}
-                    required
-                  />
-                </div>
-              </div>
-              <div>
-                <label 
-                  className="block text-xs uppercase tracking-wider text-gray-500 mb-2"
-                  style={{ fontFamily: '"Noto Sans", sans-serif', fontWeight: 400 }}
-                >
-                  Email *
-                </label>
-                <Input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="bg-gray-50 border-gray-200 focus:border-gray-400 focus:ring-0"
-                  style={{ fontFamily: '"Noto Sans", sans-serif' }}
+          <div className="p-8 md:p-12 flex flex-col justify-center bg-[#f5f5f5]">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-2 gap-6">
+                <input
+                  type="text"
+                  placeholder="First*"
+                  value={formData.firstName}
+                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                  className="bg-transparent border-0 border-b border-gray-300 focus:border-gray-500 focus:ring-0 px-0 py-3 text-gray-600 placeholder-gray-400"
+                  style={{ fontFamily: '"Noto Sans", sans-serif', fontWeight: 300, fontSize: '16px' }}
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder="Last*"
+                  value={formData.lastName}
+                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                  className="bg-transparent border-0 border-b border-gray-300 focus:border-gray-500 focus:ring-0 px-0 py-3 text-gray-600 placeholder-gray-400"
+                  style={{ fontFamily: '"Noto Sans", sans-serif', fontWeight: 300, fontSize: '16px' }}
                   required
                 />
               </div>
-              <div>
-                <label 
-                  className="block text-xs uppercase tracking-wider text-gray-500 mb-2"
-                  style={{ fontFamily: '"Noto Sans", sans-serif', fontWeight: 400 }}
-                >
-                  Phone *
-                </label>
-                <Input
-                  type="tel"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="bg-gray-50 border-gray-200 focus:border-gray-400 focus:ring-0"
-                  style={{ fontFamily: '"Noto Sans", sans-serif' }}
-                  required
-                />
-              </div>
-              <div>
-                <label 
-                  className="block text-xs uppercase tracking-wider text-gray-500 mb-2"
-                  style={{ fontFamily: '"Noto Sans", sans-serif', fontWeight: 400 }}
-                >
-                  Message *
-                </label>
-                <Textarea
-                  value={formData.message}
-                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                  className="bg-gray-50 border-gray-200 focus:border-gray-400 focus:ring-0 min-h-[120px] resize-none"
-                  style={{ fontFamily: '"Noto Sans", sans-serif' }}
-                  required
-                />
-              </div>
+              <input
+                type="email"
+                placeholder="Email*"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="w-full bg-transparent border-0 border-b border-gray-300 focus:border-gray-500 focus:ring-0 px-0 py-3 text-gray-600 placeholder-gray-400"
+                style={{ fontFamily: '"Noto Sans", sans-serif', fontWeight: 300, fontSize: '16px' }}
+                required
+              />
+              <input
+                type="tel"
+                placeholder="Phone #"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                className="w-full bg-transparent border-0 border-b border-gray-300 focus:border-gray-500 focus:ring-0 px-0 py-3 text-gray-600 placeholder-gray-400"
+                style={{ fontFamily: '"Noto Sans", sans-serif', fontWeight: 300, fontSize: '16px' }}
+              />
+              <textarea
+                placeholder="Your Message"
+                value={formData.message}
+                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                className="w-full bg-transparent border-0 border-b border-gray-300 focus:border-gray-500 focus:ring-0 px-0 py-3 text-gray-600 placeholder-gray-400 min-h-[120px] resize-none"
+                style={{ fontFamily: '"Noto Sans", sans-serif', fontWeight: 300, fontSize: '16px' }}
+                required
+              />
               
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full py-4 text-white uppercase tracking-widest text-sm transition-all hover:opacity-90"
-                style={{ 
-                  backgroundColor: '#1a1a1a', 
-                  fontFamily: '"Noto Sans", sans-serif',
-                  fontWeight: 400
-                }}
-              >
-                {isSubmitting ? 'Sending...' : 'Send Inquiry'}
-              </Button>
+              <div className="pt-4">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="px-6 py-3 bg-transparent border border-gray-400 text-gray-600 hover:bg-gray-100 transition-colors"
+                  style={{ fontFamily: '"Noto Sans", sans-serif', fontWeight: 400, fontSize: '14px' }}
+                >
+                  {isSubmitting ? 'Sending...' : 'Send Inquiry'}
+                </button>
+              </div>
               
               {submitStatus === 'success' && (
-                <p className="text-green-600 text-center text-sm mt-4">Message sent successfully!</p>
+                <p className="text-green-600 text-sm mt-2">Message sent successfully!</p>
               )}
               {submitStatus === 'error' && (
-                <p className="text-red-600 text-center text-sm mt-4">Failed to send. Please try again.</p>
+                <p className="text-red-600 text-sm mt-2">Failed to send. Please try again.</p>
               )}
             </form>
           </div>
