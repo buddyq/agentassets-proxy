@@ -3659,7 +3659,7 @@ function SoapStoneHero({ site, theme, heroImage, hasPhotos, onOpenMenu, navLinks
           <nav className="flex flex-col gap-4 items-center">
             {navLinks.map((link, index) => {
               const isActive = activeSection === link.id;
-              const showLabel = !isInHero && (isActive || hoveredDot === index);
+              const showLabel = hoveredDot === index || (!isInHero && isActive);
               
               return (
                 <div
