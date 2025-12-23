@@ -4864,12 +4864,11 @@ function SoapstoneMap({ site, theme }: { site: Site; theme?: Theme }) {
           }}
         >
           <iframe
-            src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${encodeURIComponent(site.address)}&zoom=14`}
+            src={`https://maps.google.com/maps?q=${encodeURIComponent(site.address)}&t=m&z=14&iwloc=near&output=embed`}
             className="w-full h-full border-0"
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
             title="Property Location"
-            allowFullScreen
           />
         </div>
         
