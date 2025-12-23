@@ -4074,8 +4074,9 @@ function SoapstoneOverview({ site, theme }: { site: Site; theme?: Theme }) {
       {/* Overview text section - with subtle SVG background */}
       <section 
         id="overview" 
-        className="pt-24 md:pt-32 pb-16 md:pb-24 px-6 relative overflow-visible"
+        className="pb-16 md:pb-24 px-6 relative overflow-visible"
         style={{ 
+          paddingTop: '150px',
           scrollMarginTop: '64px',
           backgroundColor: `${primaryColor}08`
         }}
@@ -4117,9 +4118,9 @@ function SoapstoneOverview({ site, theme }: { site: Site; theme?: Theme }) {
         <div 
           className="absolute z-30"
           style={{ 
-            top: '0',
+            top: '15px',
             left: '100px',
-            transform: `translateY(calc(-50% - ${parallaxOffset}px))`
+            transform: `translateY(-${parallaxOffset}px)`
           }}
         >
           <div 
@@ -4144,9 +4145,9 @@ function SoapstoneOverview({ site, theme }: { site: Site; theme?: Theme }) {
         <div 
           className="absolute z-30"
           style={{ 
-            top: '0',
+            top: '15px',
             right: '100px',
-            transform: `translateY(calc(-50% - ${parallaxOffset}px))`
+            transform: `translateY(-${parallaxOffset}px)`
           }}
         >
           <div 
