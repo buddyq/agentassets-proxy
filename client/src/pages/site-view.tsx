@@ -3677,7 +3677,8 @@ function SoapStoneHero({ site, theme, heroImage, hasPhotos, onOpenMenu, navLinks
                     style={{ 
                       backgroundColor: '#ffffff',
                       padding: '8px 16px',
-                      whiteSpace: 'nowrap'
+                      whiteSpace: 'nowrap',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
                     }}
                   >
                     <span
@@ -3729,121 +3730,6 @@ function SoapStoneHero({ site, theme, heroImage, hasPhotos, onOpenMenu, navLinks
       </section>
       
     </>
-  );
-}
-
-// Vertical right-side dot navigation with hover labels (400inwood.com style)
-function SoapstoneDotNavigation({ site, theme, hasPhotos, hasVideo }: { site: Site; theme?: Theme; hasPhotos: boolean; hasVideo: boolean }) {
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const [activeSection, setActiveSection] = useState<string | null>(null);
-  const [isInHero, setIsInHero] = useState(true);
-  
-  const videoTabs = ((site as any).soapstoneVideoTabs as VideoTab[]) || [];
-  const floorPlans = ((site as any).soapstoneFloorPlans as string[]) || [];
-  
-  const navLinks = [
-    { id: 'overview', label: 'OVERVIEW' },
-    ...(videoTabs.length > 0 || site.videoUrl ? [{ id: 'videos', label: 'VIDEO' }] : []),
-    ...(hasPhotos ? [{ id: 'photos', label: 'PHOTOS' }] : []),
-    ...(floorPlans.length > 0 ? [{ id: 'floorplans', label: 'FLOOR PLAN' }] : []),
-    { id: 'contact', label: 'CONTACT' },
-    { id: 'map', label: 'MAP' },
-  ];
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const overviewSection = document.getElementById('overview');
-      const scrollPos = window.scrollY + window.innerHeight / 3;
-      
-      // Check if we're still in the hero section (before overview starts)
-      if (overviewSection) {
-        const inHero = scrollPos < overviewSection.offsetTop;
-        setIsInHero(inHero);
-        
-        // If in hero, no section is active
-        if (inHero) {
-          setActiveSection(null);
-          return;
-        }
-      }
-      
-      // Find active section
-      const sections = navLinks.map(link => document.getElementById(link.id));
-      
-      for (let i = sections.length - 1; i >= 0; i--) {
-        const section = sections[i];
-        if (section && section.offsetTop <= scrollPos) {
-          setActiveSection(navLinks[i].id);
-          return;
-        }
-      }
-      
-      // Default to no active section if nothing found
-      setActiveSection(null);
-    };
-    window.addEventListener('scroll', handleScroll);
-    handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const scrollToSection = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  return (
-    <nav 
-      className="fixed right-6 top-1/2 -translate-y-1/2 z-50 hidden md:flex flex-col gap-10 items-end"
-      style={{ fontFamily: '"Open Sans", sans-serif' }}
-    >
-      {navLinks.map((link, index) => {
-        const isActive = activeSection === link.id;
-        const showLabel = !isInHero && (isActive || hoveredIndex === index);
-        
-        return (
-          <div
-            key={link.id}
-            className="flex items-center gap-4 relative"
-            onMouseEnter={() => setHoveredIndex(index)}
-            onMouseLeave={() => setHoveredIndex(null)}
-          >
-            {/* Label - visible when active (not in hero) or hovered */}
-            <div 
-              className={`absolute right-8 top-1/2 -translate-y-1/2 transition-all duration-200 ${
-                showLabel ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4 pointer-events-none'
-              }`}
-              style={{ 
-                backgroundColor: '#ffffff',
-                padding: '8px 16px',
-                whiteSpace: 'nowrap'
-              }}
-            >
-              <span
-                style={{ 
-                  color: '#333',
-                  fontWeight: '400',
-                  fontSize: '25px',
-                  letterSpacing: '2px',
-                  textTransform: 'uppercase'
-                }}
-              >
-                {link.label}
-              </span>
-            </div>
-            
-            {/* Dot */}
-            <button
-              onClick={() => scrollToSection(link.id)}
-              className={`w-3.5 h-3.5 rounded-full border transition-all ${
-                isActive
-                  ? 'bg-gray-700 border-gray-700' 
-                  : 'bg-transparent border-gray-500 hover:border-gray-700'
-              }`}
-              aria-label={`Go to ${link.label}`}
-            />
-          </div>
-        );
-      })}
-    </nav>
   );
 }
 
