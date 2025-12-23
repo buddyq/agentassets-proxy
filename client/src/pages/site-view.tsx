@@ -4077,8 +4077,12 @@ function SoapstoneOverview({ site, theme }: { site: Site; theme?: Theme }) {
         style={{ marginTop: '20px' }}
       >
         <div 
-          className="w-full px-[10px] py-6"
-          style={{ transform: `translateY(-${parallaxOffset}px)` }}
+          className="w-full py-6"
+          style={{ 
+            transform: `translateY(-${parallaxOffset}px)`,
+            paddingLeft: '100px',
+            paddingRight: '60px'
+          }}
         >
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             {/* Price Box - shadow 20px down, 10px left */}
