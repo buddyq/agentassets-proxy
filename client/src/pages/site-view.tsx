@@ -3956,28 +3956,44 @@ function SoapStoneLayoutWrapper({
       <SoapstoneFloorPlans site={site} theme={theme} />
       <SoapstoneContact site={site} theme={theme} agentInfo={agentInfo} />
       <SoapstoneMap site={site} theme={theme} />
-      <SoapstoneFooter site={site} theme={theme} footerLogo={footerLogo} invertLogo={site.invertLogo ?? false} />
       
-      {/* Spacer for presented by bar to slide up into at bottom */}
-      {presentedBy && <div className="h-16 bg-white" />}
+      {/* Spacer for bottom bar to slide up into at bottom */}
+      <div className="h-20 bg-white" />
       
-      {/* Fixed "Presented by" bar - full viewport width, above all sidebars */}
-      {presentedBy && (
-        <div 
-          className="fixed bottom-0 left-0 right-0 z-[70] bg-white py-5 text-center transition-transform duration-500 ease-out"
-          style={{ 
-            transform: (!isScrolled || isAtBottom) ? 'translateY(0)' : 'translateY(100%)',
-            boxShadow: '0 -4px 12px rgba(0,0,0,0.1)'
-          }}
-        >
-          <span 
-            className="text-xs uppercase tracking-widest"
-            style={{ fontFamily: '"Open Sans", sans-serif', color: '#666' }}
+      {/* Fixed bottom bar - slides up when at bottom of page */}
+      <div 
+        className="fixed bottom-0 left-0 right-0 z-[70] bg-white py-4 px-6 transition-transform duration-500 ease-out"
+        style={{ 
+          transform: isAtBottom ? 'translateY(0)' : 'translateY(100%)',
+          boxShadow: '0 -4px 12px rgba(0,0,0,0.1)'
+        }}
+      >
+        <div className="container mx-auto max-w-5xl flex flex-col md:flex-row items-center justify-between gap-2">
+          {/* Powered by - left on desktop, below on mobile */}
+          <a 
+            href="https://agentassets.com" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-gray-400 text-xs hover:text-gray-600 order-2 md:order-1"
+            style={{ fontFamily: '"Open Sans", sans-serif' }}
           >
-            {presentedBy}
-          </span>
+            Powered by <span className="font-semibold">AgentAssets</span>
+          </a>
+          
+          {/* Presented by - center on desktop, top on mobile */}
+          {presentedBy && (
+            <span 
+              className="text-xs uppercase tracking-widest order-1 md:order-2"
+              style={{ fontFamily: '"Open Sans", sans-serif', color: '#666' }}
+            >
+              {presentedBy}
+            </span>
+          )}
+          
+          {/* Empty spacer for balance on desktop when presentedBy exists */}
+          {presentedBy && <div className="hidden md:block order-3" style={{ width: '150px' }} />}
         </div>
-      )}
+      </div>
     </div>
   );
 }
