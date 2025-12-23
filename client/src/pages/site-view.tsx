@@ -4071,94 +4071,10 @@ function SoapstoneOverview({ site, theme }: { site: Site; theme?: Theme }) {
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500&display=swap');
       `}</style>
       
-      {/* Floating Price and Details Boxes with Parallax - positioned at top of overview, float up into hero */}
-      <div 
-        className="relative z-30 bg-white"
-        style={{ marginTop: '20px' }}
-      >
-        <div 
-          className="w-full py-6"
-          style={{ 
-            transform: `translateY(-${parallaxOffset}px)`,
-            paddingLeft: '100px',
-            paddingRight: '100px'
-          }}
-        >
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            {/* Price Box - shadow 20px down, 10px left */}
-            <div 
-              className="bg-white"
-              style={{ 
-                padding: '10px 15px',
-                boxShadow: '-10px 20px 0px 0px rgba(30, 30, 30, 0.85)',
-                fontFamily: '"Noto Sans", sans-serif',
-                fontWeight: 300
-              }}
-            >
-              <span 
-                className="text-lg md:text-xl tracking-wide"
-                style={{ color: '#1a1a1a' }}
-              >
-                {site.price || 'Price Upon Request'}
-              </span>
-            </div>
-            
-            {/* Details Box - shadow 20px down, 10px right */}
-            <div 
-              className="bg-white flex items-center gap-4 md:gap-6"
-              style={{ 
-                padding: '10px 15px',
-                boxShadow: '10px 20px 0px 0px rgba(30, 30, 30, 0.85)',
-                fontFamily: '"Noto Sans", sans-serif',
-                fontWeight: 300
-              }}
-            >
-              {site.bedrooms && (
-                <>
-                  <div className="text-center">
-                    <span className="text-base md:text-lg" style={{ color: '#1a1a1a' }}>
-                      {site.bedrooms} <span className="text-xs uppercase tracking-wider text-gray-500">beds</span>
-                    </span>
-                  </div>
-                  <div className="w-px h-6 bg-gray-300" />
-                </>
-              )}
-              {site.bathrooms && (
-                <>
-                  <div className="text-center">
-                    <span className="text-base md:text-lg" style={{ color: '#1a1a1a' }}>
-                      {site.bathrooms} <span className="text-xs uppercase tracking-wider text-gray-500">baths</span>
-                    </span>
-                  </div>
-                  <div className="w-px h-6 bg-gray-300" />
-                </>
-              )}
-              {site.sqft && (
-                <>
-                  <div className="text-center">
-                    <span className="text-base md:text-lg" style={{ color: '#1a1a1a' }}>
-                      {site.sqft.toLocaleString()} <span className="text-xs uppercase tracking-wider text-gray-500">sqft</span>
-                    </span>
-                  </div>
-                  <div className="w-px h-6 bg-gray-300" />
-                </>
-              )}
-              {(site as any).acres && (
-                <div className="text-center">
-                  <span className="text-base md:text-lg" style={{ color: '#1a1a1a' }}>
-                    {(site as any).acres} <span className="text-xs uppercase tracking-wider text-gray-500">acres</span>
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-      
       {/* Overview text section - with subtle SVG background */}
       <section 
         id="overview" 
-        className="py-16 md:py-24 px-6 relative overflow-hidden"
+        className="pt-24 md:pt-32 pb-16 md:pb-24 px-6 relative overflow-visible"
         style={{ 
           scrollMarginTop: '64px',
           backgroundColor: `${primaryColor}08`
@@ -4196,6 +4112,91 @@ function SoapstoneOverview({ site, theme }: { site: Site; theme?: Theme }) {
           </defs>
           <rect width="100%" height="100%" fill="url(#topo-pattern)" />
         </svg>
+        
+        {/* Floating Price Box - absolutely positioned, parallax */}
+        <div 
+          className="absolute z-30"
+          style={{ 
+            top: '0',
+            left: '100px',
+            transform: `translateY(calc(-50% - ${parallaxOffset}px))`
+          }}
+        >
+          <div 
+            className="bg-white"
+            style={{ 
+              padding: '10px 15px',
+              boxShadow: '-10px 20px 0px 0px rgba(30, 30, 30, 0.85)',
+              fontFamily: '"Noto Sans", sans-serif',
+              fontWeight: 300
+            }}
+          >
+            <span 
+              className="text-lg md:text-xl tracking-wide"
+              style={{ color: '#1a1a1a' }}
+            >
+              {site.price || 'Price Upon Request'}
+            </span>
+          </div>
+        </div>
+        
+        {/* Floating Details Box - absolutely positioned, parallax */}
+        <div 
+          className="absolute z-30"
+          style={{ 
+            top: '0',
+            right: '100px',
+            transform: `translateY(calc(-50% - ${parallaxOffset}px))`
+          }}
+        >
+          <div 
+            className="bg-white flex items-center gap-4 md:gap-6"
+            style={{ 
+              padding: '10px 15px',
+              boxShadow: '10px 20px 0px 0px rgba(30, 30, 30, 0.85)',
+              fontFamily: '"Noto Sans", sans-serif',
+              fontWeight: 300
+            }}
+          >
+            {site.bedrooms && (
+              <>
+                <div className="text-center">
+                  <span className="text-base md:text-lg" style={{ color: '#1a1a1a' }}>
+                    {site.bedrooms} <span className="text-xs uppercase tracking-wider text-gray-500">beds</span>
+                  </span>
+                </div>
+                <div className="w-px h-6 bg-gray-300" />
+              </>
+            )}
+            {site.bathrooms && (
+              <>
+                <div className="text-center">
+                  <span className="text-base md:text-lg" style={{ color: '#1a1a1a' }}>
+                    {site.bathrooms} <span className="text-xs uppercase tracking-wider text-gray-500">baths</span>
+                  </span>
+                </div>
+                <div className="w-px h-6 bg-gray-300" />
+              </>
+            )}
+            {site.sqft && (
+              <>
+                <div className="text-center">
+                  <span className="text-base md:text-lg" style={{ color: '#1a1a1a' }}>
+                    {site.sqft.toLocaleString()} <span className="text-xs uppercase tracking-wider text-gray-500">sqft</span>
+                  </span>
+                </div>
+                <div className="w-px h-6 bg-gray-300" />
+              </>
+            )}
+            {(site as any).acres && (
+              <div className="text-center">
+                <span className="text-base md:text-lg" style={{ color: '#1a1a1a' }}>
+                  {(site as any).acres} <span className="text-xs uppercase tracking-wider text-gray-500">acres</span>
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
         
         <div className="container mx-auto max-w-4xl relative z-10">
           <h2 
