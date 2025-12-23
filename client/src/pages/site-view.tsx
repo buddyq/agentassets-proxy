@@ -3471,6 +3471,7 @@ function SoapStoneHero({ site, theme, heroImage, hasPhotos, onOpenMenu, navLinks
   const [activeSection, setActiveSection] = useState('overview');
   const [isScrolled, setIsScrolled] = useState(false);
   const [isAtBottom, setIsAtBottom] = useState(false);
+  const [parallaxOffset, setParallaxOffset] = useState(0);
   const heroMode = (site as any).soapstoneHeroMode || 'video';
   const presentedBy = (site as any).soapstonePresentedBy || (site as any).brokerageName;
   
@@ -3511,6 +3512,11 @@ function SoapStoneHero({ site, theme, heroImage, hasPhotos, onOpenMenu, navLinks
       } else {
         setIsScrolled(false);
       }
+      
+      // Calculate parallax offset for floating boxes (subtle upward movement)
+      const maxParallax = 80; // Maximum pixels to move up
+      const scrollPercent = Math.min(window.scrollY / (window.innerHeight * 0.5), 1);
+      setParallaxOffset(scrollPercent * maxParallax);
       
       // Check if at bottom of page
       const scrollHeight = document.documentElement.scrollHeight;
@@ -3700,6 +3706,77 @@ function SoapStoneHero({ site, theme, heroImage, hasPhotos, onOpenMenu, navLinks
             <line x1="3" y1="18" x2="21" y2="18" />
           </svg>
         </button>
+        
+        {/* Floating Price and Details Boxes with Parallax */}
+        <div 
+          className="absolute left-0 right-0 bottom-0 z-30 pointer-events-none"
+          style={{ transform: `translateY(calc(-50% - ${parallaxOffset}px))` }}
+        >
+          <div className="container mx-auto px-4 md:px-20 lg:px-32 flex flex-col md:flex-row justify-between items-end gap-4 pointer-events-auto">
+            {/* Price Box - shadow down/left */}
+            <div 
+              className="bg-white px-6 py-4 md:px-8 md:py-5"
+              style={{ 
+                boxShadow: '-6px 6px 0px 0px rgba(30, 30, 30, 0.9)',
+                fontFamily: '"Open Sans", sans-serif'
+              }}
+            >
+              <span 
+                className="text-lg md:text-xl font-normal tracking-wide"
+                style={{ color: '#1a1a1a' }}
+              >
+                {site.price || 'Price Upon Request'}
+              </span>
+            </div>
+            
+            {/* Details Box - shadow down/right */}
+            <div 
+              className="bg-white px-4 py-3 md:px-6 md:py-4 flex items-center gap-4 md:gap-8"
+              style={{ 
+                boxShadow: '6px 6px 0px 0px rgba(30, 30, 30, 0.9)',
+                fontFamily: '"Open Sans", sans-serif'
+              }}
+            >
+              {site.bedrooms && (
+                <>
+                  <div className="text-center">
+                    <span className="text-base md:text-lg font-normal" style={{ color: '#1a1a1a' }}>
+                      {site.bedrooms} <span className="text-xs uppercase tracking-wider text-gray-500">beds</span>
+                    </span>
+                  </div>
+                  <div className="w-px h-6 bg-gray-300" />
+                </>
+              )}
+              {site.bathrooms && (
+                <>
+                  <div className="text-center">
+                    <span className="text-base md:text-lg font-normal" style={{ color: '#1a1a1a' }}>
+                      {site.bathrooms} <span className="text-xs uppercase tracking-wider text-gray-500">baths</span>
+                    </span>
+                  </div>
+                  <div className="w-px h-6 bg-gray-300" />
+                </>
+              )}
+              {site.sqft && (
+                <>
+                  <div className="text-center">
+                    <span className="text-base md:text-lg font-normal" style={{ color: '#1a1a1a' }}>
+                      {site.sqft.toLocaleString()} <span className="text-xs uppercase tracking-wider text-gray-500">sqft</span>
+                    </span>
+                  </div>
+                  {(site as any).lotSize && <div className="w-px h-6 bg-gray-300" />}
+                </>
+              )}
+              {(site as any).lotSize && (
+                <div className="text-center">
+                  <span className="text-base md:text-lg font-normal" style={{ color: '#1a1a1a' }}>
+                    {(site as any).lotSize} <span className="text-xs uppercase tracking-wider text-gray-500">lot</span>
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </section>
       
     </>
@@ -4046,80 +4123,14 @@ function SoapStoneLayoutWrapper({
   );
 }
 
-// Overview section with stats bar (400inwood.com style)
+// Overview section (400inwood.com style)
 function SoapstoneOverview({ site, theme }: { site: Site; theme?: Theme }) {
   const primaryColor = theme?.colors?.primary || '#558B73';
   
-  // Parse bathrooms to show full/half if available
-  const bathroomsDisplay = site.bathrooms || '';
-  
   return (
     <>
-      {/* Stats bar - dark background with property stats */}
-      <div className="bg-[#1a1a1a] py-6 px-4">
-        <div className="container mx-auto">
-          <div className="flex flex-wrap justify-center items-center gap-6 md:gap-12">
-            {/* Price */}
-            <div className="text-center">
-              <p className="text-white text-2xl md:text-3xl font-light" style={{ fontFamily: '"Playfair Display", serif' }}>
-                {site.price || 'Price Upon Request'}
-              </p>
-            </div>
-            
-            {/* Divider */}
-            {site.bedrooms && <div className="hidden md:block w-px h-10 bg-gray-600" />}
-            
-            {/* Beds */}
-            {site.bedrooms && (
-              <div className="text-center">
-                <p className="text-white text-2xl md:text-3xl font-light" style={{ fontFamily: '"Playfair Display", serif' }}>
-                  {site.bedrooms}
-                </p>
-                <p className="text-gray-400 text-xs uppercase tracking-wider mt-1">beds</p>
-              </div>
-            )}
-            
-            {/* Divider */}
-            {site.bathrooms && <div className="hidden md:block w-px h-10 bg-gray-600" />}
-            
-            {/* Baths */}
-            {site.bathrooms && (
-              <div className="text-center">
-                <p className="text-white text-2xl md:text-3xl font-light" style={{ fontFamily: '"Playfair Display", serif' }}>
-                  {bathroomsDisplay}
-                </p>
-                <p className="text-gray-400 text-xs uppercase tracking-wider mt-1">baths</p>
-              </div>
-            )}
-            
-            {/* Divider */}
-            {site.sqft && <div className="hidden md:block w-px h-10 bg-gray-600" />}
-            
-            {/* Sqft */}
-            {site.sqft && (
-              <div className="text-center">
-                <p className="text-white text-2xl md:text-3xl font-light" style={{ fontFamily: '"Playfair Display", serif' }}>
-                  {site.sqft.toLocaleString()}
-                </p>
-                <p className="text-gray-400 text-xs uppercase tracking-wider mt-1">sqft</p>
-              </div>
-            )}
-            
-            {/* Divider */}
-            {(site as any).lotSize && <div className="hidden md:block w-px h-10 bg-gray-600" />}
-            
-            {/* Lot size (if available) */}
-            {(site as any).lotSize && (
-              <div className="text-center">
-                <p className="text-white text-2xl md:text-3xl font-light" style={{ fontFamily: '"Playfair Display", serif' }}>
-                  {(site as any).lotSize}
-                </p>
-                <p className="text-gray-400 text-xs uppercase tracking-wider mt-1">lot</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+      {/* Spacer to account for floating boxes overlap */}
+      <div className="h-16 md:h-20 bg-white" />
       
       {/* Overview text section - with subtle SVG background */}
       <section 
