@@ -4852,10 +4852,10 @@ function SoapstoneMap({ site, theme }: { site: Site; theme?: Theme }) {
       }}
     >
       <div className="relative h-[450px] md:h-[500px]">
-        {/* Map - right side, 50% width */}
+        {/* Map - right side, 75% width */}
         <div 
-          className="absolute right-0 top-0 bottom-0 w-full md:w-1/2"
-          style={{ filter: 'grayscale(100%)' }}
+          className="absolute right-0 top-0 bottom-0"
+          style={{ filter: 'grayscale(100%)', width: '75%' }}
         >
           <iframe
             src={`https://www.google.com/maps?q=${encodeURIComponent(site.address)}&output=embed`}
@@ -4866,11 +4866,17 @@ function SoapstoneMap({ site, theme }: { site: Site; theme?: Theme }) {
           />
         </div>
         
-        {/* Address box - overlays map on left */}
+        {/* Address box - floating, half over map */}
         <div 
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white p-8 md:p-10 max-w-sm"
+          className="absolute z-10 bg-white p-8 md:p-10"
           style={{ 
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+            left: '0',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            width: '40%',
+            minWidth: '280px',
+            maxWidth: '400px'
           }}
         >
           <h3 
