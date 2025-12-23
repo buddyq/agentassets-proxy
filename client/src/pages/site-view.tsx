@@ -3982,10 +3982,34 @@ function SoapStoneLayoutWrapper({
   );
 }
 
+// Helper function to lighten a hex color by a percentage
+function lightenColor(hex: string, percent: number): string {
+  // Remove # if present
+  const cleanHex = hex.replace('#', '');
+  
+  // Parse hex to RGB
+  const r = parseInt(cleanHex.substring(0, 2), 16);
+  const g = parseInt(cleanHex.substring(2, 4), 16);
+  const b = parseInt(cleanHex.substring(4, 6), 16);
+  
+  // Lighten each channel toward 255 (white)
+  const lightenChannel = (channel: number) => {
+    return Math.round(channel + (255 - channel) * (percent / 100));
+  };
+  
+  const newR = lightenChannel(r);
+  const newG = lightenChannel(g);
+  const newB = lightenChannel(b);
+  
+  // Convert back to hex
+  return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
+}
+
 // Overview section (400inwood.com style)
 function SoapstoneOverview({ site, theme }: { site: Site; theme?: Theme }) {
   const primaryColor = theme?.colors?.primary || '#558B73';
   const backgroundColor = theme?.colors?.background || '#ffffff';
+  const lighterBackground = lightenColor(backgroundColor, 50);
   const [parallaxOffset, setParallaxOffset] = useState(0);
   
   useEffect(() => {
@@ -4014,7 +4038,7 @@ function SoapstoneOverview({ site, theme }: { site: Site; theme?: Theme }) {
         style={{ 
           paddingTop: '150px',
           scrollMarginTop: '64px',
-          backgroundColor: `${backgroundColor}15`
+          backgroundColor: lighterBackground
         }}
       >
         {/* Subtle topography-style SVG background */}
@@ -4064,7 +4088,7 @@ function SoapstoneOverview({ site, theme }: { site: Site; theme?: Theme }) {
             className="bg-white"
             style={{ 
               padding: '10px 15px',
-              boxShadow: `-10px 20px 0px 0px ${primaryColor}`,
+              boxShadow: '-10px 20px 0px 0px rgba(30, 30, 30, 0.85)',
               fontFamily: '"Noto Sans", sans-serif',
               fontWeight: 300
             }}
@@ -4092,7 +4116,7 @@ function SoapstoneOverview({ site, theme }: { site: Site; theme?: Theme }) {
             className="bg-white flex items-center gap-4 md:gap-6"
             style={{ 
               padding: '10px 15px',
-              boxShadow: `10px 20px 0px 0px ${primaryColor}`,
+              boxShadow: '10px 20px 0px 0px rgba(30, 30, 30, 0.85)',
               fontFamily: '"Noto Sans", sans-serif',
               fontWeight: 300
             }}
