@@ -6,7 +6,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { MapPin, Play, Home, Info, Video, Image, X, ChevronLeft, ChevronRight, ChevronDown, Bed, Bath, Square, Calendar, Building, Phone, Mail, User, Instagram, Facebook, Linkedin, Youtube, Twitter, FileText, Download, Package, Lock, Eye, EyeOff, Grid } from "lucide-react";
 import heroImage from "@assets/generated_images/luxury_living_room_interior_for_hero_background.png";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+
+declare global {
+  interface Window {
+    google: any;
+  }
+}
 import useEmblaCarousel from "embla-carousel-react";
 import type { Site, Theme, Layout, HeroTransitionType } from "@shared/schema";
 import HeroSlider from "@/components/hero/HeroSlider";
@@ -4834,6 +4840,65 @@ function SoapstoneContact({ site, theme, agentInfo }: { site: Site; theme?: Them
   );
 }
 
+// Google Map component with clickableIcons disabled
+function SoapstoneGoogleMap({ address }: { address: string }) {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const [mapLoaded, setMapLoaded] = useState(false);
+  
+  useEffect(() => {
+    // Load Google Maps script if not already loaded
+    if (!window.google?.maps) {
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => setMapLoaded(true);
+      document.head.appendChild(script);
+    } else {
+      setMapLoaded(true);
+    }
+  }, []);
+  
+  useEffect(() => {
+    if (!mapLoaded || !mapRef.current || !window.google?.maps) return;
+    
+    const geocoder = new window.google.maps.Geocoder();
+    
+    geocoder.geocode({ address }, (results: any, status: any) => {
+      if (status === 'OK' && results[0]) {
+        const location = results[0].geometry.location;
+        
+        const map = new window.google.maps.Map(mapRef.current!, {
+          center: location,
+          zoom: 14,
+          clickableIcons: false,
+          disableDefaultUI: true,
+          zoomControl: true,
+          styles: [
+            { elementType: 'geometry', stylers: [{ saturation: -100 }] },
+            { elementType: 'labels.icon', stylers: [{ saturation: -100 }] },
+            { elementType: 'labels.text.fill', stylers: [{ saturation: -100, lightness: 40 }] },
+            { elementType: 'labels.text.stroke', stylers: [{ saturation: -100 }] },
+            { featureType: 'road', elementType: 'geometry', stylers: [{ saturation: -100, lightness: 50 }] },
+            { featureType: 'water', elementType: 'geometry', stylers: [{ saturation: -100, lightness: 30 }] },
+            { featureType: 'poi', elementType: 'all', stylers: [{ saturation: -100 }] },
+            { featureType: 'landscape', elementType: 'all', stylers: [{ saturation: -100 }] },
+            { featureType: 'transit', elementType: 'all', stylers: [{ saturation: -100 }] },
+          ]
+        });
+        
+        new window.google.maps.Marker({
+          position: location,
+          map: map,
+          clickable: false
+        });
+      }
+    });
+  }, [mapLoaded, address]);
+  
+  return <div ref={mapRef} className="w-full h-full" />;
+}
+
 // Map section (400inwood.com style)
 function SoapstoneMap({ site, theme }: { site: Site; theme?: Theme }) {
   // Parse address into street and city/state/zip
@@ -4858,18 +4923,11 @@ function SoapstoneMap({ site, theme }: { site: Site; theme?: Theme }) {
         <div 
           className="absolute top-0 bottom-0"
           style={{ 
-            filter: 'grayscale(100%)', 
             width: '75%',
             right: '0'
           }}
         >
-          <iframe
-            src={`https://maps.google.com/maps?q=${encodeURIComponent(site.address)}&t=m&z=14&iwloc=near&output=embed`}
-            className="w-full h-full border-0"
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            title="Property Location"
-          />
+          <SoapstoneGoogleMap address={site.address} />
         </div>
         
         {/* Address box - floating, half over map */}
