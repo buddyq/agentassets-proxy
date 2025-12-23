@@ -4836,39 +4836,68 @@ function SoapstoneContact({ site, theme, agentInfo }: { site: Site; theme?: Them
 
 // Map section (400inwood.com style)
 function SoapstoneMap({ site, theme }: { site: Site; theme?: Theme }) {
+  // Parse address into street and city/state/zip
+  const addressParts = site.address.split(',');
+  const streetAddress = addressParts[0]?.trim() || site.address;
+  const cityStateZip = addressParts.slice(1).join(',').trim();
+  
   return (
     <section 
       id="map" 
-      className="bg-gray-100"
-      style={{ scrollMarginTop: '64px' }}
+      className="bg-white relative"
+      style={{ 
+        scrollMarginTop: '64px',
+        margin: '0 40px'
+      }}
     >
-      {/* Address header */}
-      <div className="py-6 px-6 bg-white border-b">
-        <div className="container mx-auto max-w-5xl">
+      <div className="relative h-[450px] md:h-[500px]">
+        {/* Map - right side, 50% width */}
+        <div 
+          className="absolute right-0 top-0 bottom-0 w-full md:w-1/2"
+          style={{ filter: 'grayscale(100%)' }}
+        >
+          <iframe
+            src={`https://www.google.com/maps?q=${encodeURIComponent(site.address)}&output=embed`}
+            className="w-full h-full border-0"
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            title="Property Location"
+          />
+        </div>
+        
+        {/* Address box - overlays map on left */}
+        <div 
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white p-8 md:p-10 max-w-sm"
+          style={{ 
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
+          }}
+        >
           <h3 
-            className="text-lg"
-            style={{ fontFamily: '"Open Sans", sans-serif', fontWeight: '400', color: '#1a1a1a' }}
+            className="text-sm uppercase tracking-widest mb-4"
+            style={{ 
+              fontFamily: '"Noto Sans", sans-serif', 
+              fontWeight: 400, 
+              color: '#1a1a1a',
+              letterSpacing: '0.15em'
+            }}
           >
-            Address
+            ADDRESS
           </h3>
           <p 
-            className="text-gray-600 mt-1"
-            style={{ fontFamily: '"Open Sans", sans-serif' }}
+            className="text-gray-700 text-lg"
+            style={{ fontFamily: '"Noto Sans", sans-serif', fontWeight: 300, lineHeight: 1.6 }}
           >
-            {site.address}
+            {streetAddress}
           </p>
+          {cityStateZip && (
+            <p 
+              className="text-gray-700 text-lg"
+              style={{ fontFamily: '"Noto Sans", sans-serif', fontWeight: 300, lineHeight: 1.6 }}
+            >
+              {cityStateZip}
+            </p>
+          )}
         </div>
-      </div>
-      
-      {/* Map */}
-      <div className="h-[400px] md:h-[500px]">
-        <iframe
-          src={`https://www.google.com/maps?q=${encodeURIComponent(site.address)}&output=embed`}
-          className="w-full h-full border-0"
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-          title="Property Location"
-        />
       </div>
     </section>
   );
