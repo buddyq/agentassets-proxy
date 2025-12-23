@@ -4939,10 +4939,15 @@ function SoapstoneMap({ site, theme }: { site: Site; theme?: Theme }) {
 
 // Footer (400inwood.com / Rela style)
 function SoapstoneFooter({ site, theme, footerLogo, invertLogo }: { site: Site; theme?: Theme; footerLogo?: string | null; invertLogo?: boolean }) {
+  const backgroundColor = theme?.colors?.background || '#ffffff';
+  
   return (
-    <footer className="py-6 px-6 bg-white border-t">
+    <footer 
+      className="py-6 px-6 border-t"
+      style={{ backgroundColor }}
+    >
       <div className="container mx-auto max-w-5xl">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex flex-col md:flex-row items-center justify-center gap-4">
           {/* Powered by */}
           <a 
             href="https://agentassets.com" 
@@ -4953,16 +4958,6 @@ function SoapstoneFooter({ site, theme, footerLogo, invertLogo }: { site: Site; 
           >
             Powered by <span className="font-semibold">AgentAssets</span>
           </a>
-          
-          {/* Company copyright */}
-          {theme?.name && (
-            <p 
-              className="text-gray-400 text-xs"
-              style={{ fontFamily: '"Open Sans", sans-serif' }}
-            >
-              {theme.name}
-            </p>
-          )}
         </div>
       </div>
     </footer>
