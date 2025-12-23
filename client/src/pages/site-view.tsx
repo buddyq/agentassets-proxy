@@ -4120,7 +4120,8 @@ function SoapstoneOverview({ site, theme }: { site: Site; theme?: Theme }) {
           style={{ 
             top: '15px',
             left: '100px',
-            transform: `translateY(-${parallaxOffset}px)`
+            transform: `translateY(-${parallaxOffset}px)`,
+            transition: 'transform 0.3s ease-out'
           }}
         >
           <div 
@@ -4147,7 +4148,8 @@ function SoapstoneOverview({ site, theme }: { site: Site; theme?: Theme }) {
           style={{ 
             top: '15px',
             right: '100px',
-            transform: `translateY(-${parallaxOffset}px)`
+            transform: `translateY(-${parallaxOffset}px)`,
+            transition: 'transform 0.3s ease-out'
           }}
         >
           <div 
