@@ -4081,14 +4081,15 @@ function SoapstoneOverview({ site, theme }: { site: Site; theme?: Theme }) {
           style={{ 
             transform: `translateY(-${parallaxOffset}px)`,
             paddingLeft: '100px',
-            paddingRight: '60px'
+            paddingRight: '80px'
           }}
         >
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             {/* Price Box - shadow 20px down, 10px left */}
             <div 
-              className="bg-white px-6 py-4 md:px-8 md:py-5"
+              className="bg-white"
               style={{ 
+                padding: '10px 15px',
                 boxShadow: '-10px 20px 0px 0px rgba(30, 30, 30, 0.85)',
                 fontFamily: '"Noto Sans", sans-serif',
                 fontWeight: 300
@@ -4104,8 +4105,9 @@ function SoapstoneOverview({ site, theme }: { site: Site; theme?: Theme }) {
             
             {/* Details Box - shadow 20px down, 10px right */}
             <div 
-              className="bg-white px-4 py-3 md:px-6 md:py-4 flex items-center gap-4 md:gap-8"
+              className="bg-white flex items-center gap-4 md:gap-6"
               style={{ 
+                padding: '10px 15px',
                 boxShadow: '10px 20px 0px 0px rgba(30, 30, 30, 0.85)',
                 fontFamily: '"Noto Sans", sans-serif',
                 fontWeight: 300
@@ -4138,13 +4140,13 @@ function SoapstoneOverview({ site, theme }: { site: Site; theme?: Theme }) {
                       {site.sqft.toLocaleString()} <span className="text-xs uppercase tracking-wider text-gray-500">sqft</span>
                     </span>
                   </div>
-                  {(site as any).lotSize && <div className="w-px h-6 bg-gray-300" />}
+                  <div className="w-px h-6 bg-gray-300" />
                 </>
               )}
-              {(site as any).lotSize && (
+              {(site as any).acres && (
                 <div className="text-center">
                   <span className="text-base md:text-lg" style={{ color: '#1a1a1a' }}>
-                    {(site as any).lotSize} <span className="text-xs uppercase tracking-wider text-gray-500">lot</span>
+                    {(site as any).acres} <span className="text-xs uppercase tracking-wider text-gray-500">acres</span>
                   </span>
                 </div>
               )}
