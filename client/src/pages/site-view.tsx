@@ -3716,7 +3716,7 @@ function SoapStoneHero({ site, theme, heroImage, hasPhotos, onOpenMenu, navLinks
 // Vertical right-side dot navigation with hover labels (400inwood.com style)
 function SoapstoneDotNavigation({ site, theme, hasPhotos, hasVideo }: { site: Site; theme?: Theme; hasPhotos: boolean; hasVideo: boolean }) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const [activeSection, setActiveSection] = useState('hero');
+  const [activeSection, setActiveSection] = useState<string | null>(null);
   const [isInHero, setIsInHero] = useState(true);
   
   const videoTabs = ((site as any).soapstoneVideoTabs as VideoTab[]) || [];
@@ -3733,24 +3733,34 @@ function SoapstoneDotNavigation({ site, theme, hasPhotos, hasVideo }: { site: Si
 
   useEffect(() => {
     const handleScroll = () => {
-      const heroSection = document.getElementById('hero');
       const overviewSection = document.getElementById('overview');
       const scrollPos = window.scrollY + window.innerHeight / 3;
       
-      // Check if we're still in the hero section
+      // Check if we're still in the hero section (before overview starts)
       if (overviewSection) {
-        setIsInHero(scrollPos < overviewSection.offsetTop);
+        const inHero = scrollPos < overviewSection.offsetTop;
+        setIsInHero(inHero);
+        
+        // If in hero, no section is active
+        if (inHero) {
+          setActiveSection(null);
+          return;
+        }
       }
       
+      // Find active section
       const sections = navLinks.map(link => document.getElementById(link.id));
       
       for (let i = sections.length - 1; i >= 0; i--) {
         const section = sections[i];
         if (section && section.offsetTop <= scrollPos) {
           setActiveSection(navLinks[i].id);
-          break;
+          return;
         }
       }
+      
+      // Default to no active section if nothing found
+      setActiveSection(null);
     };
     window.addEventListener('scroll', handleScroll);
     handleScroll();
@@ -3760,9 +3770,6 @@ function SoapstoneDotNavigation({ site, theme, hasPhotos, hasVideo }: { site: Si
   const scrollToSection = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
-
-  // Find the active nav link index
-  const activeIndex = navLinks.findIndex(link => link.id === activeSection);
 
   return (
     <nav 
@@ -3808,7 +3815,7 @@ function SoapstoneDotNavigation({ site, theme, hasPhotos, hasVideo }: { site: Si
             <button
               onClick={() => scrollToSection(link.id)}
               className={`w-3.5 h-3.5 rounded-full border transition-all ${
-                isActive && !isInHero
+                isActive
                   ? 'bg-gray-700 border-gray-700' 
                   : 'bg-transparent border-gray-500 hover:border-gray-700'
               }`}
