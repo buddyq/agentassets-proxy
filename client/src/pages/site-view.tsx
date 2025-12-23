@@ -4081,7 +4081,7 @@ function SoapstoneOverview({ site, theme }: { site: Site; theme?: Theme }) {
           style={{ 
             transform: `translateY(-${parallaxOffset}px)`,
             paddingLeft: '100px',
-            paddingRight: '80px'
+            paddingRight: '100px'
           }}
         >
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
