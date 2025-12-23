@@ -4808,8 +4808,13 @@ function SoapstoneContact({ site, theme, agentInfo }: { site: Site; theme?: Them
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-6 py-3 bg-transparent border border-gray-400 text-gray-600 hover:bg-gray-100 transition-colors"
-                  style={{ fontFamily: '"Noto Sans", sans-serif', fontWeight: 400, fontSize: '14px' }}
+                  className="px-6 py-3 bg-white border border-gray-400 text-gray-600 hover:bg-gray-50 transition-colors"
+                  style={{ 
+                    fontFamily: '"Noto Sans", sans-serif', 
+                    fontWeight: 400, 
+                    fontSize: '14px',
+                    boxShadow: '-8px 6px 0px 0px rgba(30, 30, 30, 0.85)'
+                  }}
                 >
                   {isSubmitting ? 'Sending...' : 'Send Inquiry'}
                 </button>
