@@ -4005,11 +4005,20 @@ function lightenColor(hex: string, percent: number): string {
   return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
 }
 
+// Helper function to convert hex to rgba with opacity
+function hexToRgba(hex: string, opacity: number): string {
+  const cleanHex = hex.replace('#', '');
+  const r = parseInt(cleanHex.substring(0, 2), 16);
+  const g = parseInt(cleanHex.substring(2, 4), 16);
+  const b = parseInt(cleanHex.substring(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+}
+
 // Overview section (400inwood.com style)
 function SoapstoneOverview({ site, theme }: { site: Site; theme?: Theme }) {
   const primaryColor = theme?.colors?.primary || '#558B73';
   const backgroundColor = theme?.colors?.background || '#ffffff';
-  const lighterBackground = lightenColor(backgroundColor, 50);
+  const backgroundWithOpacity = hexToRgba(backgroundColor, 0.5);
   const [parallaxOffset, setParallaxOffset] = useState(0);
   
   useEffect(() => {
@@ -4038,7 +4047,7 @@ function SoapstoneOverview({ site, theme }: { site: Site; theme?: Theme }) {
         style={{ 
           paddingTop: '150px',
           scrollMarginTop: '64px',
-          backgroundColor: lighterBackground
+          backgroundColor: backgroundWithOpacity
         }}
       >
         {/* Subtle topography-style SVG background */}
