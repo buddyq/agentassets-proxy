@@ -3985,6 +3985,7 @@ function SoapStoneLayoutWrapper({
 // Overview section (400inwood.com style)
 function SoapstoneOverview({ site, theme }: { site: Site; theme?: Theme }) {
   const primaryColor = theme?.colors?.primary || '#558B73';
+  const backgroundColor = theme?.colors?.background || '#ffffff';
   const [parallaxOffset, setParallaxOffset] = useState(0);
   
   useEffect(() => {
@@ -4013,7 +4014,7 @@ function SoapstoneOverview({ site, theme }: { site: Site; theme?: Theme }) {
         style={{ 
           paddingTop: '150px',
           scrollMarginTop: '64px',
-          backgroundColor: `${primaryColor}08`
+          backgroundColor: `${backgroundColor}15`
         }}
       >
         {/* Subtle topography-style SVG background */}
@@ -4063,7 +4064,7 @@ function SoapstoneOverview({ site, theme }: { site: Site; theme?: Theme }) {
             className="bg-white"
             style={{ 
               padding: '10px 15px',
-              boxShadow: '-10px 20px 0px 0px rgba(30, 30, 30, 0.85)',
+              boxShadow: `-10px 20px 0px 0px ${primaryColor}`,
               fontFamily: '"Noto Sans", sans-serif',
               fontWeight: 300
             }}
@@ -4091,7 +4092,7 @@ function SoapstoneOverview({ site, theme }: { site: Site; theme?: Theme }) {
             className="bg-white flex items-center gap-4 md:gap-6"
             style={{ 
               padding: '10px 15px',
-              boxShadow: '10px 20px 0px 0px rgba(30, 30, 30, 0.85)',
+              boxShadow: `10px 20px 0px 0px ${primaryColor}`,
               fontFamily: '"Noto Sans", sans-serif',
               fontWeight: 300
             }}
