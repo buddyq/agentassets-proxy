@@ -4847,7 +4847,8 @@ function SoapstoneMap({ site, theme }: { site: Site; theme?: Theme }) {
       className="bg-white relative"
       style={{ 
         scrollMarginTop: '64px',
-        margin: '0 40px'
+        marginLeft: '140px',
+        marginRight: '140px'
       }}
     >
       <div className="relative h-[450px] md:h-[500px]">
