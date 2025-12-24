@@ -16,9 +16,11 @@ import {
   useAdminAllBrokerageTemplates,
   useAdminStats,
   useAdminSampleSites,
+  useCaptureScreenshot,
+  useCreateSampleSite,
   type BrokerageWithOwner, type BrokerageTemplate
 } from "@/lib/api";
-import { Plus, Palette, Trash2, Shield, Pencil, LayoutTemplate, Ticket, Users, CreditCard, Gift, Clock, Hash, Calendar, Loader2, Building2, Check, Infinity, TrendingUp, Eye, FileText, ArrowUpRight, Globe } from "lucide-react";
+import { Plus, Palette, Trash2, Shield, Pencil, LayoutTemplate, Ticket, Users, CreditCard, Gift, Clock, Hash, Calendar, Loader2, Building2, Check, Infinity, TrendingUp, Eye, FileText, ArrowUpRight, Globe, Camera, Link, Image } from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -37,7 +39,9 @@ export default function AdminDashboard() {
   const { data: coupons = [], isError: couponsError } = useAdminCoupons();
   const { data: users = [], isError: usersError } = useAdminUsers();
   const { data: stats, isLoading: statsLoading } = useAdminStats();
-  const { data: sampleSites = [] } = useAdminSampleSites();
+  const { data: sampleSites = [], refetch: refetchSampleSites } = useAdminSampleSites();
+  const captureScreenshotMutation = useCaptureScreenshot();
+  const createSampleSiteMutation = useCreateSampleSite();
   const createThemeMutation = useCreateTheme();
   const updateThemeMutation = useUpdateTheme();
   const deleteThemeMutation = useDeleteTheme();
@@ -117,6 +121,13 @@ export default function AdminDashboard() {
   const [editLayoutHeroStyle, setEditLayoutHeroStyle] = useState<"fullscreen" | "split" | "minimal" | "slider">("fullscreen");
   const [editLayoutGalleryStyle, setEditLayoutGalleryStyle] = useState<"grid" | "masonry" | "carousel" | "lightbox">("grid");
   const [editLayoutTypographyScale, setEditLayoutTypographyScale] = useState<"compact" | "normal" | "spacious">("normal");
+  
+  // Sample Site Manager state
+  const [capturingScreenshotForLayout, setCapturingScreenshotForLayout] = useState<string | null>(null);
+  const [creatingSampleSiteForLayout, setCreatingSampleSiteForLayout] = useState<string | null>(null);
+  const [linkSampleSiteDialogOpen, setLinkSampleSiteDialogOpen] = useState(false);
+  const [selectedLayoutForLink, setSelectedLayoutForLink] = useState<Layout | null>(null);
+  const [sampleSiteSlugInput, setSampleSiteSlugInput] = useState("");
   
   if (authLoading) {
     return (
@@ -2291,70 +2302,281 @@ export default function AdminDashboard() {
           </TabsContent>
 
           <TabsContent value="sample-sites">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Eye className="h-5 w-5" />
-                  Sample Sites
-                </CardTitle>
-                <CardDescription>
-                  Manage sample sites that appear as layout previews. Click "Edit" to customize photos, content, and details.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4 md:grid-cols-2">
-                  {sampleSites.map((sample) => (
-                    <Card key={sample.layout.id} className="overflow-hidden">
-                      <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-lg">{sample.layout.name}</CardTitle>
-                          <Badge variant="outline">{sample.layout.sampleSiteSlug}</Badge>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+              <div>
+                <h2 className="text-xl font-bold text-secondary">Sample Site Manager</h2>
+                <p className="text-muted-foreground">Manage sample sites and thumbnails for layout previews. Users see these when choosing a layout.</p>
+              </div>
+            </div>
+
+            {/* Link Sample Site Dialog */}
+            <Dialog open={linkSampleSiteDialogOpen} onOpenChange={setLinkSampleSiteDialogOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Link Sample Site to {selectedLayoutForLink?.name}</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="sample-site-slug">Sample Site Subdomain</Label>
+                    <Input 
+                      id="sample-site-slug" 
+                      value={sampleSiteSlugInput} 
+                      onChange={(e) => setSampleSiteSlugInput(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                      placeholder="e.g., sample-modern" 
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      Enter the subdomain of an existing site to use as the sample for this layout.
+                    </p>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setLinkSampleSiteDialogOpen(false)}>Cancel</Button>
+                  <Button 
+                    onClick={() => {
+                      if (selectedLayoutForLink && sampleSiteSlugInput) {
+                        updateLayoutMutation.mutate(
+                          { id: selectedLayoutForLink.id, updates: { sampleSiteSlug: sampleSiteSlugInput } },
+                          {
+                            onSuccess: () => {
+                              setLinkSampleSiteDialogOpen(false);
+                              setSampleSiteSlugInput("");
+                              setSelectedLayoutForLink(null);
+                              refetchSampleSites();
+                              toast({
+                                title: "Sample Site Linked",
+                                description: `Layout now uses "${sampleSiteSlugInput}" as its sample site.`,
+                              });
+                            }
+                          }
+                        );
+                      }
+                    }}
+                    disabled={!sampleSiteSlugInput}
+                  >
+                    Link Sample Site
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {layouts.map((layout) => {
+                const sampleSite = sampleSites.find(s => s.layout.id === layout.id);
+                const hasSampleSite = !!sampleSite?.site;
+                const hasSlug = !!layout.sampleSiteSlug;
+                const isCapturing = capturingScreenshotForLayout === layout.id;
+                
+                return (
+                  <Card key={layout.id} className="overflow-hidden">
+                    {/* Thumbnail */}
+                    <div className="aspect-video bg-muted relative overflow-hidden">
+                      {layout.thumbnailUrl ? (
+                        <img 
+                          src={layout.thumbnailUrl} 
+                          alt={layout.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                          <Image className="h-12 w-12 opacity-30" />
                         </div>
-                        <CardDescription>
-                          {sample.site ? sample.site.address : 'Sample site not created yet'}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="pt-0">
-                        <div className="flex gap-2">
-                          <a 
-                            href={`/p/${sample.layout.sampleSiteSlug}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex-1"
-                          >
-                            <Button variant="outline" className="w-full gap-2">
-                              <Eye className="h-4 w-4" />
-                              Preview
-                            </Button>
-                          </a>
-                          {sample.site ? (
+                      )}
+                      {isCapturing && (
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                          <div className="text-white text-center">
+                            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+                            <p className="text-sm">Capturing screenshot...</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg">{layout.name}</CardTitle>
+                        {layout.enabled ? (
+                          <Badge variant="default" className="bg-green-600">Enabled</Badge>
+                        ) : (
+                          <Badge variant="secondary">Disabled</Badge>
+                        )}
+                      </div>
+                      <CardDescription className="line-clamp-2">
+                        {layout.description || 'No description'}
+                      </CardDescription>
+                    </CardHeader>
+                    
+                    <CardContent className="pt-0 space-y-3">
+                      {/* Sample Site Status */}
+                      <div className="flex items-center gap-2 text-sm">
+                        {hasSlug ? (
+                          <>
+                            <Check className="h-4 w-4 text-green-600" />
+                            <span className="text-muted-foreground">Sample site:</span>
+                            <Badge variant="outline" className="font-mono text-xs">{layout.sampleSiteSlug}</Badge>
+                          </>
+                        ) : (
+                          <>
+                            <span className="h-4 w-4 rounded-full bg-orange-200" />
+                            <span className="text-muted-foreground">No sample site linked</span>
+                          </>
+                        )}
+                      </div>
+                      
+                      {/* Actions */}
+                      <div className="grid grid-cols-2 gap-2">
+                        {hasSlug && hasSampleSite ? (
+                          <>
                             <a 
-                              href={`/edit-site/${sample.site.id}`}
-                              className="flex-1"
+                              href={`/p/${layout.sampleSiteSlug}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
                             >
-                              <Button className="w-full gap-2">
-                                <Pencil className="h-4 w-4" />
-                                Edit
+                              <Button variant="outline" size="sm" className="w-full gap-1.5">
+                                <Eye className="h-3.5 w-3.5" />
+                                Preview
                               </Button>
                             </a>
-                          ) : (
-                            <Button className="flex-1 gap-2" disabled>
-                              <Pencil className="h-4 w-4" />
-                              No Site
+                            <a href={`/edit-site/${sampleSite.site!.id}`}>
+                              <Button variant="outline" size="sm" className="w-full gap-1.5">
+                                <Pencil className="h-3.5 w-3.5" />
+                                Edit Site
+                              </Button>
+                            </a>
+                          </>
+                        ) : hasSlug && !hasSampleSite ? (
+                          <>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="w-full gap-1.5"
+                              onClick={() => {
+                                setSelectedLayoutForLink(layout);
+                                setSampleSiteSlugInput(layout.sampleSiteSlug || "");
+                                setLinkSampleSiteDialogOpen(true);
+                              }}
+                            >
+                              <Link className="h-3.5 w-3.5" />
+                              Re-link
                             </Button>
+                            <Button 
+                              variant="secondary" 
+                              size="sm" 
+                              className="w-full gap-1.5 text-orange-700"
+                              disabled
+                            >
+                              Site Missing
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button 
+                              variant="default" 
+                              size="sm" 
+                              className="w-full gap-1.5"
+                              disabled={creatingSampleSiteForLayout === layout.id}
+                              onClick={async () => {
+                                setCreatingSampleSiteForLayout(layout.id);
+                                try {
+                                  const result = await createSampleSiteMutation.mutateAsync({ layoutId: layout.id });
+                                  toast({
+                                    title: result.screenshotCaptured ? "Sample Site Created" : "Sample Site Created (No Screenshot)",
+                                    description: result.screenshotCaptured 
+                                      ? `Created "${result.site.subdomain}" with auto-captured thumbnail.`
+                                      : `Created "${result.site.subdomain}" - add photos and capture screenshot manually.`,
+                                  });
+                                  refetchSampleSites();
+                                } catch (error) {
+                                  toast({
+                                    title: "Creation Failed",
+                                    description: "Could not create sample site. Try again.",
+                                    variant: "destructive",
+                                  });
+                                } finally {
+                                  setCreatingSampleSiteForLayout(null);
+                                }
+                              }}
+                            >
+                              {creatingSampleSiteForLayout === layout.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <Plus className="h-3.5 w-3.5" />
+                              )}
+                              {creatingSampleSiteForLayout === layout.id ? 'Creating...' : 'Create Sample Site'}
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="w-full gap-1.5"
+                              onClick={() => {
+                                setSelectedLayoutForLink(layout);
+                                setSampleSiteSlugInput("");
+                                setLinkSampleSiteDialogOpen(true);
+                              }}
+                            >
+                              <Link className="h-3.5 w-3.5" />
+                              Link Existing
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                      
+                      {/* Screenshot Capture */}
+                      {hasSlug && hasSampleSite && (
+                        <Button 
+                          variant="secondary"
+                          size="sm"
+                          className="w-full gap-1.5"
+                          disabled={isCapturing}
+                          onClick={async () => {
+                            setCapturingScreenshotForLayout(layout.id);
+                            try {
+                              const result = await captureScreenshotMutation.mutateAsync({ 
+                                siteSlug: layout.sampleSiteSlug! 
+                              });
+                              // Update the layout with the new thumbnail
+                              await updateLayoutMutation.mutateAsync({
+                                id: layout.id,
+                                updates: { thumbnailUrl: result.screenshotPath }
+                              });
+                              toast({
+                                title: "Screenshot Captured",
+                                description: "Layout thumbnail has been updated.",
+                              });
+                            } catch (error) {
+                              toast({
+                                title: "Screenshot Failed",
+                                description: "Could not capture screenshot. Try again.",
+                                variant: "destructive",
+                              });
+                            } finally {
+                              setCapturingScreenshotForLayout(null);
+                            }
+                          }}
+                        >
+                          {isCapturing ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Camera className="h-3.5 w-3.5" />
                           )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-                {sampleSites.length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No sample sites configured. Add a sampleSiteSlug to layouts to create sample sites.
+                          {isCapturing ? 'Capturing...' : 'Capture Screenshot'}
+                        </Button>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+            
+            {layouts.length === 0 && (
+              <Card>
+                <CardContent className="py-12">
+                  <div className="text-center text-muted-foreground">
+                    <LayoutTemplate className="h-12 w-12 mx-auto mb-4 opacity-30" />
+                    <p>No layouts found. Create layouts in the Layouts tab first.</p>
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
         </Tabs>
       </main>

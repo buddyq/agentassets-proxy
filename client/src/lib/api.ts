@@ -524,6 +524,50 @@ export function useDeleteLayout() {
   });
 }
 
+export function useCaptureScreenshot() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ url, siteSlug }: { url?: string; siteSlug?: string }) => {
+      const res = await fetch(`${API_BASE}/admin/capture-screenshot`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ url, siteSlug })
+      });
+      if (!res.ok) throw new Error('Failed to capture screenshot');
+      return res.json() as Promise<{ screenshotPath: string }>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['layouts'] });
+    }
+  });
+}
+
+export function useCreateSampleSite() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ layoutId }: { layoutId: string }) => {
+      const res = await fetch(`${API_BASE}/admin/create-sample-site`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ layoutId })
+      });
+      if (!res.ok) throw new Error('Failed to create sample site');
+      return res.json() as Promise<{ 
+        site: { id: string; subdomain: string; title: string; address: string };
+        screenshotCaptured: boolean;
+        screenshotPath: string | null;
+        message: string;
+      }>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['layouts'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'sample-sites'] });
+    }
+  });
+}
+
 // Leads API
 export function useLeads() {
   return useQuery({

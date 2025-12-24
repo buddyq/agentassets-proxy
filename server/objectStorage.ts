@@ -208,6 +208,33 @@ export class ObjectStorageService {
       requestedPermission: requestedPermission ?? ObjectPermission.READ,
     });
   }
+
+  async uploadBuffer(buffer: Buffer, contentType: string = 'image/png'): Promise<string> {
+    const privateObjectDir = this.getPrivateObjectDir();
+    if (!privateObjectDir) {
+      throw new Error(
+        "PRIVATE_OBJECT_DIR not set. Create a bucket in 'Object Storage' " +
+          "tool and set PRIVATE_OBJECT_DIR env var."
+      );
+    }
+
+    const objectId = randomUUID();
+    const fullPath = `${privateObjectDir}/uploads/${objectId}`;
+    const { bucketName, objectName } = parseObjectPath(fullPath);
+
+    const bucket = objectStorageClient.bucket(bucketName);
+    const file = bucket.file(objectName);
+    
+    await file.save(buffer, {
+      contentType,
+      resumable: false,
+    });
+
+    // Set public ACL so the thumbnail is visible
+    await setObjectAclPolicy(file, { owner: 'system', visibility: 'public' });
+
+    return `/objects/uploads/${objectId}`;
+  }
 }
 
 function parseObjectPath(path: string): {

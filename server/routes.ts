@@ -2110,6 +2110,145 @@ export async function registerRoutes(
     }
   });
 
+  // Admin route to capture a screenshot of a site
+  app.post("/api/admin/capture-screenshot", isAdmin, async (req, res) => {
+    try {
+      const { url, siteSlug } = req.body;
+      
+      if (!url && !siteSlug) {
+        return res.status(400).json({ error: "Either url or siteSlug is required" });
+      }
+
+      // Determine the URL to capture
+      let captureUrl = url;
+      if (siteSlug && !url) {
+        // Get the base URL for sites
+        const domains = process.env.REPLIT_DOMAINS?.split(',') || [];
+        const baseUrl = domains.length > 0 ? `https://${domains[0]}` : `http://localhost:5000`;
+        captureUrl = `${baseUrl}/site/${siteSlug}`;
+      }
+
+      const { captureAndUploadScreenshot } = await import('./screenshot');
+      const screenshotPath = await captureAndUploadScreenshot(captureUrl, {
+        width: 1280,
+        height: 800,
+        waitTime: 4000, // Wait for animations to complete
+      });
+
+      res.json({ screenshotPath });
+    } catch (error) {
+      console.error("Error capturing screenshot:", error);
+      res.status(500).json({ error: "Failed to capture screenshot" });
+    }
+  });
+
+  // Admin route to create a sample site for a layout
+  app.post("/api/admin/create-sample-site", isAdmin, async (req: any, res) => {
+    try {
+      const { layoutId } = req.body;
+      
+      if (!layoutId) {
+        return res.status(400).json({ error: "layoutId is required" });
+      }
+
+      // Get the layout
+      const layout = await storage.getLayout(layoutId);
+      if (!layout) {
+        return res.status(404).json({ error: "Layout not found" });
+      }
+
+      // Generate a unique subdomain
+      const baseSlug = `sample-${layout.name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').slice(0, 20)}`;
+      let subdomain = baseSlug;
+      let counter = 1;
+      while (await storage.getSiteBySubdomain(subdomain)) {
+        subdomain = `${baseSlug}-${counter}`;
+        counter++;
+      }
+
+      // Create the sample site with placeholder content
+      const sampleSiteData = {
+        userId: req.user.id, // Admin user owns the sample sites
+        subdomain,
+        title: `${layout.name} Sample`,
+        address: "123 Luxury Lane, Beverly Hills, CA 90210",
+        price: "$4,500,000",
+        bedrooms: 5,
+        bathrooms: 6,
+        sqft: 6500,
+        yearBuilt: "2022",
+        stories: "2",
+        description: "This stunning property showcases the elegant design possibilities of this layout. Featuring an open floor plan with high ceilings, premium finishes throughout, and seamless indoor-outdoor living. The gourmet kitchen features top-of-the-line appliances, while the primary suite offers a spa-like retreat. Perfect for entertaining with its resort-style pool and outdoor kitchen.",
+        layoutId: layout.id,
+        themeId: "modern-black", // Default theme
+        status: "published" as const,
+        isTrial: false,
+        features: ["Pool", "Smart Home", "Wine Cellar", "Home Theater", "Chef's Kitchen", "Mountain Views"],
+        customDetails: [
+          { label: "Lot Size", value: "0.75 acres" },
+          { label: "Garage", value: "3-car attached" },
+          { label: "Pool", value: "Infinity edge with spa" }
+        ],
+        photos: [] as string[],
+        heroPhotos: [] as string[],
+        heroSlides: [] as { title: string; subtitle: string; backgroundImage?: string }[],
+        heroTransition: "slide" as const,
+        documents: [] as { name: string; url: string }[],
+        openHouses: [] as { label?: string; date: string; startTime: string; endTime: string }[],
+        soapstoneVideoTabs: [] as { label: string; url: string }[],
+        soapstoneFloorPlans: [] as string[],
+        soapstoneHeroMode: "video" as const,
+      };
+
+      const site = await storage.createSite(sampleSiteData);
+
+      // Update the layout to link to this sample site
+      await storage.updateLayout(layoutId, { sampleSiteSlug: subdomain });
+
+      // Attempt to capture initial screenshot (may fail if site isn't fully accessible yet)
+      let screenshotCaptured = false;
+      let screenshotPath: string | null = null;
+      
+      try {
+        const domains = process.env.REPLIT_DOMAINS?.split(',') || [];
+        const baseUrl = domains.length > 0 ? `https://${domains[0]}` : `http://localhost:5000`;
+        const captureUrl = `${baseUrl}/site/${subdomain}`;
+        
+        const { captureAndUploadScreenshot } = await import('./screenshot');
+        screenshotPath = await captureAndUploadScreenshot(captureUrl, {
+          width: 1280,
+          height: 800,
+          waitTime: 5000, // Wait for site to render
+        });
+        
+        // Update layout with the screenshot
+        await storage.updateLayout(layoutId, { thumbnailUrl: screenshotPath });
+        screenshotCaptured = true;
+        console.log(`Auto-captured screenshot for sample site: ${subdomain}`);
+      } catch (err) {
+        console.error("Auto-screenshot capture failed (admin can manually capture later):", err);
+        // Don't fail the whole request - sample site was still created successfully
+      }
+
+      res.json({ 
+        site: {
+          id: site.id,
+          subdomain: site.subdomain,
+          title: site.title,
+          address: site.address
+        },
+        screenshotCaptured,
+        screenshotPath,
+        message: screenshotCaptured 
+          ? "Sample site created with screenshot captured." 
+          : "Sample site created. Screenshot capture failed - you can manually capture it from the Sample Site Manager."
+      });
+    } catch (error) {
+      console.error("Error creating sample site:", error);
+      res.status(500).json({ error: "Failed to create sample site" });
+    }
+  });
+
   // Admin route to get sample sites for editing
   app.get("/api/admin/sample-sites", isAdmin, async (req, res) => {
     try {
