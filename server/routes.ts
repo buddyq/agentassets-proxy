@@ -10,7 +10,7 @@ import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import archiver from "archiver";
-import { sendLeadNotificationEmail, sendAgentInvitationEmail, sendGroupMemberAddedEmail, sendNewUserNotificationEmail, sendCustomDomainNotificationEmail } from "./email";
+import { sendLeadNotificationEmail, sendAgentInvitationEmail, sendGroupMemberAddedEmail, sendNewUserNotificationEmail, sendCustomDomainNotificationEmail, sendCreditsAddedEmail } from "./email";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 
 function getExtensionFromMime(mimeType: string): string {
@@ -2005,8 +2005,29 @@ export async function registerRoutes(
       if (typeof credits !== 'number' || credits < 0) {
         return res.status(400).json({ error: "Credits must be a non-negative number" });
       }
+      
+      // Get current user to check previous credits
+      const currentUser = await storage.getUser(req.params.id);
+      const previousCredits = currentUser?.credits || 0;
+      
       const user = await storage.updateUserCredits(req.params.id, credits);
       const { password: _, ...safeUser } = user;
+      
+      // Send email if credits were added (not just set or reduced)
+      const creditsAdded = credits - previousCredits;
+      if (creditsAdded > 0 && user.email) {
+        const domains = process.env.REPLIT_DOMAINS?.split(',') || [];
+        const baseUrl = domains.length > 0 ? `https://${domains[0]}` : 'https://agentassets.com';
+        
+        sendCreditsAddedEmail({
+          recipientEmail: user.email,
+          recipientName: user.name || user.username || '',
+          creditsAdded,
+          totalCredits: credits,
+          baseUrl
+        }).catch(err => console.error('Failed to send credits added email:', err));
+      }
+      
       res.json(safeUser);
     } catch (error) {
       console.error("Error updating user credits:", error);
@@ -2046,12 +2067,31 @@ export async function registerRoutes(
 
       const { credits, isAdmin: setAdmin, ...profileData } = result.data;
       
+      // Get current user to check previous credits before any updates
+      const currentUser = await storage.getUser(req.params.id);
+      const previousCredits = currentUser?.credits || 0;
+      
       // Update profile fields
       let user = await storage.updateUserProfile(req.params.id, profileData);
       
       // Update credits if provided
       if (typeof credits === 'number' && credits >= 0) {
         user = await storage.updateUserCredits(req.params.id, credits);
+        
+        // Send email if credits were added (not just set or reduced)
+        const creditsAdded = credits - previousCredits;
+        if (creditsAdded > 0 && user.email) {
+          const domains = process.env.REPLIT_DOMAINS?.split(',') || [];
+          const baseUrl = domains.length > 0 ? `https://${domains[0]}` : 'https://agentassets.com';
+          
+          sendCreditsAddedEmail({
+            recipientEmail: user.email,
+            recipientName: user.name || user.username || '',
+            creditsAdded,
+            totalCredits: credits,
+            baseUrl
+          }).catch(err => console.error('Failed to send credits added email:', err));
+        }
       }
       
       // Update admin status if provided

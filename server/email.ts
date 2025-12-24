@@ -1032,3 +1032,172 @@ AgentAssets - Beautiful Property Websites for Real Estate Professionals
   });
   console.log(`Custom domain notification email sent to ${adminEmail} for domain ${customDomain}`);
 }
+
+interface CreditsAddedEmailData {
+  recipientEmail: string;
+  recipientName: string;
+  creditsAdded: number;
+  totalCredits: number;
+  baseUrl: string;
+}
+
+export async function sendCreditsAddedEmail(
+  data: CreditsAddedEmailData,
+): Promise<void> {
+  const {
+    recipientEmail,
+    recipientName,
+    creditsAdded,
+    totalCredits,
+    baseUrl,
+  } = data;
+
+  const safeName = escapeHtml(recipientName || "there");
+  const loginUrl = `${baseUrl}/auth`;
+  const logoUrl = "https://atxpocket.nyc3.cdn.digitaloceanspaces.com/static/img/logos/agentassets_logo_white.png";
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #f3f4f6; font-family: 'Helvetica Neue', Arial, sans-serif;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f3f4f6; padding: 40px 20px;">
+        <tr>
+          <td align="center">
+            <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 560px; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
+              
+              <!-- Logo Header -->
+              <tr>
+                <td style="background: linear-gradient(135deg, #0d9488 0%, #0a7566 100%); padding: 40px; text-align: center;">
+                  <img src="${logoUrl}" alt="AgentAssets" style="height: 40px; margin-bottom: 0;" onerror="this.style.display='none'"/>
+                </td>
+              </tr>
+              
+              <!-- Main Content -->
+              <tr>
+                <td style="padding: 48px 40px 32px;">
+                  <!-- Credit Icon -->
+                  <div style="text-align: center; margin-bottom: 32px;">
+                    <div style="display: inline-block; width: 80px; height: 80px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 50%; line-height: 80px; text-align: center;">
+                      <span style="font-size: 36px;">✨</span>
+                    </div>
+                  </div>
+                  
+                  <!-- Title -->
+                  <h1 style="margin: 0 0 16px; text-align: center; font-size: 28px; font-weight: 700; color: #111827; font-family: 'Helvetica Neue', Arial, sans-serif;">
+                    Credits Added to Your Account!
+                  </h1>
+                  
+                  <!-- Greeting -->
+                  <p style="margin: 0 0 32px; text-align: center; font-size: 16px; color: #6b7280; line-height: 1.6;">
+                    Hi ${safeName}, great news! Your account has been topped up.
+                  </p>
+                  
+                  <!-- Credits Box -->
+                  <table width="100%" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-radius: 16px; margin-bottom: 32px; border: 1px solid #bbf7d0;">
+                    <tr>
+                      <td style="padding: 32px; text-align: center;">
+                        <div style="font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #16a34a; font-weight: 600; margin-bottom: 8px;">Credits Added</div>
+                        <div style="font-size: 56px; font-weight: 800; color: #15803d; font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1;">+${creditsAdded}</div>
+                      </td>
+                    </tr>
+                  </table>
+                  
+                  <!-- Balance Info -->
+                  <table width="100%" cellpadding="0" cellspacing="0" style="background: #f9fafb; border-radius: 12px; margin-bottom: 32px;">
+                    <tr>
+                      <td style="padding: 20px 24px; border-bottom: 1px solid #e5e7eb;">
+                        <table width="100%" cellpadding="0" cellspacing="0">
+                          <tr>
+                            <td style="font-size: 14px; color: #6b7280;">New Balance</td>
+                            <td style="text-align: right; font-size: 18px; font-weight: 700; color: #111827;">${totalCredits} credits</td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 20px 24px;">
+                        <table width="100%" cellpadding="0" cellspacing="0">
+                          <tr>
+                            <td style="font-size: 14px; color: #6b7280;">What you can do</td>
+                            <td style="text-align: right; font-size: 14px; color: #374151;">Create ${totalCredits} property site${totalCredits !== 1 ? 's' : ''}</td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                  
+                  <!-- CTA Button -->
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td style="text-align: center;">
+                        <a href="${loginUrl}" style="display: inline-block; background: linear-gradient(135deg, #0d9488 0%, #0a7566 100%); color: #ffffff; font-size: 16px; font-weight: 600; padding: 16px 48px; text-decoration: none; border-radius: 12px; box-shadow: 0 4px 14px rgba(13,148,136,0.3);">
+                          Go to Dashboard
+                        </a>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              
+              <!-- Footer -->
+              <tr>
+                <td style="background: #f9fafb; padding: 32px 40px; text-align: center; border-top: 1px solid #e5e7eb;">
+                  <div style="margin-bottom: 16px;">
+                    <span style="color: #0d9488; font-size: 18px; font-weight: 700; font-family: 'Helvetica Neue', Arial, sans-serif;">AgentAssets</span>
+                  </div>
+                  <div style="font-size: 13px; color: #6b7280; margin-bottom: 8px;">Beautiful property websites for real estate professionals</div>
+                  <div style="font-size: 12px; color: #9ca3af;">
+                    Questions? Reply to this email or visit <a href="https://agentassets.com" style="color: #0d9488; text-decoration: none;">agentassets.com</a>
+                  </div>
+                </td>
+              </tr>
+              
+            </table>
+            
+            <!-- Legal Footer -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 560px; margin-top: 24px;">
+              <tr>
+                <td style="text-align: center; font-size: 11px; color: #9ca3af;">
+                  This email was sent to ${escapeHtml(recipientEmail)} because credits were added to your AgentAssets account.
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `;
+
+  const textContent = `
+Credits Added to Your Account!
+
+Hi ${recipientName || "there"},
+
+Great news! Your AgentAssets account has been topped up.
+
+CREDITS ADDED: +${creditsAdded}
+NEW BALANCE: ${totalCredits} credits
+
+You can now create up to ${totalCredits} property site${totalCredits !== 1 ? 's' : ''}.
+
+Log in to your dashboard: ${loginUrl}
+
+---
+AgentAssets - Beautiful Property Websites for Real Estate Professionals
+Questions? Reply to this email or visit agentassets.com
+  `.trim();
+
+  await transporter.sendMail({
+    from: `"AgentAssets" <${process.env.SMTP_FROM || "no-reply@agentassets.com"}>`,
+    to: recipientEmail,
+    subject: `🎉 ${creditsAdded} Credit${creditsAdded !== 1 ? 's' : ''} Added to Your Account`,
+    text: textContent,
+    html: htmlContent,
+  });
+  console.log(`Credits added email sent to ${recipientEmail} for ${creditsAdded} credits`);
+}
