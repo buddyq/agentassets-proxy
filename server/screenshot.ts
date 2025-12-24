@@ -44,8 +44,10 @@ export async function captureScreenshot(
   const page = await context.newPage();
   
   try {
+    // Use 'domcontentloaded' instead of 'networkidle' to avoid timeout 
+    // when pages have video embeds or other persistent network connections
     await page.goto(url, { 
-      waitUntil: 'networkidle',
+      waitUntil: 'domcontentloaded',
       timeout: 30000 
     });
 
