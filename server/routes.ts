@@ -2122,10 +2122,9 @@ export async function registerRoutes(
       // Determine the URL to capture
       let captureUrl = url;
       if (siteSlug && !url) {
-        // Get the base URL for sites - use /p/ route for public preview
-        const domains = process.env.REPLIT_DOMAINS?.split(',') || [];
-        const baseUrl = domains.length > 0 ? `https://${domains[0]}` : `http://localhost:5000`;
-        captureUrl = `${baseUrl}/p/${siteSlug}`;
+        // Use localhost for screenshot capture (captures current dev state, not production)
+        // This ensures we capture the site as it exists in the current environment
+        captureUrl = `http://localhost:5000/p/${siteSlug}`;
       }
 
       const { captureAndUploadScreenshot } = await import('./screenshot');
@@ -2210,9 +2209,8 @@ export async function registerRoutes(
       let screenshotPath: string | null = null;
       
       try {
-        const domains = process.env.REPLIT_DOMAINS?.split(',') || [];
-        const baseUrl = domains.length > 0 ? `https://${domains[0]}` : `http://localhost:5000`;
-        const captureUrl = `${baseUrl}/p/${subdomain}`;
+        // Use localhost for screenshot capture (captures current dev state)
+        const captureUrl = `http://localhost:5000/p/${subdomain}`;
         
         const { captureAndUploadScreenshot } = await import('./screenshot');
         screenshotPath = await captureAndUploadScreenshot(captureUrl, {
