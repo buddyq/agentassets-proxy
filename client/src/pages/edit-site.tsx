@@ -1795,6 +1795,42 @@ export default function EditSite() {
                           </label>
                         </div>
 
+                        {/* Video URL - Only show for Video Background */}
+                        {formData.soapstoneHeroMode === 'video' && (
+                          <div className="pt-4 mt-3 border-t border-gray-200 space-y-3">
+                            <Label htmlFor="soapstone-video-url" className="text-sm font-medium">Video URL (YouTube/Vimeo)</Label>
+                            <Input 
+                              id="soapstone-video-url"
+                              className="bg-white"
+                              placeholder="https://youtube.com/watch?v=..." 
+                              value={formData.videoUrl}
+                              onChange={e => setFormData({...formData, videoUrl: e.target.value})}
+                              data-testid="input-soapstone-video-url"
+                            />
+                            <p className="text-xs text-muted-foreground">This video will play as the hero background</p>
+                            {(() => {
+                              const videoInfo = parseVideoUrl(formData.videoUrl);
+                              if (videoInfo) {
+                                return (
+                                  <div className="mt-2">
+                                    <p className="text-sm text-muted-foreground mb-2">Video Preview:</p>
+                                    <div className="aspect-video rounded-lg overflow-hidden bg-black">
+                                      <iframe
+                                        src={videoInfo.embedUrl}
+                                        title="Video preview"
+                                        className="w-full h-full"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowFullScreen
+                                      />
+                                    </div>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            })()}
+                          </div>
+                        )}
+
                         {/* Hero Transition Effect - Only show for Photo Slider */}
                         {formData.soapstoneHeroMode === 'slider' && (
                           <div className="pt-4 mt-3 border-t border-gray-200 space-y-3">
