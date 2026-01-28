@@ -740,7 +740,7 @@ export default function Dashboard() {
               </p>
               <div className="space-y-2 text-xs">
                 <div className="bg-background rounded p-2 border">
-                  <div className="font-medium mb-1">For root domain (e.g., 410brookhaven.com):</div>
+                  <div className="font-medium mb-1">For root domain{domainInput ? ` (${domainInput.replace(/^www\./i, '')})` : ''}:</div>
                   <div className="font-mono text-muted-foreground">
                     Type: <span className="text-foreground">A</span><br/>
                     Host: <span className="text-foreground">@</span><br/>
@@ -752,7 +752,7 @@ export default function Dashboard() {
                   <div className="font-mono text-muted-foreground">
                     Type: <span className="text-foreground">CNAME</span><br/>
                     Host: <span className="text-foreground">www</span><br/>
-                    Value: <span className="text-foreground">agentassets.com</span>
+                    Value: <span className="text-foreground">{domainInput ? domainInput.replace(/^www\./i, '') : 'yourdomain.com'}</span>
                   </div>
                 </div>
               </div>
