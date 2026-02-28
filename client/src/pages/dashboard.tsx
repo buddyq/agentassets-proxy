@@ -575,6 +575,26 @@ export default function Dashboard() {
                           </div>
                         )}
                       </div>
+                      <div className="pt-3 border-t mt-3">
+                        <div className="flex items-center gap-1.5 text-muted-foreground mb-2">
+                          <BarChart3 className="h-3.5 w-3.5" />
+                          <span className="text-xs font-semibold uppercase tracking-wide">Performance</span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="text-center p-2 bg-muted/30 rounded-md" data-testid={`stat-views-${site.id}`}>
+                            <p className="text-lg font-bold">{(site.stats as any)?.views ?? 0}</p>
+                            <p className="text-[10px] text-muted-foreground">Views</p>
+                          </div>
+                          <div className="text-center p-2 bg-muted/30 rounded-md" data-testid={`stat-visitors-${site.id}`}>
+                            <p className="text-lg font-bold">{(site.stats as any)?.uniqueVisitors ?? 0}</p>
+                            <p className="text-[10px] text-muted-foreground">Visitors</p>
+                          </div>
+                          <div className="text-center p-2 bg-muted/30 rounded-md" data-testid={`stat-leads-${site.id}`}>
+                            <p className="text-lg font-bold">{(site.stats as any)?.leads ?? 0}</p>
+                            <p className="text-[10px] text-muted-foreground">Leads</p>
+                          </div>
+                        </div>
+                      </div>
                     </CardContent>
                     <CardFooter className="flex flex-col gap-2 border-t bg-muted/5 p-4">
                       <div className="flex gap-2 w-full">
