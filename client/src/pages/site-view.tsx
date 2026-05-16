@@ -2073,7 +2073,7 @@ function ModernDocuments({ site, theme }: { site: Site; theme?: Theme }) {
 
 // ===================== MAGAZINE LAYOUT COMPONENTS =====================
 
-function MagazineNavigation({ site, theme, effectiveLogo, invertLogo }: { site: Site; theme?: Theme; effectiveLogo?: string | null; invertLogo?: boolean }) {
+function MagazineNavigation({ site, theme, effectiveLogo, effectiveHeroLogo, invertLogo }: { site: Site; theme?: Theme; effectiveLogo?: string | null; effectiveHeroLogo?: string | null; invertLogo?: boolean }) {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -2109,18 +2109,22 @@ function MagazineNavigation({ site, theme, effectiveLogo, invertLogo }: { site: 
       }`}
     >
       <div className="container mx-auto px-6 flex justify-between items-center">
-        {(effectiveLogo || theme?.logoUrl) && (
-          <img 
-            src={effectiveLogo ?? theme?.logoUrl ?? ''} 
-            alt="Logo" 
-            className={`w-auto object-contain transition-all duration-300 ${
-              !scrolled && invertLogo ? 'brightness-0 invert' : ''
-            }`}
-            style={{ height: '80px' }}
-            data-testid="img-magazine-logo"
-          />
-        )}
-        {!effectiveLogo && !theme?.logoUrl && <div />}
+        {(() => {
+          const logoSrc = !scrolled
+            ? (effectiveHeroLogo || effectiveLogo || theme?.logoUrl)
+            : (effectiveLogo || theme?.logoUrl);
+          return logoSrc ? (
+            <img
+              src={logoSrc}
+              alt="Logo"
+              className={`w-auto object-contain transition-all duration-300 ${
+                !scrolled && invertLogo ? 'brightness-0 invert' : ''
+              }`}
+              style={{ height: '80px' }}
+              data-testid="img-magazine-logo"
+            />
+          ) : <div />;
+        })()}
         
         <div className="hidden md:flex items-center gap-8">
           {navItems.map((item, index) => (
@@ -5575,7 +5579,7 @@ export default function SiteView({ siteId: propSiteId, params: routeParams }: Si
           fontFamily: 'var(--font-body)'
         }}
       >
-        <MagazineNavigation site={site} theme={theme} effectiveLogo={effectiveLogo} invertLogo={site.invertLogo} />
+        <MagazineNavigation site={site} theme={theme} effectiveLogo={effectiveLogo} effectiveHeroLogo={effectiveHeroLogo} invertLogo={site.invertLogo} />
         <MagazineHero site={site} theme={theme} heroImage={heroImage} />
         <MagazineFactsBar site={site} theme={theme} />
         
