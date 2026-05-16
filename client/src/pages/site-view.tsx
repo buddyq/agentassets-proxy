@@ -5376,7 +5376,7 @@ export default function SiteView({ siteId: propSiteId, params: routeParams }: Si
       >
         {/* Navigation overlay - rendered first, floats on top of hero */}
         <ShoalwoodNavigation site={site} theme={theme} hasPhotos={!!hasPhotos} hasVideo={hasVideo} effectiveLogo={effectiveLogo} invertLogo={site.invertLogo} />
-        <ShoalwoodHero site={site} theme={theme} heroImage={heroImage} effectiveLogo={effectiveLogo} invertLogo={site.invertLogo} />
+        <ShoalwoodHero site={site} theme={theme} heroImage={heroImage} effectiveLogo={effectiveHeroLogo} invertLogo={site.invertLogo} />
         <ShoalwoodDescription description={site.description || "A beautiful property awaiting your discovery."} descriptionImage={site.descriptionImage} />
         <ShoalwoodDetails site={site} theme={theme} />
         
