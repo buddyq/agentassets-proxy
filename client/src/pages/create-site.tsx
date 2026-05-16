@@ -237,7 +237,7 @@ export default function CreateSite() {
   
   // Image picker sheet state
   const [imagePickerOpen, setImagePickerOpen] = useState(false);
-  const [imagePickerTarget, setImagePickerTarget] = useState<'contentGridImage1' | 'contentGridImage2' | null>(null);
+  const [imagePickerTarget, setImagePickerTarget] = useState<'contentGridImage1' | 'contentGridImage2' | 'descriptionImage' | null>(null);
   
   const addCustomDetail = () => {
     setCustomDetails([...customDetails, { label: '', value: '' }]);
@@ -1393,25 +1393,20 @@ export default function CreateSite() {
                             <X className="h-4 w-4" />
                           </Button>
                         ) : (
-                          <ObjectUploader
-                            maxNumberOfFiles={1}
-                            maxFileSize={10485760}
-                            variant="button"
-                            buttonClassName="text-sm"
-                            onGetUploadParameters={async () => {
-                              const { url } = await getUploadUrl();
-                              return { method: 'PUT' as const, url };
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setImagePickerTarget('descriptionImage');
+                              setImagePickerOpen(true);
                             }}
-                            onComplete={(result) => {
-                              if (result.successful && result.successful.length > 0) {
-                                const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
-                                setFormData({...formData, descriptionImage: normalizedUrl});
-                              }
-                            }}
+                            disabled={!photos || photos.length === 0}
+                            data-testid="button-select-description-image"
                           >
-                            <Upload className="h-4 w-4 mr-1" />
-                            Upload
-                          </ObjectUploader>
+                            <ImageIcon className="h-4 w-4 mr-1" />
+                            Select
+                          </Button>
                         )}
                       </div>
                     </div>
@@ -1744,15 +1739,27 @@ export default function CreateSite() {
                         <SheetContent side="right" className="w-full sm:max-w-md">
                           <SheetHeader>
                             <SheetTitle>
-                              Select {imagePickerTarget === 'contentGridImage1' ? 'Top Right' : 'Bottom Left'} Image
+                              {imagePickerTarget === 'contentGridImage1' && 'Select Top Right Image'}
+                              {imagePickerTarget === 'contentGridImage2' && 'Select Bottom Left Image'}
+                              {imagePickerTarget === 'descriptionImage' && 'Select Description Image'}
                             </SheetTitle>
                           </SheetHeader>
                           <ScrollArea className="h-[calc(100vh-120px)] mt-6 pr-4">
                             <div className="grid grid-cols-2 gap-3">
-                              {photos.map((photo, photoIndex) => {
-                                const isSelected = imagePickerTarget === 'contentGridImage1' 
-                                  ? formData.contentGridImage1 === photo
-                                  : formData.contentGridImage2 === photo;
+                              {(!photos || photos.length === 0) ? (
+                                <div className="col-span-2 flex flex-col items-center justify-center py-12 text-center gap-3 text-muted-foreground">
+                                  <ImageIcon className="h-10 w-10 opacity-30" />
+                                  <p className="text-sm">Your gallery doesn't have any photos yet. Head to the Photos step to upload some, then come back here to pick one.</p>
+                                </div>
+                              ) : photos.map((photo, photoIndex) => {
+                                let isSelected = false;
+                                if (imagePickerTarget === 'contentGridImage1') {
+                                  isSelected = formData.contentGridImage1 === photo;
+                                } else if (imagePickerTarget === 'contentGridImage2') {
+                                  isSelected = formData.contentGridImage2 === photo;
+                                } else if (imagePickerTarget === 'descriptionImage') {
+                                  isSelected = formData.descriptionImage === photo;
+                                }
                                 return (
                                   <div
                                     key={photoIndex}

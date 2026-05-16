@@ -193,7 +193,7 @@ export default function EditSite() {
   
   // Image picker sheet state
   const [imagePickerOpen, setImagePickerOpen] = useState(false);
-  const [imagePickerTarget, setImagePickerTarget] = useState<'contentGridImage1' | 'contentGridImage2' | 'seoImage' | 'heroSlide-0' | 'heroSlide-1' | 'heroSlide-2' | null>(null);
+  const [imagePickerTarget, setImagePickerTarget] = useState<'contentGridImage1' | 'contentGridImage2' | 'seoImage' | 'descriptionImage' | 'heroSlide-0' | 'heroSlide-1' | 'heroSlide-2' | null>(null);
 
   // Password protection state
   const [newPassword, setNewPassword] = useState("");
@@ -1459,25 +1459,20 @@ export default function EditSite() {
                               <X className="h-4 w-4" />
                             </Button>
                           ) : (
-                            <ObjectUploader
-                              maxNumberOfFiles={1}
-                              maxFileSize={10485760}
-                              variant="button"
-                              buttonClassName="text-sm"
-                              onGetUploadParameters={async () => {
-                                const { url } = await getUploadUrl();
-                                return { method: 'PUT' as const, url };
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setImagePickerTarget('descriptionImage');
+                                setImagePickerOpen(true);
                               }}
-                              onComplete={(result) => {
-                                if (result.successful && result.successful.length > 0) {
-                                  const normalizedUrl = normalizeObjectUrl(result.successful[0].uploadURL);
-                                  setFormData({...formData, descriptionImage: normalizedUrl});
-                                }
-                              }}
+                              disabled={!site?.photos || site.photos.length === 0}
+                              data-testid="button-select-description-image"
                             >
-                              <Upload className="h-4 w-4 mr-1" />
-                              Upload
-                            </ObjectUploader>
+                              <Image className="h-4 w-4 mr-1" />
+                              Select
+                            </Button>
                           )}
                         </div>
                       )}
@@ -2499,12 +2494,18 @@ export default function EditSite() {
                           {imagePickerTarget === 'contentGridImage1' && 'Select Top Right Image'}
                           {imagePickerTarget === 'contentGridImage2' && 'Select Bottom Left Image'}
                           {imagePickerTarget === 'seoImage' && 'Select Image for Sharing'}
+                          {imagePickerTarget === 'descriptionImage' && 'Select Description Image'}
                           {imagePickerTarget?.startsWith('heroSlide-') && `Select Background for Slide ${parseInt(imagePickerTarget.split('-')[1]) + 1}`}
                         </SheetTitle>
                       </SheetHeader>
                       <ScrollArea className="h-[calc(100vh-120px)] mt-6 pr-4">
                         <div className="grid grid-cols-2 gap-3">
-                          {site?.photos?.map((photo, photoIndex) => {
+                          {(!site?.photos || site.photos.length === 0) ? (
+                            <div className="col-span-2 flex flex-col items-center justify-center py-12 text-center gap-3 text-muted-foreground">
+                              <Image className="h-10 w-10 opacity-30" />
+                              <p className="text-sm">Your gallery doesn't have any photos yet. Head to the Photos step to upload some, then come back here to pick one.</p>
+                            </div>
+                          ) : site?.photos?.map((photo, photoIndex) => {
                             let isSelected = false;
                             if (imagePickerTarget === 'contentGridImage1') {
                               isSelected = formData.contentGridImage1 === photo;
@@ -2512,6 +2513,8 @@ export default function EditSite() {
                               isSelected = formData.contentGridImage2 === photo;
                             } else if (imagePickerTarget === 'seoImage') {
                               isSelected = formData.seoImage === photo;
+                            } else if (imagePickerTarget === 'descriptionImage') {
+                              isSelected = formData.descriptionImage === photo;
                             } else if (imagePickerTarget?.startsWith('heroSlide-')) {
                               const slideIndex = parseInt(imagePickerTarget.split('-')[1]);
                               isSelected = formData.heroSlides[slideIndex]?.backgroundImage === photo;
