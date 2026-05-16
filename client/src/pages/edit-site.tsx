@@ -1103,7 +1103,7 @@ export default function EditSite() {
                         </div>
                         <div className="bg-[#f3faf9] rounded-xl p-6 flex flex-col items-center gap-4">
                           <p className="text-sm font-medium text-muted-foreground">Current Logo</p>
-                          <div className="w-20 h-20 rounded-full bg-white shadow-lg flex items-center justify-center p-3">
+                          <div className="w-20 h-20 bg-white shadow-lg flex items-center justify-center p-3">
                             {(formData.logo || user?.logo) ? (
                               <img 
                                 src={formData.logo || user?.logo || ''} 
