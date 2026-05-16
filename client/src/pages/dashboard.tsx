@@ -1,4 +1,12 @@
 import { Navbar } from "@/components/layout/navbar";
+
+function formatPriceDisplay(price: string | null | undefined): string {
+  if (!price) return '';
+  const cleaned = price.replace(/[$,\s]/g, '');
+  const num = parseFloat(cleaned);
+  if (isNaN(num)) return price;
+  return '$' + num.toLocaleString('en-US');
+}
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -513,7 +521,7 @@ export default function Dashboard() {
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Price:</span>
-                          <span className="font-medium">{site.price}</span>
+                          <span className="font-medium">{formatPriceDisplay(site.price)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Layout:</span>

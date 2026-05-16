@@ -1,4 +1,20 @@
 import { Navbar } from "@/components/layout/navbar";
+
+function formatPriceDisplay(price: string | null | undefined): string {
+  if (!price) return '';
+  const cleaned = price.replace(/[$,\s]/g, '');
+  const num = parseFloat(cleaned);
+  if (isNaN(num)) return price;
+  return '$' + num.toLocaleString('en-US');
+}
+
+function formatPriceInput(value: string): string {
+  const cleaned = value.replace(/[$,]/g, '');
+  if (cleaned === '' || cleaned === '.') return cleaned;
+  const num = parseFloat(cleaned);
+  if (isNaN(num)) return cleaned;
+  return num.toLocaleString('en-US');
+}
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -526,13 +542,16 @@ export default function CreateSite() {
                       </div>
                       <div className="grid gap-2">
                         <Label htmlFor="price">Price</Label>
-                        <Input 
-                          id="price" 
-                          className="bg-[#ffffff]"
-                          placeholder="$1,250,000" 
-                          value={formData.price}
-                          onChange={e => setFormData({...formData, price: e.target.value})}
-                        />
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium pointer-events-none">$</span>
+                          <Input 
+                            id="price" 
+                            className="bg-[#ffffff] pl-6"
+                            placeholder="1,250,000" 
+                            value={formData.price}
+                            onChange={e => setFormData({...formData, price: formatPriceInput(e.target.value)})}
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -2459,7 +2478,7 @@ export default function CreateSite() {
                         </div>
                         <div>
                           <span className="text-muted-foreground block">Price</span>
-                          <span className="font-medium">{formData.price}</span>
+                          <span className="font-medium">{formatPriceDisplay(formData.price)}</span>
                         </div>
                         <div>
                           <span className="text-muted-foreground block">Details</span>
