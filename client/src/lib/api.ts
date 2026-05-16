@@ -787,6 +787,7 @@ export type AdminUserProfileUpdate = {
   address?: string | null;
   credits?: number;
   isAdmin?: boolean;
+  activated?: boolean;
 };
 
 export function useAdminUpdateUserProfile() {

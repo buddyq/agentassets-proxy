@@ -101,6 +101,7 @@ export default function AdminDashboard() {
   const [editUserAddress, setEditUserAddress] = useState("");
   const [editUserCredits, setEditUserCredits] = useState<number>(0);
   const [editUserIsAdmin, setEditUserIsAdmin] = useState(false);
+  const [editUserActivated, setEditUserActivated] = useState(false);
   const [newThemeName, setNewThemeName] = useState("");
   const [primaryColor, setPrimaryColor] = useState("#000000");
   const [secondaryColor, setSecondaryColor] = useState("#ffffff");
@@ -464,6 +465,7 @@ export default function AdminDashboard() {
     setEditUserAddress(user.address || "");
     setEditUserCredits(user.credits);
     setEditUserIsAdmin(user.isAdmin || false);
+    setEditUserActivated(!(user.trialEndsAt && new Date(user.trialEndsAt) > new Date()));
     setIsUserProfileDialogOpen(true);
   };
 
@@ -496,6 +498,10 @@ export default function AdminDashboard() {
     }
     if (editUserIsAdmin !== (editingUser.isAdmin || false)) {
       updates.isAdmin = editUserIsAdmin;
+    }
+    const currentActivated = !(editingUser.trialEndsAt && new Date(editingUser.trialEndsAt) > new Date());
+    if (editUserActivated !== currentActivated) {
+      updates.activated = editUserActivated;
     }
 
     // If no changes, just close the dialog
@@ -1972,6 +1978,19 @@ export default function AdminDashboard() {
                         
                         <div className="flex items-center justify-between p-4 border rounded-lg">
                           <div>
+                            <Label htmlFor="edit-user-activated">Account Activated</Label>
+                            <p className="text-sm text-muted-foreground">Mark as paid — removes trial status</p>
+                          </div>
+                          <Switch
+                            id="edit-user-activated"
+                            checked={editUserActivated}
+                            onCheckedChange={setEditUserActivated}
+                            data-testid="switch-edit-user-activated"
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between p-4 border rounded-lg">
+                          <div>
                             <Label htmlFor="edit-user-admin">Admin Access</Label>
                             <p className="text-sm text-muted-foreground">Grant admin privileges</p>
                           </div>
@@ -2058,13 +2077,20 @@ export default function AdminDashboard() {
                               )}
                             </td>
                             <td className="px-4 py-3 text-center">
-                              <Badge variant={user.accountType === 'broker' ? 'default' : 'outline'} className="capitalize">
-                                {user.accountType === 'broker' ? (
-                                  <><Building2 className="h-3 w-3 mr-1" />Broker</>
-                                ) : (
-                                  'Individual'
+                              <div className="flex items-center justify-center gap-1 flex-wrap">
+                                <Badge variant={user.accountType === 'broker' ? 'default' : 'outline'} className="capitalize">
+                                  {user.accountType === 'broker' ? (
+                                    <><Building2 className="h-3 w-3 mr-1" />Broker</>
+                                  ) : (
+                                    'Individual'
+                                  )}
+                                </Badge>
+                                {user.trialEndsAt && new Date(user.trialEndsAt) > new Date() && (
+                                  <Badge variant="secondary" className="text-xs bg-amber-100 text-amber-800 border-amber-200">
+                                    Trial
+                                  </Badge>
                                 )}
-                              </Badge>
+                              </div>
                             </td>
                             <td className="px-4 py-3 text-sm text-muted-foreground">
                               {user.createdAt ? format(new Date(user.createdAt), 'MMM d, yyyy') : '-'}

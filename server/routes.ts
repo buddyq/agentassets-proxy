@@ -2056,6 +2056,7 @@ export async function registerRoutes(
     address: z.string().optional().nullable(),
     credits: z.number().optional(),
     isAdmin: z.boolean().optional(),
+    activated: z.boolean().optional(),
   });
 
   app.patch("/api/admin/users/:id/profile", isAdmin, async (req, res) => {
@@ -2065,7 +2066,7 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Invalid profile data", details: result.error.issues });
       }
 
-      const { credits, isAdmin: setAdmin, ...profileData } = result.data;
+      const { credits, isAdmin: setAdmin, activated, ...profileData } = result.data;
       
       // Get current user to check previous credits before any updates
       const currentUser = await storage.getUser(req.params.id);
@@ -2097,6 +2098,14 @@ export async function registerRoutes(
       // Update admin status if provided
       if (typeof setAdmin === 'boolean') {
         user = await storage.updateUserAdminStatus(req.params.id, setAdmin);
+      }
+
+      // Update activation status if provided
+      if (typeof activated === 'boolean') {
+        const trialEndsAt = activated
+          ? new Date(0) // epoch = definitively past, trial over
+          : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // reset to 7 days
+        user = await storage.updateUserProfile(req.params.id, { trialEndsAt });
       }
       
       const { password: _, ...safeUser } = user;
