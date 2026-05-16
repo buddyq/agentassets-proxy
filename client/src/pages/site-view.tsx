@@ -2109,27 +2109,23 @@ function MagazineNavigation({ site, theme, effectiveLogo, effectiveHeroLogo, inv
       }`}
     >
       <div className="container mx-auto px-6 flex justify-between items-center">
-        <div className="relative flex items-center" style={{ height: '80px' }}>
-          {/* Hero logo — visible when not scrolled */}
-          {(effectiveHeroLogo || effectiveLogo || theme?.logoUrl) && (
+        <div className="flex items-center">
+          {/* Hero logo — shown when not scrolled */}
+          {!scrolled && (effectiveHeroLogo || effectiveLogo || theme?.logoUrl) && (
             <img
               src={effectiveHeroLogo || effectiveLogo || theme?.logoUrl || ''}
               alt="Logo"
-              className={`w-auto object-contain absolute transition-all duration-500 ${
-                scrolled ? 'opacity-0 pointer-events-none' : 'opacity-100'
-              } ${!scrolled && invertLogo ? 'brightness-0 invert' : ''}`}
+              className={`w-auto object-contain transition-all duration-500 ${invertLogo ? 'brightness-0 invert' : ''}`}
               style={{ height: '80px' }}
               data-testid="img-magazine-hero-logo"
             />
           )}
-          {/* Site logo — visible when scrolled */}
-          {(effectiveLogo || theme?.logoUrl) && (
+          {/* Site logo — shown when scrolled */}
+          {scrolled && (effectiveLogo || theme?.logoUrl) && (
             <img
               src={effectiveLogo || theme?.logoUrl || ''}
               alt="Logo"
-              className={`w-auto object-contain absolute transition-all duration-500 ${
-                scrolled ? 'opacity-100' : 'opacity-0 pointer-events-none'
-              }`}
+              className="w-auto object-contain transition-all duration-500"
               style={{ height: '56px' }}
               data-testid="img-magazine-logo"
             />
