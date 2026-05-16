@@ -46,7 +46,6 @@ integrations = ["javascript_database:1.0.0", "javascript_log_in_with_replit:1.0.
 [userenv]
 
 [userenv.shared]
-SMTP_HOST = "mail.agentassets.com"
 SMTP_PORT = "465"
 SMTP_USER = "no-reply@agentassets.com"
 SMTP_FROM = "no-reply@agentassets.com"
