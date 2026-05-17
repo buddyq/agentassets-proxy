@@ -630,16 +630,30 @@ export default function Dashboard() {
                         </Button>
                       </div>
                       {site.status === 'published' ? (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full gap-2 text-xs h-8 text-muted-foreground"
-                          onClick={() => handleUnpublish(site.id)}
-                          disabled={unpublishSiteMutation.isPending}
-                          data-testid={`button-unpublish-${site.id}`}
-                        >
-                          <EyeOff className="h-3 w-3" /> Unpublish Site
-                        </Button>
+                        <div className="flex gap-2 w-full">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 gap-2 text-xs h-8 text-muted-foreground"
+                            onClick={() => handleUnpublish(site.id)}
+                            disabled={unpublishSiteMutation.isPending}
+                            data-testid={`button-unpublish-${site.id}`}
+                          >
+                            <EyeOff className="h-3 w-3" /> Unpublish
+                          </Button>
+                          <Button
+                            variant={(site as any).comingSoon ? "default" : "outline"}
+                            size="sm"
+                            className="flex-1 gap-2 text-xs h-8"
+                            onClick={() => updateSiteMutation.mutate({ id: site.id, comingSoon: !(site as any).comingSoon })}
+                            disabled={updateSiteMutation.isPending}
+                            data-testid={`button-coming-soon-${site.id}`}
+                            title={(site as any).comingSoon ? "Showing coming soon page — click to show full site" : "Show coming soon page instead of full site"}
+                          >
+                            {(site as any).comingSoon ? <Eye className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
+                            {(site as any).comingSoon ? 'Show Site' : 'Coming Soon'}
+                          </Button>
+                        </div>
                       ) : site.status === 'unpublished' || site.status === 'draft' ? (
                         <Button
                           variant="default"

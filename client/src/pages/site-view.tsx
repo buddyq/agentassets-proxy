@@ -5142,6 +5142,83 @@ function PasswordGate({
   );
 }
 
+function ComingSoonPage({ site, theme }: { site: Site & { agentInfo?: any; effectiveLogo?: string; effectiveHeroLogo?: string }; theme?: Theme }) {
+  const [email, setEmail] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+  const bgPhoto = (site.heroPhotos?.[0] || site.photos?.[0]) ?? null;
+  const agentInfo = (site as any).agentInfo;
+  const logo = (site as any).effectiveHeroLogo || (site as any).effectiveLogo;
+  const primary = theme?.colors?.primary || '#558B73';
+
+  return (
+    <div className="min-h-screen relative flex flex-col items-center justify-center overflow-hidden">
+      {/* Background photo */}
+      {bgPhoto ? (
+        <>
+          <div
+            className="absolute inset-0 bg-cover bg-center scale-105"
+            style={{ backgroundImage: `url(${bgPhoto})`, filter: 'blur(2px)' }}
+          />
+          <div className="absolute inset-0 bg-black/60" />
+        </>
+      ) : (
+        <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${primary}22 0%, #0f1923 100%)` }} />
+      )}
+
+      {/* Content */}
+      <div className="relative z-10 text-center px-6 max-w-xl mx-auto">
+        {logo && (
+          <img src={logo} alt="Agent logo" className="h-14 object-contain mx-auto mb-8 drop-shadow-lg" />
+        )}
+
+        <p className="text-xs font-semibold tracking-[0.25em] uppercase mb-4 text-white/60">Property Website</p>
+        <h1 className="text-5xl sm:text-6xl font-light text-white mb-3 tracking-tight">Coming Soon</h1>
+        <div className="w-16 h-px mx-auto mb-6" style={{ backgroundColor: primary }} />
+        <p className="text-lg text-white/90 font-medium mb-2">{site.address}</p>
+        {site.price && (
+          <p className="text-base text-white/60 mb-8">{site.price}</p>
+        )}
+
+        {agentInfo?.name && (
+          <div className="mb-8 text-sm text-white/70">
+            <p className="font-medium text-white/90">{agentInfo.name}</p>
+            {agentInfo.brokerage && <p>{agentInfo.brokerage}</p>}
+            {agentInfo.phone && <p>{agentInfo.phone}</p>}
+            {agentInfo.email && <p>{agentInfo.email}</p>}
+          </div>
+        )}
+
+        {/* Notify form */}
+        {!submitted ? (
+          <div className="flex gap-2 max-w-sm mx-auto">
+            <input
+              type="email"
+              placeholder="Get notified when live"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              className="flex-1 px-4 py-2 rounded-lg text-sm bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-white/50 backdrop-blur"
+            />
+            <button
+              onClick={() => { if (email) setSubmitted(true); }}
+              className="px-4 py-2 rounded-lg text-sm font-medium text-white transition-opacity hover:opacity-90"
+              style={{ backgroundColor: primary }}
+            >
+              Notify me
+            </button>
+          </div>
+        ) : (
+          <p className="text-sm text-white/70">Thanks! We'll let you know when this site goes live.</p>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="absolute bottom-4 left-0 right-0 text-center">
+        <p className="text-xs text-white/30">Powered by AgentAssets</p>
+      </div>
+    </div>
+  );
+}
+
 interface SiteViewProps {
   siteId?: string;
   params?: { id?: string };
@@ -5333,6 +5410,10 @@ export default function SiteView({ siteId: propSiteId, params: routeParams }: Si
         onUnlock={() => setIsUnlocked(true)} 
       />
     );
+  }
+
+  if ((site as any).comingSoon) {
+    return <ComingSoonPage site={site as any} theme={theme} />;
   }
 
   // Helper to get embed URL
