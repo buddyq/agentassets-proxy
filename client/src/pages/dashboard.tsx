@@ -754,7 +754,7 @@ export default function Dashboard() {
                         <div className="font-mono">
                           Type: <span className="text-foreground">CNAME</span> &nbsp;
                           Host: <span className="text-foreground">@</span> &nbsp;
-                          Value: <span className="text-foreground">custom.agentassets.com</span>
+                          Value: <span className="text-foreground">sites.agentassets.com</span>
                         </div>
                         <div className="text-muted-foreground mt-1">Note: If your registrar doesn't support CNAME at @, use Type: A / Value: 34.111.179.128 instead.</div>
                       </div>
@@ -763,7 +763,7 @@ export default function Dashboard() {
                         <div className="font-mono">
                           Type: <span className="text-foreground">CNAME</span> &nbsp;
                           Host: <span className="text-foreground">www</span> &nbsp;
-                          Value: <span className="text-foreground">custom.agentassets.com</span>
+                          Value: <span className="text-foreground">sites.agentassets.com</span>
                         </div>
                       </div>
                     </div>
