@@ -591,6 +591,16 @@ export async function registerRoutes(
             // Continue — domain is still saved to DB even if Cloudflare fails
           }
         }
+      } else if (newCustomDomain && (!cloudflareApexId || !cloudflareWwwId)) {
+        // Domain unchanged but Cloudflare IDs missing — re-register
+        try {
+          const ids = await registerDomain(newCustomDomain);
+          cloudflareApexId = ids.apexId;
+          cloudflareWwwId = ids.wwwId;
+          console.log(`[Cloudflare] Re-registered missing IDs for ${newCustomDomain}`);
+        } catch (cfErr) {
+          console.error('[Cloudflare] Failed to re-register domain:', cfErr);
+        }
       }
 
       // Update the site (including Cloudflare IDs)
