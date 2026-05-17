@@ -841,7 +841,7 @@ export async function sendCustomDomainNotificationEmail(data: CustomDomainEmailD
   const wwwDomain = customDomain.startsWith('www.') ? customDomain : `www.${customDomain}`;
   const safeWwwDomain = escapeHtml(wwwDomain);
   const logoUrl = "https://atxpocket.nyc3.cdn.digitaloceanspaces.com/static/img/logos/agentassets_logo_white.png";
-  const replitIp = "34.111.179.208";
+  const vercelCname = "aa-proxy.vercel.app";
 
   const htmlContent = `
     <!DOCTYPE html>
@@ -936,47 +936,29 @@ export async function sendCustomDomainNotificationEmail(data: CustomDomainEmailD
             </div>
 
             <div class="steps-card">
-              <h3>📋 Steps to Activate the Domain</h3>
+              <h3>✅ Domain Auto-Registered — Action Required from User Only</h3>
               <div class="step">
                 <div class="step-number">1</div>
                 <div class="step-content">
-                  Go to <strong>Replit Deployments</strong> → Click on the active deployment
+                  <strong>No admin action needed</strong> — both <span class="code">${safeDomain}</span> and <span class="code">${safeWwwDomain}</span> have been automatically registered with Vercel.
                 </div>
               </div>
               <div class="step">
                 <div class="step-number">2</div>
                 <div class="step-content">
-                  Click the <strong>Settings</strong> tab at the top
+                  Tell the user to add a <strong>CNAME record</strong> for <span class="code">www</span> pointing to <span class="code">${vercelCname}</span>
                 </div>
               </div>
               <div class="step">
                 <div class="step-number">3</div>
                 <div class="step-content">
-                  Scroll down to <strong>"Custom domains"</strong> section
+                  For the apex domain (<span class="code">${safeDomain}</span>), tell the user to add a <strong>CNAME</strong> (or ALIAS/ANAME) record pointing to <span class="code">${vercelCname}</span>
                 </div>
               </div>
               <div class="step">
                 <div class="step-number">4</div>
                 <div class="step-content">
-                  Click <strong>"Link a domain"</strong> or <strong>"Manually connect from another registrar"</strong>
-                </div>
-              </div>
-              <div class="step">
-                <div class="step-number">5</div>
-                <div class="step-content">
-                  Enter <span class="code">${safeDomain}</span> and click Add
-                </div>
-              </div>
-              <div class="step">
-                <div class="step-number">6</div>
-                <div class="step-content">
-                  Repeat step 5 for <span class="code">${safeWwwDomain}</span>
-                </div>
-              </div>
-              <div class="step">
-                <div class="step-number">7</div>
-                <div class="step-content">
-                  Tell the user to add an A record pointing to <span class="code">${replitIp}</span> (if not already done)
+                  Once DNS propagates (usually within minutes), the site will be live at <span class="code">https://${safeWwwDomain}</span>
                 </div>
               </div>
             </div>
@@ -1009,15 +991,14 @@ Address: ${propertyAddress}
 Site URL: https://agentassets.com/p/${siteSlug}
 User: ${userName} (${userEmail})
 
-STEPS TO ACTIVATE
------------------
-1. Go to Replit Deployments → Click on the active deployment
-2. Click the Settings tab at the top
-3. Scroll down to "Custom domains" section
-4. Click "Link a domain" or "Manually connect from another registrar"
-5. Enter ${customDomain} and click Add
-6. Repeat step 5 for ${wwwDomain}
-7. Tell the user to add an A record pointing to ${replitIp} (if not already done)
+DOMAIN AUTO-REGISTERED — USER ACTION ONLY
+-----------------------------------------
+No admin action needed. Both ${customDomain} and ${wwwDomain} have been automatically registered with Vercel.
+
+Tell the user to:
+1. Add a CNAME record for "www" pointing to: ${vercelCname}
+2. Add a CNAME (or ALIAS/ANAME) for the apex domain pointing to: ${vercelCname}
+3. Once DNS propagates (usually minutes), the site is live at https://${wwwDomain}
 
 ---
 AgentAssets - Beautiful Property Websites for Real Estate Professionals

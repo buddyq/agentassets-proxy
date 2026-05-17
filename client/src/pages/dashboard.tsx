@@ -792,7 +792,7 @@ export default function Dashboard() {
                         <div className="font-mono">
                           Type: <span className="text-foreground">CNAME</span> &nbsp;
                           Host: <span className="text-foreground">www</span> &nbsp;
-                          Value: <span className="text-foreground">sites.agentassets.com</span>
+                          Value: <span className="text-foreground">aa-proxy.vercel.app</span>
                         </div>
                       </div>
                       <div className="bg-background rounded p-2 border">

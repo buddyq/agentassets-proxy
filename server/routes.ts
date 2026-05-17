@@ -12,7 +12,7 @@ import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import archiver from "archiver";
 import { sendLeadNotificationEmail, sendAgentInvitationEmail, sendGroupMemberAddedEmail, sendNewUserNotificationEmail, sendCustomDomainNotificationEmail, sendCreditsAddedEmail } from "./email";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
-import { registerDomain, unregisterDomain } from "./cloudflare";
+import { registerDomainVercel, unregisterDomainVercel } from "./vercel";
 
 function getExtensionFromMime(mimeType: string): string {
   const mimeToExt: Record<string, string> = {
@@ -566,41 +566,34 @@ export async function registerRoutes(
       const isCustomDomainAdded = isDomainChanged && !!newCustomDomain;
       const isCustomDomainRemoved = isDomainChanged && !newCustomDomain;
 
-      // Auto-register/unregister with Cloudflare for SaaS
+      // Auto-register/unregister with Vercel proxy
       let cloudflareApexId = existingSite.cloudflareApexId ?? null;
       let cloudflareWwwId = existingSite.cloudflareWwwId ?? null;
 
       if (isDomainChanged) {
-        // Remove old domain from Cloudflare
-        if (oldCustomDomain && (cloudflareApexId || cloudflareWwwId)) {
-          unregisterDomain(cloudflareApexId, cloudflareWwwId).catch(err =>
-            console.error('[Cloudflare] Failed to unregister old domain:', err)
+        // Remove old domain from Vercel
+        if (oldCustomDomain) {
+          unregisterDomainVercel(oldCustomDomain).catch(err =>
+            console.error('[Vercel] Failed to unregister old domain:', err)
           );
           cloudflareApexId = null;
           cloudflareWwwId = null;
         }
 
-        // Register new domain with Cloudflare
+        // Register new domain with Vercel
         if (newCustomDomain) {
           try {
-            const ids = await registerDomain(newCustomDomain);
-            cloudflareApexId = ids.apexId;
-            cloudflareWwwId = ids.wwwId;
-          } catch (cfErr) {
-            console.error('[Cloudflare] Failed to register domain:', cfErr);
-            // Continue — domain is still saved to DB even if Cloudflare fails
+            await registerDomainVercel(newCustomDomain);
+          } catch (vercelErr) {
+            console.error('[Vercel] Failed to register domain:', vercelErr);
+            // Continue — domain is still saved to DB even if Vercel fails
           }
         }
-      } else if (newCustomDomain && (!cloudflareApexId || !cloudflareWwwId)) {
-        // Domain unchanged but Cloudflare IDs missing — re-register
-        try {
-          const ids = await registerDomain(newCustomDomain);
-          cloudflareApexId = ids.apexId;
-          cloudflareWwwId = ids.wwwId;
-          console.log(`[Cloudflare] Re-registered missing IDs for ${newCustomDomain}`);
-        } catch (cfErr) {
-          console.error('[Cloudflare] Failed to re-register domain:', cfErr);
-        }
+      } else if (newCustomDomain) {
+        // Domain unchanged — ensure it's registered with Vercel
+        registerDomainVercel(newCustomDomain).catch(err =>
+          console.error('[Vercel] Failed to ensure domain registration:', err)
+        );
       }
 
       // Update the site (including Cloudflare IDs)
