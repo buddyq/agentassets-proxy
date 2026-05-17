@@ -301,6 +301,25 @@ export function useRepublishSite() {
   });
 }
 
+export function useRenewSite() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`${API_BASE}/sites/${id}/renew`, { method: 'POST' });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to renew site');
+      }
+      return res.json() as Promise<Site>;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['sites'] });
+      queryClient.invalidateQueries({ queryKey: ['user'] });
+      queryClient.setQueryData(['site', data.id], data);
+    }
+  });
+}
+
 // Themes API
 export function useThemes(options?: { preset?: boolean; userId?: string; forUser?: boolean }) {
   return useQuery({

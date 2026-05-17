@@ -10,7 +10,7 @@ function formatPriceDisplay(price: string | null | undefined): string {
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useSites, useDeleteSite, useUpdateSite, useThemes, useLeads, useLayouts, useUnpublishSite, useRepublishSite, useSitePasswords, useCheckSlugAvailability, useUpdateSiteSlug, useDailyStats, useTrafficSources, useBrokerage } from "@/lib/api";
+import { useSites, useDeleteSite, useUpdateSite, useThemes, useLeads, useLayouts, useUnpublishSite, useRepublishSite, useRenewSite, useSitePasswords, useCheckSlugAvailability, useUpdateSiteSlug, useDailyStats, useTrafficSources, useBrokerage } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
 import { Plus, ExternalLink, Trash2, Globe, BarChart3, Users, MousePointerClick, TrendingUp, Pencil, MessageSquare, Mail, Phone, Calendar, ChevronRight, LayoutDashboard, UserCircle, Image, FileText, Share2, ArrowRight, X, EyeOff, Eye, Clock, AlertTriangle, Lock, Copy, Check, Link2, Building2 } from "lucide-react";
@@ -53,6 +53,7 @@ export default function Dashboard() {
   const updateSiteMutation = useUpdateSite();
   const unpublishSiteMutation = useUnpublishSite();
   const republishSiteMutation = useRepublishSite();
+  const renewSiteMutation = useRenewSite();
   const { toast } = useToast();
   
   const isBrokerageAdmin = brokerageData?.membership?.role === 'admin';
@@ -329,6 +330,24 @@ export default function Dashboard() {
       onError: (error) => {
         toast({
           title: "Error",
+          description: error.message,
+          variant: "destructive"
+        });
+      }
+    });
+  };
+
+  const handleRenew = (siteId: string) => {
+    renewSiteMutation.mutate(siteId, {
+      onSuccess: () => {
+        toast({
+          title: "Site Renewed",
+          description: "Your site is live again and active for another 90 days.",
+        });
+      },
+      onError: (error) => {
+        toast({
+          title: "Renewal Failed",
           description: error.message,
           variant: "destructive"
         });
@@ -629,7 +648,18 @@ export default function Dashboard() {
                           <BarChart3 className="h-3 w-3" /> Analytics
                         </Button>
                       </div>
-                      {site.status === 'published' ? (
+                      {site.expiresAt && isPast(new Date(site.expiresAt)) ? (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="w-full gap-2 text-xs h-8"
+                          onClick={() => handleRenew(site.id)}
+                          disabled={renewSiteMutation.isPending}
+                          data-testid={`button-renew-${site.id}`}
+                        >
+                          <Clock className="h-3 w-3" /> Renew Site (1 credit)
+                        </Button>
+                      ) : site.status === 'published' ? (
                         <Button
                           variant="outline"
                           size="sm"
@@ -646,10 +676,10 @@ export default function Dashboard() {
                           size="sm"
                           className="w-full gap-2 text-xs h-8"
                           onClick={() => handleRepublish(site.id)}
-                          disabled={republishSiteMutation.isPending || (site.expiresAt && isPast(new Date(site.expiresAt)))}
+                          disabled={republishSiteMutation.isPending}
                           data-testid={`button-republish-${site.id}`}
                         >
-                          <Eye className="h-3 w-3" /> {site.expiresAt && isPast(new Date(site.expiresAt)) ? 'Expired' : 'Publish Site'}
+                          <Eye className="h-3 w-3" /> Publish Site
                         </Button>
                       ) : null}
                     </CardFooter>

@@ -662,6 +662,27 @@ export async function registerRoutes(
   });
 
   // Republish a site (protected)
+  app.post("/api/sites/:id/renew", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const site = await storage.getSite(req.params.id);
+
+      if (!site) return res.status(404).json({ error: "Site not found" });
+      if (site.userId !== userId) return res.status(403).json({ error: "You can only renew your own sites" });
+
+      const user = await storage.getUser(userId);
+      if (!user) return res.status(404).json({ error: "User not found" });
+      if ((user.credits || 0) < 1) return res.status(403).json({ error: "Insufficient credits. Please purchase more credits to renew this site." });
+
+      await storage.updateUserCredits(userId, user.credits - 1);
+      const updatedSite = await storage.renewSite(req.params.id);
+      res.json(updatedSite);
+    } catch (error) {
+      console.error("Failed to renew site:", error);
+      res.status(500).json({ error: "Failed to renew site" });
+    }
+  });
+
   app.post("/api/sites/:id/republish", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;

@@ -108,6 +108,7 @@ export interface IStorage {
   updateSiteStats(id: string, stats: { views: number; uniqueVisitors: number; leads: number }): Promise<void>;
   unpublishSite(id: string): Promise<Site>;
   republishSite(id: string): Promise<Site>;
+  renewSite(id: string): Promise<Site>;
   
   // Theme methods
   getTheme(id: string): Promise<Theme | undefined>;
@@ -479,6 +480,22 @@ export class DatabaseStorage implements IStorage {
         status: 'published', 
         unpublishedAt: null,
         updatedAt: new Date() 
+      })
+      .where(eq(sites.id, id))
+      .returning();
+    return site;
+  }
+
+  async renewSite(id: string): Promise<Site> {
+    const newExpiry = new Date();
+    newExpiry.setDate(newExpiry.getDate() + 90);
+    const [site] = await db
+      .update(sites)
+      .set({
+        expiresAt: newExpiry,
+        status: 'published',
+        unpublishedAt: null,
+        updatedAt: new Date()
       })
       .where(eq(sites.id, id))
       .returning();

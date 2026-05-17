@@ -5142,6 +5142,24 @@ function PasswordGate({
   );
 }
 
+function ExpiredPage() {
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-950 px-6">
+      <div className="text-center max-w-md">
+        <div className="w-16 h-16 rounded-full bg-zinc-800 flex items-center justify-center mx-auto mb-6">
+          <svg className="w-8 h-8 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+          </svg>
+        </div>
+        <h1 className="text-2xl font-semibold text-white mb-3">This site has expired</h1>
+        <p className="text-zinc-400 text-base leading-relaxed">
+          The property website you're looking for is no longer active. Please notify the owner of the site.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function ComingSoonPage({ site, theme }: { site: Site & { agentInfo?: any; effectiveLogo?: string; effectiveHeroLogo?: string }; theme?: Theme }) {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
@@ -5410,6 +5428,10 @@ export default function SiteView({ siteId: propSiteId, params: routeParams }: Si
         onUnlock={() => setIsUnlocked(true)} 
       />
     );
+  }
+
+  if (site.expiresAt && new Date(site.expiresAt) < new Date()) {
+    return <ExpiredPage />;
   }
 
   if (site.status !== 'published') {
