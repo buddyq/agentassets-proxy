@@ -437,6 +437,7 @@ export default function CreateSite() {
           toast({
             title: "Site Published!",
             description: message,
+            variant: "success",
           });
           setLocation("/dashboard");
         },

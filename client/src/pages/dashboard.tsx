@@ -325,6 +325,7 @@ export default function Dashboard() {
         toast({
           title: "Site Published",
           description: "Your site is now live again!",
+          variant: "success",
         });
       },
       onError: (error) => {
@@ -343,6 +344,7 @@ export default function Dashboard() {
         toast({
           title: "Site Renewed",
           description: "Your site is live again and active for another 90 days.",
+          variant: "success",
         });
       },
       onError: (error) => {
