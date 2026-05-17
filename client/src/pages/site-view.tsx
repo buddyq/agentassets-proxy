@@ -5412,7 +5412,7 @@ export default function SiteView({ siteId: propSiteId, params: routeParams }: Si
     );
   }
 
-  if ((site as any).comingSoon) {
+  if (site.status !== 'published') {
     return <ComingSoonPage site={site as any} theme={theme} />;
   }
 

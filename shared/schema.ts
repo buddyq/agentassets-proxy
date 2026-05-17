@@ -191,7 +191,6 @@ export const sites = pgTable("sites", {
   cloudflareWwwId: text("cloudflare_www_id"),
   customDetails: jsonb("custom_details").$type<CustomDetail[]>().default([]),
   status: text("status").notNull().default('draft'),
-  comingSoon: boolean("coming_soon").notNull().default(false),
   isTrial: boolean("is_trial").notNull().default(false),
   unpublishedAt: timestamp("unpublished_at"),
   // SEO fields
