@@ -741,32 +741,41 @@ export default function Dashboard() {
             <div className="bg-muted/50 rounded-lg p-4 space-y-3">
               <h4 className="font-medium text-sm flex items-center gap-2">
                 <Globe className="h-4 w-4" />
-                DNS Setup Instructions
+                Setup Instructions
               </h4>
-              <p className="text-xs text-muted-foreground">
-                After saving, you'll need to configure your domain's DNS settings. Log in to your domain registrar (GoDaddy, Namecheap, Google Domains, etc.) and add these records:
-              </p>
-              <div className="space-y-2 text-xs">
-                <div className="bg-background rounded p-2 border">
-                  <div className="font-medium mb-1">For root domain{domainInput ? ` (${domainInput.replace(/^www\./i, '')})` : ''}:</div>
-                  <div className="font-mono text-muted-foreground">
-                    Type: <span className="text-foreground">A</span><br/>
-                    Host: <span className="text-foreground">@</span><br/>
-                    Value: <span className="text-foreground">34.111.179.128</span>
+              <div className="space-y-3 text-xs">
+                <div className="flex gap-2">
+                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-[10px]">1</span>
+                  <div>
+                    <div className="font-medium mb-1">Add these DNS records at your registrar (GoDaddy, Namecheap, etc.):</div>
+                    <div className="space-y-2">
+                      <div className="bg-background rounded p-2 border">
+                        <div className="font-medium mb-1 text-muted-foreground">Root domain{domainInput ? ` (${domainInput.replace(/^www\./i, '')})` : ''}:</div>
+                        <div className="font-mono">
+                          Type: <span className="text-foreground">A</span> &nbsp;
+                          Host: <span className="text-foreground">@</span> &nbsp;
+                          Value: <span className="text-foreground">34.111.179.128</span>
+                        </div>
+                      </div>
+                      <div className="bg-background rounded p-2 border">
+                        <div className="font-medium mb-1 text-muted-foreground">www subdomain:</div>
+                        <div className="font-mono">
+                          Type: <span className="text-foreground">CNAME</span> &nbsp;
+                          Host: <span className="text-foreground">www</span> &nbsp;
+                          Value: <span className="text-foreground">{domainInput ? domainInput.replace(/^www\./i, '') : 'yourdomain.com'}</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className="bg-background rounded p-2 border">
-                  <div className="font-medium mb-1">For www subdomain (optional):</div>
-                  <div className="font-mono text-muted-foreground">
-                    Type: <span className="text-foreground">CNAME</span><br/>
-                    Host: <span className="text-foreground">www</span><br/>
-                    Value: <span className="text-foreground">{domainInput ? domainInput.replace(/^www\./i, '') : 'yourdomain.com'}</span>
+                <div className="flex gap-2">
+                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-[10px]">2</span>
+                  <div>
+                    <div className="font-medium mb-1">Save this form — AgentAssets will be notified to activate your domain.</div>
+                    <div className="text-muted-foreground">After DNS propagates (usually a few minutes, up to 24 hrs) and we activate the domain on our end, your site will be live at your custom URL with SSL automatically enabled.</div>
                   </div>
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground">
-                DNS changes can take up to 24-48 hours to propagate. SSL certificates are automatically provisioned once DNS is configured.
-              </p>
             </div>
           </div>
           <DialogFooter>
