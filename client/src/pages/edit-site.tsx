@@ -500,6 +500,22 @@ export default function EditSite() {
     );
   }
 
+  if (site.expiresAt && new Date(site.expiresAt) < new Date()) {
+    return (
+      <div className="min-h-screen flex flex-col bg-muted/10">
+        <Navbar />
+        <main className="container mx-auto px-4 py-8 flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold mb-2">Site Expired</h2>
+            <p className="text-muted-foreground mb-4">This site has expired. Renew it from the dashboard to edit it again.</p>
+            <Button onClick={() => setLocation("/dashboard")}>Back to Dashboard</Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-muted/10">
       <Navbar />

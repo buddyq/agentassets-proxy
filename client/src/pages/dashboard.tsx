@@ -605,11 +605,17 @@ export default function Dashboard() {
                     </CardContent>
                     <CardFooter className="flex flex-col gap-2 border-t bg-muted/5 p-4">
                       <div className="flex gap-2 w-full">
-                        <Link href={`/edit-site/${site.id}`} className="flex-1">
-                          <Button variant="outline" size="sm" className="w-full gap-1" data-testid={`button-edit-${site.id}`}>
+                        {site.expiresAt && isPast(new Date(site.expiresAt)) ? (
+                          <Button variant="outline" size="sm" className="flex-1 gap-1 opacity-40 cursor-not-allowed" disabled data-testid={`button-edit-${site.id}`}>
                             <Pencil className="h-3 w-3" /> Edit
                           </Button>
-                        </Link>
+                        ) : (
+                          <Link href={`/edit-site/${site.id}`} className="flex-1">
+                            <Button variant="outline" size="sm" className="w-full gap-1" data-testid={`button-edit-${site.id}`}>
+                              <Pencil className="h-3 w-3" /> Edit
+                            </Button>
+                          </Link>
+                        )}
                         <a 
                           href={site.customDomain ? `https://${site.customDomain}` : `/p/${(site as any).subdomain}`} 
                           target="_blank"
