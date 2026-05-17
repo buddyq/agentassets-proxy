@@ -752,17 +752,18 @@ export default function Dashboard() {
                       <div className="bg-background rounded p-2 border">
                         <div className="font-medium mb-1 text-muted-foreground">Root domain{domainInput ? ` (${domainInput.replace(/^www\./i, '')})` : ''}:</div>
                         <div className="font-mono">
-                          Type: <span className="text-foreground">A</span> &nbsp;
+                          Type: <span className="text-foreground">CNAME</span> &nbsp;
                           Host: <span className="text-foreground">@</span> &nbsp;
-                          Value: <span className="text-foreground">34.111.179.128</span>
+                          Value: <span className="text-foreground">custom.agentassets.com</span>
                         </div>
+                        <div className="text-muted-foreground mt-1">Note: If your registrar doesn't support CNAME at @, use Type: A / Value: 34.111.179.128 instead.</div>
                       </div>
                       <div className="bg-background rounded p-2 border">
                         <div className="font-medium mb-1 text-muted-foreground">www subdomain:</div>
                         <div className="font-mono">
                           Type: <span className="text-foreground">CNAME</span> &nbsp;
                           Host: <span className="text-foreground">www</span> &nbsp;
-                          Value: <span className="text-foreground">{domainInput ? domainInput.replace(/^www\./i, '') : 'yourdomain.com'}</span>
+                          Value: <span className="text-foreground">custom.agentassets.com</span>
                         </div>
                       </div>
                     </div>
@@ -771,8 +772,8 @@ export default function Dashboard() {
                 <div className="flex gap-2">
                   <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-[10px]">2</span>
                   <div>
-                    <div className="font-medium mb-1">Save this form — AgentAssets will be notified to activate your domain.</div>
-                    <div className="text-muted-foreground">After DNS propagates (usually a few minutes, up to 24 hrs) and we activate the domain on our end, your site will be live at your custom URL with SSL automatically enabled.</div>
+                    <div className="font-medium mb-1">Save this form — your domain activates automatically.</div>
+                    <div className="text-muted-foreground">SSL is provisioned automatically. DNS changes typically propagate within a few minutes, though it can take up to 24 hours.</div>
                   </div>
                 </div>
               </div>

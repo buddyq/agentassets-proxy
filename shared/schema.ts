@@ -187,6 +187,8 @@ export const sites = pgTable("sites", {
   templateId: text("template_id"),
   themeId: text("theme_id").notNull(),
   customDomain: text("custom_domain"),
+  cloudflareApexId: text("cloudflare_apex_id"),
+  cloudflareWwwId: text("cloudflare_www_id"),
   customDetails: jsonb("custom_details").$type<CustomDetail[]>().default([]),
   status: text("status").notNull().default('draft'),
   isTrial: boolean("is_trial").notNull().default(false),

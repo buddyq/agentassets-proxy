@@ -12,6 +12,7 @@ import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import archiver from "archiver";
 import { sendLeadNotificationEmail, sendAgentInvitationEmail, sendGroupMemberAddedEmail, sendNewUserNotificationEmail, sendCustomDomainNotificationEmail, sendCreditsAddedEmail } from "./email";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
+import { registerDomain, unregisterDomain } from "./cloudflare";
 
 function getExtensionFromMime(mimeType: string): string {
   const mimeToExt: Record<string, string> = {
@@ -558,18 +559,50 @@ export async function registerRoutes(
         return res.status(404).json({ error: "Site not found" });
       }
       
-      // Check if custom domain is being added or changed
+      // Check if custom domain is being added, changed, or removed
       const newCustomDomain = req.body.customDomain;
       const oldCustomDomain = existingSite.customDomain;
-      const isCustomDomainAdded = newCustomDomain && newCustomDomain !== oldCustomDomain;
-      
-      // Update the site
-      const site = await storage.updateSite(siteId, req.body);
-      
+      const isDomainChanged = newCustomDomain !== oldCustomDomain;
+      const isCustomDomainAdded = isDomainChanged && !!newCustomDomain;
+      const isCustomDomainRemoved = isDomainChanged && !newCustomDomain;
+
+      // Auto-register/unregister with Cloudflare for SaaS
+      let cloudflareApexId = existingSite.cloudflareApexId ?? null;
+      let cloudflareWwwId = existingSite.cloudflareWwwId ?? null;
+
+      if (isDomainChanged) {
+        // Remove old domain from Cloudflare
+        if (oldCustomDomain && (cloudflareApexId || cloudflareWwwId)) {
+          unregisterDomain(cloudflareApexId, cloudflareWwwId).catch(err =>
+            console.error('[Cloudflare] Failed to unregister old domain:', err)
+          );
+          cloudflareApexId = null;
+          cloudflareWwwId = null;
+        }
+
+        // Register new domain with Cloudflare
+        if (newCustomDomain) {
+          try {
+            const ids = await registerDomain(newCustomDomain);
+            cloudflareApexId = ids.apexId;
+            cloudflareWwwId = ids.wwwId;
+          } catch (cfErr) {
+            console.error('[Cloudflare] Failed to register domain:', cfErr);
+            // Continue — domain is still saved to DB even if Cloudflare fails
+          }
+        }
+      }
+
+      // Update the site (including Cloudflare IDs)
+      const site = await storage.updateSite(siteId, {
+        ...req.body,
+        cloudflareApexId,
+        cloudflareWwwId,
+      });
+
       // Send notification email if custom domain was added/changed
       if (isCustomDomainAdded) {
         try {
-          // Use the site owner's info, not the current user (in case an admin is updating)
           const siteOwner = site.userId ? await storage.getUser(site.userId) : null;
           if (siteOwner) {
             await sendCustomDomainNotificationEmail({
@@ -583,11 +616,10 @@ export async function registerRoutes(
             console.log(`Custom domain notification sent for ${newCustomDomain} (site owner: ${siteOwner.email})`);
           }
         } catch (emailError) {
-          // Log but don't fail the request if email fails
           console.error("Failed to send custom domain notification email:", emailError);
         }
       }
-      
+
       res.json(site);
     } catch (error) {
       res.status(500).json({ error: "Failed to update site" });
