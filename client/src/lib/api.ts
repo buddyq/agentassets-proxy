@@ -296,6 +296,7 @@ export function useRepublishSite() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['sites'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
       queryClient.setQueryData(['site', data.id], data);
     }
   });
@@ -314,7 +315,7 @@ export function useRenewSite() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['sites'] });
-      queryClient.invalidateQueries({ queryKey: ['user'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
       queryClient.setQueryData(['site', data.id], data);
     }
   });
