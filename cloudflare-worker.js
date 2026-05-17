@@ -6,18 +6,25 @@
  * Replit accepts the request. The original customer hostname is
  * preserved in X-Forwarded-Host for SSR/meta-tag injection.
  *
- * Attach this Worker to the route: fallback.agentassets.com/*
- * in the agentassets.com Cloudflare zone (Workers Routes).
+ * This Worker is attached as a Custom Domain to fallback.agentassets.com
+ * so that Cloudflare for SaaS fallback origin traffic passes through it.
  */
 
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    // CF for SaaS sets cf-custom-hostname to the original customer domain
-    // (e.g. www.410brookhaven.com). Fall back to the request hostname.
+    // CF for SaaS sets cf-custom-hostname to the original customer domain.
+    // Fall back to the Host header, then the URL hostname.
     const originalHostname =
-      request.headers.get('cf-custom-hostname') || url.hostname;
+      request.headers.get('cf-custom-hostname') ||
+      request.headers.get('host') ||
+      url.hostname;
+
+    // Skip proxying if this is already an agentassets.com request
+    if (originalHostname.includes('agentassets.com') || originalHostname.includes('fallback.')) {
+      return fetch(request);
+    }
 
     // Rewrite destination to the Replit-registered hostname
     url.hostname = 'agentassets.com';
