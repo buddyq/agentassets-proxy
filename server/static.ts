@@ -31,7 +31,8 @@ export function serveStatic(app: Express) {
         return next();
       }
 
-      const host = req.headers.host || req.hostname || '';
+      // X-Forwarded-Host is set by the Cloudflare Worker when proxying custom domain traffic
+      const host = (req.headers['x-forwarded-host'] as string) || req.headers.host || req.hostname || '';
       const requestPath = req.originalUrl || req.path || '';
       
       // Try to get site-specific meta data
