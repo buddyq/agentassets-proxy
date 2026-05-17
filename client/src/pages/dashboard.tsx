@@ -747,17 +747,8 @@ export default function Dashboard() {
                 <div className="flex gap-2">
                   <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-[10px]">1</span>
                   <div>
-                    <div className="font-medium mb-1">Add these DNS records at your registrar (GoDaddy, Namecheap, etc.):</div>
+                    <div className="font-medium mb-1">Add this DNS record at your registrar (GoDaddy, Namecheap, etc.):</div>
                     <div className="space-y-2">
-                      <div className="bg-background rounded p-2 border">
-                        <div className="font-medium mb-1 text-muted-foreground">Root domain{domainInput ? ` (${domainInput.replace(/^www\./i, '')})` : ''}:</div>
-                        <div className="font-mono">
-                          Type: <span className="text-foreground">CNAME</span> &nbsp;
-                          Host: <span className="text-foreground">@</span> &nbsp;
-                          Value: <span className="text-foreground">sites.agentassets.com</span>
-                        </div>
-                        <div className="text-muted-foreground mt-1">Note: If your registrar doesn't support CNAME at @, use Type: A / Value: 34.111.179.128 instead.</div>
-                      </div>
                       <div className="bg-background rounded p-2 border">
                         <div className="font-medium mb-1 text-muted-foreground">www subdomain:</div>
                         <div className="font-mono">
@@ -765,6 +756,10 @@ export default function Dashboard() {
                           Host: <span className="text-foreground">www</span> &nbsp;
                           Value: <span className="text-foreground">sites.agentassets.com</span>
                         </div>
+                      </div>
+                      <div className="bg-background rounded p-2 border">
+                        <div className="font-medium mb-1 text-muted-foreground">Root domain{domainInput ? ` (${domainInput.replace(/^www\./i, '')})` : ''}:</div>
+                        <div className="text-muted-foreground">Set up a <span className="font-medium text-foreground">domain forward</span> (redirect) from your root domain to <span className="font-medium text-foreground">www.{domainInput ? domainInput.replace(/^www\./i, '') : 'yourdomain.com'}</span>. In GoDaddy this is under <span className="font-medium text-foreground">Forwarding</span> at the bottom of the DNS page.</div>
                       </div>
                     </div>
                   </div>
